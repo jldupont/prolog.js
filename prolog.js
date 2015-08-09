@@ -5,6 +5,9 @@ function Token(name, maybe_value) {
 	this.value = maybe_value || null;
 };
 
+Token.compare = function(t1, t2) {
+	return ((t1.name == t2.name) && (t1.value == t2.value));
+};
 
 /**
  *  Lexer
@@ -14,6 +17,7 @@ function Token(name, maybe_value) {
  */
 function Lexer (text) {
 	this.text = text;
+	this.at_the_end = false;
 	
 	this._tokenRegexp = /[A-Za-z_]+|:\-|[()\.,]|[\n]|./gm;
 };
@@ -32,13 +36,22 @@ Lexer.token_map = {
 	,')': new Token('parens_close')
 };
 
+Lexer.newline_as_null = true;
+
 /**
  *  Retrieve the next token in raw format
  *  
+ *  @param {boolean} newline_as_null : emit the newline as a null
+ *  
  *  @return Token | null 
  */
-Lexer.prototype.next = function() {
+Lexer.prototype.next = function(newline_as_null) {
 
+	// we reached the end already,
+	//  prevent restart
+	if (this.at_the_end)
+		return null;
+	
 	var match = null;
 	
 	// note that regex.exec keeps a context
@@ -48,6 +61,10 @@ Lexer.prototype.next = function() {
 	if (match!=null)
 		return match[0];
 	
+	if (match == '\n')
+		return null;
+	
+	this.at_the_end = true;
 	return null;
 };
 
@@ -69,6 +86,14 @@ Lexer.prototype.next_token = function() {
 		return new Token('null');
 	
 	var raw_token = maybe_raw_token;
+	
+	// If we are dealing with a comment,
+	//  skip till the end of the line
+	if (raw_token == '%') {
+		
+		while( this.next(Lexer.newline_as_null) != null);
+		return new Token('comment');
+	};
 	
 	// are we dealing with a string ?
 	//
