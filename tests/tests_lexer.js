@@ -12,23 +12,6 @@ var lexer = require("../src/lexer.js");
 var Token = lexer.Token;
 
 
-var get_token_list = function(lexer) {
-	
-	var list = [];
-	var t;
-	
-	for (;;) {
-		t = lexer.next();
-		
-		if (t.name == 'null' | t.name == 'eof')
-			break;
-		
-		list.push(t);
-	};
-	
-	return list;
-};
-
 
 // ----------------------------------------------------------------- TESTS - parsing
 
@@ -150,7 +133,7 @@ it('Lex - Token class - simple', function(){
 	result = l.next();
 	
 	should.equal(result.constructor.name, 'Token');
-	should.equal(result.name, 'atom');
+	should.equal(result.name, 'term');
 	should.equal(result.value, 'love');
 	
 	result = l.next();
@@ -159,7 +142,7 @@ it('Lex - Token class - simple', function(){
 
 	result = l.next();
 	should.equal(result.constructor.name, 'Token');
-	should.equal(result.name, 'atom');
+	should.equal(result.name, 'term');
 	should.equal(result.value, 'julianne');
 	
 	result = l.next();
@@ -184,7 +167,7 @@ it('Lex - Token - string', function(){
 	result = l.next();
 	
 	should.equal(result.constructor.name, 'Token');
-	should.equal(result.name, 'atom');
+	should.equal(result.name, 'term');
 	should.equal(result.value, 'love');
 	
 	result = l.next();
@@ -225,9 +208,9 @@ it('Lex - comment - simple', function(){
 it('Lex - comment - trailing', function(){
 
 	var text = "love(charlot).% some comment";
-	var elist = [new Token('atom', 'love'), 
+	var elist = [new Token('term', 'love'), 
 	             new Token('parens_open'),
-	             new Token('atom', 'charlot'),
+	             new Token('term', 'charlot'),
 	             new Token('parens_close'),
 	             new Token('period'),
 	             new Token('comment'),
@@ -236,7 +219,7 @@ it('Lex - comment - trailing', function(){
 	var Lexer = lexer.Lexer;
 	
 	var l = new Lexer(text);
-	var list = get_token_list(l);
+	var list = l.get_token_list();
 
 	var result = Token.check_for_match(list, elist);
 
@@ -246,9 +229,9 @@ it('Lex - comment - trailing', function(){
 it('Lex - with newline', function(){
 
 	var text = "love(charlot).\n";
-	var elist = [new Token('atom', 'love'), 
+	var elist = [new Token('term', 'love'), 
 	             new Token('parens_open'),
-	             new Token('atom', 'charlot'),
+	             new Token('term', 'charlot'),
 	             new Token('parens_close'),
 	             new Token('period'),
 	             new Token('newline'),
@@ -257,7 +240,7 @@ it('Lex - with newline', function(){
 	var Lexer = lexer.Lexer;
 	
 	var l = new Lexer(text);
-	var list = get_token_list(l);
+	var list = l.get_token_list();
 
 	var result = Token.check_for_match(list, elist);
 
@@ -269,9 +252,9 @@ it('Lex - check index', function(){
 	var also_index = true;
 	
 	var text = "love(charlot).\n";
-	var elist = [new Token('atom', 'love', 0), 
+	var elist = [new Token('term', 'love', 0), 
 	             new Token('parens_open', null, 4),
-	             new Token('atom', 'charlot', 5),
+	             new Token('term', 'charlot', 5),
 	             new Token('parens_close', null, 12),
 	             new Token('period', null, 13),
 	             new Token('newline', null, 14),
@@ -280,9 +263,40 @@ it('Lex - check index', function(){
 	var Lexer = lexer.Lexer;
 	
 	var l = new Lexer(text);
-	var list = get_token_list(l);
+	var list = l.get_token_list();
 
 	var result = Token.check_for_match(list, elist, also_index);
 
 	should.equal(result, true);
+});
+
+it('Lex - number - integer', function(){
+
+	var also_index = true;
+	
+	var text = "1234";
+	
+	var Lexer = lexer.Lexer;
+	
+	var l = new Lexer(text);
+	var result = l.next();
+
+	should.equal(result.name, 'number');
+	should.equal(result.value, 1234);
+	
+});
+
+it('Lex - number - float', function(){
+
+	var also_index = true;
+	
+	var text = "1234.5678";
+	
+	var Lexer = lexer.Lexer;
+	
+	var l = new Lexer(text);
+	var result = l.next();
+
+	should.equal(result.name, 'number');
+	should.equal(result.value, 1234.5678);
 });

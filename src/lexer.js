@@ -70,7 +70,7 @@ function Lexer (text) {
 	this.at_the_end = false;
 	this.current_match = null;
 	
-	this._tokenRegexp = /[A-Za-z_]+|:\-|[()\.,]|[\n]|./gm;
+	this._tokenRegexp = /[0-9\.]+|[A-Za-z_]+|:\-|[()\.,]|[\n]|./gm;
 };
 
 
@@ -78,7 +78,7 @@ function Lexer (text) {
  *  The supported tokens 
  */
 Lexer.token_map = {
-	':-': new Token('predicate')
+	':-': new Token('rule')
 	,'.': new Token('period')
 	,',': new Token('conjunction')
 	,';': new Token('disjunction')
@@ -88,6 +88,30 @@ Lexer.token_map = {
 };
 
 Lexer.newline_as_null = true;
+
+/**
+ * Retrieves all tokens from the stream.
+ * 
+ * This function is useful for tests.
+ * 
+ * @returns {Array}
+ */
+Lexer.prototype.get_token_list = function() {
+	
+	var list = [];
+	var t;
+	
+	for (;;) {
+		t = this.next();
+		
+		if (t.name == 'null' | t.name == 'eof')
+			break;
+		
+		list.push(t);
+	};
+	
+	return list;
+};
 
 /**
  *  Retrieve the next token in raw format
@@ -121,12 +145,18 @@ Lexer.prototype.is_quote = function(character) {
 	return (character == '\'' | character == '\"');
 };
 
+Lexer.is_number = function(maybe_number) {
+	
+	return String(parseFloat(maybe_number)) == String(maybe_number); 
+};
 
 /**
  *  Get the next token from the text
  *  
  *  If it's a token we don't recognize,
  *   we just emit an 'atom'.
+ *   
+ *   @return Token
  */
 Lexer.prototype.next = function() {
 	
@@ -147,6 +177,12 @@ Lexer.prototype.next = function() {
 		return new Token('comment', null, current_index);
 	};
 	
+	// are we dealing with a number ?
+	if (Lexer.is_number(raw_token)) {
+		var number = parseFloat(raw_token);
+		return new Token('number', number, current_index);
+	};
+	
 	// are we dealing with a string ?
 	//
 	if (this.is_quote(raw_token)) {
@@ -164,7 +200,7 @@ Lexer.prototype.next = function() {
 	};
 	
 	var maybe_return_token = Lexer.token_map[maybe_raw_token];
-	var return_token = maybe_return_token || new Token('atom', maybe_raw_token);
+	var return_token = maybe_return_token || new Token('term', maybe_raw_token);
 	
 	return_token.index = current_index;
 	
