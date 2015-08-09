@@ -10,8 +10,36 @@ function Token(name, maybe_value) {
 	this.value = maybe_value || null;
 };
 
-Token.compare = function(t1, t2) {
+/**
+ * Check for token equality
+ * 
+ * @param t1
+ * @param t2
+ * @returns {Boolean}
+ */
+Token.equal = function(t1, t2) {
 	return ((t1.name == t2.name) && (t1.value == t2.value));
+};
+
+/**
+ * Check for match between the list of tokens
+ * 
+ * @param input_list
+ * @param expected_list
+ * @returns {Boolean}
+ */
+Token.check_for_match = function(input_list, expected_list){
+	
+	for (var index in input_list) {
+		
+		var input_token = input_list[index];
+		var expected_token = expected_list[index] || new Token('null');
+	
+		if (!Token.equal(input_token, expected_token))
+			return false;
+	};
+	
+	return true;
 };
 
 /**
@@ -50,7 +78,7 @@ Lexer.newline_as_null = true;
  *  
  *  @return Token | null 
  */
-Lexer.prototype.next = function(newline_as_null) {
+Lexer.prototype.step = function(newline_as_null) {
 
 	// we reached the end already,
 	//  prevent restart
@@ -83,9 +111,9 @@ Lexer.prototype.is_quote = function(character) {
  *  If it's a token we don't recognize,
  *   we just emit an 'atom'.
  */
-Lexer.prototype.next_token = function() {
+Lexer.prototype.next = function() {
 	
-	var maybe_raw_token = this.next();
+	var maybe_raw_token = this.step();
 	
 	if (maybe_raw_token == null)
 		return new Token('null');
@@ -96,7 +124,7 @@ Lexer.prototype.next_token = function() {
 	//  skip till the end of the line
 	if (raw_token == '%') {
 		
-		while( this.next(Lexer.newline_as_null) != null);
+		while( this.step(Lexer.newline_as_null) != null);
 		return new Token('comment');
 	};
 	
@@ -107,7 +135,7 @@ Lexer.prototype.next_token = function() {
 		var t;
 		
 		for (;;) {
-			t = this.next();
+			t = this.step();
 			if (this.is_quote(t) | t == '\n' | t == null) {
 				return new Token('string', string);
 			} 

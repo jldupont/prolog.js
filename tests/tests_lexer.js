@@ -19,23 +19,23 @@ it('Lex - simple fact', function(){
 	
 	var l = new Lexer("love(julianne).");
 	
-	var result = l.next();
+	var result = l.step();
 	
 	should.equal(result, 'love', "expecting 'love'");
 	
-	result = l.next();
+	result = l.step();
 	should.equal(result, '(', "expecting '('");
 	
-	result = l.next();
+	result = l.step();
 	should.equal(result, 'julianne', "expecting 'julianne'");
 
-	result = l.next();
+	result = l.step();
 	should.equal(result, ')', "expecting ')'");
 
-	result = l.next();
+	result = l.step();
 	should.equal(result, '.', "expecting '.'");
 
-	result = l.next();
+	result = l.step();
 	should.equal(result, null, "expecting 'null'");
 
 });
@@ -48,32 +48,32 @@ it('Lex - simple facts - multiline', function(){
 	
 	var l = new Lexer(text);
 	
-	var result = l.next();
+	var result = l.step();
 	
 	should.equal(result, 'love', "expecting 'love'");
 	
-	result = l.next();
+	result = l.step();
 	should.equal(result, '(', "expecting '('");
 	
-	result = l.next();
+	result = l.step();
 	should.equal(result, 'julianne', "expecting 'julianne'");
 
-	result = l.next();
+	result = l.step();
 	should.equal(result, ')', "expecting ')'");
 
-	result = l.next();
+	result = l.step();
 	should.equal(result, '.', "expecting '.'");
 
-	result = l.next();
+	result = l.step();
 	should.equal(result, '\n', "expecting 'newline'");
 
-	result = l.next();
+	result = l.step();
 	should.equal(result, 'love', "expecting 'love'");
 
-	result = l.next();
+	result = l.step();
 	should.equal(result, '(', "expecting '('");
 
-	result = l.next();
+	result = l.step();
 	should.equal(result, 'charlot', "expecting 'charlot'");
 	
 });
@@ -86,19 +86,19 @@ it('Lex - simple rule', function(){
 	
 	var l = new Lexer(text);
 	
-	var result = l.next();
+	var result = l.step();
 	should.equal(result, 'happy');
 
-	result = l.next();
+	result = l.step();
 	should.equal(result, '(');
 
-	result = l.next();
+	result = l.step();
 	should.equal(result, 'julianne');
 	
-	result = l.next();
+	result = l.step();
 	should.equal(result, ')');
 
-	result = l.next();
+	result = l.step();
 	should.equal(result, ':-');
 	
 });
@@ -112,11 +112,11 @@ it('Lex - unknown token', function(){
 	
 	var l = new Lexer(text);
 	
-	var result = l.next();
+	var result = l.step();
 	
 	should.equal(result, '@');
-	should.equal(l.next(), '@');
-	should.equal(l.next(), 'love');
+	should.equal(l.step(), '@');
+	should.equal(l.step(), 'love');
 });
 
 it('Lex - Token class - simple', function(){
@@ -128,26 +128,26 @@ it('Lex - Token class - simple', function(){
 	var l = new Lexer(text);
 	var result = undefined;
 	
-	result = l.next_token();
+	result = l.next();
 	
 	should.equal(result.constructor.name, 'Token');
 	should.equal(result.name, 'atom');
 	should.equal(result.value, 'love');
 	
-	result = l.next_token();
+	result = l.next();
 	should.equal(result.constructor.name, 'Token');
 	should.equal(result.name, 'parens_open');
 
-	result = l.next_token();
+	result = l.next();
 	should.equal(result.constructor.name, 'Token');
 	should.equal(result.name, 'atom');
 	should.equal(result.value, 'julianne');
 	
-	result = l.next_token();
+	result = l.next();
 	should.equal(result.constructor.name, 'Token');
 	should.equal(result.name, 'parens_close');
 
-	result = l.next_token();
+	result = l.next();
 	should.equal(result.constructor.name, 'Token');
 	should.equal(result.name, 'end');
 
@@ -164,26 +164,26 @@ it('Lex - Token - string', function(){
 	var l = new Lexer(text);
 	var result = undefined;
 	
-	result = l.next_token();
+	result = l.next();
 	
 	should.equal(result.constructor.name, 'Token');
 	should.equal(result.name, 'atom');
 	should.equal(result.value, 'love');
 	
-	result = l.next_token();
+	result = l.next();
 	should.equal(result.constructor.name, 'Token');
 	should.equal(result.name, 'parens_open');
 
-	result = l.next_token();
+	result = l.next();
 	should.equal(result.constructor.name, 'Token');
 	should.equal(result.name, 'string');
 	should.equal(result.value, 'julianne');
 	
-	result = l.next_token();
+	result = l.next();
 	should.equal(result.constructor.name, 'Token');
 	should.equal(result.name, 'parens_close');
 
-	result = l.next_token();
+	result = l.next();
 	should.equal(result.constructor.name, 'Token');
 	should.equal(result.name, 'end');
 
@@ -200,7 +200,7 @@ it('Lex - comment - simple', function(){
 	var l = new Lexer(text);
 	var result = undefined;
 	
-	result = l.next_token();
+	result = l.next();
 	
 	should.equal(result.constructor.name, 'Token');
 	should.equal(result.name, 'comment');
@@ -213,7 +213,7 @@ var get_token_list = function(lexer) {
 	var t;
 	
 	for (;;) {
-		t = lexer.next_token();
+		t = lexer.next();
 		
 		if (t.name == 'null')
 			break;
@@ -222,20 +222,6 @@ var get_token_list = function(lexer) {
 	};
 	
 	return list;
-};
-
-var check_expected_list = function(input_list, expected_list){
-	
-	for (var index in input_list) {
-		
-		var input_token = input_list[index];
-		var expected_token = expected_list[index] || new Token('null');
-	
-		if (!Token.compare(input_token, expected_token))
-			return false;
-	};
-	
-	return true;
 };
 
 it('Lex - comment - trailing', function(){
@@ -254,7 +240,7 @@ it('Lex - comment - trailing', function(){
 	var l = new Lexer(text);
 	var list = get_token_list(l);
 
-	var result = check_expected_list(list, elist);
+	var result = Token.check_for_match(list, elist);
 
 	should.equal(result, true);
 });
