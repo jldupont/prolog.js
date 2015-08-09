@@ -3,34 +3,32 @@
  *  
  *  @author: jldupont
  *  
- *  In prolog, we have the following tokens:
- *  
- *  :-    a rule
- *  .     fact or rule terminator
- *  ,     conjunction
- *  ;     disjunction
- *  
- * 
  */
 
 /**
- *  Parser constructor
+ *  Parser
+ *  
  *  @constructor
  */
 function Parser() {
+	this.list = [];
+	this.index = 0;
+	this.state = 'start';
 };
 
 /**
- *  Parse the input string
- *  
- *  @param {String} input
- *  
- *  @return Tokens 
+ * Processes a list of tokens
+ *  May output Term if one is ready 
+ * 
+ * @param token_list
+ * 
+ * @return 
  */
-Parser.prototype.parse = function(input) {
+Parser.prototype.process_tokens = function(token_list) {
 	
-	// step 1: break the input string into [line]
 	
-	var lines = input.split("\n");
-	
+};
+
+if (typeof module!= 'undefined') {
+	module.exports.Parser = Parser;
 };

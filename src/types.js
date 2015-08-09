@@ -16,7 +16,7 @@
  *  
  */
 function Atom(name) {
-
+	this.name = name;
 };
 
 /**
@@ -28,9 +28,16 @@ function Rule(name) {
 };
 
 /**
- *  Token class
- *  @constructor
+ * Either monad
  */
-function Token(name) {
-	
+function Either(value_a, value_b) {
+	this.value_a = value_a || null;
+	this.value_b = value_b || null;
+};
+
+
+if (typeof module!= 'undefined') {
+	module.exports.Rule = Rule;
+	module.exports.Atom = Atom;
+	module.exports.Either = Either;
 };

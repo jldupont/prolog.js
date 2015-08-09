@@ -11,6 +11,25 @@ var lexer = require("../src/lexer.js");
 
 var Token = lexer.Token;
 
+
+var get_token_list = function(lexer) {
+	
+	var list = [];
+	var t;
+	
+	for (;;) {
+		t = lexer.next();
+		
+		if (t.name == 'null' | t.name == 'eof')
+			break;
+		
+		list.push(t);
+	};
+	
+	return list;
+};
+
+
 // ----------------------------------------------------------------- TESTS - parsing
 
 it('Lex - simple fact', function(){
@@ -149,10 +168,8 @@ it('Lex - Token class - simple', function(){
 
 	result = l.next();
 	should.equal(result.constructor.name, 'Token');
-	should.equal(result.name, 'end');
+	should.equal(result.name, 'period');
 
-	assert.deepEqual(result, new Token('end'));
-	
 });
 
 it('Lex - Token - string', function(){
@@ -185,10 +202,8 @@ it('Lex - Token - string', function(){
 
 	result = l.next();
 	should.equal(result.constructor.name, 'Token');
-	should.equal(result.name, 'end');
+	should.equal(result.name, 'period');
 
-	assert.deepEqual(result, new Token('end'));
-	
 });
 
 it('Lex - comment - simple', function(){
@@ -207,23 +222,6 @@ it('Lex - comment - simple', function(){
 		
 });
 
-var get_token_list = function(lexer) {
-	
-	var list = [];
-	var t;
-	
-	for (;;) {
-		t = lexer.next();
-		
-		if (t.name == 'null')
-			break;
-		
-		list.push(t);
-	};
-	
-	return list;
-};
-
 it('Lex - comment - trailing', function(){
 
 	var text = "love(charlot).% some comment";
@@ -231,7 +229,7 @@ it('Lex - comment - trailing', function(){
 	             new Token('parens_open'),
 	             new Token('atom', 'charlot'),
 	             new Token('parens_close'),
-	             new Token('end'),
+	             new Token('period'),
 	             new Token('comment'),
 	             ];
 	
@@ -241,6 +239,50 @@ it('Lex - comment - trailing', function(){
 	var list = get_token_list(l);
 
 	var result = Token.check_for_match(list, elist);
+
+	should.equal(result, true);
+});
+
+it('Lex - with newline', function(){
+
+	var text = "love(charlot).\n";
+	var elist = [new Token('atom', 'love'), 
+	             new Token('parens_open'),
+	             new Token('atom', 'charlot'),
+	             new Token('parens_close'),
+	             new Token('period'),
+	             new Token('newline'),
+	             ];
+	
+	var Lexer = lexer.Lexer;
+	
+	var l = new Lexer(text);
+	var list = get_token_list(l);
+
+	var result = Token.check_for_match(list, elist);
+
+	should.equal(result, true);
+});
+
+it('Lex - check index', function(){
+
+	var also_index = true;
+	
+	var text = "love(charlot).\n";
+	var elist = [new Token('atom', 'love', 0), 
+	             new Token('parens_open', null, 4),
+	             new Token('atom', 'charlot', 5),
+	             new Token('parens_close', null, 12),
+	             new Token('period', null, 13),
+	             new Token('newline', null, 14),
+	             ];
+	
+	var Lexer = lexer.Lexer;
+	
+	var l = new Lexer(text);
+	var list = get_token_list(l);
+
+	var result = Token.check_for_match(list, elist, also_index);
 
 	should.equal(result, true);
 });
