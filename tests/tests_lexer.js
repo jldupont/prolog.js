@@ -5,9 +5,11 @@
  */
 
 var should = require('should');
+var assert = require('assert');
 
 var lexer = require("../src/lexer.js");
 
+var Token = lexer.Token;
 
 // ----------------------------------------------------------------- TESTS - parsing
 
@@ -148,5 +150,43 @@ it('Lex - Token class - simple', function(){
 	result = l.next_token();
 	should.equal(result.constructor.name, 'Token');
 	should.equal(result.name, 'end');
+
+	assert.deepEqual(result, new Token('end'));
+	
+});
+
+it('Lex - Token - string', function(){
+
+	var text = "love('julianne').";
+	
+	var Lexer = lexer.Lexer;
+	
+	var l = new Lexer(text);
+	var result = undefined;
+	
+	result = l.next_token();
+	
+	should.equal(result.constructor.name, 'Token');
+	should.equal(result.name, 'atom');
+	should.equal(result.value, 'love');
+	
+	result = l.next_token();
+	should.equal(result.constructor.name, 'Token');
+	should.equal(result.name, 'parens_open');
+
+	result = l.next_token();
+	should.equal(result.constructor.name, 'Token');
+	should.equal(result.name, 'string');
+	should.equal(result.value, 'julianne');
+	
+	result = l.next_token();
+	should.equal(result.constructor.name, 'Token');
+	should.equal(result.name, 'parens_close');
+
+	result = l.next_token();
+	should.equal(result.constructor.name, 'Token');
+	should.equal(result.name, 'end');
+
+	assert.deepEqual(result, new Token('end'));
 	
 });
