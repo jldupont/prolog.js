@@ -1,7 +1,7 @@
 /**
  *  tpiler.js
  *  
- *  Transpiler - making the lexicographical list more easily parsable
+ *  Transpiler - making the token list more easily parsable
  *  
  *  @author: jldupont
  *  

@@ -300,3 +300,29 @@ it('Lex - number - float', function(){
 	should.equal(result.name, 'number');
 	should.equal(result.value, 1234.5678);
 });
+
+it('Lex - rule - simple', function(){
+
+	var text = "happy(jld):-listenMusic(jld).";
+
+	var elist = [new Token('term', 'happy', 0), 
+	             new Token('parens_open', null, 5),
+	             new Token('term', 'jld', 6),
+	             new Token('parens_close', null, 9),
+	             new Token('op', 'rule', 10),
+	             new Token('term', 'listenMusic', 12),
+	             new Token('parens_open', null, 23),
+	             new Token('term', 'jld', 24),
+	             new Token('parens_close', null, 27),
+	             new Token('period', null, 28),
+	             ];
+	
+	var Lexer = lexer.Lexer;
+	
+	var l = new Lexer(text);
+	var result = l.get_token_list();
+
+	var result = Token.check_for_match(result, elist, true);
+	should.equal(result, true);
+	
+});

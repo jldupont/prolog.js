@@ -81,14 +81,14 @@ function Lexer (text) {
  *  The supported tokens 
  */
 Lexer.token_map = {
-	':-': new Token('rule')
-	,'=': new Token('unif')
-	,'.': new Token('period')
-	,',': new Token('conjunction')
-	,';': new Token('disjunction')
-	,'\n': new Token('newline')
-	,'(': new Token('parens_open')
-	,')': new Token('parens_close')
+	':-': function() { return new Token('op', 'rule') }
+	,'=': function() { return new Token('op', 'unif') }
+	,'.': function() { return new Token('period') }
+	,',': function() { return new Token('op', 'conjunction') }
+	,';': function() { return new Token('op', 'disjunction') }
+	,'\n': function() { return new Token('newline') }
+	,'(': function() { return new Token('parens_open') }
+	,')': function() { return new Token('parens_close') }
 };
 
 Lexer.newline_as_null = true;
@@ -202,10 +202,14 @@ Lexer.prototype.next = function() {
 		}; 
 		
 	};
+
+	function generate_new_term(value) {
+		return new Token('term', value);
+	};
 	
-	var maybe_return_token = Lexer.token_map[maybe_raw_token];
-	var return_token = maybe_return_token || new Token('term', maybe_raw_token);
+	var fn = Lexer.token_map[maybe_raw_token] || generate_new_term; 
 	
+	var return_token = fn(maybe_raw_token);	
 	return_token.index = current_index;
 	
 	return return_token;
