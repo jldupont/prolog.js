@@ -8,15 +8,14 @@
  *  * Atom
  *  * Numbers
  *  * Variables
- *  
- *  Data Type: Term
- *  
- *  Complex Term:
- *  
- *  fact -->  term(term, ...).
+ *  * Compound term
+ *
+ *  Fact is a rule with `body` = true.
  *  
  *  
- *  @dependency: types.js (Either, Error)
+ *  
+ *  
+ *  @dependency: types.js
  */
 
 /**
@@ -26,32 +25,20 @@
  *  
  */
 function Parser(maybe_context) {
-	this.list = [];
-	this.index = 0;
-	this.state = Parser.step_start;
+	
 	this.result = [];
 	this.context = maybe_context || {};
-};
-
-/**
- * Peek at the head of the result list
- * 
- * @return Token | null
- */
-Parser.prototype.head = function() {
 	
-	return this.result[0] || null;
+	this.state = Parser.step_start;
 };
 
-Parser.prototype.get_state = function() {
-	return this.state;
-};
+
 /**
- * Public - goes 1 step in the state-machine
+ * Public - Pushes 1 token down the processing pipeline
  * 
- * @return Either(Expression, Error) | null
+ * @return Expression | Error | Eos
  */
-Parser.prototype.next = function() {
+Parser.prototype.step = function(token) {
 	
 	// go one step in the state-machine
 	var token = this.list.shift();

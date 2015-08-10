@@ -37,6 +37,9 @@ Token.check_for_match = function(input_list, expected_list, also_index){
 	
 	also_index = also_index || false;
 	
+	if (input_list.length != expected_list.length)
+		return false;
+	
 	for (var index in input_list) {
 		
 		var input_token = input_list[index];
@@ -74,6 +77,7 @@ function Lexer (text) {
  */
 Lexer.token_map = {
 	':-': new Token('rule')
+	,'=': new Token('unif')
 	,'.': new Token('period')
 	,',': new Token('conjunction')
 	,';': new Token('disjunction')
@@ -215,32 +219,20 @@ if (typeof module!= 'undefined') {
  *  
  */
 function Parser(maybe_context) {
-	this.list = [];
-	this.index = 0;
-	this.state = Parser.step_start;
+	
 	this.result = [];
 	this.context = maybe_context || {};
-};
-
-/**
- * Peek at the head of the result list
- * 
- * @return Token | null
- */
-Parser.prototype.head = function() {
 	
-	return this.result[0] || null;
+	this.state = Parser.step_start;
 };
 
-Parser.prototype.get_state = function() {
-	return this.state;
-};
+
 /**
- * Public - goes 1 step in the state-machine
+ * Public - Pushes 1 token down the processing pipeline
  * 
- * @return Either(Expression, Error) | null
+ * @return Expression | Error | Eos
  */
-Parser.prototype.next = function() {
+Parser.prototype.step = function(token) {
 	
 	// go one step in the state-machine
 	var token = this.list.shift();
@@ -366,12 +358,26 @@ if (typeof module!= 'undefined') {
 function Tpiler(token_list) {
 	this.list = token_list;
 	this.reached_end = false;
+	this.found_rule = false;
+};
+
+/**
+ *  Handle the cases 
+ *    (1) end of stream
+ *    (2) end of expression
+ *  
+ *  If the expression was a 'fact', turn it to
+ *   the form of rule with 'true'.
+ *   
+ */
+Tpiler.prototype.handle_end = function() {
+	
 };
 
 /**
  *  Processes the token list 1 by 1
  *  
- *  @return Token | Nothing | Eos
+ *  @return [Token] | Eos
  */
 Tpiler.prototype.next = function() {
 	
@@ -382,26 +388,51 @@ Tpiler.prototype.next = function() {
 	if (head == null)
 		return new Eos();
 	
+	// Reset the state-machine
+	if (head.name == 'period') {
+		var period_token =  head;
+		
+		if (!this.found_rule) {
+			
+			this.found_rule = false;
+			
+			return [ new Token('rule', null, 0), 
+			         new Token('term', 'true', 0), 
+			         period_token ];
+		};
+		
+		this.found_rule = false;
+	};
+	
+	
+	if (head.name == 'rule') {
+		this.found_rule = true;
+	};
+
+	
 	var head_plus_one = this.list.shift() || null;
 	
 	// Maybe it's the end of the stream ...
-	//  Return the token and mark the end of the stream
+	//  Check if we need to turn a 'fact' to a 'rule' with 'true'.
+	//
 	if (head_plus_one == null) {
 		this.reached_end = true;
-		return head;
+		return [head];
 	};
 
 	if (head.name == 'term' || head.name == 'string') {
 		if (head_plus_one.name == 'parens_open') {
-			// we have found :  term(
-			//  Return the parens_open
-			this.list.unshift( head );
-			return head_plus_one;
+			
+			return [head_plus_one, head];
 		};
 	};
 	
+	// We must unshift the token
+	//  as not to loose the state-machine's context
+	//
 	this.list.unshift(head_plus_one);
-	return head;
+	
+	return [head];
 };
 
 /**
@@ -418,9 +449,10 @@ Tpiler.prototype.get_token_list = function() {
 		var maybe_token = this.next();
 		if (maybe_token instanceof Eos)
 			break;
-		result.push(maybe_token);
+		
+		Array.prototype.push.apply(result, maybe_token);
 	};
-	
+
 	return result;
 };
 

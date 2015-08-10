@@ -29,13 +29,6 @@ it('Parser - simple', function(){
 	
 	var p = new Parser();
 	
-	p.push_tokens(tokens);
-	p.next();
-	
-	var head = p.head();
-	
-	should.equal(head.name,  'atom', "Got: " + head);
-	should.equal(head.value, 'love');
 });
 
 /**
@@ -52,9 +45,4 @@ it('Parser - simple - start error', function(){
 	
 	var p = new Parser();
 	
-	p.push_tokens(tokens);
-	var either = p.next();
-	
-	should.equal(either.getA(), null);
-	should.equal(either.getB().name, 'expect_atom');
 });

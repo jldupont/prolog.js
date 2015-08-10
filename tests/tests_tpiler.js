@@ -34,6 +34,8 @@ it('Tpiler - simple', function(){
 	                     new Token('term', 'love', 0),
 	                     new Token('term', 'mercedes', 5),
 	                     new Token('parens_close', null, 13),
+	                     new Token('rule', null, 0),
+	                     new Token('term', 'true', 0),
 	                     new Token('period', null, 14),
 	                     new Token('newline', null, 15)
 	                     ];

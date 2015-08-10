@@ -42,6 +42,9 @@ Token.check_for_match = function(input_list, expected_list, also_index){
 	
 	also_index = also_index || false;
 	
+	if (input_list.length != expected_list.length)
+		return false;
+	
 	for (var index in input_list) {
 		
 		var input_token = input_list[index];
@@ -79,6 +82,7 @@ function Lexer (text) {
  */
 Lexer.token_map = {
 	':-': new Token('rule')
+	,'=': new Token('unif')
 	,'.': new Token('period')
 	,',': new Token('conjunction')
 	,';': new Token('disjunction')
