@@ -309,7 +309,7 @@ it('Lex - rule - simple', function(){
 	             new Token('parens_open', null, 5),
 	             new Token('term', 'jld', 6),
 	             new Token('parens_close', null, 9),
-	             new Token('op', 'rule', 10),
+	             new Token('op:rule', null, 10),
 	             new Token('term', 'listenMusic', 12),
 	             new Token('parens_open', null, 23),
 	             new Token('term', 'jld', 24),

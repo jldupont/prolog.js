@@ -3,6 +3,7 @@
  *  
  *  @author: jldupont
  *  
+ *  @dependency: types.js
  */
 
 /**
@@ -81,14 +82,13 @@ function Lexer (text) {
  *  The supported tokens 
  */
 Lexer.token_map = {
-	':-': function() { return new Token('op', 'rule') }
-	,'=': function() { return new Token('op', 'unif') }
-	,'.': function() { return new Token('period') }
-	,',': function() { return new Token('op', 'conjunction') }
-	,';': function() { return new Token('op', 'disjunction') }
+	':-':  function() { return new Token('op:rule') }
+	,'.':  function() { return new Token('period') }
+	,',':  function() { return new Token('op:conj') }
+	,';':  function() { return new Token('op:disj') }
 	,'\n': function() { return new Token('newline') }
-	,'(': function() { return new Token('parens_open') }
-	,')': function() { return new Token('parens_close') }
+	,'(':  function() { return new Token('parens_open') }
+	,')':  function() { return new Token('parens_close') }
 };
 
 Lexer.newline_as_null = true;

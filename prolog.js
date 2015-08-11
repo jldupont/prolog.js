@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-08-09 */
+/*! prolog.js - v0.0.1 - 2015-08-10 */
 
 /**
  *  Token
@@ -76,14 +76,13 @@ function Lexer (text) {
  *  The supported tokens 
  */
 Lexer.token_map = {
-	':-': function() { return new Token('op', 'rule') }
-	,'=': function() { return new Token('op', 'unif') }
-	,'.': function() { return new Token('period') }
-	,',': function() { return new Token('op', 'conjunction') }
-	,';': function() { return new Token('op', 'disjunction') }
+	':-':  function() { return new Token('op:rule') }
+	,'.':  function() { return new Token('period') }
+	,',':  function() { return new Token('op:conj') }
+	,';':  function() { return new Token('op:disj') }
 	,'\n': function() { return new Token('newline') }
-	,'(': function() { return new Token('parens_open') }
-	,')': function() { return new Token('parens_close') }
+	,'(':  function() { return new Token('parens_open') }
+	,')':  function() { return new Token('parens_close') }
 };
 
 Lexer.newline_as_null = true;
@@ -359,23 +358,18 @@ if (typeof module!= 'undefined') {
  * 
  * @constructor
  */
-function Tpiler(token_list) {
+function Tpiler(token_list, options) {
+	
+	var default_options = {
+		
+		// convert fact term to rule
+		convert_fact: true	
+	};
+	
 	this.list = token_list;
 	this.reached_end = false;
 	this.found_rule = false;
-};
-
-/**
- *  Handle the cases 
- *    (1) end of stream
- *    (2) end of expression
- *  
- *  If the expression was a 'fact', turn it to
- *   the form of rule with 'true'.
- *   
- */
-Tpiler.prototype.handle_end = function() {
-	
+	this.options = options || default_options;
 };
 
 /**
@@ -396,11 +390,13 @@ Tpiler.prototype.next = function() {
 	if (head.name == 'period') {
 		var period_token =  head;
 		
-		if (!this.found_rule) {
+		// we didn't found a rule definition
+		//
+		if (!this.found_rule && this.options.convert_fact) {
 			
 			this.found_rule = false;
 			
-			return [ new Token('rule', null, 0), 
+			return [ new Token('op:rule', null, 0), 
 			         new Token('term', 'true', 0), 
 			         period_token ];
 		};
@@ -417,7 +413,6 @@ Tpiler.prototype.next = function() {
 	var head_plus_one = this.list.shift() || null;
 	
 	// Maybe it's the end of the stream ...
-	//  Check if we need to turn a 'fact' to a 'rule' with 'true'.
 	//
 	if (head_plus_one == null) {
 		this.reached_end = true;
@@ -463,6 +458,51 @@ Tpiler.prototype.get_token_list = function() {
 if (typeof module!= 'undefined') {
 	module.exports.Tpiler = Tpiler;
 };
+
+/**
+ * Operator
+ * @constructor
+ */
+function Op(name, symbol, precedence, type, locked) {
+	this.name = name;
+	this.symbol = symbol;
+	this.precedence = precedence;
+	this.type = type;
+	
+	// by default, operators can not be redefined
+	this.locked = locked || true;
+};
+
+//Initialize the operators
+/*
+ * Precedence is an integer between 0 and 1200. 
+ * 
+ * Type is one of: xf, yf, xfx, xfy, yfx, fy or fx. 
+ * 
+ * The `f' indicates the position of the functor, 
+ *  while x and y indicate the position of the arguments. 
+ *  `y' should be interpreted as 
+ *    ``on this position a term with precedence lower or equal 
+ *    to the precedence of the functor should occur''. 
+ * 
+ * For `x' the precedence of the argument must be strictly lower. 
+ *  
+ * The precedence of a term is 0, unless its principal functor is an operator, 
+ *  in which case the precedence is the precedence of this operator. 
+ *   
+ *   A term enclosed in parentheses ( ... ) has precedence 0.
+ */
+Op._map = {
+	 ':-': new Op("rule",    ':-', 1200, 'xfx')
+	,';':  new Op("disj",    ';',  1100, 'xfy')
+	,',':  new Op("conj",    ',',  1000, 'xfy')
+	,'.':  new Op("period",  '.',   100, 'yfx')
+	,'\n': new Op("newline", '\n',    0, '*')
+
+	,'(':  new Op("parens_open",  '(',    0, '*')
+	,')':  new Op("parens_close", '(',    0, '*')
+};
+
 
 /**
  *  Define an Atom
@@ -539,4 +579,5 @@ if (typeof module!= 'undefined') {
 	module.exports.Error = Error;
 	module.exports.Eos = Eos;
 	module.exports.Functor = Functor;
+	module.exports.Op = Op;
 };

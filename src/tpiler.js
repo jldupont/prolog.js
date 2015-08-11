@@ -20,23 +20,18 @@
  * 
  * @constructor
  */
-function Tpiler(token_list) {
+function Tpiler(token_list, options) {
+	
+	var default_options = {
+		
+		// convert fact term to rule
+		convert_fact: true	
+	};
+	
 	this.list = token_list;
 	this.reached_end = false;
 	this.found_rule = false;
-};
-
-/**
- *  Handle the cases 
- *    (1) end of stream
- *    (2) end of expression
- *  
- *  If the expression was a 'fact', turn it to
- *   the form of rule with 'true'.
- *   
- */
-Tpiler.prototype.handle_end = function() {
-	
+	this.options = options || default_options;
 };
 
 /**
@@ -57,11 +52,13 @@ Tpiler.prototype.next = function() {
 	if (head.name == 'period') {
 		var period_token =  head;
 		
-		if (!this.found_rule) {
+		// we didn't found a rule definition
+		//
+		if (!this.found_rule && this.options.convert_fact) {
 			
 			this.found_rule = false;
 			
-			return [ new Token('rule', null, 0), 
+			return [ new Token('op:rule', null, 0), 
 			         new Token('term', 'true', 0), 
 			         period_token ];
 		};
@@ -78,7 +75,6 @@ Tpiler.prototype.next = function() {
 	var head_plus_one = this.list.shift() || null;
 	
 	// Maybe it's the end of the stream ...
-	//  Check if we need to turn a 'fact' to a 'rule' with 'true'.
 	//
 	if (head_plus_one == null) {
 		this.reached_end = true;
