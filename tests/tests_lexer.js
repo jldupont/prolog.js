@@ -23,7 +23,7 @@ it('Lex - simple fact', function(){
 	
 	var result = l.step();
 	
-	should.equal(result, 'love', "expecting 'love'");
+	should.equal(result, 'love', "expecting 'love', got: "+result);
 	
 	result = l.step();
 	should.equal(result, '(', "expecting '('");

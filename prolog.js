@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-08-10 */
+/*! prolog.js - v0.0.1 - 2015-08-11 */
 
 /**
  *  Token
@@ -401,7 +401,7 @@ function Tpiler(token_list, options) {
 /**
  *  Processes the token list 1 by 1
  *  
- *  @return [Token] | Eos
+ *  @return [Token] | Eos | null
  */
 Tpiler.prototype.next = function() {
 	
@@ -456,6 +456,13 @@ Tpiler.prototype.next = function() {
 	//  as not to loose the state-machine's context
 	//
 	this.list.unshift(head_plus_one);
+
+	// Check for whitespaces and remove
+	if (head.name == 'term') {
+		var value_without_whitespaces = (head.value || "").replace(/\s/g, '');
+		if (value_without_whitespaces.length == 0)
+			return null;
+	};
 	
 	return [head];
 };
@@ -472,6 +479,10 @@ Tpiler.prototype.get_token_list = function() {
 	
 	for (;;) {
 		var maybe_token = this.next();
+
+		if (maybe_token == null)
+			continue;
+		
 		if (maybe_token instanceof Eos)
 			break;
 		
