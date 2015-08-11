@@ -7,10 +7,11 @@
  *  value : the value of the token
  *  index : where on the line the token was found
  */
-function Token(name, maybe_value, maybe_index) {
+function Token(name, maybe_value, maybe_index, maybe_line) {
 	this.name = name;
 	this.value = maybe_value || null;
 	this.index = maybe_index || 0;
+	this.line = maybe_line || 0;
 };
 
 /**
@@ -67,10 +68,20 @@ function Lexer (text) {
 	this.text = text;
 	this.at_the_end = false;
 	this.current_match = null;
+	this.current_line = 0;
+	this.offset = 0;
 	
 	this._tokenRegexp = /[0-9\.]+|[A-Za-z_]+|:\-|[()\.,]|[\n]|./gm;
 };
 
+Lexer.prototype._handleNewline = function(){
+	this.offset = this._tokenRegexp.lastIndex;
+	this.current_line = this.current_line + 1;
+};
+
+Lexer.prototype._computeIndex = function(index) {
+	return index - this.offset; 
+};
 
 /**
  *  The supported tokens 
@@ -158,6 +169,8 @@ Lexer.is_number = function(maybe_number) {
  */
 Lexer.prototype.next = function() {
 	
+	var return_token = null;
+	
 	var maybe_raw_token = this.step();
 	
 	if (maybe_raw_token == null)
@@ -165,20 +178,27 @@ Lexer.prototype.next = function() {
 	
 	var raw_token = maybe_raw_token;
 	
-	var current_index = this.current_match.index;
+	var current_index = this._computeIndex( this.current_match.index );
 	
 	// If we are dealing with a comment,
 	//  skip till the end of the line
 	if (raw_token == '%') {
 		
+		return_token = new Token('comment', null, current_index);
+		return_token.line = this.current_line;
+		
+		this.current_line = this.current_line + 1;
+		
 		while( this.step(Lexer.newline_as_null) != null);
-		return new Token('comment', null, current_index);
+		return return_token;
 	};
 	
 	// are we dealing with a number ?
 	if (Lexer.is_number(raw_token)) {
 		var number = parseFloat(raw_token);
-		return new Token('number', number, current_index);
+		return_token = new Token('number', number, current_index);
+		return_token.line = this.current_line;
+		return return_token;
 	};
 	
 	// are we dealing with a string ?
@@ -190,7 +210,9 @@ Lexer.prototype.next = function() {
 		for (;;) {
 			t = this.step();
 			if (this.is_quote(t) | t == '\n' | t == null) {
-				return new Token('string', string, current_index);
+				return_token = new Token('string', string, current_index);
+				return_token.line = this.current_line;
+				return return_token;
 			} 
 			string = string + t;
 		}; 
@@ -203,8 +225,12 @@ Lexer.prototype.next = function() {
 	
 	var fn = Lexer.token_map[maybe_raw_token] || generate_new_term; 
 	
-	var return_token = fn(maybe_raw_token);	
+	return_token = fn(maybe_raw_token);	
 	return_token.index = current_index;
+	return_token.line = this.current_line;
+	
+	if (return_token.name == 'newline')
+		this._handleNewline();
 	
 	return return_token;
 };
@@ -457,6 +483,73 @@ Tpiler.prototype.get_token_list = function() {
 
 if (typeof module!= 'undefined') {
 	module.exports.Tpiler = Tpiler;
+};
+
+/**
+ * TpilerL2
+ * 
+ * @constructor
+ */
+function TpilerL2(token_list, options) {
+	
+	var default_options = {
+		
+		// convert fact term to rule
+		convert_fact: true	
+	};
+	
+	this.list = token_list;
+	this.reached_end = false;
+	this.options = options || default_options;
+};
+
+/**
+ *  Processes the token list 1 by 1
+ *  
+ *  @return [Token] | Eos
+ */
+TpilerL2.prototype.next = function() {
+	
+	if (this.reached_end)
+		return new Eos();
+	
+	var head = this.list.shift() || null;
+	if (head == null)
+		return new Eos();
+	
+
+	
+	// We must unshift the token
+	//  as not to loose the state-machine's context
+	//
+	this.list.unshift(head_plus_one);
+	
+	return [head];
+};
+
+/**
+ *  Transpiles the token list entirely
+ *   Useful for tests
+ *   
+ *   @return [Token]
+ */
+TpilerL2.prototype.get_token_list = function() {
+	
+	var result = [];
+	
+	for (;;) {
+		var maybe_token = this.next();
+		if (maybe_token instanceof Eos)
+			break;
+		
+		Array.prototype.push.apply(result, maybe_token);
+	};
+
+	return result;
+};
+
+if (typeof module!= 'undefined') {
+	module.exports.TpilerL2 = TpilerL2;
 };
 
 /**

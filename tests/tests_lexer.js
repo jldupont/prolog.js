@@ -326,3 +326,34 @@ it('Lex - rule - simple', function(){
 	should.equal(result, true);
 	
 });
+
+
+it('Lex - multiline', function(){
+
+	var also_index = true;
+	
+	var text = "love(charlot).\n"+"love(julianne).";
+	var elist = [
+	             new Token('term',        'love',    0, 0), 
+	             new Token('parens_open', null,      4, 0),
+	             new Token('term',        'charlot', 5, 0),
+	             new Token('parens_close', null,     12, 0),
+	             new Token('period',       null,     13, 1),
+	             new Token('newline',      null,     14, 0),
+	             
+	             new Token('term',         'love',     0, 1), 
+	             new Token('parens_open',   null,      4, 1),
+	             new Token('term',         'julianne', 5, 1),
+	             new Token('parens_close',  null,      13, 1),	             
+	             new Token('period',        null,      14, 1),
+	             ];
+	
+	var Lexer = lexer.Lexer;
+	
+	var l = new Lexer(text);
+	var list = l.get_token_list();
+
+	var result = Token.check_for_match(list, elist, also_index);
+
+	should.equal(result, true);
+});
