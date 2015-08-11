@@ -51,27 +51,6 @@ Op._map = {
 };
 
 
-/**
- *  Define an Atom
- *  @constructor
- *  
- *  Atoms are defined as follows:
- *  * start with a lowercase character
- *  * anything enclosed in single quote
- *  
- */
-function Atom(name) {
-	this.name = name;
-};
-
-/**
- *  Define a Rule
- *  @constructor 
- */
-function Rule(name) {
-	
-};
-
 // End of stream
 function Eos () {};
 
@@ -119,8 +98,6 @@ function Error(name, maybe_details) {
 };
 
 if (typeof module!= 'undefined') {
-	module.exports.Rule = Rule;
-	module.exports.Atom = Atom;
 	module.exports.Either = Either;
 	module.exports.Nothing = Nothing;
 	module.exports.Error = Error;

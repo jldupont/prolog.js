@@ -5,13 +5,18 @@
  *  
  *  name  : the name assigned to the Token
  *  value : the value of the token
- *  index : where on the line the token was found
+ *  col : where on the line the token was found
  */
-function Token(name, maybe_value, maybe_index, maybe_line) {
+function Token(name, maybe_value, maybe_attrs) {
+	
+	maybe_attrs = maybe_attrs || {}; 
+	
 	this.name = name;
 	this.value = maybe_value || null;
-	this.index = maybe_index || 0;
-	this.line = maybe_line || 0;
+	this.line = maybe_attrs.line || 0;
+	this.col  = maybe_attrs.col || 0;
+	this.is_primitive = maybe_attrs.is_primitive || false;
+	this.is_operator =  maybe_attrs.is_operator || false;
 };
 
 /**
@@ -50,7 +55,7 @@ Token.check_for_match = function(input_list, expected_list, also_index){
 			return false;
 		
 		if (also_index)
-			if (input_token.index != expected_token.index)
+			if (input_token.col != expected_token.col)
 				return false;
 				
 	};
@@ -87,13 +92,13 @@ Lexer.prototype._computeIndex = function(index) {
  *  The supported tokens 
  */
 Lexer.token_map = {
-	':-':  function() { return new Token('op:rule') }
+	':-':  function() { return new Token('op:rule', null, {is_operator: true}) }
 	,'.':  function() { return new Token('period') }
-	,',':  function() { return new Token('op:conj') }
-	,';':  function() { return new Token('op:disj') }
+	,',':  function() { return new Token('op:conj', null, {is_operator: true}) }
+	,';':  function() { return new Token('op:disj', null, {is_operator: true}) }
 	,'\n': function() { return new Token('newline') }
-	,'(':  function() { return new Token('parens_open') }
-	,')':  function() { return new Token('parens_close') }
+	,'(':  function() { return new Token('parens_open',  null, {is_operator: true}) }
+	,')':  function() { return new Token('parens_close', null, {is_operator: true}) }
 };
 
 Lexer.newline_as_null = true;
@@ -155,7 +160,6 @@ Lexer.prototype.is_quote = function(character) {
 };
 
 Lexer.is_number = function(maybe_number) {
-	
 	return String(parseFloat(maybe_number)) == String(maybe_number); 
 };
 
@@ -184,7 +188,8 @@ Lexer.prototype.next = function() {
 	//  skip till the end of the line
 	if (raw_token == '%') {
 		
-		return_token = new Token('comment', null, current_index);
+		return_token = new Token('comment', null);
+		return_token.col  = current_index;
 		return_token.line = this.current_line;
 		
 		this.current_line = this.current_line + 1;
@@ -196,7 +201,9 @@ Lexer.prototype.next = function() {
 	// are we dealing with a number ?
 	if (Lexer.is_number(raw_token)) {
 		var number = parseFloat(raw_token);
-		return_token = new Token('number', number, current_index);
+		return_token = new Token('number', number);
+		return_token.is_primitive = true;
+		return_token.col = current_index;
 		return_token.line = this.current_line;
 		return return_token;
 	};
@@ -210,7 +217,9 @@ Lexer.prototype.next = function() {
 		for (;;) {
 			t = this.step();
 			if (this.is_quote(t) | t == '\n' | t == null) {
-				return_token = new Token('string', string, current_index);
+				return_token = new Token('string', string);
+				return_token.is_primitive = true;
+				return_token.col = current_index;
 				return_token.line = this.current_line;
 				return return_token;
 			} 
@@ -608,27 +617,6 @@ Op._map = {
 };
 
 
-/**
- *  Define an Atom
- *  @constructor
- *  
- *  Atoms are defined as follows:
- *  * start with a lowercase character
- *  * anything enclosed in single quote
- *  
- */
-function Atom(name) {
-	this.name = name;
-};
-
-/**
- *  Define a Rule
- *  @constructor 
- */
-function Rule(name) {
-	
-};
-
 // End of stream
 function Eos () {};
 
@@ -676,8 +664,6 @@ function Error(name, maybe_details) {
 };
 
 if (typeof module!= 'undefined') {
-	module.exports.Rule = Rule;
-	module.exports.Atom = Atom;
 	module.exports.Either = Either;
 	module.exports.Nothing = Nothing;
 	module.exports.Error = Error;
