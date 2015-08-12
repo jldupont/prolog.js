@@ -1,7 +1,7 @@
 /**
- *  tpiler.js
+ *  parser_l1.js
  *  
- *  Transpiler - making the token list more easily parsable
+ *  Parser Level 1 - making the token list more easily parsable
  *  
  *  @author: jldupont
  *  
@@ -19,11 +19,11 @@
  */
 
 /**
- * Tpiler
+ * ParserL1
  * 
  * @constructor
  */
-function Tpiler(token_list, options) {
+function ParserL1(token_list, options) {
 	
 	var default_options = {
 		
@@ -42,7 +42,7 @@ function Tpiler(token_list, options) {
  *  
  *  @return [Token] | Eos | null
  */
-Tpiler.prototype.next = function() {
+ParserL1.prototype.next = function() {
 	
 	if (this.reached_end)
 		return new Eos();
@@ -115,7 +115,7 @@ Tpiler.prototype.next = function() {
  *   
  *   @return [Token]
  */
-Tpiler.prototype.get_token_list = function() {
+ParserL1.prototype.get_token_list = function() {
 	
 	var result = [];
 	
@@ -135,5 +135,5 @@ Tpiler.prototype.get_token_list = function() {
 };
 
 if (typeof module!= 'undefined') {
-	module.exports.Tpiler = Tpiler;
+	module.exports.ParserL1 = ParserL1;
 };

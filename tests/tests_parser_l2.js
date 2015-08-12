@@ -10,17 +10,17 @@ var assert = require('assert');
 var pr = require("../prolog.js");
 
 var Lexer = pr.Lexer;
-var Parser = pr.Parser;
+var ParserL2 = pr.ParserL2;
 var Token = pr.Token;
 var Functor = pr.Functor;
-var Tpiler = pr.Tpiler;
+var ParserL1 = pr.ParserL1;
 
 var setup = function(text, convert_fact) {
 
 	var l = new Lexer(text);
 	var tokens = l.get_token_list();
 
-	var t = new Tpiler(tokens, {convert_fact: convert_fact});
+	var t = new ParserL1(tokens, {convert_fact: convert_fact});
 	var ttokens = t.get_token_list();
 	
 	return ttokens;
@@ -41,7 +41,7 @@ it('Parser - simple - no fact to rule transpiling', function(){
 	
 	//console.log(tokens);
 	
-	var p = new Parser(tokens, 0);
+	var p = new ParserL2(tokens, 0);
 	
 	var result = p.process();
 	
@@ -74,7 +74,7 @@ it('Parser - simple - with fact to rule transpiling', function(){
 	
 	//console.log(tokens);
 	
-	var p = new Parser(tokens, 0);
+	var p = new ParserL2(tokens, 0);
 	
 	var result = p.process();
 	
@@ -101,7 +101,7 @@ it('Parser - functor in functor - 1', function(){
 	
 	//console.log(tokens);
 	
-	var p = new Parser(tokens, 0);
+	var p = new ParserL2(tokens, 0);
 	
 	var result = p.process();
 	

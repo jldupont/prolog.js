@@ -11,21 +11,21 @@ var pr = require("../prolog.js");
 
 var Lexer = pr.Lexer;
 var Token = pr.Token;
-var Tpiler = pr.Tpiler;
+var ParserL1 = pr.ParserL1;
 var Eos = pr.Eos;
 var Nothing = pr.Nothing;
 
 /**
  * 
  */
-it('Tpiler - simple', function(){
+it('ParserL1 - simple', function(){
 
 	var text = "love(mercedes).\n";
 	
 	var l = new Lexer(text);
 	var result = l.get_token_list();
 	
-	var t = new Tpiler(result);
+	var t = new ParserL1(result);
 	
 	var tresult = t.get_token_list();
 	
@@ -45,14 +45,14 @@ it('Tpiler - simple', function(){
 	should.equal(check, true);
 });
 
-it('Tpiler - simple - no convert fact', function(){
+it('ParserL1 - simple - no convert fact', function(){
 
 	var text = "love(mercedes).\n";
 	
 	var l = new Lexer(text);
 	var result = l.get_token_list();
 	
-	var t = new Tpiler(result, {convert_fact: false});
+	var t = new ParserL1(result, {convert_fact: false});
 	
 	var tresult = t.get_token_list();
 	
@@ -73,14 +73,14 @@ it('Tpiler - simple - no convert fact', function(){
 });
 
 
-it('Tpiler - remove whitespaces', function(){
+it('ParserL1 - remove whitespaces', function(){
 
 	var text = " 	love(mercedes).	\n";
 	
 	var l = new Lexer(text);
 	var result = l.get_token_list();
 	
-	var t = new Tpiler(result, {convert_fact: false});
+	var t = new ParserL1(result, {convert_fact: false});
 	
 	var tresult = t.get_token_list();
 	

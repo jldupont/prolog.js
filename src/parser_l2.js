@@ -1,5 +1,5 @@
 /**
- *  parser.js
+ *  parser_l2.js
  *  
  *  @author: jldupont
  *  
@@ -20,7 +20,7 @@
  *  @param token_list: the token_list
  *  @param list_index: the index to start from in the token_list
  */
-function Parser(token_list, list_index, maybe_context) {
+function ParserL2(token_list, list_index, maybe_context) {
 	
 	// the resulting terms list
 	//
@@ -39,7 +39,7 @@ function Parser(token_list, list_index, maybe_context) {
  * 
  * @return Result
  */
-Parser.prototype.process = function(){
+ParserL2.prototype.process = function(){
 
 	var expression = null;
 	var token = null;
@@ -107,9 +107,9 @@ Parser.prototype.process = function(){
  *  
  *   @return Result
  */
-Parser.prototype._handleFunctor = function() {
+ParserL2.prototype._handleFunctor = function() {
 	
-	var parser_level_down = new Parser(this.tokens, 
+	var parser_level_down = new ParserL2(this.tokens, 
 										this.index,
 										{diving: true}
 										);
@@ -117,7 +117,7 @@ Parser.prototype._handleFunctor = function() {
 	return parser_level_down.process();
 };
 
-Parser.prototype._handleEnd = function(current_expression) {
+ParserL2.prototype._handleEnd = function(current_expression) {
 	
 	if (current_expression.length != 0)
 		this.result.push(current_expression);
@@ -135,5 +135,5 @@ Parser.prototype._handleEnd = function(current_expression) {
 
 
 if (typeof module!= 'undefined') {
-	module.exports.Parser = Parser;
+	module.exports.ParserL2 = ParserL2;
 };
