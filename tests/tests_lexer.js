@@ -252,12 +252,12 @@ it('Lex - check index', function(){
 	var also_index = true;
 	
 	var text = "love(charlot).\n";
-	var elist = [new Token('term', 'love', 0), 
-	             new Token('parens_open', null, 4),
-	             new Token('term', 'charlot', 5),
-	             new Token('parens_close', null, 12),
-	             new Token('period', null, 13),
-	             new Token('newline', null, 14),
+	var elist = [new Token('term', 'love', {col: 0}), 
+	             new Token('parens_open', null, {col: 4}),
+	             new Token('term', 'charlot', {col: 5}),
+	             new Token('parens_close', null, {col: 12}),
+	             new Token('period', null, {col: 13}),
+	             new Token('newline', null, {col: 14}),
 	             ];
 	
 	var Lexer = lexer.Lexer;
@@ -305,16 +305,16 @@ it('Lex - rule - simple', function(){
 
 	var text = "happy(jld):-listenMusic(jld).";
 
-	var elist = [new Token('term', 'happy', 0), 
-	             new Token('parens_open', null, 5),
-	             new Token('term', 'jld', 6),
-	             new Token('parens_close', null, 9),
-	             new Token('op:rule', null, 10),
-	             new Token('term', 'listenMusic', 12),
-	             new Token('parens_open', null, 23),
-	             new Token('term', 'jld', 24),
-	             new Token('parens_close', null, 27),
-	             new Token('period', null, 28),
+	var elist = [new Token('term', 'happy', {col: 0}), 
+	             new Token('parens_open', null, {col: 5}),
+	             new Token('term', 'jld', {col: 6}),
+	             new Token('parens_close', null, {col: 9}),
+	             new Token('op:rule', null, {col: 10}),
+	             new Token('term', 'listenMusic', {col: 12}),
+	             new Token('parens_open', null, {col: 23}),
+	             new Token('term', 'jld', {col: 24}),
+	             new Token('parens_close', null, {col: 27}),
+	             new Token('period', null, {col: 28}),
 	             ];
 	
 	var Lexer = lexer.Lexer;
@@ -334,24 +334,27 @@ it('Lex - multiline', function(){
 	
 	var text = "love(charlot).\n"+"love(julianne).";
 	var elist = [
-	             new Token('term',        'love',    0, 0), 
-	             new Token('parens_open', null,      4, 0),
-	             new Token('term',        'charlot', 5, 0),
-	             new Token('parens_close', null,     12, 0),
-	             new Token('period',       null,     13, 1),
-	             new Token('newline',      null,     14, 0),
+	             new Token('term',        'love',    {col: 0, line: 0}), 
+	             new Token('parens_open', null,      {col: 4, line: 0}),
+	             new Token('term',        'charlot', {col: 5, line: 0}),
+	             new Token('parens_close', null,     {col: 12, line: 0}),
 	             
-	             new Token('term',         'love',     0, 1), 
-	             new Token('parens_open',   null,      4, 1),
-	             new Token('term',         'julianne', 5, 1),
-	             new Token('parens_close',  null,      13, 1),	             
-	             new Token('period',        null,      14, 1),
+	             new Token('period',       null,     {col: 13, line: 0}),
+	             new Token('newline',      null,     {col: 14, line: 0}),
+	             
+	             new Token('term',         'love',     {col: 0, line: 1}), 
+	             new Token('parens_open',   null,      {col: 4, line: 1}),
+	             new Token('term',         'julianne', {col: 5, line: 1}),
+	             new Token('parens_close',  null,      {col: 13, line: 1}),	             
+	             new Token('period',        null,      {col: 14, line: 1}),
 	             ];
 	
 	var Lexer = lexer.Lexer;
 	
 	var l = new Lexer(text);
 	var list = l.get_token_list();
+	
+	//console.log(JSON.stringify(list));
 
 	var result = Token.check_for_match(list, elist, also_index);
 

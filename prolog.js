@@ -47,20 +47,29 @@ Token.check_for_match = function(input_list, expected_list, also_index){
 	
 	also_index = also_index || false;
 	
-	if (input_list.length != expected_list.length)
+	if (input_list.length != expected_list.length) {
+		//console.log("match: list not same length");
 		return false;
+	}
+		
 	
 	for (var index in input_list) {
 		
 		var input_token = input_list[index];
 		var expected_token = expected_list[index] || new Token('null');
 	
-		if (!Token.equal(input_token, expected_token))
+		if (!Token.equal(input_token, expected_token)) {
+			//console.log("match fail: "+input_token);
 			return false;
+		}
+			
 		
 		if (also_index)
-			if (input_token.col != expected_token.col)
+			if (input_token.col != expected_token.col) {
+				//console.log("match: col mismatch: "+ JSON.stringify(input_token));
 				return false;
+			}
+				
 				
 	};
 	
@@ -239,7 +248,7 @@ Lexer.prototype.next = function() {
 	var fn = Lexer.token_map[maybe_raw_token] || generate_new_term; 
 	
 	return_token = fn(maybe_raw_token);	
-	return_token.index = current_index;
+	return_token.col = current_index;
 	return_token.line = this.current_line;
 	
 	if (return_token.name == 'newline')

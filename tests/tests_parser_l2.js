@@ -104,6 +104,8 @@ it('ParserL2 - functor in functor - 1', function(){
 	
 	var result = p.process();
 	
+	//console.log(JSON.stringify(result.terms));
+	
 	var exp0 = result.terms[0];
 
 	should.equal(exp0[0] instanceof Functor, true, 'expecting Functor 0');
