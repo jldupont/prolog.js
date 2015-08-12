@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-08-11 */
+/*! prolog.js - v0.0.1 - 2015-08-12 */
 
 /**
  *  Token
@@ -328,7 +328,7 @@ Parser.prototype.process = function(){
 			this.index = new_index;
 			
 			var compound_node = new Term('c', token);
-			compound_node.child = result.terms;
+			compound_node.child = [token].concat( result.terms );
 			
 			expression.push( compound_node );
 			continue;
@@ -363,6 +363,9 @@ Parser.prototype._handleEnd = function(current_expression) {
 	
 	if (current_expression.length != 0)
 		this.result.push(current_expression);
+	
+	if (this.context.diving)
+		return new Result(current_expression, this.index);
 	
 	return new Result(this.result, this.index);
 };
@@ -575,7 +578,7 @@ function Result(term_list, last_index) {
 function Term(name, maybe_original_token) {
 	
 	this.name = name;
-	this.token_original = maybe_original_token || null;
+	//this.token_original = maybe_original_token || null;
 	
 	// Node tree support
 	//

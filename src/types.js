@@ -18,7 +18,7 @@ function Result(term_list, last_index) {
 function Term(name, maybe_original_token) {
 	
 	this.name = name;
-	this.token_original = maybe_original_token || null;
+	//this.token_original = maybe_original_token || null;
 	
 	// Node tree support
 	//

@@ -86,7 +86,7 @@ Parser.prototype.process = function(){
 			this.index = new_index;
 			
 			var compound_node = new Term('c', token);
-			compound_node.child = result.terms;
+			compound_node.child = [token].concat( result.terms );
 			
 			expression.push( compound_node );
 			continue;
@@ -121,6 +121,9 @@ Parser.prototype._handleEnd = function(current_expression) {
 	
 	if (current_expression.length != 0)
 		this.result.push(current_expression);
+	
+	if (this.context.diving)
+		return new Result(current_expression, this.index);
 	
 	return new Result(this.result, this.index);
 };

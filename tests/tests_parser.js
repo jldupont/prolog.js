@@ -107,6 +107,8 @@ it('Parser - functor in functor - 1', function(){
 	
 	var exp0 = result.terms[0];
 
+	//console.log(JSON.stringify(exp0));
+	
 	should.equal(exp0[0].name, 'c');       // the compound term "functor"
 	should.equal(exp0[1].name, 'op:rule'); // :-
 	should.equal(exp0[2].name, 'term');
@@ -116,8 +118,18 @@ it('Parser - functor in functor - 1', function(){
 	
 	// Let's look into the 1st compound term
 	var c1 = exp0[0];
-	console.log(c1.child);
+	var exp0_1c = c1.child;
 	
+	should.equal(exp0_1c[0].name, 'functor');
+	should.equal(exp0_1c[1].name, 'c');
+
+	var exp0_1c_2c = exp0_1c[1].child;
+		
+	//console.log(exp0_1c_2c);
+	should.equal(exp0_1c_2c[0].name, 'functor');
+	should.equal(exp0_1c_2c[1].name, 'term');
+	should.equal(exp0_1c_2c[2].name, 'parens_close');
+		
 	// We should only have 1 expression
 	should.equal(result.terms.length, 1);
 	
