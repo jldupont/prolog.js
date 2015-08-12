@@ -91,6 +91,74 @@ it('ParserL2 - simple - with fact to rule', function(){
 	
 });
 
+it('ParserL2 - simple - with variable', function(){
+	
+	
+	var text = "love(X).\n";
+
+	var tokens = setup(text, true);
+	
+	//console.log(tokens);
+	
+	var p = new ParserL2(tokens, 0);
+	
+	var result = p.process();
+	
+	var exp0 = result.terms[0];
+
+	var functor = exp0[0];
+	var functor_arg0 = functor.args[0];
+	
+	should.equal(exp0[0] instanceof Functor, true);
+	
+	should.equal(functor_arg0.name,  'var');
+	should.equal(functor_arg0.value, 'X');
+	
+	should.equal(exp0[1].name, 'op:rule'); // :-
+	should.equal(exp0[2].name, 'term');
+	should.equal(exp0[2].value, 'true');
+	
+	should.equal(exp0.length, 3);
+	
+	// We should only have 1 expression
+	should.equal(result.terms.length, 1);
+	
+});
+
+it('ParserL2 - simple - with anon variable', function(){
+	
+	
+	var text = "love(_).\n";
+
+	var tokens = setup(text, true);
+	
+	//console.log(tokens);
+	
+	var p = new ParserL2(tokens, 0);
+	
+	var result = p.process();
+	
+	var exp0 = result.terms[0];
+
+	var functor = exp0[0];
+	var functor_arg0 = functor.args[0];
+	
+	should.equal(exp0[0] instanceof Functor, true);
+	
+	should.equal(functor_arg0.name,  'var_anon');
+	should.equal(functor_arg0.value, null);
+	
+	should.equal(exp0[1].name, 'op:rule'); // :-
+	should.equal(exp0[2].name, 'term');
+	should.equal(exp0[2].value, 'true');
+	
+	should.equal(exp0.length, 3);
+	
+	// We should only have 1 expression
+	should.equal(result.terms.length, 1);
+	
+});
+
 it('ParserL2 - functor in functor - 1', function(){
 	
 	

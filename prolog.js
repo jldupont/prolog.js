@@ -357,6 +357,21 @@ ParserL1.prototype.next = function() {
 			return null;
 	};
 	
+	// check for variables
+	if (head.name == 'term' && head.value != null) {
+		var first_character = ""+head.value[0];
+		if (first_character.toUpperCase() == first_character)
+			head.name = 'var';
+		
+		if (first_character=='_' && head.value.length == 1) {
+			head.name = 'var_anon';
+			head.value = null;
+		};
+			
+		
+	};
+		
+		
 	return [head];
 };
 
