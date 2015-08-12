@@ -30,8 +30,8 @@ it('Tpiler - simple', function(){
 	var tresult = t.get_token_list();
 	
 	var expected_list = [
-	                     new Token('parens_open', null, 4),
-	                     new Token('term', 'love', 0),
+	                     //new Token('parens_open', null, 4),
+	                     new Token('functor', 'love', 0),
 	                     new Token('term', 'mercedes', 5),
 	                     new Token('parens_close', null, 13),
 	                     new Token('op:rule', null, 0),
@@ -57,8 +57,8 @@ it('Tpiler - simple - no convert fact', function(){
 	var tresult = t.get_token_list();
 	
 	var expected_list = [
-	                     new Token('parens_open', null, 4),
-	                     new Token('term', 'love', 0),
+	                     //new Token('parens_open', null, 4),
+	                     new Token('functor', 'love', 0),
 	                     new Token('term', 'mercedes', 5),
 	                     new Token('parens_close', null, 13),
 	                     //new Token('op:rule', null, 0),
@@ -85,8 +85,8 @@ it('Tpiler - remove whitespaces', function(){
 	var tresult = t.get_token_list();
 	
 	var expected_list = [
-	                     new Token('parens_open', null, 4),
-	                     new Token('term', 'love', 0),
+	                     //new Token('parens_open', null, 4),
+	                     new Token('functor', 'love', 0),
 	                     new Token('term', 'mercedes', 5),
 	                     new Token('parens_close', null, 13),
 	                     //new Token('op:rule', null, 0),

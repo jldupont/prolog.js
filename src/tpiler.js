@@ -10,7 +10,7 @@
  *  * get rid of whitespaces
  *  
  *  * rearrange stream for infix notation for functors
- *    e.g.  functor(arg1, arg2, ...) ==>  (functor, arg1, arg2, ...)
+ *    e.g.  functor(arg1, arg2, ...) ==>  functor, arg1, arg2, ...)
  *    
  *  * convert `fact` to `rule`
  *    e.g.  love(enfants).  ==>  love(enfants) :- true.
@@ -87,7 +87,10 @@ Tpiler.prototype.next = function() {
 	if (head.name == 'term' || head.name == 'string') {
 		if (head_plus_one.name == 'parens_open') {
 			
-			return [head_plus_one, head];
+			//  functor(  ==>  functor
+			//
+			head.name = 'functor';
+			return [head];
 		};
 	};
 	

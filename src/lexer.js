@@ -19,10 +19,14 @@ function Token(name, maybe_value, maybe_attrs) {
 	
 	this.name = name;
 	this.value = maybe_value || null;
+	
+	// Position in input stream
 	this.line = maybe_attrs.line || 0;
 	this.col  = maybe_attrs.col || 0;
+	
 	this.is_primitive = maybe_attrs.is_primitive || false;
 	this.is_operator =  maybe_attrs.is_operator || false;
+	
 };
 
 /**

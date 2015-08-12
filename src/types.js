@@ -6,6 +6,25 @@
  *   @author: jldupont
  */
 
+
+function Result(term_list, last_index) {
+	this.terms = term_list;
+	this.index = last_index;
+};
+
+
+
+
+function Term(name, maybe_original_token) {
+	
+	this.name = name;
+	this.token_original = maybe_original_token || null;
+	
+	// Node tree support
+	//
+	this.child = null;
+};
+
 /**
  * Operator
  * @constructor
@@ -49,7 +68,6 @@ Op._map = {
 	,'(':  new Op("parens_open",  '(',    0, '*')
 	,')':  new Op("parens_close", '(',    0, '*')
 };
-
 
 // End of stream
 function Eos () {};
@@ -104,4 +122,6 @@ if (typeof module!= 'undefined') {
 	module.exports.Eos = Eos;
 	module.exports.Functor = Functor;
 	module.exports.Op = Op;
+	module.exports.Result = Result;
+	module.exports.Term = Term;
 };
