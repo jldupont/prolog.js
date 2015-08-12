@@ -78,6 +78,24 @@ function Functor(name, maybe_arguments_list) {
 		this.args = [];
 };
 
+Functor.prototype.inspect = function(){
+	return "Functor("+this.name+"/"+this.args.length+this.format_args()+")";
+};
+
+Functor.prototype.format_args = function () {
+	
+	var result = "";
+	for (var index in this.args) {
+		var arg = this.args[index];
+		if (arg.inspect)
+			result += ","+arg.inspect();
+		else
+			result += ","+JSON.stringify(arg);
+	};
+	
+	return result;
+};
+
 Functor.prototype.get_args = function(){
 	return this.args;
 };

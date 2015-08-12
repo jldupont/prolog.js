@@ -66,7 +66,9 @@ ParserL2.prototype.process = function(){
 			continue;
 				
 		if (token.name == 'parens_close') {
-			expression.push( token );
+			
+			// we don't need to keep the parens
+			//expression.push( token );
 
 			// Were we 1 level down accumulating 
 			//  arguments for a functor ?

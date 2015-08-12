@@ -23,6 +23,10 @@ function Token(name, maybe_value, maybe_attrs) {
 	
 };
 
+Token.prototype.inspect = function(){
+	return "Token("+this.name+","+this.value+")";
+};
+
 /**
  * Check for token equality
  * 
@@ -439,7 +443,9 @@ ParserL2.prototype.process = function(){
 			continue;
 				
 		if (token.name == 'parens_close') {
-			expression.push( token );
+			
+			// we don't need to keep the parens
+			//expression.push( token );
 
 			// Were we 1 level down accumulating 
 			//  arguments for a functor ?
@@ -588,6 +594,24 @@ function Functor(name, maybe_arguments_list) {
 		this.args = Array.prototype.splice.call(arguments, 1);
 	else
 		this.args = [];
+};
+
+Functor.prototype.inspect = function(){
+	return "Functor("+this.name+"/"+this.args.length+this.format_args()+")";
+};
+
+Functor.prototype.format_args = function () {
+	
+	var result = "";
+	for (var index in this.args) {
+		var arg = this.args[index];
+		if (arg.inspect)
+			result += ","+arg.inspect();
+		else
+			result += ","+JSON.stringify(arg);
+	};
+	
+	return result;
 };
 
 Functor.prototype.get_args = function(){

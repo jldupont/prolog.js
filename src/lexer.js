@@ -29,6 +29,10 @@ function Token(name, maybe_value, maybe_attrs) {
 	
 };
 
+Token.prototype.inspect = function(){
+	return "Token("+this.name+","+this.value+")";
+};
+
 /**
  * Check for token equality
  * 

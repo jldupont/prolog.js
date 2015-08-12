@@ -105,6 +105,7 @@ it('ParserL2 - functor in functor - 1', function(){
 	var result = p.process();
 	
 	//console.log(JSON.stringify(result.terms));
+	//console.log(result.terms);
 	
 	var exp0 = result.terms[0];
 
@@ -116,7 +117,7 @@ it('ParserL2 - functor in functor - 1', function(){
 	
 	should.equal(love_functor_arg1 instanceof Functor, true, "expecting Functor 'happy'");
 	should.equal(love_functor_arg1.name, 'happy', "expecting Functor 'happy'");
-	should.equal(love_functor_arg2.name, 'parens_close');
+	//should.equal(love_functor_arg2.name, 'parens_close');
 	
 	var happy_functor = love_functor_arg1;
 	var happy_functor_arg1 = happy_functor.args[0];
@@ -125,7 +126,7 @@ it('ParserL2 - functor in functor - 1', function(){
 	should.equal(happy_functor_arg1.name, 'term');
 	should.equal(happy_functor_arg1.value, 'charlot');
 	
-	should.equal(happy_functor_arg2.name, 'parens_close');
+	//should.equal(happy_functor_arg2.name, 'parens_close');
 	
 });
 
