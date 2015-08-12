@@ -89,6 +89,8 @@ ParserL1.prototype.next = function() {
 			
 			//  functor(  ==>  functor
 			//
+			//  i.e. remove parens_open
+			//
 			head.name = 'functor';
 			return [head];
 		};

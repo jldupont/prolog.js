@@ -126,3 +126,18 @@ it('ParserL2 - functor in functor - 1', function(){
 	should.equal(happy_functor_arg2.name, 'parens_close');
 	
 });
+
+it('ParserL2 - remove comments', function(){
+
+	var text = "% whatever\n% whatever 2\n";
+	
+	var tokens = setup(text, true);
+	
+	var p = new ParserL2(tokens, 0);
+	
+	var result = p.process();
+	var terms = result.terms;
+
+	should.equal(terms.length, 0);
+	
+});

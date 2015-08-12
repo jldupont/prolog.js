@@ -325,6 +325,8 @@ ParserL1.prototype.next = function() {
 			
 			//  functor(  ==>  functor
 			//
+			//  i.e. remove parens_open
+			//
 			head.name = 'functor';
 			return [head];
 		};
@@ -417,6 +419,13 @@ ParserL2.prototype.process = function(){
 		if (token == null || token instanceof Eos)
 			return this._handleEnd( expression );
 
+		// We are removing at this layer
+		//  because we might want to introduce directives
+		//  at parser layer 1
+		//
+		if (token.name == 'comment')
+			continue;
+		
 		if (token.name == 'newline')
 			continue;
 				
