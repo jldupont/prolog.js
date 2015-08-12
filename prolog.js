@@ -447,10 +447,11 @@ ParserL2.prototype.process = function(){
 			// adjust our index
 			this.index = new_index;
 			
-			var compound_node = new Term('c', token);
-			compound_node.child = [token].concat( result.terms );
+			var functor_node = new Functor(token.value);
+			functor_node.args =  result.terms;
+			functor_node.original_token = token;
 			
-			expression.push( compound_node );
+			expression.push( functor_node );
 			continue;
 		};
 		
@@ -500,90 +501,11 @@ if (typeof module!= 'undefined') {
 	module.exports.ParserL2 = ParserL2;
 };
 
-/**
- * TpilerL2
- * 
- * @constructor
- */
-function TpilerL2(token_list, options) {
-	
-	var default_options = {
-		
-		// convert fact term to rule
-		convert_fact: true	
-	};
-	
-	this.list = token_list;
-	this.reached_end = false;
-	this.options = options || default_options;
-};
-
-/**
- *  Processes the token list 1 by 1
- *  
- *  @return [Token] | Eos
- */
-TpilerL2.prototype.next = function() {
-	
-	if (this.reached_end)
-		return new Eos();
-	
-	var head = this.list.shift() || null;
-	if (head == null)
-		return new Eos();
-	
-
-	
-	// We must unshift the token
-	//  as not to loose the state-machine's context
-	//
-	this.list.unshift(head_plus_one);
-	
-	return [head];
-};
-
-/**
- *  Transpiles the token list entirely
- *   Useful for tests
- *   
- *   @return [Token]
- */
-TpilerL2.prototype.get_token_list = function() {
-	
-	var result = [];
-	
-	for (;;) {
-		var maybe_token = this.next();
-		if (maybe_token instanceof Eos)
-			break;
-		
-		Array.prototype.push.apply(result, maybe_token);
-	};
-
-	return result;
-};
-
-if (typeof module!= 'undefined') {
-	module.exports.TpilerL2 = TpilerL2;
-};
-
 function Result(term_list, last_index) {
 	this.terms = term_list;
 	this.index = last_index;
 };
 
-
-
-
-function Term(name, maybe_original_token) {
-	
-	this.name = name;
-	//this.token_original = maybe_original_token || null;
-	
-	// Node tree support
-	//
-	this.child = null;
-};
 
 /**
  * Operator
@@ -639,10 +561,15 @@ function Nothing () {};
  *  @constructor
  */
 function Functor(name, maybe_arguments_list) {
+	
 	this.name = name;
+	this.original_token = null;
 	
 	// remove the first parameter of the constructor
-	this.args = Array.prototype.splice.call(arguments, 1);
+	if (arguments.length > 1)
+		this.args = Array.prototype.splice.call(arguments, 1);
+	else
+		this.args = [];
 };
 
 Functor.prototype.get_args = function(){
@@ -683,5 +610,4 @@ if (typeof module!= 'undefined') {
 	module.exports.Functor = Functor;
 	module.exports.Op = Op;
 	module.exports.Result = Result;
-	module.exports.Term = Term;
 };

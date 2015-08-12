@@ -13,18 +13,6 @@ function Result(term_list, last_index) {
 };
 
 
-
-
-function Term(name, maybe_original_token) {
-	
-	this.name = name;
-	//this.token_original = maybe_original_token || null;
-	
-	// Node tree support
-	//
-	this.child = null;
-};
-
 /**
  * Operator
  * @constructor
@@ -79,10 +67,15 @@ function Nothing () {};
  *  @constructor
  */
 function Functor(name, maybe_arguments_list) {
+	
 	this.name = name;
+	this.original_token = null;
 	
 	// remove the first parameter of the constructor
-	this.args = Array.prototype.splice.call(arguments, 1);
+	if (arguments.length > 1)
+		this.args = Array.prototype.splice.call(arguments, 1);
+	else
+		this.args = [];
 };
 
 Functor.prototype.get_args = function(){
@@ -123,5 +116,4 @@ if (typeof module!= 'undefined') {
 	module.exports.Functor = Functor;
 	module.exports.Op = Op;
 	module.exports.Result = Result;
-	module.exports.Term = Term;
 };

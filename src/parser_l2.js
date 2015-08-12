@@ -85,10 +85,11 @@ ParserL2.prototype.process = function(){
 			// adjust our index
 			this.index = new_index;
 			
-			var compound_node = new Term('c', token);
-			compound_node.child = [token].concat( result.terms );
+			var functor_node = new Functor(token.value);
+			functor_node.args =  result.terms;
+			functor_node.original_token = token;
 			
-			expression.push( compound_node );
+			expression.push( functor_node );
 			continue;
 		};
 		

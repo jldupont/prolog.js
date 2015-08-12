@@ -32,7 +32,7 @@ var setup = function(text, convert_fact) {
  *   to be transformed to an 'atom' since
  *   we have not stepped the process further along
  */
-it('Parser - simple - no fact to rule transpiling', function(){
+it('ParserL2 - simple - no fact to rule', function(){
 	
 	
 	var text = "love(charlot).\n";
@@ -56,8 +56,7 @@ it('Parser - simple - no fact to rule transpiling', function(){
 	//  ] expressions
 	
 	
-	
-	should.equal(exp0[0].name, 'c');
+	should.equal(exp0[0] instanceof Functor, true);
 	should.equal(exp0.length, 1);
 	
 	// We should only have 1 expression
@@ -65,7 +64,7 @@ it('Parser - simple - no fact to rule transpiling', function(){
 	
 });
 
-it('Parser - simple - with fact to rule transpiling', function(){
+it('ParserL2 - simple - with fact to rule', function(){
 	
 	
 	var text = "love(charlot).\n";
@@ -80,7 +79,7 @@ it('Parser - simple - with fact to rule transpiling', function(){
 	
 	var exp0 = result.terms[0];
 
-	should.equal(exp0[0].name, 'c');       // the compound term "functor"
+	should.equal(exp0[0] instanceof Functor, true);
 	should.equal(exp0[1].name, 'op:rule'); // :-
 	should.equal(exp0[2].name, 'term');
 	should.equal(exp0[2].value, 'true');
@@ -92,7 +91,7 @@ it('Parser - simple - with fact to rule transpiling', function(){
 	
 });
 
-it('Parser - functor in functor - 1', function(){
+it('ParserL2 - functor in functor - 1', function(){
 	
 	
 	var text = "love(happy(charlot)).\n";
@@ -107,30 +106,23 @@ it('Parser - functor in functor - 1', function(){
 	
 	var exp0 = result.terms[0];
 
-	//console.log(JSON.stringify(exp0));
+	should.equal(exp0[0] instanceof Functor, true, 'expecting Functor 0');
 	
-	should.equal(exp0[0].name, 'c');       // the compound term "functor"
-	should.equal(exp0[1].name, 'op:rule'); // :-
-	should.equal(exp0[2].name, 'term');
-	should.equal(exp0[2].value, 'true');
+	var love_functor = exp0[0];
+	var love_functor_arg1 = love_functor.args[0];
+	var love_functor_arg2 = love_functor.args[1];
 	
-	should.equal(exp0.length, 3);
+	should.equal(love_functor_arg1 instanceof Functor, true, "expecting Functor 'happy'");
+	should.equal(love_functor_arg1.name, 'happy', "expecting Functor 'happy'");
+	should.equal(love_functor_arg2.name, 'parens_close');
 	
-	// Let's look into the 1st compound term
-	var c1 = exp0[0];
-	var exp0_1c = c1.child;
+	var happy_functor = love_functor_arg1;
+	var happy_functor_arg1 = happy_functor.args[0];
+	var happy_functor_arg2 = happy_functor.args[1];
 	
-	should.equal(exp0_1c[0].name, 'functor');
-	should.equal(exp0_1c[1].name, 'c');
-
-	var exp0_1c_2c = exp0_1c[1].child;
-		
-	//console.log(exp0_1c_2c);
-	should.equal(exp0_1c_2c[0].name, 'functor');
-	should.equal(exp0_1c_2c[1].name, 'term');
-	should.equal(exp0_1c_2c[2].name, 'parens_close');
-		
-	// We should only have 1 expression
-	should.equal(result.terms.length, 1);
+	should.equal(happy_functor_arg1.name, 'term');
+	should.equal(happy_functor_arg1.value, 'charlot');
+	
+	should.equal(happy_functor_arg2.name, 'parens_close');
 	
 });
