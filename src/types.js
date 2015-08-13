@@ -115,6 +115,7 @@ Op.prototype.inspect = function() {
 	return "Op("+this.name+")";
 };
 
+
 //Initialize the operators
 /*
  * Precedence is an integer between 0 and 1200. 
@@ -139,6 +140,27 @@ Op._map = {
 	,';':  new Op("disj",    ';',  1100, 'xfy')
 	,',':  new Op("conj",    ',',  1000, 'xfy')
 };
+
+/*
+ *  Return an ordered list of operators
+ *   from least to highest precedence
+ */
+(function(){
+	
+	Op.ordered_list_by_precedence = [];
+	
+	for (var index in Op._map) {
+		var entry = Op._map[index];
+		Op.ordered_list_by_precedence.push(entry);
+	};
+	
+	Op.ordered_list_by_precedence.sort(function(a, b){
+		return (a.prec - b.prec);
+	});
+	
+})();
+
+
 
 function OpNode(symbol) {
 	this.symbol = symbol;

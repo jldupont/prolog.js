@@ -6,6 +6,8 @@
  *  
  *  Substitute operators for functors
  *  
+ *  Start
+ *  
  *  
  *  @dependency: types.js
  */
@@ -16,13 +18,16 @@
  *  @constructor
  *  
  *  @param expression_list: the list of expressions
+ *  @param operators_map : the map of operators with type, precedence fields
  *  @param maybe_context
  */
-function ParserL3(expression_list, maybe_context) {
+function ParserL3(expression_list, operators_map, maybe_context) {
 	
 	// the resulting terms list
 	//
 	this.result = [];
+	
+	this.op_map = operators_map;
 	
 	this.expressions = expression_list;
 	
@@ -38,6 +43,9 @@ function ParserL3(expression_list, maybe_context) {
 
 /**
  * Process the expression list
+ *
+ * - Order operator list from least to highest precedence
+ * - For each operator,
  *
  * @return Result
  */

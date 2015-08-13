@@ -35,3 +35,20 @@ it('Types - OpNode - unknown', function(){
 	var o = new OpNode("**");
 	should.equal(o.name, "??");
 });
+
+
+it('Types - Op - ordered list by precedence', function(){
+
+	var liste = Op.ordered_list_by_precedence;
+	
+	var prec = liste[0].prec;
+	
+	for (var index in liste) {
+		var el = liste[index];
+		if (el.prec < prec) {
+			throw new Error("Op list precedence error" + JSON.stringify(el));
+		prec = el.prec;
+		};
+	};
+	
+});
