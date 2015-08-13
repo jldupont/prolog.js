@@ -109,11 +109,16 @@ Lexer.prototype._computeIndex = function(index) {
  *  The supported tokens 
  */
 Lexer.token_map = {
+		
+	// The operators should match with the ones supported
+	//  downstream in the parsers
+	// --------------------------------------------------
 	':-':  function() { return new Token('op:rule', null, {is_operator: true}) }
-	,'.':  function() { return new Token('period') }
 	,',':  function() { return new Token('op:conj', null, {is_operator: true}) }
 	,';':  function() { return new Token('op:disj', null, {is_operator: true}) }
+	
 	,'\n': function() { return new Token('newline') }
+	,'.':  function() { return new Token('period') }
 	,'(':  function() { return new Token('parens_open',  null, {is_operator: true}) }
 	,')':  function() { return new Token('parens_close', null, {is_operator: true}) }
 };
@@ -427,8 +432,6 @@ function ParserL2(token_list, list_index, maybe_context) {
 /**
  * Process the token list
  *
- * 1) Functor 'call' ==> Compound Term with 'down' pointer to 'Functor'
- * 
  * @return Result
  */
 ParserL2.prototype.process = function(){
@@ -540,6 +543,53 @@ if (typeof module!= 'undefined') {
 	module.exports.ParserL2 = ParserL2;
 };
 
+/**
+ *  Parser
+ *  
+ *  @constructor
+ *  
+ *  @param expression_list: the list of expressions
+ *  @param maybe_context
+ */
+function ParserL3(expression_list, maybe_context) {
+	
+	// the resulting terms list
+	//
+	this.result = [];
+	
+	this.expressions = expression_list;
+	
+	// Context defaults
+	this.context = {
+		// The index of the expression we are processing
+		 index_exp:    maybe_context.index_exp    || 0
+		 
+		 // The index inside the expression we are processing
+		,index_in_exp: maybe_context.index_in_exp || 0
+	};
+};
+
+/**
+ * Process the expression list
+ *
+ * @return Result
+ */
+ParserL3.prototype.process = function(){
+
+};// process
+
+
+
+//
+// =========================================================== PRIVATE
+//
+
+
+
+if (typeof module!= 'undefined') {
+	module.exports.ParserL3 = ParserL3;
+};
+
 function Result(term_list, last_index) {
 	this.terms = term_list;
 	this.index = last_index;
@@ -558,6 +608,10 @@ function Op(name, symbol, precedence, type, locked) {
 	
 	// by default, operators can not be redefined
 	this.locked = locked || true;
+};
+
+Op.prototype.inspect = function() {
+	return "Op("+this.name+")";
 };
 
 //Initialize the operators
@@ -583,15 +637,27 @@ Op._map = {
 	 ':-': new Op("rule",    ':-', 1200, 'xfx')
 	,';':  new Op("disj",    ';',  1100, 'xfy')
 	,',':  new Op("conj",    ',',  1000, 'xfy')
-	,'.':  new Op("period",  '.',   100, 'yfx')
-	,'\n': new Op("newline", '\n',    0, '*')
+};
 
-	,'(':  new Op("parens_open",  '(',    0, '*')
-	,')':  new Op("parens_close", '(',    0, '*')
+function OpNode(symbol) {
+	this.symbol = symbol;
+};
+
+OpNode.prototype.inspect = function(){
+	return "OpNode("+this.symbol+","+this.get_name()+")";
+};
+
+OpNode.prototype.get_name = function(){
+	var o = Op._map[this.symbol] || {};
+	return o.name || "??";
 };
 
 // End of stream
 function Eos () {};
+
+Eos.prototype.inspect = function () {
+	return "Eos";
+};
 
 function Nothing () {};
 
@@ -666,5 +732,6 @@ if (typeof module!= 'undefined') {
 	module.exports.Eos = Eos;
 	module.exports.Functor = Functor;
 	module.exports.Op = Op;
+	module.exports.OpNode = OpNode;
 	module.exports.Result = Result;
 };

@@ -115,11 +115,16 @@ Lexer.prototype._computeIndex = function(index) {
  *  The supported tokens 
  */
 Lexer.token_map = {
+		
+	// The operators should match with the ones supported
+	//  downstream in the parsers
+	// --------------------------------------------------
 	':-':  function() { return new Token('op:rule', null, {is_operator: true}) }
-	,'.':  function() { return new Token('period') }
 	,',':  function() { return new Token('op:conj', null, {is_operator: true}) }
 	,';':  function() { return new Token('op:disj', null, {is_operator: true}) }
+	
 	,'\n': function() { return new Token('newline') }
+	,'.':  function() { return new Token('period') }
 	,'(':  function() { return new Token('parens_open',  null, {is_operator: true}) }
 	,')':  function() { return new Token('parens_close', null, {is_operator: true}) }
 };

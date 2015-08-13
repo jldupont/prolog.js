@@ -4,8 +4,11 @@
  *  @author: jldupont
  *  
  *  
- *  Fact is a rule with `body` = true.
- *  
+ *  * strip comments
+ *  * strip newlines
+ *  * strip periods
+ *  * build Functor, get rid of parens
+ *  * build Op
  *  
  *  
  *  
@@ -35,8 +38,6 @@ function ParserL2(token_list, list_index, maybe_context) {
 /**
  * Process the token list
  *
- * 1) Functor 'call' ==> Compound Term with 'down' pointer to 'Functor'
- * 
  * @return Result
  */
 ParserL2.prototype.process = function(){

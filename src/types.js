@@ -27,6 +27,10 @@ function Op(name, symbol, precedence, type, locked) {
 	this.locked = locked || true;
 };
 
+Op.prototype.inspect = function() {
+	return "Op("+this.name+")";
+};
+
 //Initialize the operators
 /*
  * Precedence is an integer between 0 and 1200. 
@@ -50,15 +54,27 @@ Op._map = {
 	 ':-': new Op("rule",    ':-', 1200, 'xfx')
 	,';':  new Op("disj",    ';',  1100, 'xfy')
 	,',':  new Op("conj",    ',',  1000, 'xfy')
-	,'.':  new Op("period",  '.',   100, 'yfx')
-	,'\n': new Op("newline", '\n',    0, '*')
+};
 
-	,'(':  new Op("parens_open",  '(',    0, '*')
-	,')':  new Op("parens_close", '(',    0, '*')
+function OpNode(symbol) {
+	this.symbol = symbol;
+};
+
+OpNode.prototype.inspect = function(){
+	return "OpNode("+this.symbol+","+this.get_name()+")";
+};
+
+OpNode.prototype.get_name = function(){
+	var o = Op._map[this.symbol] || {};
+	return o.name || "??";
 };
 
 // End of stream
 function Eos () {};
+
+Eos.prototype.inspect = function () {
+	return "Eos";
+};
 
 function Nothing () {};
 
@@ -133,5 +149,6 @@ if (typeof module!= 'undefined') {
 	module.exports.Eos = Eos;
 	module.exports.Functor = Functor;
 	module.exports.Op = Op;
+	module.exports.OpNode = OpNode;
 	module.exports.Result = Result;
 };
