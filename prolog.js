@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-08-12 */
+/*! prolog.js - v0.0.1 - 2015-08-13 */
 
 /**
  *  Token
@@ -474,7 +474,16 @@ ParserL2.prototype.process = function(){
 		};
 			
 		// Should we be substituting an OpNode ?
+		//
+		// We also need to drop the "," tokens
+		//  if we are inside a Functor
+		//
 		if (token.is_operator) {
+			
+			if (this.context.diving)
+				if (token.name == 'op:conj')
+					continue;
+			
 			var opn = new OpNode(token.value);
 			expression.push( opn );
 			continue;

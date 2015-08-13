@@ -232,3 +232,42 @@ it('ParserL2 - operator - 1', function(){
 	should.equal(node2.symbol, ':-');
 	
 });
+
+it('ParserL2 - operator - 2', function(){
+
+	var text = "love(julianne, charlot).";
+	
+	/*
+	  [ 
+	    [ Functor(love/3,Token(term,julianne),Token(term,charlot)),
+          Token(op:rule,null),
+          Token(term,true) 
+         ] 
+       ]
+	 */
+	
+	var tokens = setup(text, true);
+	
+	var p = new ParserL2(tokens, 0);
+	
+	var result = p.process();
+	var terms = result.terms;
+
+	var exp0 = terms[0];
+	var functor = exp0[0];
+	var functor_arg0 = functor.args[0];
+	var functor_arg1 = functor.args[1];
+	
+	should.equal(functor instanceof Functor, true);
+	should.equal(functor_arg0 instanceof Token, true);
+	should.equal(functor_arg0.value, 'julianne');
+	
+	should.equal(functor_arg1 instanceof Token, true);
+	should.equal(functor_arg1.value, 'charlot');
+	
+	var rule = exp0[1];
+	var term_true = exp0[2];
+	
+	should.equal(rule instanceof Token, true);
+	should.equal(term_true instanceof Token, true);
+});
