@@ -7,18 +7,16 @@
 var should = require('should');
 var assert = require('assert');
 
-var lexer = require("../src/lexer.js");
+var pr = require("../prolog.js");
 
-var Token = lexer.Token;
-
+var Token = pr.Token;
+var Lexer = pr.Lexer;
 
 
 // ----------------------------------------------------------------- TESTS - parsing
 
 it('Lex - simple fact', function(){
 
-	var Lexer = lexer.Lexer;
-	
 	var l = new Lexer("love(julianne).");
 	
 	var result = l.step();
@@ -45,8 +43,6 @@ it('Lex - simple fact', function(){
 it('Lex - simple facts - multiline', function(){
 
 	var text = "love(julianne).\n" + "love(charlot).";
-	
-	var Lexer = lexer.Lexer;
 	
 	var l = new Lexer(text);
 	
@@ -84,8 +80,6 @@ it('Lex - simple rule', function(){
 
 	var text = "happy(julianne):-listenMusic(julianne).";
 	
-	var Lexer = lexer.Lexer;
-	
 	var l = new Lexer(text);
 	
 	var result = l.step();
@@ -110,8 +104,6 @@ it('Lex - unknown token', function(){
 
 	var text = "@@love(julianne).";
 	
-	var Lexer = lexer.Lexer;
-	
 	var l = new Lexer(text);
 	
 	var result = l.step();
@@ -124,8 +116,6 @@ it('Lex - unknown token', function(){
 it('Lex - Token class - simple', function(){
 
 	var text = "love(julianne).";
-	
-	var Lexer = lexer.Lexer;
 	
 	var l = new Lexer(text);
 	var result = undefined;
@@ -159,8 +149,6 @@ it('Lex - Token - string', function(){
 
 	var text = "love('julianne').";
 	
-	var Lexer = lexer.Lexer;
-	
 	var l = new Lexer(text);
 	var result = undefined;
 	
@@ -193,8 +181,6 @@ it('Lex - comment - simple', function(){
 
 	var text = "% some comment";
 	
-	var Lexer = lexer.Lexer;
-	
 	var l = new Lexer(text);
 	var result = undefined;
 	
@@ -216,8 +202,6 @@ it('Lex - comment - trailing', function(){
 	             new Token('comment'),
 	             ];
 	
-	var Lexer = lexer.Lexer;
-	
 	var l = new Lexer(text);
 	var list = l.get_token_list();
 
@@ -236,8 +220,6 @@ it('Lex - with newline', function(){
 	             new Token('period'),
 	             new Token('newline'),
 	             ];
-	
-	var Lexer = lexer.Lexer;
 	
 	var l = new Lexer(text);
 	var list = l.get_token_list();
@@ -260,8 +242,6 @@ it('Lex - check index', function(){
 	             new Token('newline', null, {col: 14}),
 	             ];
 	
-	var Lexer = lexer.Lexer;
-	
 	var l = new Lexer(text);
 	var list = l.get_token_list();
 
@@ -276,8 +256,6 @@ it('Lex - number - integer', function(){
 	
 	var text = "1234";
 	
-	var Lexer = lexer.Lexer;
-	
 	var l = new Lexer(text);
 	var result = l.next();
 
@@ -291,8 +269,6 @@ it('Lex - number - float', function(){
 	var also_index = true;
 	
 	var text = "1234.5678";
-	
-	var Lexer = lexer.Lexer;
 	
 	var l = new Lexer(text);
 	var result = l.next();
@@ -316,8 +292,6 @@ it('Lex - rule - simple', function(){
 	             new Token('parens_close', null, {col: 27}),
 	             new Token('period', null, {col: 28}),
 	             ];
-	
-	var Lexer = lexer.Lexer;
 	
 	var l = new Lexer(text);
 	var result = l.get_token_list();
@@ -348,8 +322,6 @@ it('Lex - multiline', function(){
 	             new Token('parens_close',  null,      {col: 13, line: 1}),	             
 	             new Token('period',        null,      {col: 14, line: 1}),
 	             ];
-	
-	var Lexer = lexer.Lexer;
 	
 	var l = new Lexer(text);
 	var list = l.get_token_list();

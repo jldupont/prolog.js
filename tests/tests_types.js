@@ -27,11 +27,11 @@ it('Types - Functor - simple', function(){
 it('Types - OpNode - simple', function(){
 
 	var o = new OpNode(":-");
-	should.equal(o.get_name(), "rule");
+	should.equal(o.name, "rule");
 });
 
 it('Types - OpNode - unknown', function(){
 
 	var o = new OpNode("**");
-	should.equal(o.get_name(), "??");
+	should.equal(o.name, "??");
 });
