@@ -8,7 +8,7 @@
  *  * strip newlines
  *  * strip periods
  *  * build Functor, get rid of parens
- *  * build Op
+ *  * build OpNode
  *  
  *  
  *  
@@ -79,6 +79,12 @@ ParserL2.prototype.process = function(){
 			continue;
 		};
 			
+		// Should we be substituting an OpNode ?
+		if (token.is_operator) {
+			var opn = new OpNode(token.value);
+			expression.push( opn );
+			continue;
+		};
 		
 		// Complete an expression, start the next
 		if (token.name == 'period') {

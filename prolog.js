@@ -113,9 +113,9 @@ Lexer.token_map = {
 	// The operators should match with the ones supported
 	//  downstream in the parsers
 	// --------------------------------------------------
-	':-':  function() { return new Token('op:rule', null, {is_operator: true}) }
-	,',':  function() { return new Token('op:conj', null, {is_operator: true}) }
-	,';':  function() { return new Token('op:disj', null, {is_operator: true}) }
+	':-':  function() { return new Token('op:rule', ':-', {is_operator: true}) }
+	,',':  function() { return new Token('op:conj', ',', {is_operator: true}) }
+	,';':  function() { return new Token('op:disj', ';', {is_operator: true}) }
 	
 	,'\n': function() { return new Token('newline') }
 	,'.':  function() { return new Token('period') }
@@ -473,6 +473,12 @@ ParserL2.prototype.process = function(){
 			continue;
 		};
 			
+		// Should we be substituting an OpNode ?
+		if (token.is_operator) {
+			var opn = new OpNode(token.value);
+			expression.push( opn );
+			continue;
+		};
 		
 		// Complete an expression, start the next
 		if (token.name == 'period') {

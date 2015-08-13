@@ -14,6 +14,7 @@ var ParserL2 = pr.ParserL2;
 var Token = pr.Token;
 var Functor = pr.Functor;
 var ParserL1 = pr.ParserL1;
+var OpNode = pr.OpNode;
 
 var setup = function(text, convert_fact) {
 
@@ -210,5 +211,24 @@ it('ParserL2 - remove comments', function(){
 	var terms = result.terms;
 
 	should.equal(terms.length, 0);
+	
+});
+
+it('ParserL2 - operator - 1', function(){
+
+	var text = "love(mercedes) :- true";
+	
+	var tokens = setup(text, true);
+	
+	var p = new ParserL2(tokens, 0);
+	
+	var result = p.process();
+	var terms = result.terms;
+
+	var exp0  = terms[0];
+	var node2 = exp0[1];
+	
+	should.equal(node2 instanceof OpNode, true);
+	should.equal(node2.symbol, ':-');
 	
 });
