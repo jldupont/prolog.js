@@ -239,7 +239,7 @@ it('ParserL2 - operator - 2', function(){
 	
 	/*
 	  [ 
-	    [ Functor(love/3,Token(term,julianne),Token(term,charlot)),
+	    [ Functor(love/3,Token(term,julianne),OpNode(,),Token(term,charlot)),
           Token(op:rule,null),
           Token(term,true) 
          ] 
@@ -253,17 +253,23 @@ it('ParserL2 - operator - 2', function(){
 	var result = p.process();
 	var terms = result.terms;
 
+	console.log(terms);
+	
 	var exp0 = terms[0];
 	var functor = exp0[0];
 	var functor_arg0 = functor.args[0];
 	var functor_arg1 = functor.args[1];
+	var functor_arg2 = functor.args[2];
 	
 	should.equal(functor instanceof Functor, true);
 	should.equal(functor_arg0 instanceof Token, true);
 	should.equal(functor_arg0.value, 'julianne');
 	
-	should.equal(functor_arg1 instanceof Token, true);
-	should.equal(functor_arg1.value, 'charlot');
+	should.equal(functor_arg1 instanceof OpNode, true);
+	should.equal(functor_arg1.symbol, ',');
+	
+	should.equal(functor_arg2 instanceof Token, true);
+	should.equal(functor_arg2.value, 'charlot');
 	
 	var rule = exp0[1];
 	var term_true = exp0[2];

@@ -136,22 +136,39 @@ Op.prototype.inspect = function() {
  *   A term enclosed in parentheses ( ... ) has precedence 0.
  */
 Op._map = {
-	 ':-': new Op("rule",    ':-', 1200, 'xfx')
-	,';':  new Op("disj",    ';',  1100, 'xfy')
-	,',':  new Op("conj",    ',',  1000, 'xfy')
+		
+	 ':-': [ new Op("rule",    ':-', 1200, 'xfx') ]
+	,';':  [ new Op("disj",    ';',  1100, 'xfy') ]
+	,',':  [ new Op("conj",    ',',  1000, 'xfy') ]
+	,'=':  [ new Op("unif",    '=',   700, 'xfx') ]
+
+	,'-':  [ new Op("minus",   '-',   500, 'yfx'), new Op("uminus",   '-',   200, 'fy') ]
+	,'+':  [ new Op("plus",    '+',   500, 'yfx'), new Op("uplus",    '+',   200, 'fy') ] 
+
 };
 
 /*
- *  Return an ordered list of operators
- *   from least to highest precedence
+ *  Various Inits
+ * 
+ *  * an ordered list of operators
+ *    from least to highest precedence
+ *    
+ *  * map by name
  */
 (function(){
 	
+	Op.map_by_name = {};
 	Op.ordered_list_by_precedence = [];
 	
 	for (var index in Op._map) {
-		var entry = Op._map[index];
-		Op.ordered_list_by_precedence.push(entry);
+		var entries = Op._map[index];
+		
+		Op.ordered_list_by_precedence.push.apply(Op.ordered_list_by_precedence, entries);
+		
+		for (var oi in entries) {
+			var o = entries[oi];
+			Op.map_by_name [ o.name ] = o;
+		}; 
 	};
 	
 	Op.ordered_list_by_precedence.sort(function(a, b){
@@ -163,18 +180,67 @@ Op._map = {
 
 
 function OpNode(symbol) {
+	
 	this.symbol = symbol;
-	
-	var o = Op._map[this.symbol] || {};
-	
-	this.prec = o.prec || 0;
-	this.name = o.name || "??";
-	this.type = o.type || 'xfx';
 };
 
 OpNode.prototype.inspect = function(){
-	return "OpNode("+this.symbol+","+this.name+")";
+	return "OpNode("+this.symbol+")";
 };
+
+/**
+ * Create an OpNode from a name 
+ */
+OpNode.create = function(name) {
+	
+};
+
+
+/**
+ *  Classify a triplet of nodes
+ *  
+ *  If node has strictly lower precedence than node_center => `x`
+ *  If node has lower or equal precedence than node_center => `y`
+ *  If node has higher precedence than node_center => ``
+ * 
+ * @param node_left   : the node on the lefthand side
+ * @param node_center : should be an OpNode
+ * @param node_right  : the node on the righthand side
+ * 
+ * @return String (e.g. xfx, yfx etc.) | null
+ */
+Op.classify_triplet = function (node_left, node_center, node_right) {
+	
+	var result = "";
+	var pc = node_center.prec;
+	
+	if (node_left.prec == pc)
+		result += "y";
+	else
+		if (node_left.prec < pc)
+			result += "x";
+	
+	if (!(node_center instanceof OpNode))
+		throw Error("Expecting an OpNode from node_center");
+	
+	result += 'f';
+		
+	if (node_right.prec == pc)
+		result += 'y';
+	else if (node_right.prec < pc)
+		result += 'x';
+
+	return result;
+};
+
+
+
+
+
+
+
+
+
 
 // End of stream
 function Eos () {};

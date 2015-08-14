@@ -6,7 +6,6 @@
  *  
  *  * strip comments
  *  * strip newlines
- *  * strip periods
  *  * build Functor, get rid of parens
  *  * build OpNode
  *  
@@ -85,10 +84,6 @@ ParserL2.prototype.process = function(){
 		//  if we are inside a Functor
 		//
 		if (token.is_operator) {
-			
-			if (this.context.diving)
-				if (token.name == 'op:conj')
-					continue;
 			
 			var opn = new OpNode(token.value);
 			expression.push( opn );
