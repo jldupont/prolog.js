@@ -109,6 +109,10 @@ ParserL2.prototype.process = function(){
 				
 				var maybe_replacement_opnode = ParserL2.compute_ops_replacement(token, token_next);
 				if (maybe_replacement_opnode != null) {
+					
+					maybe_replacement_opnode.line = token.line;
+					maybe_replacement_opnode.col  = token.col;
+					
 					expression.push( maybe_replacement_opnode );
 					this.index = this.index + 1;
 					continue;
@@ -120,6 +124,8 @@ ParserL2.prototype.process = function(){
 		
 		if (token.value == "+-" || token.value == "-+") {
 			var opn = new OpNode("-");
+			opn.line = token.line;
+			opn.col  = token.col;
 			expression.push( opn );
 			continue;
 		};
@@ -155,6 +161,8 @@ ParserL2.prototype.process = function(){
 		if (token.is_operator) {
 			
 			var opn = new OpNode(token.value);
+			opn.line = token.line;
+			opn.col  = token.col;
 			expression.push( opn );
 			continue;
 		};
@@ -177,6 +185,8 @@ ParserL2.prototype.process = function(){
 			var functor_node = new Functor(token.value);
 			functor_node.args =  result.terms;
 			functor_node.original_token = token;
+			functor_node.line = token.line;
+			functor_node.col  = token.col;
 			
 			expression.push( functor_node );
 			continue;
