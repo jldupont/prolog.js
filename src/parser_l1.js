@@ -12,9 +12,6 @@
  *  * rearrange stream for infix notation for functors
  *    e.g.  functor(arg1, arg2, ...) ==>  functor, arg1, arg2, ...)
  *    
- *  * convert `fact` to `rule`
- *    e.g.  love(enfants).  ==>  love(enfants) :- true.
- *    
  *  * convert Term to variable
  *  
  *  @dependency: types.js
@@ -35,7 +32,6 @@ function ParserL1(token_list, options) {
 	
 	this.list = token_list;
 	this.reached_end = false;
-	this.found_rule = false;
 	this.options = options || default_options;
 };
 
@@ -52,31 +48,7 @@ ParserL1.prototype.next = function() {
 	var head = this.list.shift() || null;
 	if (head == null)
 		return new Eos();
-	
-	// Reset the state-machine
-	if (head.name == 'period') {
-		var period_token =  head;
 		
-		// we didn't found a rule definition
-		//
-		if (!this.found_rule && this.options.convert_fact) {
-			
-			this.found_rule = false;
-			
-			return [ new Token('op:rule', null, 0), 
-			         new Token('term', 'true', 0), 
-			         period_token ];
-		};
-		
-		this.found_rule = false;
-	};
-	
-	
-	if (head.name == 'rule') {
-		this.found_rule = true;
-	};
-
-	
 	var head_plus_one = this.list.shift() || null;
 	
 	// Maybe it's the end of the stream ...

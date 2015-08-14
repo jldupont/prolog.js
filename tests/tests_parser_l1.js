@@ -34,8 +34,8 @@ it('ParserL1 - simple', function(){
 	                     new Token('functor', 'love', 0),
 	                     new Token('term', 'mercedes', 5),
 	                     new Token('parens_close', null, 13),
-	                     new Token('op:rule', null, 0),
-	                     new Token('term', 'true', 0),
+	                     //new Token('op:rule', null, 0),
+	                     //new Token('term', 'true', 0),
 	                     new Token('period', null, 14),
 	                     new Token('newline', null, 15)
 	                     ];
