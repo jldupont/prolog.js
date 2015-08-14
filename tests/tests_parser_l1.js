@@ -101,3 +101,27 @@ it('ParserL1 - remove whitespaces', function(){
 });
 
 
+it('ParserL1 - var - 1', function(){
+
+	var text = "X=Y.\n";
+
+	var expected_list = [
+	                     //new Token('parens_open', null, 4),
+	                     new Token('var',     'X'),
+	                     new Token('op:unif', '='),
+	                     new Token('var',     'Y'),
+	                     new Token('period',   null),
+	                     new Token('newline',  null)
+	                     ];
+	
+	var l = new Lexer(text);
+	var list = l.get_token_list();
+
+	var t = new ParserL1(list, {convert_fact: false});
+	var tresult = t.get_token_list();
+	
+	var check = Token.check_for_match(tresult, expected_list);
+	
+	//console.log(tresult);
+	should.equal(check, true);
+});

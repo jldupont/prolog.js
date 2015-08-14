@@ -8,6 +8,12 @@
  *  * strip newlines
  *  * build Functor, get rid of parens
  *  * build OpNode
+ *  * replace `- -` with `+`
+ *  * replace `- +` with `-`
+ *  * replace `-+`  with `-` *  
+ *  * replace `+ -` with `-`
+ *  * replace `+ +` with `+`
+ *  * replace `+-`  with `-`
  *  
  *  
  *  
@@ -35,6 +41,43 @@ function ParserL2(token_list, list_index, maybe_context) {
 };
 
 /**
+ * Compute replacement for adjacent `-` & `+` tokens 
+ * 
+ * @param token_n
+ * @param token_n1
+ * 
+ * @returns `+` or `-` | null
+ */
+ParserL2.compute_ops_replacement = function(token_n, token_n1){
+
+	if (token_n.value == '-') {
+		
+		// not the same thing as `--`
+		if (token_n1.value == '-') {
+			return new OpNode('+');
+		};
+		
+		if (token_n1.value == '+') {
+			return new OpNode('-');
+		};
+	};
+
+	if (token_n.value == '+') {
+		
+		// not the same thing as `++`
+		if (token_n1.value == '+') {
+			return new OpNode('+');
+		};
+		
+		if (token_n1.value == '-') {
+			return new OpNode('-');
+		};
+	};
+	
+	return null;
+};
+
+/**
  * Process the token list
  *
  * @return Result
@@ -43,6 +86,7 @@ ParserL2.prototype.process = function(){
 
 	var expression = null;
 	var token = null;
+	var token_next = null;
 	
 	expression = new Array();
 	
@@ -55,6 +99,31 @@ ParserL2.prototype.process = function(){
 		if (token == null || token instanceof Eos)
 			return this._handleEnd( expression );
 
+		if (token.is_operator) {
+
+			// Look ahead 1 more token
+			//  in order to handle the `- -` etc. replacements
+			token_next = this.tokens[this.index] || null;
+			
+			if (token_next.is_operator) {
+				
+				var maybe_replacement_opnode = ParserL2.compute_ops_replacement(token, token_next);
+				if (maybe_replacement_opnode != null) {
+					expression.push( maybe_replacement_opnode );
+					this.index = this.index + 1;
+					continue;
+				}
+			};
+			
+		};
+		
+		
+		if (token.value == "+-" || token.value == "-+") {
+			var opn = new OpNode("-");
+			expression.push( opn );
+			continue;
+		};
+		
 		// We are removing at this layer
 		//  because we might want to introduce directives
 		//  at parser layer 1

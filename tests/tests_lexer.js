@@ -332,3 +332,47 @@ it('Lex - multiline', function(){
 
 	should.equal(result, true);
 });
+
+it('Lex - var - 1', function(){
+
+	var text = "X=1.\n";
+	var elist = [new Token('term',     'X'), 
+	             new Token('op:unif',  '='),
+	             new Token('number',   1),
+	             new Token('period',   null),
+	             new Token('newline',  null),
+	             ];
+	
+	var l = new Lexer(text);
+	var list = l.get_token_list();
+
+	//console.log(list);
+	
+	var result = Token.check_for_match(list, elist);
+
+	
+	
+	should.equal(result, true);
+});
+
+it('Lex - var - 2', function(){
+
+	var text = "X=Y.\n";
+	var elist = [new Token('term',     'X'), 
+	             new Token('op:unif',  '='),
+	             new Token('term',      'Y'),
+	             new Token('period',   null),
+	             new Token('newline',  null),
+	             ];
+	
+	var l = new Lexer(text);
+	var list = l.get_token_list();
+
+	//console.log(list);
+	
+	var result = Token.check_for_match(list, elist);
+
+	
+	
+	should.equal(result, true);
+});

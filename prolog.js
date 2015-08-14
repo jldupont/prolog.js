@@ -13,7 +13,7 @@ function Lexer (text) {
 	this.current_line = 0;
 	this.offset = 0;
 	
-	this._tokenRegexp = /[0-9\.]+|[A-Za-z_]+|:\-|=|[()\.,]|[\n]|./gm;
+	this._tokenRegexp = /\d+(\.\d+)?|[A-Za-z_]+|:\-|=|\+\-|\-\+|[()\.,]|[\n]|./gm;
 };
 
 Lexer.prototype._handleNewline = function(){
@@ -37,6 +37,8 @@ Lexer.token_map = {
 	,',':  function() { return new Token('op:conj', ',', {is_operator: true}) }
 	,';':  function() { return new Token('op:disj', ';', {is_operator: true}) }
 	,'=':  function() { return new Token('op:unif', '=', {is_operator: true}) }
+	,'-':  function() { return new Token('op:minus', '-', {is_operator: true}) }
+	,'+':  function() { return new Token('op:plus',  '+', {is_operator: true}) }
 	
 	,'\n': function() { return new Token('newline') }
 	,'.':  function() { return new Token('period') }
@@ -286,7 +288,8 @@ ParserL1.prototype.next = function() {
 	// check for variables
 	if (head.name == 'term' && head.value != null) {
 		var first_character = ""+head.value[0];
-		if (first_character.toUpperCase() == first_character)
+		
+		if (first_character.toUpperCase() == first_character && ParserL1.isLetter(first_character))
 			head.name = 'var';
 		
 		if (first_character=='_' && head.value.length == 1) {
@@ -299,6 +302,11 @@ ParserL1.prototype.next = function() {
 		
 		
 	return [head];
+};
+
+ParserL1.isLetter = function(char) {
+	var code = char.charCodeAt(0);
+	return ((code >= 65) && (code <= 90)) || ((code >= 97) && (code <= 122));
 };
 
 /**
@@ -351,6 +359,43 @@ function ParserL2(token_list, list_index, maybe_context) {
 };
 
 /**
+ * Compute replacement for adjacent `-` & `+` tokens 
+ * 
+ * @param token_n
+ * @param token_n1
+ * 
+ * @returns `+` or `-` | null
+ */
+ParserL2.compute_ops_replacement = function(token_n, token_n1){
+
+	if (token_n.value == '-') {
+		
+		// not the same thing as `--`
+		if (token_n1.value == '-') {
+			return new OpNode('+');
+		};
+		
+		if (token_n1.value == '+') {
+			return new OpNode('-');
+		};
+	};
+
+	if (token_n.value == '+') {
+		
+		// not the same thing as `++`
+		if (token_n1.value == '+') {
+			return new OpNode('+');
+		};
+		
+		if (token_n1.value == '-') {
+			return new OpNode('-');
+		};
+	};
+	
+	return null;
+};
+
+/**
  * Process the token list
  *
  * @return Result
@@ -359,6 +404,7 @@ ParserL2.prototype.process = function(){
 
 	var expression = null;
 	var token = null;
+	var token_next = null;
 	
 	expression = new Array();
 	
@@ -371,6 +417,31 @@ ParserL2.prototype.process = function(){
 		if (token == null || token instanceof Eos)
 			return this._handleEnd( expression );
 
+		if (token.is_operator) {
+
+			// Look ahead 1 more token
+			//  in order to handle the `- -` etc. replacements
+			token_next = this.tokens[this.index] || null;
+			
+			if (token_next.is_operator) {
+				
+				var maybe_replacement_opnode = ParserL2.compute_ops_replacement(token, token_next);
+				if (maybe_replacement_opnode != null) {
+					expression.push( maybe_replacement_opnode );
+					this.index = this.index + 1;
+					continue;
+				}
+			};
+			
+		};
+		
+		
+		if (token.value == "+-" || token.value == "-+") {
+			var opn = new OpNode("-");
+			expression.push( opn );
+			continue;
+		};
+		
 		// We are removing at this layer
 		//  because we might want to introduce directives
 		//  at parser layer 1

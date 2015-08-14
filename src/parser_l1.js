@@ -113,7 +113,8 @@ ParserL1.prototype.next = function() {
 	// check for variables
 	if (head.name == 'term' && head.value != null) {
 		var first_character = ""+head.value[0];
-		if (first_character.toUpperCase() == first_character)
+		
+		if (first_character.toUpperCase() == first_character && ParserL1.isLetter(first_character))
 			head.name = 'var';
 		
 		if (first_character=='_' && head.value.length == 1) {
@@ -126,6 +127,11 @@ ParserL1.prototype.next = function() {
 		
 		
 	return [head];
+};
+
+ParserL1.isLetter = function(char) {
+	var code = char.charCodeAt(0);
+	return ((code >= 65) && (code <= 90)) || ((code >= 97) && (code <= 122));
 };
 
 /**

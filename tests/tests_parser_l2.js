@@ -214,6 +214,75 @@ it('ParserL2 - remove comments', function(){
 	
 });
 
+it('ParserL2 - operator replacement - 1', function(){
+
+	var text = "X +- Y";
+	
+	var tokens = setup(text, true);
+	
+	var p = new ParserL2(tokens, 0);
+	
+	var result = p.process();
+	var terms = result.terms;
+	var exp0 = terms[0];
+
+	var tokenX = exp0[0];
+	var token_ = exp0[1];
+
+	//console.log(terms);
+	
+	should.equal(tokenX.value, 'X');
+	should.equal(token_ instanceof OpNode, true);
+	should.equal(token_.symbol, '-');
+	
+});
+
+it('ParserL2 - operator replacement - 2', function(){
+
+	var text = "X -+ Y";
+	
+	var tokens = setup(text, true);
+	
+	var p = new ParserL2(tokens, 0);
+	
+	var result = p.process();
+	var terms = result.terms;
+	var exp0 = terms[0];
+
+	var tokenX = exp0[0];
+	var token_ = exp0[1];
+
+	//console.log(terms);
+	
+	should.equal(tokenX.value, 'X');
+	should.equal(token_ instanceof OpNode, true);
+	should.equal(token_.symbol, '-');
+	
+});
+
+it('ParserL2 - operator replacement - 3', function(){
+
+	var text = "X - -Y";
+	
+	var tokens = setup(text, true);
+	
+	var p = new ParserL2(tokens, 0);
+	
+	var result = p.process();
+	var terms = result.terms;
+	var exp0 = terms[0];
+
+	var tokenX = exp0[0];
+	var tokenP = exp0[1];
+
+	//console.log(exp0);
+	
+	should.equal(tokenX.value, 'X');
+	should.equal(tokenP instanceof OpNode, true);
+	should.equal(tokenP.symbol, '+');
+	
+});
+
 it('ParserL2 - operator - 1', function(){
 
 	var text = "love(mercedes) :- true";
@@ -253,7 +322,7 @@ it('ParserL2 - operator - 2', function(){
 	var result = p.process();
 	var terms = result.terms;
 
-	console.log(terms);
+	//console.log(terms);
 	
 	var exp0 = terms[0];
 	var functor = exp0[0];
