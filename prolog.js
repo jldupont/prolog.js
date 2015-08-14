@@ -722,8 +722,24 @@ Op.prototype.inspect = function() {
 	return "Op("+this.name+")";
 };
 
+/**
+ *  aFb --> [a, F, b]
+ *   Fb --> [null, F, b]
+ *  aF  --> [a, F, null]
+ * 
+ *  @return [A, B, C]
+ */
+Op.parts = function(type) {
+	
+	var parts = type.split("");
+	if (parts[0] == 'f')
+		return [null, parts[0], parts[1]];
+	
+	return [parts[0], parts[1], parts[2] || null];
+};
 
 //Initialize the operators
+
 /*
  * Precedence is an integer between 0 and 1200. 
  * 
@@ -742,17 +758,16 @@ Op.prototype.inspect = function() {
  *   
  *   A term enclosed in parentheses ( ... ) has precedence 0.
  */
-Op._map = {
-		
-	 ':-': [ new Op("rule",    ':-', 1200, 'xfx') ]
-	,';':  [ new Op("disj",    ';',  1100, 'xfy') ]
-	,',':  [ new Op("conj",    ',',  1000, 'xfy') ]
-	,'=':  [ new Op("unif",    '=',   700, 'xfx') ]
-
-	,'-':  [ new Op("minus",   '-',   500, 'yfx'), new Op("uminus",   '-',   200, 'fy') ]
-	,'+':  [ new Op("plus",    '+',   500, 'yfx'), new Op("uplus",    '+',   200, 'fy') ] 
-
-};
+Op._list = [ 
+	    new Op("rule",    ':-', 1200, 'xfx')
+	   ,new Op("disj",    ';',  1100, 'xfy')
+	   ,new Op("conj",    ',',  1000, 'xfy')
+	   ,new Op("unif",    '=',   700, 'xfx')
+	   ,new Op("minus",   '-',   500, 'yfx')
+	   ,new Op("uminus",   '-',   200, 'fy')
+	   ,new Op("plus",    '+',   500, 'yfx')
+	   ,new Op("uplus",    '+',   200, 'fy') 
+	  ]; 
 
 /*
  *  Various Inits
@@ -767,15 +782,11 @@ Op._map = {
 	Op.map_by_name = {};
 	Op.ordered_list_by_precedence = [];
 	
-	for (var index in Op._map) {
-		var entries = Op._map[index];
+	for (var index in Op._list) {
+		var o = Op._list[index];
 		
-		Op.ordered_list_by_precedence.push.apply(Op.ordered_list_by_precedence, entries);
-		
-		for (var oi in entries) {
-			var o = entries[oi];
-			Op.map_by_name [ o.name ] = o;
-		}; 
+		Op.ordered_list_by_precedence.push(o);
+		Op.map_by_name [ o.name ] = o;
 	};
 	
 	Op.ordered_list_by_precedence.sort(function(a, b){
@@ -786,25 +797,14 @@ Op._map = {
 
 
 
-function OpNode(symbol) {
-	
-	this.symbol = symbol;
-};
-
-OpNode.prototype.inspect = function(){
-	return "OpNode("+this.symbol+")";
-};
-
-/**
- * Create an OpNode from a name 
- */
-OpNode.create = function(name) {
-	
-};
 
 
 /**
  *  Classify a triplet of nodes
+ *  
+ *  The node_center is determined i.e. it needs to be
+ *   a fully configured OpNode with precedence & type.
+ *  
  *  
  *  If node has strictly lower precedence than node_center => `x`
  *  If node has lower or equal precedence than node_center => `y`
@@ -817,6 +817,13 @@ OpNode.create = function(name) {
  * @return String (e.g. xfx, yfx etc.) | null
  */
 Op.classify_triplet = function (node_left, node_center, node_right) {
+
+	if (!(node_center instanceof OpNode))
+		throw Error("Expecting an OpNode from node_center");
+
+	if (node_center.prec == null)
+		throw Error("Expecting an valid OpNode from node_center");
+	
 	
 	var result = "";
 	var pc = node_center.prec;
@@ -826,9 +833,6 @@ Op.classify_triplet = function (node_left, node_center, node_right) {
 	else
 		if (node_left.prec < pc)
 			result += "x";
-	
-	if (!(node_center instanceof OpNode))
-		throw Error("Expecting an OpNode from node_center");
 	
 	result += 'f';
 		
@@ -840,12 +844,71 @@ Op.classify_triplet = function (node_left, node_center, node_right) {
 	return result;
 };
 
+/**
+ * TODO: maybe use an object for map ?
+ * 
+ * @param input_st
+ * @param expected_st
+ * @returns {Boolean}
+ */
+Op.is_compatible_subtype = function(input_st, expected_st) {
+	
+	if (input_st == null)
+		if (expected_st != null)
+			return false;
+	
+	if (input_st == 'y')
+		if (expected_st == 'x')
+			return false;
+	
+	return true;
+};
+
+/**
+ *   an `x` can also count for `y`
+ *   but not the converse
+ * 
+ *   @param input_type:    the type to check against
+ *   @param expected_type: the reference type
+ *   @return true | false
+ */
+Op.are_compatible_types = function(input_type, expected_type) {
+	
+	var parts_input  = Op.parts( input_type );
+	var parts_expect = Op.parts( expected_type );
+	
+	return Op.is_compatible_subtype(parts_input[0], parts_expect[0]) &&
+			Op.is_compatible_subtype(parts_input[1], parts_expect[1]) &&
+			Op.is_compatible_subtype(parts_input[2], parts_expect[2]);
+};
 
 
 
+function OpNode(symbol, maybe_precedence) {
+	
+	this.symbol = symbol;
+	
+	// specifically designed
+	//  so this causes a 'burst' if not initialized
+	//  correctly during the processing
+	this.prec   = maybe_precedence || null;
+};
 
+OpNode.prototype.inspect = function(){
+	return "OpNode("+this.symbol+")";
+};
 
-
+/**
+ * Create an OpNode from a name 
+ */
+OpNode.create_from_name = function(name) {
+	var op = Op.map_by_name[name];
+	
+	if (!op)
+		throw new Error("OpNode.create_from_name: expecting a valid 'name', got: "+name);
+	
+	return new OpNode(op.symbol, op.prec);
+};
 
 
 
@@ -922,15 +985,9 @@ Either.prototype.getB = function() {
 	return this.value_b;
 };
 
-function Error(name, maybe_details) {
-	this.name = name;
-	this.details = maybe_details || null;
-};
-
 if (typeof module!= 'undefined') {
 	module.exports.Either = Either;
 	module.exports.Nothing = Nothing;
-	module.exports.Error = Error;
 	module.exports.Eos = Eos;
 	module.exports.Functor = Functor;
 	module.exports.Op = Op;
