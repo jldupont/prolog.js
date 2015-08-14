@@ -209,5 +209,11 @@ it('_Types - Op - check classifier - 2', function(){
 	
 });
 
+it('_Types - Op - check classifier - 3', function(){
+
+	var result = Op.classify_triplet(new OpNode('=', 700), new OpNode(":-", 1200), new Token('b'));
+	should.equal(result, "xfx");
+	
+});
 
 

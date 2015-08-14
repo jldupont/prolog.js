@@ -419,6 +419,19 @@ ParserL2.prototype.process = function(){
 
 		if (token.is_operator) {
 
+			// If we are in a functor definition,
+			//  we need to swap `op:conj` for a separator token
+			if (this.context.diving) {
+				if (token.name == 'op:conj') {
+					token.is_operator = false;
+					token.name = 'sep';
+					expression.push(token);
+					continue;
+				};
+					
+			};
+			
+			
 			// Look ahead 1 more token
 			//  in order to handle the `- -` etc. replacements
 			token_next = this.tokens[this.index] || null;
@@ -562,18 +575,18 @@ if (typeof module!= 'undefined') {
  *  @constructor
  *  
  *  @param expression_list: the list of expressions
- *  @param operators_map : the map of operators with type, precedence fields
+ *  @param operators_list : the precedence ordered list of operators
  *  @param maybe_context
  */
-function ParserL3(expression_list, operators_map, maybe_context) {
+function ParserL3(expression, operators_list, maybe_context) {
 	
 	// the resulting terms list
 	//
 	this.result = [];
 	
-	this.op_map = operators_map;
+	this.op_list = operators_list;
 	
-	this.expressions = expression_list;
+	this.expression = expression;
 	
 	// Context defaults
 	this.context = {
@@ -582,6 +595,9 @@ function ParserL3(expression_list, operators_map, maybe_context) {
 		 
 		 // The index inside the expression we are processing
 		,index_in_exp: maybe_context.index_in_exp || 0
+		
+		// The index in the operators list
+		//,index_in_op:  maybe_context.index_in_op  || 0
 	};
 };
 
@@ -591,10 +607,38 @@ function ParserL3(expression_list, operators_map, maybe_context) {
  * - Order operator list from least to highest precedence
  * - For each operator,
  *
- * @return Result
+ * @return [result]
  */
 ParserL3.prototype.process = function(){
 
+	var result = [];
+	
+	for (var op_index in this.op_list) {
+		var op = this.op_list[op_index]; 
+		
+		var total_opnodes_in_expression = 0;
+		var total_opnodes_processed = 0;
+		var total_opnodes_unprocessed = 0;
+		
+		for (var node_index in this.expression) {
+			var node = this.expression[node_index];
+			
+			if (!(node instanceof OpNode))
+				continue;
+			
+			
+			
+		}; // nodes
+		
+		// we didn't find anymore unprocessed OpNode in the last pass
+		// in the expression
+		if (total_opnodes_processed + total_opnodes_unprocessed == total_opnodes_in_expression)
+			break;
+		
+	};// ops
+	
+	return result;
+	
 };// process
 
 

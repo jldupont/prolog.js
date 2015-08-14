@@ -334,8 +334,8 @@ it('ParserL2 - operator - 2', function(){
 	should.equal(functor_arg0 instanceof Token, true);
 	should.equal(functor_arg0.value, 'julianne');
 	
-	should.equal(functor_arg1 instanceof OpNode, true);
-	should.equal(functor_arg1.symbol, ',');
+	should.equal(functor_arg1 instanceof Token, true);
+	should.equal(functor_arg1.value, ',');
 	
 	should.equal(functor_arg2 instanceof Token, true);
 	should.equal(functor_arg2.value, 'charlot');

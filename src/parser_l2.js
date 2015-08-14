@@ -101,6 +101,19 @@ ParserL2.prototype.process = function(){
 
 		if (token.is_operator) {
 
+			// If we are in a functor definition,
+			//  we need to swap `op:conj` for a separator token
+			if (this.context.diving) {
+				if (token.name == 'op:conj') {
+					token.is_operator = false;
+					token.name = 'sep';
+					expression.push(token);
+					continue;
+				};
+					
+			};
+			
+			
 			// Look ahead 1 more token
 			//  in order to handle the `- -` etc. replacements
 			token_next = this.tokens[this.index] || null;
