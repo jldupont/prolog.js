@@ -316,7 +316,8 @@ function OpNode(symbol, maybe_precedence) {
 	
 	// attempt to look-up precedence
 	if (this.prec == null) {
-		if (!Op.has_ambiguous_precedence(symbol))
+		var result = Op.has_ambiguous_precedence(symbol); 
+		if (result === false)
 			this.prec = Op.map_by_symbol[symbol].prec;
 	};
 };

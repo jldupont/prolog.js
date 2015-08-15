@@ -49,6 +49,13 @@ ParserL1.prototype.next = function() {
 	if (head == null)
 		return new Eos();
 		
+	// Check for whitespaces and remove
+	if (head.name == 'term') {
+		var value_without_whitespaces = (head.value || "").replace(/\s/g, '');
+		if (value_without_whitespaces.length == 0)
+			return null;
+	};
+		
 	var head_plus_one = this.list.shift() || null;
 	
 	// Maybe it's the end of the stream ...
@@ -58,8 +65,8 @@ ParserL1.prototype.next = function() {
 		return [head];
 	};
 
-	if (head.name == 'term' || head.name == 'string') {
-		if (head_plus_one.name == 'parens_open') {
+	if (head_plus_one.name == 'parens_open') {
+		if (head.name == 'term' || head.name == 'string') {
 			
 			//  functor(  ==>  functor
 			//
@@ -75,13 +82,6 @@ ParserL1.prototype.next = function() {
 	//
 	this.list.unshift(head_plus_one);
 
-	// Check for whitespaces and remove
-	if (head.name == 'term') {
-		var value_without_whitespaces = (head.value || "").replace(/\s/g, '');
-		if (value_without_whitespaces.length == 0)
-			return null;
-	};
-	
 	// check for variables
 	if (head.name == 'term' && head.value != null) {
 		var first_character = ""+head.value[0];

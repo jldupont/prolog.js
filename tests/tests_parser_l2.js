@@ -45,8 +45,10 @@ it('ParserL2 - simple - no fact to rule', function(){
 	var p = new ParserL2(tokens, 0);
 	
 	var result = p.process();
-	
+		
 	var exp0 = result.terms[0];
+	
+	//console.log(exp0);
 	
 	// We should have:
 	//  [
@@ -422,5 +424,114 @@ it('ParserL2 - operator - 4', function(){
 	should.equal(exp0[3] instanceof OpNode, true);
 	should.equal(exp0[3].prec, null);
 	should.equal(exp0[4] instanceof Token, true);
+	
+});
+
+it('ParserL2 - parens - 1', function(){
+
+	var text = "X=(4 + 5).";
+	
+	/*
+	 [ Token(var,X),
+  		OpNode(`=`,700),
+  		Functor(expr/3,
+  			Token(number,4),
+  			OpNode(`+`,null),
+  			Token(number,5)) 
+  		]
+	 */
+	
+	var tokens = setup(text, true);
+	
+	var p = new ParserL2(tokens, 0);
+	
+	var result = p.process();
+	var terms = result.terms;
+	
+	var exp0 = terms[0];
+
+	//console.log(exp0);
+	
+	should.equal(exp0[0] instanceof Token, true);
+	should.equal(exp0[1] instanceof OpNode, true);
+	should.equal(exp0[2] instanceof Functor, true);
+	should.equal(exp0[2].name, 'expr');
+	should.equal(exp0[2].args[0] instanceof Token, true);
+	should.equal(exp0[2].args[1] instanceof OpNode, true);
+	should.equal(exp0[2].args[2] instanceof Token, true);
+	
+});
+
+
+it('ParserL2 - parens - 2', function(){
+
+	var text = "(4 + 5).";
+	
+	/*
+	 [ 
+	 	Functor(expr/3,
+	 		Token(number,4),
+	 		OpNode(`+`,null),
+	 		Token(number,5)) 
+	 ]
+	 */
+	
+	var tokens = setup(text, true);
+	
+	//console.log(tokens);
+	
+	var p = new ParserL2(tokens, 0);
+	
+	var result = p.process();
+	var terms = result.terms;
+	
+	var exp0 = terms[0];
+
+	//console.log(exp0);
+	
+	should.equal(exp0[0] instanceof Functor, true);
+	should.equal(exp0[0].name, 'expr');
+	should.equal(exp0[0].args[0] instanceof Token, true);
+	should.equal(exp0[0].args[1] instanceof OpNode, true);
+	should.equal(exp0[0].args[2] instanceof Token, true);
+	
+});
+
+it('ParserL2 - parens - 3', function(){
+
+	var text = "((4 + 5)).";
+	
+	/*
+	 	[ 
+	 		Functor(expr/1,
+	 			Functor(expr/3,
+	 				Token(number,4),
+	 				OpNode(`+`,null),
+	 				Token(number,5))) 
+	 	]
+	 */
+	
+	var tokens = setup(text, true);
+	
+	//console.log(tokens);
+	
+	var p = new ParserL2(tokens, 0);
+	
+	var result = p.process();
+	var terms = result.terms;
+	
+	var exp0 = terms[0];
+
+	//console.log(exp0);
+	
+	should.equal(exp0[0] instanceof Functor, true);
+	should.equal(exp0[0].name, 'expr');
+	
+	should.equal(exp0[0].args[0] instanceof Functor, true);
+	should.equal(exp0[0].args[0].name, 'expr');
+	
+	should.equal(exp0[0].args[0].args[0] instanceof Token, true);
+	should.equal(exp0[0].args[0].args[1] instanceof OpNode, true);
+	should.equal(exp0[0].args[0].args[2] instanceof Token, true);
 	
 });

@@ -15,6 +15,7 @@
  *  * replace `+ +` with `+`
  *  * replace `+-`  with `-`
  *  
+ *  * translate `( exp ... )` ==> functor `ident( exp ...)` 
  *  
  *  
  *  @dependency: types.js
@@ -99,6 +100,19 @@ ParserL2.prototype.process = function(){
 		if (token == null || token instanceof Eos)
 			return this._handleEnd( expression );
 
+		
+		// Handle the case `(exp...)`
+		//
+		
+		if (token.name == 'parens_open') {
+			token.name = 'functor';
+			token.value = 'expr';
+			token.prec = 0;
+			token.is_operator = false;
+		};
+		
+		
+		
 		if (token.is_operator) {
 
 			// If we are in a functor definition,
@@ -132,7 +146,7 @@ ParserL2.prototype.process = function(){
 				}
 			};
 			
-		};
+		}; // token is_operator
 		
 		
 		if (token.value == "+-" || token.value == "-+") {
@@ -142,6 +156,7 @@ ParserL2.prototype.process = function(){
 			expression.push( opn );
 			continue;
 		};
+		
 		
 		// We are removing at this layer
 		//  because we might want to introduce directives

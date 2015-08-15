@@ -228,3 +228,12 @@ it('_Types - Op - check classifier - 4', function(){
 	
 });
 
+it('_Types - Op - check classifier - 4', function(){
+
+	var result = Op.classify_triplet(new OpNode('*'), new OpNode("-", 200), new OpNode('*'));
+
+	//console.log(result);
+	
+	should.equal(result, 'f');
+	
+});

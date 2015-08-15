@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-08-14 */
+/*! prolog.js - v0.0.1 - 2015-08-15 */
 
 /**
  *  Lexer
@@ -228,6 +228,13 @@ ParserL1.prototype.next = function() {
 	if (head == null)
 		return new Eos();
 		
+	// Check for whitespaces and remove
+	if (head.name == 'term') {
+		var value_without_whitespaces = (head.value || "").replace(/\s/g, '');
+		if (value_without_whitespaces.length == 0)
+			return null;
+	};
+		
 	var head_plus_one = this.list.shift() || null;
 	
 	// Maybe it's the end of the stream ...
@@ -237,8 +244,8 @@ ParserL1.prototype.next = function() {
 		return [head];
 	};
 
-	if (head.name == 'term' || head.name == 'string') {
-		if (head_plus_one.name == 'parens_open') {
+	if (head_plus_one.name == 'parens_open') {
+		if (head.name == 'term' || head.name == 'string') {
 			
 			//  functor(  ==>  functor
 			//
@@ -254,13 +261,6 @@ ParserL1.prototype.next = function() {
 	//
 	this.list.unshift(head_plus_one);
 
-	// Check for whitespaces and remove
-	if (head.name == 'term') {
-		var value_without_whitespaces = (head.value || "").replace(/\s/g, '');
-		if (value_without_whitespaces.length == 0)
-			return null;
-	};
-	
 	// check for variables
 	if (head.name == 'term' && head.value != null) {
 		var first_character = ""+head.value[0];
@@ -393,6 +393,19 @@ ParserL2.prototype.process = function(){
 		if (token == null || token instanceof Eos)
 			return this._handleEnd( expression );
 
+		
+		// Handle the case `(exp...)`
+		//
+		
+		if (token.name == 'parens_open') {
+			token.name = 'functor';
+			token.value = 'expr';
+			token.prec = 0;
+			token.is_operator = false;
+		};
+		
+		
+		
 		if (token.is_operator) {
 
 			// If we are in a functor definition,
@@ -426,7 +439,7 @@ ParserL2.prototype.process = function(){
 				}
 			};
 			
-		};
+		}; // token is_operator
 		
 		
 		if (token.value == "+-" || token.value == "-+") {
@@ -436,6 +449,7 @@ ParserL2.prototype.process = function(){
 			expression.push( opn );
 			continue;
 		};
+		
 		
 		// We are removing at this layer
 		//  because we might want to introduce directives
@@ -936,7 +950,8 @@ function OpNode(symbol, maybe_precedence) {
 	
 	// attempt to look-up precedence
 	if (this.prec == null) {
-		if (!Op.has_ambiguous_precedence(symbol))
+		var result = Op.has_ambiguous_precedence(symbol); 
+		if (result === false)
 			this.prec = Op.map_by_symbol[symbol].prec;
 	};
 };
