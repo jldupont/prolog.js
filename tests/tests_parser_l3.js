@@ -88,6 +88,38 @@ it('ParserL3 - simple - 2', function(){
 	should.equal(i, expected);
 });
 
+it('ParserL3 - simple - 3', function(){
+	
+	var input = "A = B*C.";
+	var expected = "[ [ Functor(unif/2,Token(var,A),Functor(mult/2,Token(var,B),Token(var,C))) ] ]";
+	
+	var expressions = setup(input);
+	
+	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
+	
+	var r = p.process();
+	
+	var i = util.inspect(r);
+	
+	should.equal(i, expected);
+});
+
+it('ParserL3 - simple - 4', function(){
+	
+	var input = "A + B = C*D.";
+	var expected = "[ [ Functor(unif/2,Functor(plus/2,Token(var,A),Token(var,B)),Functor(mult/2,Token(var,C),Token(var,D))) ] ]";
+	
+	var expressions = setup(input);
+	
+	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
+	
+	var r = p.process();
+	
+	var i = util.inspect(r);
+	
+	should.equal(i, expected);
+});
+
 it('ParserL3 - complex - 1', function(){
 	
 	var input = "f1( A* B ).";
@@ -132,6 +164,29 @@ it('ParserL3 - complex - 3', function(){
 	var r = p.process();
 	
 	var i = util.inspect(r);
+	
+	should.equal(i, expected, 'got: ', util.inspect(r));
+});
+
+var compare = function(a,b) {
+	
+};
+
+it('ParserL3 - complex - 4', function(){
+	
+	var input = "f1( f2( A - -B )).f3(a,b).";
+	var expected = "[ [ Functor(f1/1,Functor(f2/1,Functor(plus/2,Token(var,A),Token(var,B)))) ],\n"+
+				   "  [ Functor(f3/3,Token(term,a),Token(sep,,),Token(term,b)) ] ]";
+	
+	var expressions = setup(input);
+	
+	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
+	
+	var r = p.process();
+	
+	var i = util.inspect(r, {depth: null});
+	
+	//console.log(i);
 	
 	should.equal(i, expected, 'got: ', util.inspect(r));
 });
