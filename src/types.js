@@ -228,15 +228,23 @@ Op.has_ambiguous_precedence = function(symbol) {
  */
 Op.classify_triplet = function (node_left, node_center, node_right) {
 
+	var pc = node_center.prec;
+	
 	if (!(node_center instanceof OpNode))
 		throw Error("Expecting an OpNode from node_center");
 
 	if (node_center.prec == null)
 		throw Error("Expecting an valid OpNode from node_center");
 	
+	return Op.__classify(node_left, node_center, node_right);
+};
+
+// PRIVATE METHOD
+//
+Op.__classify = function(node_left, node_center, node_right){
 	
-	var result = "";
 	var pc = node_center.prec;
+	var result = "";
 	
 	if (node_left.prec == pc)
 		result += "y";

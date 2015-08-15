@@ -216,4 +216,15 @@ it('_Types - Op - check classifier - 3', function(){
 	
 });
 
+it('_Types - Op - check classifier - 4', function(){
+
+	var result = Op.classify_triplet(new OpNode('*'), new OpNode("-", 200), new Token('b'));
+	
+	// We should be getting a response of 'fx'
+	//  but of course this is compatible with an 'fy' pattern
+	var is_compat = Op.are_compatible_types( result, 'fy');
+	
+	should.equal(is_compat, true);
+	
+});
 

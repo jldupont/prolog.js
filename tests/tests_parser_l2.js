@@ -391,3 +391,36 @@ it('ParserL2 - operator - 3', function(){
 	should.equal(exp0[6] instanceof Token, true);
 	
 });
+
+it('ParserL2 - operator - 4', function(){
+
+	var text = "X= 4 + 5.";
+	
+	/*
+		[ Token(var,X),
+		  OpNode(`=`,700),
+		  Token(number,4),
+		  OpNode(`+`,null),
+		  Token(number,5) 
+		 ]
+	 */
+	
+	var tokens = setup(text, true);
+	
+	var p = new ParserL2(tokens, 0);
+	
+	var result = p.process();
+	var terms = result.terms;
+	
+	var exp0 = terms[0];
+
+	//console.log(exp0);
+	
+	should.equal(exp0[0] instanceof Token, true);
+	should.equal(exp0[1] instanceof OpNode, true);
+	should.equal(exp0[2] instanceof Token, true);
+	should.equal(exp0[3] instanceof OpNode, true);
+	should.equal(exp0[3].prec, null);
+	should.equal(exp0[4] instanceof Token, true);
+	
+});
