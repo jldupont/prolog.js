@@ -144,7 +144,7 @@ it('ParserL3 - complex - 2', function(){
 	var expressions = setup(input);
 	
 	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
-	
+1	
 	var r = p.process();
 	
 	var i = util.inspect(r);
@@ -176,7 +176,7 @@ it('ParserL3 - complex - 4', function(){
 	
 	var input = "f1( f2( A - -B )).f3(a,b).";
 	var expected = "[ [ Functor(f1/1,Functor(f2/1,Functor(plus/2,Token(var,A),Token(var,B)))) ],\n"+
-				   "  [ Functor(f3/3,Token(term,a),Token(sep,,),Token(term,b)) ] ]";
+				   "  [ Functor(f3/2,Token(term,a),Token(term,b)) ] ]";
 	
 	var expressions = setup(input);
 	
@@ -186,13 +186,13 @@ it('ParserL3 - complex - 4', function(){
 	
 	var i = util.inspect(r, {depth: null});
 	
-	should.equal(i, expected, 'got: ', util.inspect(r));
+	should.equal(i, expected, 'got: ', i);
 });
 
 it('ParserL3 - complex - 5', function(){
 	
 	var input = "parent_child(X, Y) :- father_child(X, Y).";
-	var expected = "[ [ Functor(rule/2,Functor(parent_child/3,Token(var,X),Token(sep,,),Token(var,Y)),Functor(father_child/3,Token(var,X),Token(sep,,),Token(var,Y))) ] ]";
+	var expected = "[ [ Functor(rule/2,Functor(parent_child/2,Token(var,X),Token(var,Y)),Functor(father_child/2,Token(var,X),Token(var,Y))) ] ]";
 	
 	var expressions = setup(input);
 	
@@ -208,7 +208,7 @@ it('ParserL3 - complex - 5', function(){
 it('ParserL3 - complex - 6', function(){
 	
 	var input = "sibling(X, Y) :- parent_child(Z, X), parent_child(Z, Y).";
-	var expected = "[ [ Functor(rule/2,Functor(sibling/3,Token(var,X),Token(sep,,),Token(var,Y)),Functor(conj/2,Functor(parent_child/3,Token(var,Z),Token(sep,,),Token(var,X)),Functor(parent_child/3,Token(var,Z),Token(sep,,),Token(var,Y)))) ] ]";
+	var expected = "[ [ Functor(rule/2,Functor(sibling/2,Token(var,X),Token(var,Y)),Functor(conj/2,Functor(parent_child/2,Token(var,Z),Token(var,X)),Functor(parent_child/2,Token(var,Z),Token(var,Y)))) ] ]";
 	
 	var expressions = setup(input);
 	

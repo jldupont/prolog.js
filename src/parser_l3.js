@@ -64,7 +64,6 @@ ParserL3.prototype.process = function(){
 ParserL3.process_expression = function(opcode, expression){
 
 	var result;
-	var terms;
 
 	for(;;) {
 
@@ -75,9 +74,8 @@ ParserL3.process_expression = function(opcode, expression){
 	
 		var tresult = ParserL3._process_expression(opcode, expr);
 		var current_count_of_opnodes_processed = tresult[1];
-		terms = tresult[0];
 		
-		result = terms;
+		result = tresult[0];
 		
 		// we didn't make any progress... bail out
 		//
@@ -100,6 +98,11 @@ ParserL3._process_expression = function(opcode, expression){
 		
 		var node = expression[node_index];
 			
+		// The Token(sep) is not helpful anymore
+		if (node instanceof Token)
+			if (node.name == 'sep')
+				continue;
+		
 		// The recursion case first of course
 		if (node instanceof Functor) {
 			var exp_from_args = node.args;
