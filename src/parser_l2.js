@@ -54,11 +54,11 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 		
 		// not the same thing as `--`
 		if (token_n1.value == '-') {
-			return new OpNode('+');
+			return new OpNode('+', 500);
 		};
 		
 		if (token_n1.value == '+') {
-			return new OpNode('-');
+			return new OpNode('-', 500);
 		};
 	};
 
@@ -66,11 +66,11 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 		
 		// not the same thing as `++`
 		if (token_n1.value == '+') {
-			return new OpNode('+');
+			return new OpNode('+', 500);
 		};
 		
 		if (token_n1.value == '-') {
-			return new OpNode('-');
+			return new OpNode('-', 500);
 		};
 	};
 	
@@ -136,7 +136,7 @@ ParserL2.prototype.process = function(){
 		
 		
 		if (token.value == "+-" || token.value == "-+") {
-			var opn = new OpNode("-");
+			var opn = new OpNode("-", 500);
 			opn.line = token.line;
 			opn.col  = token.col;
 			expression.push( opn );
@@ -167,9 +167,6 @@ ParserL2.prototype.process = function(){
 		};
 			
 		// Should we be substituting an OpNode ?
-		//
-		// We also need to drop the "," tokens
-		//  if we are inside a Functor
 		//
 		if (token.is_operator) {
 			

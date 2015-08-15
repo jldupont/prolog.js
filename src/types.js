@@ -101,7 +101,7 @@ function Result(term_list, last_index) {
  * Operator
  * @constructor
  */
-function Op(name, symbol, precedence, type, locked) {
+function Op(name, symbol, precedence, type) {
 	this.name = name;
 	this.symbol = symbol;
 	this.prec = precedence;
@@ -110,9 +110,6 @@ function Op(name, symbol, precedence, type, locked) {
 	// from the lexer
 	this.line = 0;
 	this.col  = 0;
-	
-	// by default, operators can not be redefined
-	this.locked = locked || true;
 };
 
 Op.prototype.inspect = function() {
@@ -134,6 +131,8 @@ Op.parts = function(type) {
 	
 	return [parts[0], parts[1], parts[2] || null];
 };
+
+Op.AMBIGUOUS_PRECEDENCE = true;
 
 //Initialize the operators
 
@@ -160,11 +159,23 @@ Op._list = [
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
 	   ,new Op("unif",    '=',   700, 'xfx')
+	    
 	   ,new Op("minus",   '-',   500, 'yfx')
-	   ,new Op("uminus",   '-',   200, 'fy')
 	   ,new Op("plus",    '+',   500, 'yfx')
-	   ,new Op("uplus",    '+',   200, 'fy') 
+	   ,new Op("mult",    '*',   400, 'yfx')
+	    
+	   ,new Op("uminus",   '-',  200, 'fy')
+	   ,new Op("uplus",    '+',  200, 'fy') 
 	  ]; 
+
+Op._amap = {
+		 '-':  { ambiguous_precence: true}
+		,'+':  { ambiguous_precence: true}
+};
+
+Op.has_ambiguous_precedence = function(symbol) {
+	return Op._amap[symbol] || false;
+};
 
 /*
  *  Various Inits
@@ -176,6 +187,7 @@ Op._list = [
  */
 (function(){
 	
+	Op.map_by_symbol = {};
 	Op.map_by_name = {};
 	Op.ordered_list_by_precedence = [];
 	
@@ -184,6 +196,7 @@ Op._list = [
 		
 		Op.ordered_list_by_precedence.push(o);
 		Op.map_by_name [ o.name ] = o;
+		Op.map_by_symbol[ o.symbol ] = o;
 	};
 	
 	Op.ordered_list_by_precedence.sort(function(a, b){
@@ -280,7 +293,10 @@ Op.are_compatible_types = function(input_type, expected_type) {
 };
 
 
-
+/**
+ * OpNode
+ * @constructor
+ */
 function OpNode(symbol, maybe_precedence) {
 	
 	this.symbol = symbol;
@@ -289,10 +305,16 @@ function OpNode(symbol, maybe_precedence) {
 	//  so this causes a 'burst' if not initialized
 	//  correctly during the processing
 	this.prec   = maybe_precedence || null;
+	
+	// attempt to look-up precedence
+	if (this.prec == null) {
+		if (!Op.has_ambiguous_precedence(symbol))
+			this.prec = Op.map_by_symbol[symbol].prec;
+	};
 };
 
 OpNode.prototype.inspect = function(){
-	return "OpNode("+this.symbol+")";
+	return "OpNode(`"+this.symbol+"`,"+this.prec+")";
 };
 
 /**

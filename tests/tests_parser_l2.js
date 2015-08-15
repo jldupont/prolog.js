@@ -256,6 +256,36 @@ it('ParserL2 - operator replacement - 3', function(){
 	
 });
 
+it('ParserL2 - operator replacement - 4', function(){
+
+	var text = "X * -Y";
+	
+	var tokens = setup(text, true);
+	
+	var p = new ParserL2(tokens, 0);
+	
+	var result = p.process();
+	var terms = result.terms;
+	var exp0 = terms[0];
+
+	var tokenX = exp0[0];
+	var tokenP = exp0[1];
+	var tokenM = exp0[2];
+	var tokenY = exp0[3];
+
+	//console.log(exp0);
+	
+	should.equal(tokenX.value, 'X');
+	should.equal(tokenP instanceof OpNode, true);
+	should.equal(tokenP.symbol, '*');
+	
+	should.equal(tokenM instanceof OpNode, true);
+	should.equal(tokenM.prec, null);  // the precedence is ambigous at this stage
+	
+	should.equal(tokenY.value, 'Y');
+	
+});
+
 it('ParserL2 - operator - 1', function(){
 
 	var text = "love(mercedes) :- true";

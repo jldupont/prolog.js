@@ -20,7 +20,7 @@ function Lexer (text) {
 	this.current_line = 0;
 	this.offset = 0;
 	
-	this._tokenRegexp = /\d+(\.\d+)?|[A-Za-z_]+|:\-|=|\+\-|\-\+|[()\.,]|[\n]|./gm;
+	this._tokenRegexp = /\d+(\.\d+)?|[A-Za-z_]+|:\-|=|\+\-|\*|\-\+|[()\.,]|[\n]|./gm;
 };
 
 Lexer.prototype._handleNewline = function(){
@@ -46,6 +46,7 @@ Lexer.token_map = {
 	,'=':  function() { return new Token('op:unif', '=', {is_operator: true}) }
 	,'-':  function() { return new Token('op:minus', '-', {is_operator: true}) }
 	,'+':  function() { return new Token('op:plus',  '+', {is_operator: true}) }
+	,'*':  function() { return new Token('op:mult',  '*', {is_operator: true}) }
 	
 	,'\n': function() { return new Token('newline') }
 	,'.':  function() { return new Token('period') }
