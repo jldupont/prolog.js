@@ -268,6 +268,16 @@ Op.__classify = function(node_left, node_center, node_right){
 };
 
 /**
+ * Figure out if a type is unary
+ * 
+ * @param type
+ * @return Boolean
+ */
+Op.is_unary = function(type) {
+	return  (""+type)[0] == 'f';
+};
+
+/**
  * TODO: maybe use an object for map ?
  * 
  * @param input_st
@@ -275,6 +285,10 @@ Op.__classify = function(node_left, node_center, node_right){
  * @returns {Boolean}
  */
 Op.is_compatible_subtype = function(input_st, expected_st) {
+
+	if (expected_st == null)
+		if (input_st !=null)
+			return false;
 	
 	if (input_st == null)
 		if (expected_st != null)
@@ -284,6 +298,7 @@ Op.is_compatible_subtype = function(input_st, expected_st) {
 		if (expected_st == 'x')
 			return false;
 	
+	// e.g. f == f
 	return true;
 };
 

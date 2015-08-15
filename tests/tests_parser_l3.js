@@ -6,6 +6,7 @@
 
 var should = require('should');
 var assert = require('assert');
+var util   = require('util');
 
 var pr = require("../prolog.js");
 
@@ -37,18 +38,100 @@ var setup = function(text) {
 };
 
 
-/**
- */
 it('ParserL3 - simple ', function(){
 	
 	var text = "A+B+C.";
 	
+	/*
+	 [ 
+	 	Functor(plus/2,
+	 		Functor(plus/2,
+	 			Token(var,A),Token(var,B)),
+	 		Token(var,C)) 
+	 ]
+	 */
 	var expressions = setup(text);
 	
 	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
 	
 	var r = p.process();
 	
-	console.log(r);
+	var exp0 = r[0];
+	
+	should.equal(exp0[0] instanceof Functor, true);
+	should.equal(exp0[0].name, 'plus');
+	
+	should.equal(exp0[0].args[0] instanceof Functor, true);
+	should.equal(exp0[0].args[0].args[0] instanceof Token, true);
+	should.equal(exp0[0].args[0].args[0].value, 'A');
+	
+	should.equal(exp0[0].args[0].args[1] instanceof Token, true);
+	should.equal(exp0[0].args[0].args[1].value, 'B');
+	
+	should.equal(exp0[0].args[1] instanceof Token, true);
+	should.equal(exp0[0].args[1].value, 'C');
 });
 
+it('ParserL3 - simple - 2', function(){
+	
+	var input = "A+B*C.";
+	var expected = "[ [ Functor(plus/2,Token(var,A),Functor(mult/2,Token(var,B),Token(var,C))) ] ]";
+	
+	var expressions = setup(input);
+	
+	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
+	
+	var r = p.process();
+	
+	var i = util.inspect(r);
+	
+	should.equal(i, expected);
+});
+
+it('ParserL3 - complex - 1', function(){
+	
+	var input = "f1( A* B ).";
+	var expected = "[ [ Functor(f1/1,Functor(mult/2,Token(var,A),Token(var,B))) ] ]";
+	
+	var expressions = setup(input);
+	
+	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
+	
+	var r = p.process();
+	
+	var i = util.inspect(r);
+	
+	should.equal(i, expected, 'got: ', util.inspect(r));
+});
+
+it('ParserL3 - complex - 2', function(){
+	
+	var input = "f1( A* -B ).";
+	var expected = "[ [ Functor(f1/1,Functor(mult/2,Token(var,A),Functor(uminus/1,Token(var,B)))) ] ]";
+	
+	var expressions = setup(input);
+	
+	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
+	
+	var r = p.process();
+	
+	var i = util.inspect(r);
+	
+	should.equal(i, expected, 'got: ', util.inspect(r));
+});
+
+it('ParserL3 - complex - 3', function(){
+	
+	var input = "f1( f2( A - -B )).";
+	var expected = "[ [ Functor(f1/1,Functor(f2/1,Functor(plus/2,Token(var,A),Token(var,B)))) ] ]";
+	
+	var expressions = setup(input);
+	
+	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
+	
+	var r = p.process();
+	
+	var i = util.inspect(r);
+	
+	should.equal(i, expected, 'got: ', util.inspect(r));
+});

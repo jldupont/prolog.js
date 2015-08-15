@@ -20,7 +20,7 @@ function Lexer (text) {
 	this.current_line = 0;
 	this.offset = 0;
 	
-	this._tokenRegexp = /\d+(\.\d+)?|[A-Za-z_]+|:\-|=|\+\-|\*|\-\+|[()\.,]|[\n]|./gm;
+	this._tokenRegexp = /\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\-\+|[()\.,]|[\n]|./gm;
 };
 
 Lexer.prototype._handleNewline = function(){

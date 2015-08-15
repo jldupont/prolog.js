@@ -141,6 +141,27 @@ it('_Types - Op - subtype check - 5', function(){
 	
 });
 
+it('_Types - Op - subtype check - 6', function(){
+
+	var result = Op.is_compatible_subtype('f', 'f');
+	should.equal(result, true);
+	
+});
+
+it('_Types - Op - subtype check - 7', function(){
+
+	var result = Op.is_compatible_subtype('x', null);
+	should.equal(result, false);
+	
+});
+
+it('_Types - Op - subtype check - 8', function(){
+
+	var result = Op.is_compatible_subtype('y', null);
+	should.equal(result, false);
+	
+});
+
 it('_Types - Op - type compatibility check - 1', function(){
 
 	var result = Op.are_compatible_types('xfx', 'yfy');
@@ -190,6 +211,48 @@ it('_Types - Op - type compatibility check - 7', function(){
 	
 });
 
+it('_Types - Op - type compatibility check - 8', function(){
+
+	var result = Op.are_compatible_types('xf', 'xfx');
+	should.equal(result, false);
+	
+});
+
+it('_Types - Op - type compatibility check - 9', function(){
+
+	var result = Op.are_compatible_types('xf', 'yfx');
+	should.equal(result, false);
+	
+});
+
+it('_Types - Op - type compatibility check - 10', function(){
+
+	var result = Op.are_compatible_types('fy', 'yfx');
+	should.equal(result, false);
+	
+});
+
+it('_Types - Op - type compatibility check - 11a', function(){
+
+	var result = Op.are_compatible_types('fy', 'xfx');
+	should.equal(result, false);
+	
+});
+
+it('_Types - Op - type compatibility check - 11b', function(){
+
+	var result = Op.are_compatible_types('xfx', 'fy');
+	should.equal(result, false);
+	
+});
+
+it('_Types - Op - type compatibility check - 12', function(){
+
+	var result = Op.are_compatible_types('fy', 'xfy');
+	should.equal(result, false);
+	
+});
+
 /*
  *  `a - -b` ==>  already substituted at parser L2
  *  `a + -b` ==>  already substituted at parser L2
@@ -235,5 +298,19 @@ it('_Types - Op - check classifier - 4', function(){
 	//console.log(result);
 	
 	should.equal(result, 'f');
+	
+});
+
+it('_Types - Op - check unary - 1', function(){
+
+	var result = Op.is_unary("fy");
+	should.equal(result, true);
+	
+});
+
+it('_Types - Op - check unary - 2', function(){
+
+	var result = Op.is_unary("xfy");
+	should.equal(result, false);
 	
 });
