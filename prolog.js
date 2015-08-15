@@ -565,7 +565,7 @@ if (typeof module!= 'undefined') {
  *  @param operators_list : the precedence ordered list of operators
  *  @param maybe_context
  */
-function ParserL3(expression, operators_list, maybe_context) {
+function ParserL3(expressions, operators_list, maybe_context) {
 	
 	// the resulting terms list
 	//
@@ -573,8 +573,9 @@ function ParserL3(expression, operators_list, maybe_context) {
 	
 	this.op_list = operators_list;
 	
-	this.expression = expression;
+	this.expressions = expressions;
 	
+	/*
 	// Context defaults
 	this.context = {
 		// The index of the expression we are processing
@@ -586,6 +587,7 @@ function ParserL3(expression, operators_list, maybe_context) {
 		// The index in the operators list
 		//,index_in_op:  maybe_context.index_in_op  || 0
 	};
+	*/
 };
 
 /**
@@ -601,26 +603,16 @@ ParserL3.prototype.process = function(){
 	var result = [];
 	
 	for (var op_index in this.op_list) {
-		var op = this.op_list[op_index]; 
+		var opcode = this.op_list[op_index]; 
 		
-		var total_opnodes_in_expression = 0;
-		var total_opnodes_processed = 0;
-		var total_opnodes_unprocessed = 0;
+		//console.log("ParserL3.process: op= ", op);
 		
-		for (var node_index in this.expression) {
-			var node = this.expression[node_index];
+		for (var index_exp in this.expressions) {
 			
-			if (!(node instanceof OpNode))
-				continue;
-			
-			
-			
-		}; // nodes
-		
-		// we didn't find anymore unprocessed OpNode in the last pass
-		// in the expression
-		if (total_opnodes_processed + total_opnodes_unprocessed == total_opnodes_in_expression)
-			break;
+			var expression = this.expressions[index_exp];
+			var r = this.process_expression(opcode, expression);
+			result.push( r );
+		};
 		
 	};// ops
 	
@@ -628,6 +620,61 @@ ParserL3.prototype.process = function(){
 	
 };// process
 
+/**
+ *  @return [terms]
+ */
+ParserL3.prototype.process_expression = function(opcode, expression){
+
+	var result = [];
+
+	//console.log("ParserL3.process_expression: ", JSON.stringify(expression));
+	
+	for(;;) {
+
+		var current_count_of_opnodes_processed = 0;
+		
+		for (var node_index=0; node_index < expression.length; node_index++) {
+			
+			var node = expression[node_index];
+					
+			if (!(node instanceof OpNode))
+				continue;
+			
+			// Is it the sort of operator we are
+			//  interested in at this point?
+			
+			if (opcode.symbol != node.symbol)
+				continue;
+			
+			//console.log("process_expression: opnode: ", node);
+			
+			// We need to get the proper precedence
+			//  for the operator we which to be processing for
+			//
+			var opnode_center = OpNode.create_from_name(opcode.name);
+			
+			// gather 'node left' and 'node right'
+			var node_left  = expression[node_index - 1 ];
+			var node_right = expression[node_index + 1 ];
+			
+			//console.log(" Nodes: ", node_left, opnode_center, node_right);
+			
+			var type = Op.classify_triplet(node_left, opnode_center, node_right);
+			console.log(type);
+			
+		}; // expression
+
+		// we didn't make any progress... bail out
+		//
+		if (current_count_of_opnodes_processed == 0)
+			break;
+
+	}; //for;;
+	
+	
+	return result;
+	
+};
 
 
 //
@@ -862,13 +909,11 @@ Op.has_ambiguous_precedence = function(symbol) {
  */
 Op.classify_triplet = function (node_left, node_center, node_right) {
 
-	var pc = node_center.prec;
-	
 	if (!(node_center instanceof OpNode))
-		throw Error("Expecting an OpNode from node_center");
+		throw Error("Expecting an OpNode from node_center: " + JSON.stringify( node_center));
 
 	if (node_center.prec == null)
-		throw Error("Expecting an valid OpNode from node_center");
+		throw Error("Expecting a valid OpNode for node_center: "+JSON.stringify( node_center ));
 	
 	return Op.__classify(node_left, node_center, node_right);
 };
@@ -880,18 +925,25 @@ Op.__classify = function(node_left, node_center, node_right){
 	var pc = node_center.prec;
 	var result = "";
 	
-	if (node_left.prec == pc)
-		result += "y";
-	else
-		if (node_left.prec < pc)
-			result += "x";
+	try {
+		if (node_left)
+			if (node_left.prec == pc)
+				result += "y";
+			else
+				if (node_left.prec < pc)
+					result += "x";
+		
+	} catch(e) {}; // we anyhow need to report ``
 	
 	result += 'f';
-		
-	if (node_right.prec == pc)
-		result += 'y';
-	else if (node_right.prec < pc)
-		result += 'x';
+	
+	try {
+		if (node_right)
+			if (node_right.prec == pc)
+				result += 'y';
+			else if (node_right.prec < pc)
+				result += 'x';
+	} catch(e) {};
 
 	return result;
 };

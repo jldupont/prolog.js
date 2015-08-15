@@ -228,13 +228,11 @@ Op.has_ambiguous_precedence = function(symbol) {
  */
 Op.classify_triplet = function (node_left, node_center, node_right) {
 
-	var pc = node_center.prec;
-	
 	if (!(node_center instanceof OpNode))
-		throw Error("Expecting an OpNode from node_center");
+		throw Error("Expecting an OpNode from node_center: " + JSON.stringify( node_center));
 
 	if (node_center.prec == null)
-		throw Error("Expecting an valid OpNode from node_center");
+		throw Error("Expecting a valid OpNode for node_center: "+JSON.stringify( node_center ));
 	
 	return Op.__classify(node_left, node_center, node_right);
 };
@@ -246,18 +244,25 @@ Op.__classify = function(node_left, node_center, node_right){
 	var pc = node_center.prec;
 	var result = "";
 	
-	if (node_left.prec == pc)
-		result += "y";
-	else
-		if (node_left.prec < pc)
-			result += "x";
+	try {
+		if (node_left)
+			if (node_left.prec == pc)
+				result += "y";
+			else
+				if (node_left.prec < pc)
+					result += "x";
+		
+	} catch(e) {}; // we anyhow need to report ``
 	
 	result += 'f';
-		
-	if (node_right.prec == pc)
-		result += 'y';
-	else if (node_right.prec < pc)
-		result += 'x';
+	
+	try {
+		if (node_right)
+			if (node_right.prec == pc)
+				result += 'y';
+			else if (node_right.prec < pc)
+				result += 'x';
+	} catch(e) {};
 
 	return result;
 };
