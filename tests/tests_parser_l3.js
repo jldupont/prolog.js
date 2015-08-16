@@ -29,7 +29,7 @@ var setup = function(text) {
 	var t = new ParserL1(tokens);
 	var ttokens = t.process();
 	
-	var p = new ParserL2(ttokens, 0);
+	var p = new ParserL2(ttokens);
 	
 	var result = p.process();
 	var terms = result.terms;

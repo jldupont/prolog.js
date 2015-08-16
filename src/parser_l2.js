@@ -36,7 +36,7 @@ function ParserL2(token_list, list_index, maybe_context) {
 	this.result = [];
 	
 	this.tokens = token_list;
-	this.index = list_index;
+	this.index = list_index || 0;
 	
 	this.context = maybe_context || {};
 };

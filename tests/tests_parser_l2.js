@@ -43,7 +43,7 @@ it('ParserL2 - simple - no fact to rule', function(){
 	
 	//console.log(tokens);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 		
@@ -76,7 +76,7 @@ it('ParserL2 - simple - with variable', function(){
 
 	var tokens = setup(text, true);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 	
@@ -111,7 +111,7 @@ it('ParserL2 - simple - with anon variable', function(){
 	
 	//console.log(tokens);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 	
@@ -145,7 +145,7 @@ it('ParserL2 - functor in functor - 1', function(){
 	
 	//console.log(tokens);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 	
@@ -181,7 +181,7 @@ it('ParserL2 - remove comments', function(){
 	
 	var tokens = setup(text, true);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 	var terms = result.terms;
@@ -196,7 +196,7 @@ it('ParserL2 - operator replacement - 1', function(){
 	
 	var tokens = setup(text, true);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 	var terms = result.terms;
@@ -219,7 +219,7 @@ it('ParserL2 - operator replacement - 2', function(){
 	
 	var tokens = setup(text, true);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 	var terms = result.terms;
@@ -242,7 +242,7 @@ it('ParserL2 - operator replacement - 3', function(){
 	
 	var tokens = setup(text, true);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 	var terms = result.terms;
@@ -265,7 +265,7 @@ it('ParserL2 - operator replacement - 4', function(){
 	
 	var tokens = setup(text, true);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 	var terms = result.terms;
@@ -295,7 +295,7 @@ it('ParserL2 - operator - 1', function(){
 	
 	var tokens = setup(text, true);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 	var terms = result.terms;
@@ -323,7 +323,7 @@ it('ParserL2 - operator - 2', function(){
 	
 	var tokens = setup(text, true);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 	var terms = result.terms;
@@ -373,7 +373,7 @@ it('ParserL2 - operator - 3', function(){
 	
 	var tokens = setup(text, true);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 	var terms = result.terms;
@@ -410,7 +410,7 @@ it('ParserL2 - operator - 4', function(){
 	
 	var tokens = setup(text, true);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 	var terms = result.terms;
@@ -444,7 +444,7 @@ it('ParserL2 - parens - 1', function(){
 	
 	var tokens = setup(text, true);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 	var terms = result.terms;
@@ -481,7 +481,7 @@ it('ParserL2 - parens - 2', function(){
 	
 	//console.log(tokens);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 	var terms = result.terms;
@@ -516,7 +516,7 @@ it('ParserL2 - parens - 3', function(){
 	
 	//console.log(tokens);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 	var terms = result.terms;
@@ -547,7 +547,7 @@ it('ParserL2 - operator `is`', function(){
 	
 	var tokens = setup(text, true);
 	
-	var p = new ParserL2(tokens, 0);
+	var p = new ParserL2(tokens);
 	
 	var result = p.process();
 	var terms = result.terms;
