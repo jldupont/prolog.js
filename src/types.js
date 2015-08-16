@@ -159,6 +159,7 @@ Op._list = [
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
 	   ,new Op("unif",    '=',   700, 'xfx')
+	   ,new Op("is",      'is',  700, 'xfx')
 	    
 	   ,new Op("minus",   '-',   500, 'yfx')
 	   ,new Op("plus",    '+',   500, 'yfx')
@@ -337,8 +338,12 @@ function OpNode(symbol, maybe_precedence) {
 	// attempt to look-up precedence
 	if (this.prec == null) {
 		var result = Op.has_ambiguous_precedence(symbol); 
-		if (result === false)
-			this.prec = Op.map_by_symbol[symbol].prec;
+		try {
+			if (result === false)
+				this.prec = Op.map_by_symbol[symbol].prec;
+		} catch(e) {
+			throw new Error("Can't find `" + symbol +"` in Op.map_by_symbol");
+		}
 	};
 };
 
@@ -416,25 +421,8 @@ Functor.prototype.push_arg = function(arg) {
 	this.args.push(arg);
 };
 
-/**
- * Either monad
- */
-function Either(value_a, value_b) {
-	this.name = 'either';
-	this.value_a = value_a || null;
-	this.value_b = value_b || null;
-};
-
-Either.prototype.getA = function() {
-	return this.value_a;
-};
-
-Either.prototype.getB = function() {
-	return this.value_b;
-};
 
 if (typeof module!= 'undefined') {
-	module.exports.Either = Either;
 	module.exports.Nothing = Nothing;
 	module.exports.Eos = Eos;
 	module.exports.Functor = Functor;

@@ -6,6 +6,7 @@
 
 var should = require('should');
 var assert = require('assert');
+var util   = require('util');
 
 var pr = require("../prolog.js");
 
@@ -533,5 +534,28 @@ it('ParserL2 - parens - 3', function(){
 	should.equal(exp0[0].args[0].args[0] instanceof Token, true);
 	should.equal(exp0[0].args[0].args[1] instanceof OpNode, true);
 	should.equal(exp0[0].args[0].args[2] instanceof Token, true);
+	
+});
+
+it('ParserL2 - operator `is`', function(){
+
+	var text = "X is 1.";
+	var expected = "[ Token(var,X), OpNode(`is`,700), Token(number,1) ]";
+	
+	/*
+	 */
+	
+	var tokens = setup(text, true);
+	
+	var p = new ParserL2(tokens, 0);
+	
+	var result = p.process();
+	var terms = result.terms;
+	
+	var exp0 = terms[0];
+
+	var r = util.inspect(exp0);
+	
+	should.equal(r, expected);
 	
 });
