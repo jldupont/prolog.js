@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-08-15 */
+/*! prolog.js - v0.0.1 - 2015-08-16 */
 
 var builtins = {};
 
@@ -82,7 +82,7 @@ Lexer.newline_as_null = true;
  * 
  * @returns {Array}
  */
-Lexer.prototype.get_token_list = function() {
+Lexer.prototype.process = function() {
 	
 	var list = [];
 	var t;
@@ -317,7 +317,7 @@ ParserL1.isLetter = function(char) {
  *   
  *   @return [Token]
  */
-ParserL1.prototype.get_token_list = function() {
+ParserL1.prototype.process = function() {
 	
 	var result = [];
 	

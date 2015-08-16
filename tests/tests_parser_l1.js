@@ -23,11 +23,11 @@ it('ParserL1 - simple', function(){
 	var text = "love(mercedes).\n";
 	
 	var l = new Lexer(text);
-	var result = l.get_token_list();
+	var result = l.process();
 	
 	var t = new ParserL1(result);
 	
-	var tresult = t.get_token_list();
+	var tresult = t.process();
 	
 	var expected_list = [
 	                     //new Token('parens_open', null, 4),
@@ -50,11 +50,11 @@ it('ParserL1 - simple - no convert fact', function(){
 	var text = "love(mercedes).\n";
 	
 	var l = new Lexer(text);
-	var result = l.get_token_list();
+	var result = l.process();
 	
 	var t = new ParserL1(result, {convert_fact: false});
 	
-	var tresult = t.get_token_list();
+	var tresult = t.process();
 	
 	var expected_list = [
 	                     //new Token('parens_open', null, 4),
@@ -78,11 +78,11 @@ it('ParserL1 - remove whitespaces', function(){
 	var text = " 	love(mercedes).	\n";
 	
 	var l = new Lexer(text);
-	var result = l.get_token_list();
+	var result = l.process();
 	
 	var t = new ParserL1(result, {convert_fact: false});
 	
-	var tresult = t.get_token_list();
+	var tresult = t.process();
 	
 	var expected_list = [
 	                     //new Token('parens_open', null, 4),
@@ -115,10 +115,10 @@ it('ParserL1 - var - 1', function(){
 	                     ];
 	
 	var l = new Lexer(text);
-	var list = l.get_token_list();
+	var list = l.process();
 
 	var t = new ParserL1(list, {convert_fact: false});
-	var tresult = t.get_token_list();
+	var tresult = t.process();
 	
 	var check = Token.check_for_match(tresult, expected_list);
 	
@@ -141,10 +141,10 @@ it('ParserL1 - parens - 1', function(){
 	                     ];
 	
 	var l = new Lexer(text);
-	var list = l.get_token_list();
+	var list = l.process();
 
 	var t = new ParserL1(list, {convert_fact: false});
-	var tresult = t.get_token_list();
+	var tresult = t.process();
 	
 	//console.log(tresult);
 	

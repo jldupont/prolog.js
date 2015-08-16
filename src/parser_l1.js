@@ -112,7 +112,7 @@ ParserL1.isLetter = function(char) {
  *   
  *   @return [Token]
  */
-ParserL1.prototype.get_token_list = function() {
+ParserL1.prototype.process = function() {
 	
 	var result = [];
 	

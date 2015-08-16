@@ -24,10 +24,10 @@ var ParserL3 = pr.ParserL3;
 var setup = function(text) {
 
 	var l = new Lexer(text);
-	var tokens = l.get_token_list();
+	var tokens = l.process();
 
 	var t = new ParserL1(tokens);
-	var ttokens = t.get_token_list();
+	var ttokens = t.process();
 	
 	var p = new ParserL2(ttokens, 0);
 	

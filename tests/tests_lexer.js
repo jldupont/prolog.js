@@ -203,7 +203,7 @@ it('Lex - comment - trailing', function(){
 	             ];
 	
 	var l = new Lexer(text);
-	var list = l.get_token_list();
+	var list = l.process();
 
 	var result = Token.check_for_match(list, elist);
 
@@ -222,7 +222,7 @@ it('Lex - with newline', function(){
 	             ];
 	
 	var l = new Lexer(text);
-	var list = l.get_token_list();
+	var list = l.process();
 
 	var result = Token.check_for_match(list, elist);
 
@@ -243,7 +243,7 @@ it('Lex - check index', function(){
 	             ];
 	
 	var l = new Lexer(text);
-	var list = l.get_token_list();
+	var list = l.process();
 
 	var result = Token.check_for_match(list, elist, also_index);
 
@@ -294,7 +294,7 @@ it('Lex - rule - simple', function(){
 	             ];
 	
 	var l = new Lexer(text);
-	var result = l.get_token_list();
+	var result = l.process();
 
 	var result = Token.check_for_match(result, elist, true);
 	should.equal(result, true);
@@ -324,7 +324,7 @@ it('Lex - multiline', function(){
 	             ];
 	
 	var l = new Lexer(text);
-	var list = l.get_token_list();
+	var list = l.process();
 	
 	//console.log(JSON.stringify(list));
 
@@ -344,7 +344,7 @@ it('Lex - var - 1', function(){
 	             ];
 	
 	var l = new Lexer(text);
-	var list = l.get_token_list();
+	var list = l.process();
 
 	//console.log(list);
 	
@@ -366,7 +366,7 @@ it('Lex - var - 2', function(){
 	             ];
 	
 	var l = new Lexer(text);
-	var list = l.get_token_list();
+	var list = l.process();
 
 	//console.log(list);
 	

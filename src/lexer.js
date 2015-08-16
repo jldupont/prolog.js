@@ -64,7 +64,7 @@ Lexer.newline_as_null = true;
  * 
  * @returns {Array}
  */
-Lexer.prototype.get_token_list = function() {
+Lexer.prototype.process = function() {
 	
 	var list = [];
 	var t;

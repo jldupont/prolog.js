@@ -20,10 +20,10 @@ var OpNode = pr.OpNode;
 var setup = function(text, convert_fact) {
 
 	var l = new Lexer(text);
-	var tokens = l.get_token_list();
+	var tokens = l.process();
 
 	var t = new ParserL1(tokens, {convert_fact: convert_fact});
-	var ttokens = t.get_token_list();
+	var ttokens = t.process();
 	
 	return ttokens;
 };
