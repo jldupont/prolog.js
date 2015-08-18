@@ -165,10 +165,15 @@ if (typeof module!= 'undefined') {
  *  Lexer
  *  @constructor
  *  
- *  @param {String} text : the text to analyze
+ *  @param {String} | [{String}] text : the text to analyze
  */
 function Lexer (text) {
-	this.text = text;
+
+	if (Array.isArray(text))
+		this.text = text.join("\n"); 
+	else
+		this.text = text;
+	
 	this.at_the_end = false;
 	this.current_match = null;
 	this.current_line = 0;

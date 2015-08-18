@@ -111,7 +111,7 @@ it('Database - insert 2', function(){
 	
 	var result = db.lookup_functor("f1/3");
 	
-	console.log(result);
+	//console.log(result);
 	
 	should.equal(result.length, 2);
 	should.equal(result[0] instanceof Functor, true);

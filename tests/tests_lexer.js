@@ -40,9 +40,45 @@ it('Lex - simple fact', function(){
 
 });
 
-it('Lex - simple facts - multiline', function(){
+it('Lex - simple facts - multiline - 1', function(){
 
 	var text = "love(julianne).\n" + "love(charlot).";
+	
+	var l = new Lexer(text);
+	
+	var result = l.step();
+	
+	should.equal(result, 'love', "expecting 'love'");
+	
+	result = l.step();
+	should.equal(result, '(', "expecting '('");
+	
+	result = l.step();
+	should.equal(result, 'julianne', "expecting 'julianne'");
+
+	result = l.step();
+	should.equal(result, ')', "expecting ')'");
+
+	result = l.step();
+	should.equal(result, '.', "expecting '.'");
+
+	result = l.step();
+	should.equal(result, '\n', "expecting 'newline'");
+
+	result = l.step();
+	should.equal(result, 'love', "expecting 'love'");
+
+	result = l.step();
+	should.equal(result, '(', "expecting '('");
+
+	result = l.step();
+	should.equal(result, 'charlot', "expecting 'charlot'");
+	
+});
+
+it('Lex - simple facts - multiline - 2', function(){
+
+	var text = ["love(julianne).", "love(charlot)."];
 	
 	var l = new Lexer(text);
 	
