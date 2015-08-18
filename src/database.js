@@ -7,6 +7,8 @@
  * - need to traverse, depth first, the whole database
  * 
  * @author jldupont
+ * 
+ * 
  **/
 
 /*
@@ -14,12 +16,17 @@
  * 
  * @constructor
  */
-function Database() {
+function Database(access_layer) {
 	this.db = {};
+	this.al = access_layer;
 };
 
 /**
- *  Insert a rule in the database
+ *  Insert a rule/fact in the database
+ *  
+ *  The `root node` can be :
+ *  -- Functor('rule', args...)
+ *  -- Functor(X, args...)
  *  
  *  Rule:    `head :- body` 
  *   whereas `head`  is made up of `(functor args...)`
@@ -29,11 +36,14 @@ function Database() {
  *  
  *  @param functor_signature {String}
  *  @param rule_nodes [] 
+ *  @raise Error
  */
-Database.prototype.insert = function(functor_signature, rule_nodes){
+Database.prototype.insert = function(root_node){
 
+	var functor_signature = this.al.compute_signature(root_node);
+	
 	var maybe_entries = this.db[functor_signature] || [];
-	maybe_entries.push(rule_nodes);
+	maybe_entries.push(root_node);
 	
 	this.db[functor_signature] = maybe_entries;
 };

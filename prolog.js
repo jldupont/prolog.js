@@ -14,12 +14,17 @@ if (typeof module!= 'undefined') {
  * 
  * @constructor
  */
-function Database() {
+function Database(access_layer) {
 	this.db = {};
+	this.al = access_layer;
 };
 
 /**
- *  Insert a rule in the database
+ *  Insert a rule/fact in the database
+ *  
+ *  The `root node` can be :
+ *  -- Functor('rule', args...)
+ *  -- Functor(X, args...)
  *  
  *  Rule:    `head :- body` 
  *   whereas `head`  is made up of `(functor args...)`
@@ -29,11 +34,14 @@ function Database() {
  *  
  *  @param functor_signature {String}
  *  @param rule_nodes [] 
+ *  @raise Error
  */
-Database.prototype.insert = function(functor_signature, rule_nodes){
+Database.prototype.insert = function(root_node){
 
+	var functor_signature = this.al.compute_signature(root_node);
+	
 	var maybe_entries = this.db[functor_signature] || [];
-	maybe_entries.push(rule_nodes);
+	maybe_entries.push(root_node);
 	
 	this.db[functor_signature] = maybe_entries;
 };
@@ -58,7 +66,10 @@ function DbAccess() {
 
 /**
  * Compute the signature of the `input`
- *  whether `input` is a `fact` or a `rule`
+ *  whether `input` is a `fact` or a `rule`.
+ *  
+ *  Both are really represented by a `root node`
+ *   of the type `Functor`.
  * 
  * @param input
  * @return {String}
@@ -66,7 +77,17 @@ function DbAccess() {
  */
 DbAccess.prototype.compute_signature = function(input) {
 	
+	var sig = null;
 	
+	try {
+		var functor = this.extract_head_of_rule(input);
+		sig = this.get_functor_signature(functor);
+		
+	} catch(e) {
+		sign = this.get_functor_signature(input);
+	};
+
+	return sign;
 };
 
 
@@ -111,12 +132,9 @@ DbAccess.prototype.is_rule = function(root_node) {
  */
 DbAccess.prototype.extract_head_of_rule = function(root_node) {
 
-	if (!(root_node instanceof Functor))
-		return false;
-
-	if (root_name.name != 'rule')
+	if (!(root_node instanceof Functor) || (root_node.name != 'rule'))
 		throw new Error("Expecting a `rule`, got: "+root_node.name);
-	
+
 	return root_node.args[0];
 };
 
@@ -128,10 +146,10 @@ DbAccess.prototype.extract_head_of_rule = function(root_node) {
  */
 DbAccess.prototype.get_functor_signature = function(node){
 
-	if (!(root_node instanceof Functor))
-		return false;
+	if (!(node instanceof Functor))
+		throw new Error("Expecting Functor, got: "+JSON.stringify(node));
 
-	return ""+root.name+"/"+node.args.length;
+	return ""+node.name+"/"+node.args.length;
 };
 
 

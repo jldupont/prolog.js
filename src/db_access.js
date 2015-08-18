@@ -25,7 +25,10 @@ function DbAccess() {
 
 /**
  * Compute the signature of the `input`
- *  whether `input` is a `fact` or a `rule`
+ *  whether `input` is a `fact` or a `rule`.
+ *  
+ *  Both are really represented by a `root node`
+ *   of the type `Functor`.
  * 
  * @param input
  * @return {String}
@@ -33,7 +36,17 @@ function DbAccess() {
  */
 DbAccess.prototype.compute_signature = function(input) {
 	
+	var sig = null;
 	
+	try {
+		var functor = this.extract_head_of_rule(input);
+		sig = this.get_functor_signature(functor);
+		
+	} catch(e) {
+		sign = this.get_functor_signature(input);
+	};
+
+	return sign;
 };
 
 
@@ -78,12 +91,9 @@ DbAccess.prototype.is_rule = function(root_node) {
  */
 DbAccess.prototype.extract_head_of_rule = function(root_node) {
 
-	if (!(root_node instanceof Functor))
-		return false;
-
-	if (root_name.name != 'rule')
+	if (!(root_node instanceof Functor) || (root_node.name != 'rule'))
 		throw new Error("Expecting a `rule`, got: "+root_node.name);
-	
+
 	return root_node.args[0];
 };
 
@@ -95,10 +105,10 @@ DbAccess.prototype.extract_head_of_rule = function(root_node) {
  */
 DbAccess.prototype.get_functor_signature = function(node){
 
-	if (!(root_node instanceof Functor))
-		return false;
+	if (!(node instanceof Functor))
+		throw new Error("Expecting Functor, got: "+JSON.stringify(node));
 
-	return ""+root.name+"/"+node.args.length;
+	return ""+node.name+"/"+node.args.length;
 };
 
 
