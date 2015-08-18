@@ -43,10 +43,10 @@ DbAccess.prototype.compute_signature = function(input) {
 		sig = this.get_functor_signature(functor);
 		
 	} catch(e) {
-		sign = this.get_functor_signature(input);
+		sig = this.get_functor_signature(input);
 	};
 
-	return sign;
+	return sig;
 };
 
 

@@ -36,6 +36,7 @@ function Database(access_layer) {
  *  
  *  @param functor_signature {String}
  *  @param rule_nodes [] 
+ *  @return signature
  *  @raise Error
  */
 Database.prototype.insert = function(root_node){
@@ -46,6 +47,8 @@ Database.prototype.insert = function(root_node){
 	maybe_entries.push(root_node);
 	
 	this.db[functor_signature] = maybe_entries;
+	
+	return functor_signature;
 };
 
 Database.prototype.lookup_functor = function(functor_signature){
