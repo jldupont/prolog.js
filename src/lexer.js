@@ -25,7 +25,7 @@ function Lexer (text) {
 	this.current_line = 0;
 	this.offset = 0;
 	
-	this._tokenRegexp = /is|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\-\+|[()\.,]|[\n]|./gm;
+	this._tokenRegexp = /\[|\]|\||is|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\-\+|[()\.,]|[\n]|./gm;
 };
 
 Lexer.prototype._handleNewline = function(){
@@ -53,11 +53,15 @@ Lexer.token_map = {
 	,'+':  function() { return new Token('op:plus',  '+', {is_operator: true}) }
 	,'*':  function() { return new Token('op:mult',  '*', {is_operator: true}) }
 	,'is': function() { return new Token('op:is',    'is',{is_operator: true}) }
+	,'|':  function() { return new Token('op:tail',  '|', {is_operator: true}) }
 	
 	,'\n': function() { return new Token('newline') }
 	,'.':  function() { return new Token('period') }
 	,'(':  function() { return new Token('parens_open',  null, {is_operator: true}) }
 	,')':  function() { return new Token('parens_close', null, {is_operator: true}) }
+	
+	,'[':  function() { return new Token('list:open',  null, {is_operator: true}) }
+	,']':  function() { return new Token('list:close', null, {is_operator: true}) }
 };
 
 Lexer.newline_as_null = true;

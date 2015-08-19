@@ -412,3 +412,47 @@ it('Lex - var - 2', function(){
 	
 	should.equal(result, true);
 });
+
+it('Lex - list - 1', function(){
+
+	var text = "[1,2,3]";
+	
+	var elist = [new Token('list:open', null), 
+	             new Token('number',    1),
+	             new Token('op:conj',   ','),
+	             new Token('number',    2),
+	             new Token('op:conj',   ','),
+	             new Token('number',    3),
+	             new Token('list:close',  null),
+	             ];
+	
+	var l = new Lexer(text);
+	var list = l.process();
+
+	//console.log(list);
+	
+	var result = Token.check_for_match(list, elist);
+
+	should.equal(result, true);
+});
+
+it('Lex - list - 2', function(){
+
+	var text = "[H|T]";
+	
+	var elist = [new Token('list:open', null), 
+	             new Token('term',    'H'),
+	             new Token('op:tail',  '|'),
+	             new Token('term',    'T'),
+	             new Token('list:close',  null),
+	             ];
+	
+	var l = new Lexer(text);
+	var list = l.process();
+
+	//console.log(list);
+	
+	var result = Token.check_for_match(list, elist);
+
+	should.equal(result, true);
+});

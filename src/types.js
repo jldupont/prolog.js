@@ -73,7 +73,7 @@ Token.check_for_match = function(input_list, expected_list, also_index){
 		var expected_token = expected_list[index] || new Token('null');
 	
 		if (!Token.equal(input_token, expected_token)) {
-			//console.log("match fail: "+input_token);
+			console.log("match fail: "+JSON.stringify(input_token));
 			return false;
 		}
 			
