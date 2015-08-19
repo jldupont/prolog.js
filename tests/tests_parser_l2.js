@@ -559,3 +559,68 @@ it('ParserL2 - operator `is`', function(){
 	should.equal(r, expected);
 	
 });
+
+it('ParserL2 - list - 1', function(){
+
+	var text = "[1,2,3]";
+	
+	/*
+	 */
+	
+	var tokens = setup(text, true);
+	
+	//console.log(tokens);
+	
+	var p = new ParserL2(tokens);
+	
+	var result = p.process();
+	var terms = result.terms;
+	
+	//console.log(terms);
+	
+	var exp0 = terms[0];
+	
+	//console.log(exp0[0].args);
+
+	should.equal(exp0[0] instanceof Functor, true);
+	
+	// 1 sep 2 sep 3
+	// 1  1  1  1  1  == 5
+	should.equal(exp0[0].args.length, 1+1+1+1+1);
+});
+
+it('ParserL2 - list - 2', function(){
+
+	var text = "[A,B | T]";
+	
+	/*
+	 */
+	
+	var tokens = setup(text, true);
+	
+	//console.log(tokens);
+	
+	var p = new ParserL2(tokens);
+	
+	var result = p.process();
+	var terms = result.terms;
+	
+	//console.log(terms);
+	
+	var exp0 = terms[0];
+	
+	//console.log(exp0[0].args);
+
+	should.equal(exp0[0] instanceof Functor, true);
+	should.equal(exp0[0].args[0].name, 'var');
+	should.equal(exp0[0].args[0].value, 'A');
+	
+	should.equal(exp0[0].args[2].name, 'var');
+	should.equal(exp0[0].args[2].value, 'B');
+	
+	should.equal(exp0[0].args[3].name, 'list:tail');
+
+	should.equal(exp0[0].args[4].name, 'var');
+	should.equal(exp0[0].args[4].value, 'T');
+	
+});

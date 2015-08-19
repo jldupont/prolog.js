@@ -221,3 +221,20 @@ it('ParserL3 - complex - 6', function(){
 	should.equal(i, expected, 'got: ', util.inspect(r));
 });
 
+
+it('ParserL3 - list - 1', function(){
+	
+	var input = "[A,B | T ].";
+	var expected = "[ [ Functor(list/4,Token(var,A),Token(var,B),Token(list:tail,|),Token(var,T)) ] ]";
+	
+	var expressions = setup(input);
+	
+	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
+	
+	var r = p.process();
+	
+	var i = util.inspect(r, {depth: null});
+	
+	should.equal(i, expected, 'got: ', util.inspect(r));
+});
+

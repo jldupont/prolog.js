@@ -200,22 +200,22 @@ Lexer.token_map = {
 	//  downstream in the parsers
 	// --------------------------------------------------
 	':-':  function() { return new Token('op:rule', ':-', {is_operator: true}) }
-	,',':  function() { return new Token('op:conj', ',', {is_operator: true}) }
-	,';':  function() { return new Token('op:disj', ';', {is_operator: true}) }
-	,'=':  function() { return new Token('op:unif', '=', {is_operator: true}) }
+	,',':  function() { return new Token('op:conj', ',',  {is_operator: true}) }
+	,';':  function() { return new Token('op:disj', ';',  {is_operator: true}) }
+	,'=':  function() { return new Token('op:unif', '=',  {is_operator: true}) }
 	,'-':  function() { return new Token('op:minus', '-', {is_operator: true}) }
 	,'+':  function() { return new Token('op:plus',  '+', {is_operator: true}) }
 	,'*':  function() { return new Token('op:mult',  '*', {is_operator: true}) }
 	,'is': function() { return new Token('op:is',    'is',{is_operator: true}) }
-	,'|':  function() { return new Token('op:tail',  '|', {is_operator: true}) }
+	,'|':  function() { return new Token('list:tail','|'  ) }
 	
 	,'\n': function() { return new Token('newline') }
 	,'.':  function() { return new Token('period') }
 	,'(':  function() { return new Token('parens_open',  null, {is_operator: true}) }
 	,')':  function() { return new Token('parens_close', null, {is_operator: true}) }
 	
-	,'[':  function() { return new Token('list:open',  null, {is_operator: true}) }
-	,']':  function() { return new Token('list:close', null, {is_operator: true}) }
+	,'[':  function() { return new Token('list:open',  null) }
+	,']':  function() { return new Token('list:close', null) }
 };
 
 Lexer.newline_as_null = true;
@@ -575,13 +575,11 @@ ParserL2.prototype.process = function(){
 			token.is_operator = false;
 		};
 		
-		
-		
 		if (token.is_operator) {
 
 			// If we are in a functor definition,
 			//  we need to swap `op:conj` for a separator token
-			if (this.context.diving) {
+			if (this.context.diving_functor || this.context.diving_list) {
 				if (token.name == 'op:conj') {
 					token.is_operator = false;
 					token.name = 'sep';
@@ -639,12 +637,21 @@ ParserL2.prototype.process = function(){
 
 			// Were we 1 level down accumulating 
 			//  arguments for a functor ?
-			if (this.context.diving)
+			if (this.context.diving_functor)
 				return this._handleEnd( expression );
 			
 			continue;
 		};
+
+		if (token.name == 'list:close') {
 			
+			if (this.context.diving_list)
+				return this._handleEnd( expression );
+			continue;
+		};
+
+		
+		
 		// Should we be substituting an OpNode ?
 		//
 		if (token.is_operator) {
@@ -681,6 +688,26 @@ ParserL2.prototype.process = function(){
 			continue;
 		};
 		
+		// Handle list
+		//
+		if (token.name == 'list:open') {
+			
+			var result = this._handleList();
+			var new_index = result.index;
+			
+			this.index = new_index;
+			
+			var functor_node = new Functor('list');
+			functor_node.args = result.terms[0];
+			functor_node.line = token.line;
+			functor_node.col  = token.col;
+			
+			expression.push( functor_node );
+			continue;			
+		};
+		
+		
+		
 		// default is to build the expression 
 		//
 		expression.push( token );
@@ -700,18 +727,34 @@ ParserL2.prototype._handleFunctor = function() {
 	
 	var parser_level_down = new ParserL2(this.tokens, 
 										this.index,
-										{diving: true}
+										{diving_functor: true}
 										);
 	
 	return parser_level_down.process();
 };
+
+/**
+ *  Handles the tokens related to a list
+ *  
+ *   @return Result
+ */
+ParserL2.prototype._handleList = function() {
+	
+	var parser_level_down = new ParserL2(this.tokens, 
+										this.index,
+										{diving_list: true}
+										);
+	
+	return parser_level_down.process();
+};
+
 
 ParserL2.prototype._handleEnd = function(current_expression) {
 	
 	if (current_expression.length != 0)
 		this.result.push(current_expression);
 	
-	if (this.context.diving)
+	if (this.context.diving_functor)
 		return new Result(current_expression, this.index);
 	
 	return new Result(this.result, this.index);

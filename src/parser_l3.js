@@ -6,7 +6,6 @@
  *  
  *  Substitute operators for functors
  *  
- *  Start
  *  
  *  
  *  @dependency: types.js

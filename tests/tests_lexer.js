@@ -442,7 +442,7 @@ it('Lex - list - 2', function(){
 	
 	var elist = [new Token('list:open', null), 
 	             new Token('term',    'H'),
-	             new Token('op:tail',  '|'),
+	             new Token('list:tail',  '|'),
 	             new Token('term',    'T'),
 	             new Token('list:close',  null),
 	             ];

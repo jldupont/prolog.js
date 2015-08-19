@@ -46,22 +46,22 @@ Lexer.token_map = {
 	//  downstream in the parsers
 	// --------------------------------------------------
 	':-':  function() { return new Token('op:rule', ':-', {is_operator: true}) }
-	,',':  function() { return new Token('op:conj', ',', {is_operator: true}) }
-	,';':  function() { return new Token('op:disj', ';', {is_operator: true}) }
-	,'=':  function() { return new Token('op:unif', '=', {is_operator: true}) }
+	,',':  function() { return new Token('op:conj', ',',  {is_operator: true}) }
+	,';':  function() { return new Token('op:disj', ';',  {is_operator: true}) }
+	,'=':  function() { return new Token('op:unif', '=',  {is_operator: true}) }
 	,'-':  function() { return new Token('op:minus', '-', {is_operator: true}) }
 	,'+':  function() { return new Token('op:plus',  '+', {is_operator: true}) }
 	,'*':  function() { return new Token('op:mult',  '*', {is_operator: true}) }
 	,'is': function() { return new Token('op:is',    'is',{is_operator: true}) }
-	,'|':  function() { return new Token('op:tail',  '|', {is_operator: true}) }
+	,'|':  function() { return new Token('list:tail','|'  ) }
 	
 	,'\n': function() { return new Token('newline') }
 	,'.':  function() { return new Token('period') }
 	,'(':  function() { return new Token('parens_open',  null, {is_operator: true}) }
 	,')':  function() { return new Token('parens_close', null, {is_operator: true}) }
 	
-	,'[':  function() { return new Token('list:open',  null, {is_operator: true}) }
-	,']':  function() { return new Token('list:close', null, {is_operator: true}) }
+	,'[':  function() { return new Token('list:open',  null) }
+	,']':  function() { return new Token('list:close', null) }
 };
 
 Lexer.newline_as_null = true;
