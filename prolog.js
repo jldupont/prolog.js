@@ -224,7 +224,7 @@ Interpreter.prototype.set_expression = function(exp) {
 	this.exp = exp;
 	
 	// By default, the result will be in variable `?answer`
-	this._preprocess(this.exp, 0);
+	this._preprocess(this.exp);
 };
 
 /**
@@ -254,10 +254,11 @@ Interpreter.prototype.set_expression = function(exp) {
  */
 Interpreter.prototype._preprocess = function(node, variable_counter) {
 	
-	console.log("\nPreprocess, node= ", node);
+	var is_root = variable_counter == undefined;
+	variable_counter = variable_counter || 0;
 	
 	if (!node)
-		return [null, 0];
+		return null;
 	
 	if (!(node instanceof Functor)) {
 		return [node, variable_counter];
@@ -270,7 +271,7 @@ Interpreter.prototype._preprocess = function(node, variable_counter) {
 		if (node.args[0] instanceof Functor) {
 			variable_counter = this._preprocess(node.args[0], variable_counter);
 			node_left_varname = "?var"+variable_counter;
-			
+			variable_counter ++;
 		} else
 			node_left = node.args[0];
 		
@@ -283,6 +284,7 @@ Interpreter.prototype._preprocess = function(node, variable_counter) {
 		if (node.args[1] instanceof Functor) {
 			variable_counter = this._preprocess(node.args[1], variable_counter);
 			node_right_varname = "?var"+variable_counter;
+			variable_counter ++;
 		} else
 			node_right = node.args[1];
 		
@@ -292,9 +294,14 @@ Interpreter.prototype._preprocess = function(node, variable_counter) {
 	// CENTER
 	// =================
 	
-	var node_center = new Functor(node.name, "?var"+variable_counter);
+	var node_center;
 	
-	variable_counter++;
+	if (is_root)
+		node_center = new Functor(node.name, "?result");
+	else
+		node_center = new Functor(node.name, "?var"+variable_counter);
+	
+	//variable_counter++;
 	
 	if (node_left)
 		node_center.args.push(node_left);
