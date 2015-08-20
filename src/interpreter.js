@@ -17,15 +17,19 @@
  */
 function Interpreter(db, env, stack) {
 	this.exp = null;
-	this.db  = db;
-	this.env = env;
-	this.stack = stack;
+	this.db  = db || {};
+	this.env = env || {};
+	this.stack = stack || [];
 	
 	// The index in the stack where the
 	//  the input expression ends.
 	// This is useful during backtracking.
 	//
 	this.index_of_expression_ending = 0;
+};
+
+Interpreter.prototype.get_stack = function(){
+	return this.stack;
 };
 
 /**
@@ -63,9 +67,10 @@ Interpreter.prototype.set_expression = function(exp) {
 	if (!(exp instanceof Functor))
 		throw new Error("Expecting a rooted tree with a Functor as root, got: "+JSON.stringify(exp));
 	
-	
-	
 	this.exp = exp;
+	
+	// By default, the result will be in variable `?answer`
+	this._preprocess(this.exp, 0);
 };
 
 /**
@@ -88,11 +93,72 @@ Interpreter.prototype.set_expression = function(exp) {
  *       		Functor(goal1/2,Token(var,X),Token(var,Y)),
  *       		Functor(goal2/2,Token(var,A),Token(var,B))),
  *       	Functor(goal3/2,Token(var,C),Token(var,D)))
- *    
+ *  
+ *  @raise Error
+ *  
+ *  Uses the provided stack to build the instructions set
  */
-Interpreter.prototype._preprocess = function() {
+Interpreter.prototype._preprocess = function(node, variable_counter) {
 	
-};
+	console.log("\nPreprocess, node= ", node);
+	
+	if (!node)
+		return [null, 0];
+	
+	if (!(node instanceof Functor)) {
+		return [node, variable_counter];
+	};
+
+	var node_left = null, node_left_varname = null;
+	
+	if (node.args[0]) {
+		
+		if (node.args[0] instanceof Functor) {
+			variable_counter = this._preprocess(node.args[0], variable_counter);
+			node_left_varname = "?var"+variable_counter;
+			
+		} else
+			node_left = node.args[0];
+		
+	};
+
+	var node_right = null, node_right_varname = null;
+	
+	if (node.args[1]) {
+		
+		if (node.args[1] instanceof Functor) {
+			variable_counter = this._preprocess(node.args[1], variable_counter);
+			node_right_varname = "?var"+variable_counter;
+		} else
+			node_right = node.args[1];
+		
+	};
+	
+	
+	// CENTER
+	// =================
+	
+	var node_center = new Functor(node.name, "?var"+variable_counter);
+	
+	variable_counter++;
+	
+	if (node_left)
+		node_center.args.push(node_left);
+	else
+		if (node_left_varname)
+			node_center.args.push(new Token('var', node_left_varname));
+
+	if (node_right)
+		node_center.args.push(node_right);
+	else
+		if (node_right_varname)
+			node_center.args.push(new Token('var', node_right_varname));
+	
+	this.stack.push(node_center);
+	
+	return variable_counter;
+}; // _preprocess
+
 
 
 /**
@@ -107,6 +173,6 @@ Interpreter.prototype.next = function() {
 
 
 if (typeof module!= 'undefined') {
-	module.exports.builtins = builtins;
+	module.exports.Interpreter = Interpreter;
 };
 

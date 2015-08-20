@@ -406,9 +406,10 @@ Functor.prototype.inspect = function(){
 Functor.prototype.format_args = function () {
 	
 	var result = "";
-	for (var index in this.args) {
+	for (var index =0; index<this.args.length; index++) {
 		var arg = this.args[index];
-		if (arg.inspect)
+		
+		if (arg && arg.inspect)
 			result += ","+arg.inspect();
 		else
 			result += ","+JSON.stringify(arg);
