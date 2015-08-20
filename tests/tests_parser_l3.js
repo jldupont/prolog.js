@@ -221,6 +221,38 @@ it('ParserL3 - complex - 6', function(){
 	should.equal(i, expected, 'got: ', util.inspect(r));
 });
 
+it('ParserL3 - expression - 1', function(){
+	
+	var input = "goal1(X, Y), goal2(A,B), goal3(C,D).";
+	var expected = "[ [ Functor(conj/2,Functor(conj/2,Functor(goal1/2,Token(var,X),Token(var,Y)),Functor(goal2/2,Token(var,A),Token(var,B))),Functor(goal3/2,Token(var,C),Token(var,D))) ] ]";
+	
+	var expressions = setup(input);
+	
+	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
+	
+	var r = p.process();
+	
+	var i = util.inspect(r, {depth: null});
+		
+	should.equal(i, expected, 'got: ', util.inspect(r));
+});
+
+it('ParserL3 - expression - 2', function(){
+	
+	var input = "goal1(X, Y), goal2(A,B) ; goal3(C,D).";
+	var expected = "[ [ Functor(disj/2,Functor(conj/2,Functor(goal1/2,Token(var,X),Token(var,Y)),Functor(goal2/2,Token(var,A),Token(var,B))),Functor(goal3/2,Token(var,C),Token(var,D))) ] ]";
+	
+	var expressions = setup(input);
+	
+	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
+	
+	var r = p.process();
+	
+	var i = util.inspect(r, {depth: null});
+		
+	should.equal(i, expected, 'got: ', util.inspect(r));
+});
+
 
 it('ParserL3 - list - 1', function(){
 	

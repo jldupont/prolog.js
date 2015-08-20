@@ -377,6 +377,10 @@ function Nothing () {};
 /**
  *  Functor
  *  @constructor
+ *  
+ *  @param name: the functor's name
+ *  @param maybe_arguments_list : an optional arguments list
+ *          (useful during debugging)
  */
 function Functor(name, maybe_arguments_list) {
 	
