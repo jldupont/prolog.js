@@ -42,68 +42,78 @@ var setup = function(text) {
 	return r3;
 };
 
+var process = function(input_text, expected) {
+	
+	var expression = setup(input_text)[0][0];
 
-it('Interpreter - simple ', function(){
-	
-	var text = "f1(A) , f2(B).";
-	var expected = "";
-	/*
-	 * [ Functor(conj/2,
-	 * 		Functor(f1/1, Token(var,A)),
-	 * 		Functor(f2/1,Token(var,B))) 
-	 * ]
-	 */
-	
-	var expression = setup(text)[0][0];
-
-	//console.log(expression);
-	
 	var i = new Interpreter();
 	
 	i.set_expression(expression);
 	
-	var result = i.get_stack();
+	var ri = i.get_stack();
 	
-	var r = util.inspect(result, {depth: null});
+	var result = compare(ri, expected);
 	
-	//should.equal(r, expected, 'got: ', util.inspect(r));
+	should.equal(result, true, "Got: " + util.inspect(ri));
+};
+
+var compare = function(input, expected) {
 	
-	//console.log(i.get_stack());
+	for (var index=0;index<input.length;index++) {
+		
+		var i = input[index];
+		var re = expected[index];
+		
+		var ri = util.inspect(i, {depth: null});
+		if (ri!=re)
+			return false;
+	};
 	
+	return true;
+};
+
+it('Interpreter - simple 1', function(){
+	
+	var text = "f1(A) , f2(B).";
+	var expected = [ 'Functor(call/3,"f1","?var0",Token(var,A))',
+	                 'Functor(call/3,"f2","?var1",Token(var,B))',
+	                 'Functor(call/4,"conj","?result",Token(var,?var0),Token(var,?var1))' 
+	                 ];
+	process(text, expected);
+});
+
+it('Interpreter - simple 2', function(){
+	
+	var text = "f1(A) ; f2(B).";
+	var expected = [ 'Functor(call/3,"f1","?var0",Token(var,A))',
+	                 'Functor(call/3,"f2","?var1",Token(var,B))',
+	                 'Functor(call/4,"disj","?result",Token(var,?var0),Token(var,?var1))' 
+	                 ];
+	process(text, expected);
 });
 
 
 it('Interpreter - complex - 1 ', function(){
 	
 	var text = "f1(A) , f2(B), f3(C).";
-	var expected = "";
+	var expected = [ 'Functor(call/3,"f1","?var0",Token(var,A))',
+	                 'Functor(call/3,"f2","?var1",Token(var,B))',
+	                 'Functor(call/4,"conj","?var2",Token(var,?var0),Token(var,?var1))',
+	                 'Functor(call/3,"f3","?var3",Token(var,C))',
+	                 'Functor(call/4,"conj","?result",Token(var,?var2),Token(var,?var3))' ];
 	
-	var expression = setup(text)[0][0];
+	process(text, expected);
+});
 
-	/*
-	 * Functor(conj/2,
-	 * 		Functor(conj/2,
-	 * 			Functor(f1/1,Token(var,A)),
-	 * 			Functor(f2/1,Token(var,B))),
-	 * 		Functor(f3/1,Token(var,C)))
-	 */
+it('Interpreter - complex - 2 ', function(){
 	
-	console.log(expression);
+	var text = "f1(A) , f2(B), f3(f4(C)).";
+	var expected = [ 'Functor(call/3,"f1","?var0",Token(var,A))',
+	                 'Functor(call/3,"f2","?var1",Token(var,B))',
+	                 'Functor(call/4,"conj","?var2",Token(var,?var0),Token(var,?var1))',
+	                 'Functor(call/3,"f4","?var3",Token(var,C))',
+	                 'Functor(call/3,"f3","?var4",Token(var,?var3))',
+	                 'Functor(call/4,"conj","?result",Token(var,?var2),Token(var,?var4))' ];
 	
-	
-	var i = new Interpreter();
-	
-	i.set_expression(expression);
-	
-	var result = i.get_stack();
-	
-	console.log("***Result:", result);
-	
-	
-	//var r = util.inspect(result, {depth: null});
-	
-	//should.equal(r, expected, 'got: ', util.inspect(r));
-	
-	
-	
+	process(text, expected);
 });

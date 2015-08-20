@@ -103,13 +103,20 @@ Interpreter.prototype._preprocess = function(node, variable_counter) {
 	var is_root = variable_counter == undefined;
 	variable_counter = variable_counter || 0;
 	
-	if (!node)
-		return null;
 	
-	if (!(node instanceof Functor)) {
-		return [node, variable_counter];
-	};
+	// that should happen
+	if (!node)
+		throw new Error("Preprocess: got an undefined node.");
+	
+	if (!(node instanceof Functor)) 
+		throw new Error("Preprocess: expecting a Functor, got: ", node);
 
+	
+	
+	
+	
+	// Go depth first, left first
+	//
 	var node_left = null, node_left_varname = null;
 	
 	if (node.args[0]) {
@@ -123,6 +130,10 @@ Interpreter.prototype._preprocess = function(node, variable_counter) {
 		
 	};
 
+	
+	
+	// Right-hand side
+	//
 	var node_right = null, node_right_varname = null;
 	
 	if (node.args[1]) {
@@ -143,11 +154,9 @@ Interpreter.prototype._preprocess = function(node, variable_counter) {
 	var node_center;
 	
 	if (is_root)
-		node_center = new Functor(node.name, "?result");
+		node_center = new Functor("call", node.name, "?result");
 	else
-		node_center = new Functor(node.name, "?var"+variable_counter);
-	
-	//variable_counter++;
+		node_center = new Functor("call", node.name, "?var"+variable_counter);
 	
 	if (node_left)
 		node_center.args.push(node_left);
