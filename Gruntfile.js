@@ -29,7 +29,10 @@ module.exports = function (grunt) {
         	test: {
         		options: {
         			//clearRequireCache: true,
-        			//reporter: 'spec'
+        			reporter: 'min'
+        			,bail: true
+        			//,quiet: true
+        			
         		},
         		src: ['tests/**/*.js']
         		

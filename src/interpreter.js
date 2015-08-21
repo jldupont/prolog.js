@@ -187,6 +187,7 @@ Interpreter.prototype._preprocess = function(node, variable_counter) {
  * @raise Error
  */
 Interpreter.prototype.next = function() {
+
 	
 };
 
