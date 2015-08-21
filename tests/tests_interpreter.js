@@ -125,3 +125,21 @@ it('Interpreter - complex - 2 ', function(){
 	
 	process(text, expected);
 });
+
+it('Interpreter - complex - 3 ', function(){
+	
+	var text = "f1(A) , B is A, f2(B), f3(f4(C)).";
+	var expected = [ 'Functor(call/3,"?var0","f1",Token(var,A))',
+	                 'Functor(call/4,"?var1","is",Token(var,B),Token(var,A))',
+	                 'Functor(call/4,"?var2","conj",Token(var,?var0),Token(var,?var1))',
+	                 'Functor(call/3,"?var3","f2",Token(var,B))',
+	                 'Functor(call/4,"?var4","conj",Token(var,?var2),Token(var,?var3))',
+	                 
+	                 'Functor(call/3,"?var5","f4",Token(var,C))',
+	                 'Functor(call/3,"?var6","f3",Token(var,?var5))',
+	                 
+	                 'Functor(call/4,"?result","conj",Token(var,?var4),Token(var,?var6))' 
+	                 ];
+	
+	process(text, expected);
+});

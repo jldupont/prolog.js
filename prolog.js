@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-08-20 */
+/*! prolog.js - v0.0.1 - 2015-08-21 */
 
 var builtins = {};
 
