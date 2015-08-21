@@ -72,12 +72,20 @@ var compare = function(input, expected) {
 	return true;
 };
 
+it('Interpreter - basic', function(){
+	
+	var text = "f1(A).";
+	var expected = [ 'Functor(call/3,"?result","f1",Token(var,A))' ];
+	process(text, expected);
+});
+
+
 it('Interpreter - simple 1', function(){
 	
 	var text = "f1(A) , f2(B).";
-	var expected = [ 'Functor(call/3,"f1","?var0",Token(var,A))',
-	                 'Functor(call/3,"f2","?var1",Token(var,B))',
-	                 'Functor(call/4,"conj","?result",Token(var,?var0),Token(var,?var1))' 
+	var expected = [ 'Functor(call/3,"?var0","f1",Token(var,A))',
+	                 'Functor(call/3,"?var1","f2",Token(var,B))',
+	                 'Functor(call/4,"?result","conj",Token(var,?var0),Token(var,?var1))' 
 	                 ];
 	process(text, expected);
 });
@@ -85,9 +93,9 @@ it('Interpreter - simple 1', function(){
 it('Interpreter - simple 2', function(){
 	
 	var text = "f1(A) ; f2(B).";
-	var expected = [ 'Functor(call/3,"f1","?var0",Token(var,A))',
-	                 'Functor(call/3,"f2","?var1",Token(var,B))',
-	                 'Functor(call/4,"disj","?result",Token(var,?var0),Token(var,?var1))' 
+	var expected = [ 'Functor(call/3,"?var0","f1",Token(var,A))',
+	                 'Functor(call/3,"?var1","f2",Token(var,B))',
+	                 'Functor(call/4,"?result","disj",Token(var,?var0),Token(var,?var1))' 
 	                 ];
 	process(text, expected);
 });
@@ -96,11 +104,11 @@ it('Interpreter - simple 2', function(){
 it('Interpreter - complex - 1 ', function(){
 	
 	var text = "f1(A) , f2(B), f3(C).";
-	var expected = [ 'Functor(call/3,"f1","?var0",Token(var,A))',
-	                 'Functor(call/3,"f2","?var1",Token(var,B))',
-	                 'Functor(call/4,"conj","?var2",Token(var,?var0),Token(var,?var1))',
-	                 'Functor(call/3,"f3","?var3",Token(var,C))',
-	                 'Functor(call/4,"conj","?result",Token(var,?var2),Token(var,?var3))' ];
+	var expected = [ 'Functor(call/3,"?var0","f1",Token(var,A))',
+	                 'Functor(call/3,"?var1","f2",Token(var,B))',
+	                 'Functor(call/4,"?var2","conj",Token(var,?var0),Token(var,?var1))',
+	                 'Functor(call/3,"?var3","f3",Token(var,C))',
+	                 'Functor(call/4,"?result","conj",Token(var,?var2),Token(var,?var3))' ];
 	
 	process(text, expected);
 });
@@ -108,12 +116,12 @@ it('Interpreter - complex - 1 ', function(){
 it('Interpreter - complex - 2 ', function(){
 	
 	var text = "f1(A) , f2(B), f3(f4(C)).";
-	var expected = [ 'Functor(call/3,"f1","?var0",Token(var,A))',
-	                 'Functor(call/3,"f2","?var1",Token(var,B))',
-	                 'Functor(call/4,"conj","?var2",Token(var,?var0),Token(var,?var1))',
-	                 'Functor(call/3,"f4","?var3",Token(var,C))',
-	                 'Functor(call/3,"f3","?var4",Token(var,?var3))',
-	                 'Functor(call/4,"conj","?result",Token(var,?var2),Token(var,?var4))' ];
+	var expected = [ 'Functor(call/3,"?var0","f1",Token(var,A))',
+	                 'Functor(call/3,"?var1","f2",Token(var,B))',
+	                 'Functor(call/4,"?var2","conj",Token(var,?var0),Token(var,?var1))',
+	                 'Functor(call/3,"?var3","f4",Token(var,C))',
+	                 'Functor(call/3,"?var4","f3",Token(var,?var3))',
+	                 'Functor(call/4,"?result","conj",Token(var,?var2),Token(var,?var4))' ];
 	
 	process(text, expected);
 });

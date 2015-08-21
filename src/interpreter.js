@@ -100,6 +100,7 @@ Interpreter.prototype.set_expression = function(exp) {
  */
 Interpreter.prototype._preprocess = function(node, variable_counter) {
 	
+	
 	var is_root = variable_counter == undefined;
 	variable_counter = variable_counter || 0;
 	
@@ -151,12 +152,14 @@ Interpreter.prototype._preprocess = function(node, variable_counter) {
 	// CENTER
 	// =================
 	
-	var node_center;
+	var node_center = node_center = new Functor("call");
 	
 	if (is_root)
-		node_center = new Functor("call", node.name, "?result");
+		node_center.args.push("?result");
 	else
-		node_center = new Functor("call", node.name, "?var"+variable_counter);
+		node_center.args.push("?var"+variable_counter);
+	
+	node_center.args.push(node.name);
 	
 	if (node_left)
 		node_center.args.push(node_left);
