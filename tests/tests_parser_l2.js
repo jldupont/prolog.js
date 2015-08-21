@@ -94,7 +94,7 @@ it('ParserL2 - simple - with anon variable', function(){
 	
 	var text = "love(_).\n";
 
-	var expected = [ 'Functor(love/1,Token(var_anon,null))' ];
+	var expected = [ 'Functor(love/1,Var(_))' ];
 	
 	process(text, expected);
 });

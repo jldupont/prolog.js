@@ -630,8 +630,8 @@ ParserL1.prototype.next = function() {
 			head.name = 'var';
 		
 		if (first_character=='_' && head.value.length == 1) {
-			head.name = 'var_anon';
-			head.value = null;
+			head.name = 'var';
+			head.value = '_';
 		};
 			
 		
