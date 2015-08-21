@@ -33,240 +33,143 @@ var setup = function(text) {
 	
 	var result = p.process();
 	var terms = result.terms;
+
 	
-	return terms;
+	var p = new ParserL3(terms, Op.ordered_list_by_precedence);
+	
+	var r = p.process();
+	
+	var exp0 = r[0];
+	
+	return exp0;
+};
+
+var compare = function(input, expected) {
+	
+	//console.log("Compare: input length: ", input.length);
+	//console.log("Compare: input= ", input);
+	
+	for (var index=0;index<input.length;index++) {
+		
+		var i = input[index];
+		var re = expected[index];
+		
+		var ri = util.inspect(i, {depth: null});
+		if (ri!=re)
+			return false;
+	};
+	
+	return true;
+};
+
+var process = function(text, expected) {
+	var exp = setup(text);
+	
+	var result = compare(exp, expected);
+	
+	should.equal(result, true, "Got: " + util.inspect(exp));
+	
 };
 
 
 it('ParserL3 - simple ', function(){
 	
 	var text = "A+B+C.";
-	
-	/*
-	 [ 
-	 	Functor(plus/2,
-	 		Functor(plus/2,
-	 			Token(var,A),Token(var,B)),
-	 		Token(var,C)) 
-	 ]
-	 */
-	var expressions = setup(text);
-	
-	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
-	
-	var r = p.process();
-	
-	var exp0 = r[0];
-	
-	should.equal(exp0[0] instanceof Functor, true);
-	should.equal(exp0[0].name, 'plus');
-	
-	should.equal(exp0[0].args[0] instanceof Functor, true);
-	should.equal(exp0[0].args[0].args[0] instanceof Token, true);
-	should.equal(exp0[0].args[0].args[0].value, 'A');
-	
-	should.equal(exp0[0].args[0].args[1] instanceof Token, true);
-	should.equal(exp0[0].args[0].args[1].value, 'B');
-	
-	should.equal(exp0[0].args[1] instanceof Token, true);
-	should.equal(exp0[0].args[1].value, 'C');
+	var exp = [ 'Functor(plus/2,Functor(plus/2,Var(A),Var(B)),Var(C))' ];
+
+	process(text, exp);
 });
 
 it('ParserL3 - simple - 2', function(){
 	
-	var input = "A+B*C.";
-	var expected = "[ [ Functor(plus/2,Token(var,A),Functor(mult/2,Token(var,B),Token(var,C))) ] ]";
-	
-	var expressions = setup(input);
-	
-	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
-	
-	var r = p.process();
-	
-	var i = util.inspect(r);
-	
-	should.equal(i, expected);
+	var text = "A+B*C.";
+	var exp = [ 'Functor(plus/2,Var(A),Functor(mult/2,Var(B),Var(C)))' ];
+
+	process(text, exp);
 });
 
 it('ParserL3 - simple - 3', function(){
 	
-	var input = "A = B*C.";
-	var expected = "[ [ Functor(unif/2,Token(var,A),Functor(mult/2,Token(var,B),Token(var,C))) ] ]";
-	
-	var expressions = setup(input);
-	
-	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
-	
-	var r = p.process();
-	
-	var i = util.inspect(r);
-	
-	should.equal(i, expected);
+	var text = "A = B*C.";
+	var exp = [ 'Functor(unif/2,Var(A),Functor(mult/2,Var(B),Var(C)))' ];
+
+	process(text, exp);
 });
 
 it('ParserL3 - simple - 4', function(){
 	
-	var input = "A + B = C*D.";
-	var expected = "[ [ Functor(unif/2,Functor(plus/2,Token(var,A),Token(var,B)),Functor(mult/2,Token(var,C),Token(var,D))) ] ]";
-	
-	var expressions = setup(input);
-	
-	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
-	
-	var r = p.process();
-	
-	var i = util.inspect(r);
-	
-	should.equal(i, expected);
+	var text = "A + B = C*D.";
+	var exp = [ 'Functor(unif/2,Functor(plus/2,Var(A),Var(B)),Functor(mult/2,Var(C),Var(D)))' ];
+
+	process(text, exp);
 });
 
 it('ParserL3 - complex - 1', function(){
 	
-	var input = "f1( A* B ).";
-	var expected = "[ [ Functor(f1/1,Functor(mult/2,Token(var,A),Token(var,B))) ] ]";
-	
-	var expressions = setup(input);
-	
-	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
-	
-	var r = p.process();
-	
-	var i = util.inspect(r);
-	
-	should.equal(i, expected, 'got: ', util.inspect(r));
+	var text = "f1( A* B ).";
+	var exp = [ 'Functor(f1/1,Functor(mult/2,Var(A),Var(B)))' ];
+
+	process(text, exp);
 });
 
 it('ParserL3 - complex - 2', function(){
 	
-	var input = "f1( A* -B ).";
-	var expected = "[ [ Functor(f1/1,Functor(mult/2,Token(var,A),Functor(uminus/1,Token(var,B)))) ] ]";
-	
-	var expressions = setup(input);
-	
-	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
-1	
-	var r = p.process();
-	
-	var i = util.inspect(r);
-	
-	should.equal(i, expected, 'got: ', util.inspect(r));
+	var text = "f1( A* -B ).";
+	var exp = [ 'Functor(f1/1,Functor(mult/2,Var(A),Functor(uminus/1,Var(B))))' ];
+
+	process(text, exp);
 });
 
 it('ParserL3 - complex - 3', function(){
 	
-	var input = "f1( f2( A - -B )).";
-	var expected = "[ [ Functor(f1/1,Functor(f2/1,Functor(plus/2,Token(var,A),Token(var,B)))) ] ]";
-	
-	var expressions = setup(input);
-	
-	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
-	
-	var r = p.process();
-	
-	var i = util.inspect(r);
-	
-	should.equal(i, expected, 'got: ', util.inspect(r));
-});
+	var text = "f1( f2( A - -B )).";
+	var exp = ['Functor(f1/1,Functor(f2/1,Functor(plus/2,Var(A),Var(B))))'];
 
-var compare = function(a,b) {
-	
-};
+	process(text, exp);
+});
 
 it('ParserL3 - complex - 4', function(){
 	
-	var input = "f1( f2( A - -B )).f3(a,b).";
-	var expected = "[ [ Functor(f1/1,Functor(f2/1,Functor(plus/2,Token(var,A),Token(var,B)))) ],\n"+
-				   "  [ Functor(f3/2,Token(term,a),Token(term,b)) ] ]";
+	var text = "f1( f2( A - -B )).f3(a,b).";
+	var expected = ['Functor(f1/1,Functor(f2/1,Functor(plus/2,Var(A),Var(B))))'];
 	
-	var expressions = setup(input);
-	
-	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
-	
-	var r = p.process();
-	
-	var i = util.inspect(r, {depth: null});
-	
-	should.equal(i, expected, 'got: ', i);
+	process(text, expected);
 });
 
 it('ParserL3 - complex - 5', function(){
 	
-	var input = "parent_child(X, Y) :- father_child(X, Y).";
-	var expected = "[ [ Functor(rule/2,Functor(parent_child/2,Token(var,X),Token(var,Y)),Functor(father_child/2,Token(var,X),Token(var,Y))) ] ]";
+	var text = "parent_child(X, Y) :- father_child(X, Y).";
+	var expected = ['Functor(rule/2,Functor(parent_child/2,Var(X),Var(Y)),Functor(father_child/2,Var(X),Var(Y)))'];
 	
-	var expressions = setup(input);
-	
-	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
-	
-	var r = p.process();
-	
-	var i = util.inspect(r, {depth: null});
-	
-	should.equal(i, expected, 'got: ', util.inspect(r));
-});
+	process(text, expected);});
 
 it('ParserL3 - complex - 6', function(){
 	
-	var input = "sibling(X, Y) :- parent_child(Z, X), parent_child(Z, Y).";
-	var expected = "[ [ Functor(rule/2,Functor(sibling/2,Token(var,X),Token(var,Y)),Functor(conj/2,Functor(parent_child/2,Token(var,Z),Token(var,X)),Functor(parent_child/2,Token(var,Z),Token(var,Y)))) ] ]";
+	var text = "sibling(X, Y) :- parent_child(Z, X), parent_child(Z, Y).";
+	var expected = ['Functor(rule/2,Functor(sibling/2,Var(X),Var(Y)),Functor(conj/2,Functor(parent_child/2,Var(Z),Var(X)),Functor(parent_child/2,Var(Z),Var(Y))))'];
 	
-	var expressions = setup(input);
-	
-	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
-	
-	var r = p.process();
-	
-	var i = util.inspect(r, {depth: null});
-	
-	should.equal(i, expected, 'got: ', util.inspect(r));
-});
+	process(text, expected);});
 
 it('ParserL3 - expression - 1', function(){
 	
-	var input = "goal1(X, Y), goal2(A,B), goal3(C,D).";
-	var expected = "[ [ Functor(conj/2,Functor(conj/2,Functor(goal1/2,Token(var,X),Token(var,Y)),Functor(goal2/2,Token(var,A),Token(var,B))),Functor(goal3/2,Token(var,C),Token(var,D))) ] ]";
+	var text = "goal1(X, Y), goal2(A,B), goal3(C,D).";
+	var expected = ['Functor(conj/2,Functor(conj/2,Functor(goal1/2,Var(X),Var(Y)),Functor(goal2/2,Var(A),Var(B))),Functor(goal3/2,Var(C),Var(D)))'];
 	
-	var expressions = setup(input);
-	
-	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
-	
-	var r = p.process();
-	
-	var i = util.inspect(r, {depth: null});
-		
-	should.equal(i, expected, 'got: ', util.inspect(r));
-});
+	process(text, expected);});
 
 it('ParserL3 - expression - 2', function(){
 	
-	var input = "goal1(X, Y), goal2(A,B) ; goal3(C,D).";
-	var expected = "[ [ Functor(disj/2,Functor(conj/2,Functor(goal1/2,Token(var,X),Token(var,Y)),Functor(goal2/2,Token(var,A),Token(var,B))),Functor(goal3/2,Token(var,C),Token(var,D))) ] ]";
+	var text = "goal1(X, Y), goal2(A,B) ; goal3(C,D).";
+	var expected = ['Functor(disj/2,Functor(conj/2,Functor(goal1/2,Var(X),Var(Y)),Functor(goal2/2,Var(A),Var(B))),Functor(goal3/2,Var(C),Var(D)))'];
 	
-	var expressions = setup(input);
-	
-	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
-	
-	var r = p.process();
-	
-	var i = util.inspect(r, {depth: null});
-		
-	should.equal(i, expected, 'got: ', util.inspect(r));
-});
+	process(text, expected);});
 
 
 it('ParserL3 - list - 1', function(){
 	
-	var input = "[A,B | T ].";
-	var expected = "[ [ Functor(list/4,Token(var,A),Token(var,B),Token(list:tail,|),Token(var,T)) ] ]";
+	var text = "[A,B | T ].";
+	var expected = ['Functor(list/4,Var(A),Var(B),Token(list:tail,|),Var(T))'];
 	
-	var expressions = setup(input);
-	
-	var p = new ParserL3(expressions, Op.ordered_list_by_precedence);
-	
-	var r = p.process();
-	
-	var i = util.inspect(r, {depth: null});
-	
-	should.equal(i, expected, 'got: ', util.inspect(r));
+	process(text, expected);
 });
 

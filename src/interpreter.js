@@ -165,13 +165,13 @@ Interpreter.prototype._preprocess = function(node, variable_counter) {
 		node_center.args.push(node_left);
 	else
 		if (node_left_varname)
-			node_center.args.push(new Token('var', node_left_varname));
+			node_center.args.push(new Var(node_left_varname));
 
 	if (node_right)
 		node_center.args.push(node_right);
 	else
 		if (node_right_varname)
-			node_center.args.push(new Token('var', node_right_varname));
+			node_center.args.push(new Var(node_right_varname));
 	
 	this.stack.push(node_center);
 	

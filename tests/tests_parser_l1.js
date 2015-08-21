@@ -126,6 +126,29 @@ it('ParserL1 - var - 1', function(){
 	should.equal(check, true);
 });
 
+it('ParserL1 - var - 2', function(){
+
+	var text = "X+-Y";
+
+	var expected_list = [
+	                     //new Token('parens_open', null, 4),
+	                     new Token('var',  'X'),
+	                     new Token('term', '+-'),
+	                     new Token('var',  'Y'),
+	                     ];
+	
+	var l = new Lexer(text);
+	var list = l.process();
+
+	var t = new ParserL1(list, {convert_fact: false});
+	var tresult = t.process();
+	
+	var check = Token.check_for_match(tresult, expected_list);
+	
+	//console.log(tresult);
+	should.equal(check, true);
+});
+
 it('ParserL1 - parens - 1', function(){
 
 	var text = "(X,Y).\n";

@@ -12,7 +12,7 @@
  *  * rearrange stream for infix notation for functors
  *    e.g.  functor(arg1, arg2, ...) ==>  functor, arg1, arg2, ...)
  *    
- *  * convert Term to variable
+ *  * convert variable
  *  
  *  @dependency: types.js
  */
@@ -50,6 +50,7 @@ ParserL1.prototype.next = function() {
 		return new Eos();
 		
 	// Check for whitespaces and remove
+	//
 	if (head.name == 'term') {
 		var value_without_whitespaces = (head.value || "").replace(/\s/g, '');
 		if (value_without_whitespaces.length == 0)
@@ -62,10 +63,9 @@ ParserL1.prototype.next = function() {
 	//
 	if (head_plus_one == null) {
 		this.reached_end = true;
-		return [head];
 	};
 
-	if (head_plus_one.name == 'parens_open') {
+	if (head_plus_one && head_plus_one.name == 'parens_open') {
 		if (head.name == 'term' || head.name == 'string') {
 			
 			//  functor(  ==>  functor

@@ -319,13 +319,13 @@ Interpreter.prototype._preprocess = function(node, variable_counter) {
 		node_center.args.push(node_left);
 	else
 		if (node_left_varname)
-			node_center.args.push(new Token('var', node_left_varname));
+			node_center.args.push(new Var(node_left_varname));
 
 	if (node_right)
 		node_center.args.push(node_right);
 	else
 		if (node_right_varname)
-			node_center.args.push(new Token('var', node_right_varname));
+			node_center.args.push(new Var(node_right_varname));
 	
 	this.stack.push(node_center);
 	
@@ -590,6 +590,7 @@ ParserL1.prototype.next = function() {
 		return new Eos();
 		
 	// Check for whitespaces and remove
+	//
 	if (head.name == 'term') {
 		var value_without_whitespaces = (head.value || "").replace(/\s/g, '');
 		if (value_without_whitespaces.length == 0)
@@ -602,10 +603,9 @@ ParserL1.prototype.next = function() {
 	//
 	if (head_plus_one == null) {
 		this.reached_end = true;
-		return [head];
 	};
 
-	if (head_plus_one.name == 'parens_open') {
+	if (head_plus_one && head_plus_one.name == 'parens_open') {
 		if (head.name == 'term' || head.name == 'string') {
 			
 			//  functor(  ==>  functor
@@ -754,6 +754,14 @@ ParserL2.prototype.process = function(){
 		if (token == null || token instanceof Eos)
 			return this._handleEnd( expression );
 
+		// Translate Token for variable to Var
+		if (token.name == 'var') {
+			var v = new Var(token.value);
+			v.col = token.col;
+			v.line = token.line;
+			expression.push(v);
+			continue;
+		};
 		
 		// Handle the case `(exp...)`
 		//
@@ -1563,12 +1571,23 @@ Functor.prototype.push_arg = function(arg) {
 	this.args.push(arg);
 };
 
+function Var(name) {
+	this.prec = 0;
+	this.name = name;
+	this.col = null;
+	this.line = null;
+};
+
+Var.prototype.inspect = function(){
+	return "Var("+this.name+")";
+};
 
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
 	module.exports.Eos = Eos;
 	module.exports.Functor = Functor;
 	module.exports.Op = Op;
+	module.exports.Var = Var;
 	module.exports.OpNode = OpNode;
 	module.exports.Result = Result;
 };

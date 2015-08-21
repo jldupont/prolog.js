@@ -17,7 +17,7 @@
  *  * replace `+-`  with `-`
  *  
  *  * translate `( exp ... )` ==> functor `ident( exp ...)` 
- *  
+ *  * Translate `Token(var, name)` ==> `Var(name)` 
  *  
  *  @dependency: types.js
  */
@@ -101,6 +101,14 @@ ParserL2.prototype.process = function(){
 		if (token == null || token instanceof Eos)
 			return this._handleEnd( expression );
 
+		// Translate Token for variable to Var
+		if (token.name == 'var') {
+			var v = new Var(token.value);
+			v.col = token.col;
+			v.line = token.line;
+			expression.push(v);
+			continue;
+		};
 		
 		// Handle the case `(exp...)`
 		//

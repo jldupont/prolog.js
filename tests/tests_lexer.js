@@ -456,3 +456,24 @@ it('Lex - list - 2', function(){
 
 	should.equal(result, true);
 });
+
+// var text = "X +- Y";
+
+it('Lex - expression - 1', function(){
+
+	var text = "X+-Y";
+	
+	var elist = [new Token('term', 'X'), 
+	             new Token('term', '+-'),
+	             new Token('term', 'Y'),
+	             ];
+	
+	var l = new Lexer(text);
+	var list = l.process();
+
+	//console.log(list);
+	
+	var result = Token.check_for_match(list, elist);
+
+	should.equal(result, true);
+});

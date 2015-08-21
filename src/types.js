@@ -426,12 +426,23 @@ Functor.prototype.push_arg = function(arg) {
 	this.args.push(arg);
 };
 
+function Var(name) {
+	this.prec = 0;
+	this.name = name;
+	this.col = null;
+	this.line = null;
+};
+
+Var.prototype.inspect = function(){
+	return "Var("+this.name+")";
+};
 
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
 	module.exports.Eos = Eos;
 	module.exports.Functor = Functor;
 	module.exports.Op = Op;
+	module.exports.Var = Var;
 	module.exports.OpNode = OpNode;
 	module.exports.Result = Result;
 };
