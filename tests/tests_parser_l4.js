@@ -56,6 +56,9 @@ var process = function(input_text, expected) {
 
 var compare = function(input, expected) {
 	
+	if (input.length != expected.length)
+		return false;
+	
 	for (var index=0;index<expected.length;index++) {
 		
 		var i = input[index];
@@ -80,9 +83,10 @@ it('ParserL4 - basic', function(){
 it('ParserL4 - simple 1', function(){
 	
 	var text = "f1(A) , f2(B).";
-	var expected = [ 'Functor(call/3,"?var0","f1",Var(A))',
-	                 'Functor(call/3,"?var1","f2",Var(B))',
-	                 'Functor(call/4,"?result","conj",Var(?var0),Var(?var1))' 
+	var expected = [ 
+	                'Functor(call/4,"?result","conj",Var(?var0),Var(?var1))',                
+	                'Functor(call/3,"?var1","f2",Var(B))',
+	                'Functor(call/3,"?var0","f1",Var(A))',
 	                 ];
 	process(text, expected);
 });
@@ -90,9 +94,10 @@ it('ParserL4 - simple 1', function(){
 it('ParserL4 - simple 2', function(){
 	
 	var text = "f1(A) ; f2(B).";
-	var expected = [ 'Functor(call/3,"?var0","f1",Var(A))',
-	                 'Functor(call/3,"?var1","f2",Var(B))',
-	                 'Functor(call/4,"?result","disj",Var(?var0),Var(?var1))' 
+	var expected = [ 
+	                'Functor(call/4,"?result","disj",Var(?var0),Var(?var1))',
+	                'Functor(call/3,"?var1","f2",Var(B))',
+	                 'Functor(call/3,"?var0","f1",Var(A))'
 	                 ];
 	process(text, expected);
 });
@@ -101,11 +106,13 @@ it('ParserL4 - simple 2', function(){
 it('ParserL4 - complex - 1 ', function(){
 	
 	var text = "f1(A) , f2(B), f3(C).";
-	var expected = [ 'Functor(call/3,"?var0","f1",Var(A))',
-	                 'Functor(call/3,"?var1","f2",Var(B))',
-	                 'Functor(call/4,"?var2","conj",Var(?var0),Var(?var1))',
-	                 'Functor(call/3,"?var3","f3",Var(C))',
-	                 'Functor(call/4,"?result","conj",Var(?var2),Var(?var3))' ];
+	var expected = [ 
+	                'Functor(call/4,"?result","conj",Var(?var2),Var(?var3))',
+	                'Functor(call/3,"?var3","f3",Var(C))',
+	                'Functor(call/4,"?var2","conj",Var(?var0),Var(?var1))',
+	                'Functor(call/3,"?var1","f2",Var(B))',
+	                'Functor(call/3,"?var0","f1",Var(A))'
+	                ];
 	
 	process(text, expected);
 });
@@ -113,12 +120,14 @@ it('ParserL4 - complex - 1 ', function(){
 it('ParserL4 - complex - 2 ', function(){
 	
 	var text = "f1(A) , f2(B), f3(f4(C)).";
-	var expected = [ 'Functor(call/3,"?var0","f1",Var(A))',
-	                 'Functor(call/3,"?var1","f2",Var(B))',
-	                 'Functor(call/4,"?var2","conj",Var(?var0),Var(?var1))',
-	                 'Functor(call/3,"?var3","f4",Var(C))',
-	                 'Functor(call/3,"?var4","f3",Var(?var3))',
-	                 'Functor(call/4,"?result","conj",Var(?var2),Var(?var4))' ];
+	var expected = [
+						'Functor(call/4,"?result","conj",Var(?var2),Var(?var4))',
+						'Functor(call/3,"?var4","f3",Var(?var3))',
+						'Functor(call/3,"?var3","f4",Var(C))',
+						'Functor(call/4,"?var2","conj",Var(?var0),Var(?var1))',
+						'Functor(call/3,"?var1","f2",Var(B))',
+						'Functor(call/3,"?var0","f1",Var(A))'	                
+	                ];
 	
 	process(text, expected);
 });
@@ -126,14 +135,15 @@ it('ParserL4 - complex - 2 ', function(){
 it('ParserL4 - complex - 3 ', function(){
 	
 	var text = "f1(A) , B is A, f2(B), f3(f4(C)).";
-	var expected = [ 'Functor(call/3,"?var0","f1",Var(A))',
-	                 'Functor(call/4,"?var1","is",Var(B),Var(A))',
-	                 'Functor(call/4,"?var2","conj",Var(?var0),Var(?var1))',
-	                 'Functor(call/3,"?var3","f2",Var(B))',
-	                 'Functor(call/4,"?var4","conj",Var(?var2),Var(?var3))',
-	                 'Functor(call/3,"?var5","f4",Var(C))',
-	                 'Functor(call/3,"?var6","f3",Var(?var5))',
-	                 'Functor(call/4,"?result","conj",Var(?var4),Var(?var6))' 
+	var expected = [
+						'Functor(call/4,"?result","conj",Var(?var4),Var(?var6))',
+						'Functor(call/3,"?var6","f3",Var(?var5))',
+						'Functor(call/3,"?var5","f4",Var(C))',
+						'Functor(call/4,"?var4","conj",Var(?var2),Var(?var3))',
+						'Functor(call/3,"?var3","f2",Var(B))',
+						'Functor(call/4,"?var2","conj",Var(?var0),Var(?var1))',
+						'Functor(call/4,"?var1","is",Var(B),Var(A))',
+						'Functor(call/3,"?var0","f1",Var(A))'	                
 	                 ];
 	
 	process(text, expected);
@@ -142,11 +152,12 @@ it('ParserL4 - complex - 3 ', function(){
 it('ParserL4 - complex - 4 ', function(){
 	
 	var text = "sibling(X, Y) :- parent_child(Z, X), parent_child(Z, Y).";
-	var expected = [ 'Functor(call/4,"?var0","sibling",Var(X),Var(Y))',
-	                 'Functor(call/4,"?var1","parent_child",Var(Z),Var(X))',
-	                 'Functor(call/4,"?var2","parent_child",Var(Z),Var(Y))',
-	                 'Functor(call/4,"?var3","conj",Var(?var1),Var(?var2))',
-	                 'Functor(call/4,"?result","rule",Var(?var0),Var(?var3))' 
+	var expected = [
+						'Functor(call/4,"?result","rule",Var(?var0),Var(?var3))',
+						'Functor(call/4,"?var3","conj",Var(?var1),Var(?var2))',
+						'Functor(call/4,"?var2","parent_child",Var(Z),Var(Y))',
+						'Functor(call/4,"?var1","parent_child",Var(Z),Var(X))',
+						'Functor(call/4,"?var0","sibling",Var(X),Var(Y))'	                
 	                 ];
 	
 	process(text, expected);
@@ -157,7 +168,11 @@ it('ParserL4 - complex - 4 ', function(){
 	var text = "append([H|T],L2,[H|L3])  :-  append(T,L2,L3).";
 	
 	var expected = [ 
-	                
+						'Functor(call/4,"?result","rule",Var(?var2),Var(?var3))',
+						'Functor(call/5,"?var3","append",Var(T),Var(L2),Var(L3))',
+						'Functor(call/5,"?var2","append",Var(?var0),Var(L2),Var(?var1))',
+						'Functor(call/5,"?var1","list",Var(H),Token(list:tail,|),Var(L3))',
+						'Functor(call/5,"?var0","list",Var(H),Token(list:tail,|),Var(T))'						
 	                ];
 	
 	process(text, expected);

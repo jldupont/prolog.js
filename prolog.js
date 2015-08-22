@@ -1116,7 +1116,7 @@ ParserL4.prototype._process = function(node, variable_counter) {
 	else
 		nnode.args.unshift("?var"+variable_counter);
 		
-	this.stack.push(nnode);
+	this.stack.unshift(nnode);
 	
 	return variable_counter;
 }; // _preprocess
