@@ -56,7 +56,7 @@ var process = function(input_text, expected) {
 
 var compare = function(input, expected) {
 	
-	for (var index=0;index<input.length;index++) {
+	for (var index=0;index<expected.length;index++) {
 		
 		var i = input[index];
 		var re = expected[index];
@@ -135,6 +135,30 @@ it('ParserL4 - complex - 3 ', function(){
 	                 'Functor(call/3,"?var6","f3",Var(?var5))',
 	                 'Functor(call/4,"?result","conj",Var(?var4),Var(?var6))' 
 	                 ];
+	
+	process(text, expected);
+});
+
+it('ParserL4 - complex - 4 ', function(){
+	
+	var text = "sibling(X, Y) :- parent_child(Z, X), parent_child(Z, Y).";
+	var expected = [ 'Functor(call/4,"?var0","sibling",Var(X),Var(Y))',
+	                 'Functor(call/4,"?var1","parent_child",Var(Z),Var(X))',
+	                 'Functor(call/4,"?var2","parent_child",Var(Z),Var(Y))',
+	                 'Functor(call/4,"?var3","conj",Var(?var1),Var(?var2))',
+	                 'Functor(call/4,"?result","rule",Var(?var0),Var(?var3))' 
+	                 ];
+	
+	process(text, expected);
+});
+
+it('ParserL4 - complex - 4 ', function(){
+	
+	var text = "append([H|T],L2,[H|L3])  :-  append(T,L2,L3).";
+	
+	var expected = [ 
+	                
+	                ];
 	
 	process(text, expected);
 });

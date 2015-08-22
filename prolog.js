@@ -1090,67 +1090,33 @@ ParserL4.prototype._process = function(node, variable_counter) {
 		throw new Error("ParserL4: expecting a Functor, got: ", node);
 
 	
-	
-	
-	
-	// Go depth first, left first
+	// Recursively go through all arguments
+	//  of the present Functor
 	//
-	var node_left = null, node_left_varname = null;
+	var nnode = new Functor('call');
 	
-	if (node.args[0]) {
+	nnode.args.push(node.name);
+	
+	for (var index=0;index<node.args.length;index++) {
 		
-		if (node.args[0] instanceof Functor) {
-			variable_counter = this._process(node.args[0], variable_counter);
-			node_left_varname = "?var"+variable_counter;
-			variable_counter ++;
-		} else
-			node_left = node.args[0];
+		var bnode = node.args[index];
 		
-	};
+		if (bnode instanceof Functor) {
+			variable_counter = this._process(bnode, variable_counter);
+			nnode.args.push(new Var("?var"+variable_counter));
+			variable_counter++;
+		} else {
+			nnode.args.push(bnode);
+		};
+		
+	};// for args
 
-	
-	
-	// Right-hand side
-	//
-	var node_right = null, node_right_varname = null;
-	
-	if (node.args[1]) {
-		
-		if (node.args[1] instanceof Functor) {
-			variable_counter = this._process(node.args[1], variable_counter);
-			node_right_varname = "?var"+variable_counter;
-			variable_counter ++;
-		} else
-			node_right = node.args[1];
-		
-	};
-	
-	
-	// CENTER
-	// =================
-	
-	var node_center = node_center = new Functor("call");
-	
 	if (is_root)
-		node_center.args.push(this.result_var);
+		nnode.args.unshift(this.result_var);
 	else
-		node_center.args.push("?var"+variable_counter);
-	
-	node_center.args.push(node.name);
-	
-	if (node_left)
-		node_center.args.push(node_left);
-	else
-		if (node_left_varname)
-			node_center.args.push(new Var(node_left_varname));
-
-	if (node_right)
-		node_center.args.push(node_right);
-	else
-		if (node_right_varname)
-			node_center.args.push(new Var(node_right_varname));
-	
-	this.stack.push(node_center);
+		nnode.args.unshift("?var"+variable_counter);
+		
+	this.stack.push(nnode);
 	
 	return variable_counter;
 }; // _preprocess

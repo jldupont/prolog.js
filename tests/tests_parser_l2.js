@@ -41,7 +41,7 @@ var compare = function(input, expected) {
 	//console.log("Compare: input length: ", input.length);
 	//console.log("Compare: input= ", input);
 	
-	for (var index=0;index<input.length;index++) {
+	for (var index=0;index<expected.length;index++) {
 		
 		var i = input[index];
 		var re = expected[index];

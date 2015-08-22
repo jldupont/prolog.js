@@ -49,7 +49,7 @@ var compare = function(input, expected) {
 	//console.log("Compare: input length: ", input.length);
 	//console.log("Compare: input= ", input);
 	
-	for (var index=0;index<input.length;index++) {
+	for (var index=0;index<expected.length;index++) {
 		
 		var i = input[index];
 		var re = expected[index];
@@ -162,7 +162,20 @@ it('ParserL3 - expression - 2', function(){
 	var text = "goal1(X, Y), goal2(A,B) ; goal3(C,D).";
 	var expected = ['Functor(disj/2,Functor(conj/2,Functor(goal1/2,Var(X),Var(Y)),Functor(goal2/2,Var(A),Var(B))),Functor(goal3/2,Var(C),Var(D)))'];
 	
-	process(text, expected);});
+	process(text, expected);
+});
+
+it('ParserL3 - expression - 3', function(){
+	
+	var text = "append([H|T],L2,[H|L3])  :-  append(T,L2,L3).";
+	var expected = [
+	                	'Functor(rule/2,Functor(append/3,Functor(list/3,Var(H),Token(list:tail,|),Var(T)),Var(L2),'+
+	                	'Functor(list/3,Var(H),Token(list:tail,|),Var(L3))),'+
+	                	'Functor(append/3,Var(T),Var(L2),Var(L3)))'
+	                ];
+	
+	process(text, expected);
+});
 
 
 it('ParserL3 - list - 1', function(){
