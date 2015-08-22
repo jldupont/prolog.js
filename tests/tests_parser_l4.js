@@ -19,8 +19,7 @@ var Op = pr.Op;
 var ParserL1 = pr.ParserL1;
 var ParserL2 = pr.ParserL2;
 var ParserL3 = pr.ParserL3;
-
-var Interpreter = pr.Interpreter;
+var ParserL4 = pr.ParserL4;
 
 
 var setup = function(text) {
@@ -46,11 +45,9 @@ var process = function(input_text, expected) {
 	
 	var expression = setup(input_text)[0][0];
 
-	var i = new Interpreter();
+	var i = new ParserL4(expression);
 	
-	i.set_expression(expression);
-	
-	var ri = i.get_stack();
+	var ri = i.process();
 	
 	var result = compare(ri, expected);
 	
@@ -72,7 +69,7 @@ var compare = function(input, expected) {
 	return true;
 };
 
-it('Interpreter - basic', function(){
+it('ParserL4 - basic', function(){
 	
 	var text = "f1(A).";
 	var expected = [ 'Functor(call/3,"?result","f1",Var(A))' ];
@@ -80,7 +77,7 @@ it('Interpreter - basic', function(){
 });
 
 
-it('Interpreter - simple 1', function(){
+it('ParserL4 - simple 1', function(){
 	
 	var text = "f1(A) , f2(B).";
 	var expected = [ 'Functor(call/3,"?var0","f1",Var(A))',
@@ -90,7 +87,7 @@ it('Interpreter - simple 1', function(){
 	process(text, expected);
 });
 
-it('Interpreter - simple 2', function(){
+it('ParserL4 - simple 2', function(){
 	
 	var text = "f1(A) ; f2(B).";
 	var expected = [ 'Functor(call/3,"?var0","f1",Var(A))',
@@ -101,7 +98,7 @@ it('Interpreter - simple 2', function(){
 });
 
 
-it('Interpreter - complex - 1 ', function(){
+it('ParserL4 - complex - 1 ', function(){
 	
 	var text = "f1(A) , f2(B), f3(C).";
 	var expected = [ 'Functor(call/3,"?var0","f1",Var(A))',
@@ -113,7 +110,7 @@ it('Interpreter - complex - 1 ', function(){
 	process(text, expected);
 });
 
-it('Interpreter - complex - 2 ', function(){
+it('ParserL4 - complex - 2 ', function(){
 	
 	var text = "f1(A) , f2(B), f3(f4(C)).";
 	var expected = [ 'Functor(call/3,"?var0","f1",Var(A))',
@@ -126,7 +123,7 @@ it('Interpreter - complex - 2 ', function(){
 	process(text, expected);
 });
 
-it('Interpreter - complex - 3 ', function(){
+it('ParserL4 - complex - 3 ', function(){
 	
 	var text = "f1(A) , B is A, f2(B), f3(f4(C)).";
 	var expected = [ 'Functor(call/3,"?var0","f1",Var(A))',
