@@ -16,11 +16,13 @@
  * @param stack : the processing stack i.e. where instructions are pushed and popped
  */
 function Interpreter(db, env, stack) {
-	this.exp = null;
+
 	this.db  = db || {};
 	this.env = env || {};
 	this.stack = stack || [];
 	this.question = null;
+	this.reached_end_question = false;
+	this.question_index = 0;
 };
 
 Interpreter.prototype.get_stack = function(){

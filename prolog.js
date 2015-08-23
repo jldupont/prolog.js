@@ -667,11 +667,13 @@ if (typeof module!= 'undefined') {
  * @param stack : the processing stack i.e. where instructions are pushed and popped
  */
 function Interpreter(db, env, stack) {
-	this.exp = null;
+
 	this.db  = db || {};
 	this.env = env || {};
 	this.stack = stack || [];
 	this.question = null;
+	this.reached_end_question = false;
+	this.question_index = 0;
 };
 
 Interpreter.prototype.get_stack = function(){
@@ -914,6 +916,34 @@ if (typeof module!= 'undefined') {
 	module.exports.Lexer = Lexer;
 	module.exports.Token = Token;
 };
+
+function Parser() {
+};
+
+
+Parser.prototype.process = function(input_text){
+
+	var l = new Lexer(text);
+	var tokens = l.process();
+
+	var t = new ParserL1(tokens);
+	var ttokens = t.process();
+	
+	var p = new ParserL2(ttokens);
+	
+	var result = p.process();
+	var terms = result.terms;
+	
+	var p3 = new ParserL3(terms, Op.ordered_list_by_precedence);
+	var r3 = p3.process();
+	
+};
+
+
+if (typeof module!= 'undefined') {
+	module.exports.Parser = Parser;
+};
+
 
 /**
  * ParserL1
