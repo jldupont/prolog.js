@@ -16,6 +16,8 @@ function ParserL4(exp, stack, result_var) {
 	this.result_var = result_var || "?result";
 	this.stack = stack || [];
 	
+	this.last_variable_counter = 0;
+	
 	this.dir_left_to_right = false;
 };
 
@@ -54,9 +56,13 @@ ParserL4.prototype.process = function() {
 		throw new Error("Expecting a rooted tree with a Functor as root, got: "+JSON.stringify(exp));
 	
 	// By default, the result will be in variable `?result`
-	this._process(this.exp);
+	this.last_variable_counter = this._process(this.exp);
 	
 	return this.stack;
+};
+
+ParserL4.prototype.get_counter = function(){
+	return this.last_variable_counter;
 };
 
 /**

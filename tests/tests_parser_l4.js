@@ -180,7 +180,7 @@ it('ParserL4 - complex - 5 ', function(){
 	process(text, expected);
 });
 
-it('ParserL4 - complex - 6 ', function(){
+it('ParserL4 - complex - 6a ', function(){
 	
 	var text = "max(X,Y,Z) :- X=< Y, !, Y=Z.";
 	
@@ -196,9 +196,23 @@ it('ParserL4 - complex - 6 ', function(){
 	process(text, expected);
 });
 
+it('ParserL4 - complex - 6b ', function(){
+	
+	var text = "X =< Y, !, Y=Z";
+	
+	var expected = [
+						'Functor(call/3,"?result","conj",[Var(?var1),Var(?var2)])',
+						'Functor(call/3,"?var2","unif",[Var(Y),Var(Z)])',
+						'Functor(call/3,"?var1","conj",[Var(?var0),Token(term,!)])',
+						'Functor(call/3,"?var0","em",[Var(X),Var(Y)])'
+	                ];
+	
+	process(text, expected);
+});
+
 it('ParserL4 - complex - 6 - LTR', function(){
 	
-	var text = "max(X,Y,Z) :- X=< Y, !, Y=Z.";
+	var text = "max(X,Y,Z) :- X =< Y, !, Y=Z.";
 	
 	var expected = [
 						'Functor(call/3,"?var0","max",[Var(X),Var(Y),Var(Z)])',
@@ -222,3 +236,18 @@ it('ParserL4 - question - 1 ', function(){
 	
 	process(text, expected);
 });
+
+
+it('ParserL4 - question - 2 ', function(){
+	
+	var text = "append([a,b], [c,d], X).";
+	
+	var expected = [
+						'Functor(call/3,"?result","append",[Var(?var0),Var(?var1),Var(X)])',
+						'Functor(call/3,"?var1","list",[Token(term,c),Token(term,d)])',
+						'Functor(call/3,"?var0","list",[Token(term,a),Token(term,b)])'	                
+	                ];
+	
+	process(text, expected);
+});
+
