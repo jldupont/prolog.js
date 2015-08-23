@@ -41,11 +41,13 @@ var setup = function(text) {
 	return r3;
 };
 
-var process = function(input_text, expected) {
+var process = function(input_text, expected, left_to_right) {
 	
 	var expression = setup(input_text)[0][0];
 
 	var i = new ParserL4(expression);
+	
+	i.dir_left_to_right = left_to_right || false;
 	
 	var ri = i.process();
 	
@@ -189,6 +191,33 @@ it('ParserL4 - complex - 6 ', function(){
 						'Functor(call/3,"?var2","conj",[Var(?var1),Token(term,!)])',
 						'Functor(call/3,"?var1","em",[Var(X),Var(Y)])',
 						'Functor(call/3,"?var0","max",[Var(X),Var(Y),Var(Z)])' 
+	                ];
+	
+	process(text, expected);
+});
+
+it('ParserL4 - complex - 6 - LTR', function(){
+	
+	var text = "max(X,Y,Z) :- X=< Y, !, Y=Z.";
+	
+	var expected = [
+						'Functor(call/3,"?var0","max",[Var(X),Var(Y),Var(Z)])',
+						'Functor(call/3,"?var1","em",[Var(X),Var(Y)])',
+						'Functor(call/3,"?var2","conj",[Var(?var1),Token(term,!)])',
+						'Functor(call/3,"?var3","unif",[Var(Y),Var(Z)])',
+						'Functor(call/3,"?var4","conj",[Var(?var2),Var(?var3)])',
+						'Functor(call/3,"?result","rule",[Var(?var0),Var(?var4)])'	                
+	                ];
+	
+	process(text, expected, true);
+});
+
+it('ParserL4 - question - 1 ', function(){
+	
+	var text = "max(1,2,X)";
+	
+	var expected = [
+	                	'Functor(call/3,"?result","max",[Token(number,1),Token(number,2),Var(X)])'	                
 	                ];
 	
 	process(text, expected);

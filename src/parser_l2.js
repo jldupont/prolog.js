@@ -139,7 +139,7 @@ ParserL2.prototype.process = function(){
 			//  in order to handle the `- -` etc. replacements
 			token_next = this.tokens[this.index] || null;
 			
-			if (token_next.is_operator) {
+			if (token_next && token_next.is_operator) {
 				
 				var maybe_replacement_opnode = ParserL2.compute_ops_replacement(token, token_next);
 				if (maybe_replacement_opnode != null) {

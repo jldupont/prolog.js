@@ -1150,7 +1150,7 @@ ParserL2.prototype.process = function(){
 			//  in order to handle the `- -` etc. replacements
 			token_next = this.tokens[this.index] || null;
 			
-			if (token_next.is_operator) {
+			if (token_next && token_next.is_operator) {
 				
 				var maybe_replacement_opnode = ParserL2.compute_ops_replacement(token, token_next);
 				if (maybe_replacement_opnode != null) {
@@ -1519,6 +1519,8 @@ function ParserL4(exp, stack, result_var) {
 	this.exp = exp;
 	this.result_var = result_var || "?result";
 	this.stack = stack || [];
+	
+	this.dir_left_to_right = false;
 };
 
 /**
@@ -1629,7 +1631,11 @@ ParserL4.prototype._process = function(node, variable_counter) {
 		nnode.args.unshift("?var"+variable_counter);
 		
 	nnode.args.push(args);
-	this.stack.unshift(nnode);
+	
+	if (this.dir_left_to_right)
+		this.stack.push(nnode);
+	else
+		this.stack.unshift(nnode);
 	
 	return variable_counter;
 }; // _preprocess

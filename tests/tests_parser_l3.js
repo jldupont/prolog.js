@@ -48,6 +48,9 @@ var compare = function(input, expected) {
 	
 	//console.log("Compare: input length: ", input.length);
 	//console.log("Compare: input= ", input);
+
+	if (input.length != expected.length)
+		return false;
 	
 	for (var index=0;index<expected.length;index++) {
 		
@@ -172,6 +175,23 @@ it('ParserL3 - expression - 3', function(){
 	                	'Functor(rule/2,Functor(append/3,Functor(list/3,Var(H),Token(list:tail,|),Var(T)),Var(L2),'+
 	                	'Functor(list/3,Var(H),Token(list:tail,|),Var(L3))),'+
 	                	'Functor(append/3,Var(T),Var(L2),Var(L3)))'
+	                ];
+	
+	process(text, expected);
+});
+
+it('ParserL3 - expression - 4 ', function(){
+	
+	var text = "max(X,Y,Z) :- X=< Y, !, Y=Z.";
+	
+	var expected = [
+	                	'Functor(rule/2,'+
+	                	  'Functor(max/3,Var(X),Var(Y),Var(Z)),'+
+	                	  'Functor(conj/2,'+
+	                	  		'Functor(conj/2,'+
+	                	  			'Functor(em/2,Var(X),Var(Y)),'+
+	                	  			'Token(term,!)),'+
+	                	  		'Functor(unif/2,Var(Y),Var(Z))))'	                
 	                ];
 	
 	process(text, expected);

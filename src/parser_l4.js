@@ -15,6 +15,8 @@ function ParserL4(exp, stack, result_var) {
 	this.exp = exp;
 	this.result_var = result_var || "?result";
 	this.stack = stack || [];
+	
+	this.dir_left_to_right = false;
 };
 
 /**
@@ -125,7 +127,11 @@ ParserL4.prototype._process = function(node, variable_counter) {
 		nnode.args.unshift("?var"+variable_counter);
 		
 	nnode.args.push(args);
-	this.stack.unshift(nnode);
+	
+	if (this.dir_left_to_right)
+		this.stack.push(nnode);
+	else
+		this.stack.unshift(nnode);
 	
 	return variable_counter;
 }; // _preprocess
