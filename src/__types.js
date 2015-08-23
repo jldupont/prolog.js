@@ -159,6 +159,8 @@ Op._list = [
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
 	   ,new Op("unif",    '=',   700, 'xfx')
+	   ,new Op("em",      '=<',  700, 'xfx')
+	   ,new Op("ge",      '>=',  700, 'xfx')
 	   ,new Op("is",      'is',  700, 'xfx')
 	    
 	   ,new Op("minus",   '-',   500, 'yfx')
@@ -453,6 +455,23 @@ Var.prototype.inspect = function(){
 	return "Var("+this.name+")";
 };
 
+
+
+Builtins = {};
+
+Builtins.db = {};
+
+/**
+ * Define a builtin functor
+ */
+Builtins.define = function(name, arity, functor){
+
+	var sig = name+"/"+arity;
+	Builtins.db[sig] = functor;
+};
+
+
+
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
 	module.exports.Eos = Eos;
@@ -461,4 +480,5 @@ if (typeof module!= 'undefined') {
 	module.exports.Var = Var;
 	module.exports.OpNode = OpNode;
 	module.exports.Result = Result;
+	module.exports.Builtins = Builtins;
 };

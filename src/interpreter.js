@@ -20,10 +20,22 @@ function Interpreter(db, env, stack) {
 	this.db  = db || {};
 	this.env = env || {};
 	this.stack = stack || [];
+	this.question = null;
 };
 
 Interpreter.prototype.get_stack = function(){
 	return this.stack;
+};
+
+/**
+ * Set the `question` to get an answer to
+ * 
+ * The `question` must be a
+ * 
+ * @param question
+ */
+Interpreter.prototype.set_question = function(question){
+	this.question = question;
 };
 
 

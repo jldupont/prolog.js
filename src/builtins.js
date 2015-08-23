@@ -7,23 +7,19 @@
  * 
  **/
 
-Builtins = {};
-
-Builtins.db = {};
-
-
 /**
- * Define a builtin functor
+ *  The builtin 'call' functor
+ *  
+ *  @param env: the environment containing the stack, the database and the registers
+ *  @param return_var_name: the variable name to use for return
+ *  @param functor_name: the actual target functor name
+ *  @param args: the arguments for the functor call
+ * 
+ *  @return null
  */
-Builtins.define = function(functor){
+Builtins.define('call', 3, function(env, return_var_name, functor_name, args){
 	
-	var sig = DbAccess.compute_signature(functor);
-	Builtins.db[sig] = functor;
-};
-
-
-
-if (typeof module!= 'undefined') {
-	module.exports.Builtins = Builtins;
-};
+	
+	
+});
 

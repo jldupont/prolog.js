@@ -177,3 +177,19 @@ it('ParserL4 - complex - 5 ', function(){
 	
 	process(text, expected);
 });
+
+it('ParserL4 - complex - 6 ', function(){
+	
+	var text = "max(X,Y,Z) :- X=< Y, !, Y=Z.";
+	
+	var expected = [
+						'Functor(call/3,"?result","rule",[Var(?var0),Var(?var4)])',
+						'Functor(call/3,"?var4","conj",[Var(?var2),Var(?var3)])',
+						'Functor(call/3,"?var3","unif",[Var(Y),Var(Z)])',
+						'Functor(call/3,"?var2","conj",[Var(?var1),Token(term,!)])',
+						'Functor(call/3,"?var1","em",[Var(X),Var(Y)])',
+						'Functor(call/3,"?var0","max",[Var(X),Var(Y),Var(Z)])' 
+	                ];
+	
+	process(text, expected);
+});
