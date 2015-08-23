@@ -1,11 +1,23 @@
-/*! prolog.js - v0.0.1 - 2015-08-22 */
+/*! prolog.js - v0.0.1 - 2015-08-23 */
 
-var builtins = {};
+Builtins = {};
+
+Builtins.db = {};
+
+
+/**
+ * Define a builtin functor
+ */
+Builtins.define = function(functor){
+	
+	var sig = DbAccess.compute_signature(functor);
+	Builtins.db[sig] = functor;
+};
 
 
 
 if (typeof module!= 'undefined') {
-	module.exports.builtins = builtins;
+	module.exports.Builtins = Builtins;
 };
 
 
@@ -49,6 +61,19 @@ Database.prototype.insert = function(root_node){
 	return functor_signature;
 };
 
+
+/**
+ * Define a Functor in the database
+ * 
+ * @param root_node
+ */
+Database.prototype.define = function(root_node){
+	
+	var functor_signature = this.al.compute_signature(root_node);
+	this.db[functor_signature] = root_node;
+};
+
+
 Database.prototype.lookup_functor = function(functor_signature){
 	
 	return this.db[functor_signature] || null;
@@ -78,16 +103,16 @@ function DbAccess() {
  * @return {String}
  * @raise Error
  */
-DbAccess.prototype.compute_signature = function(input) {
+DbAccess.compute_signature = function(input) {
 	
 	var sig = null;
 	
 	try {
-		var functor = this.extract_head_of_rule(input);
-		sig = this.get_functor_signature(functor);
+		var functor = DbAccess.extract_head_of_rule(input);
+		sig = DbAccess.get_functor_signature(functor);
 		
 	} catch(e) {
-		sig = this.get_functor_signature(input);
+		sig = DbAccess.get_functor_signature(input);
 	};
 
 	return sig;
@@ -101,7 +126,7 @@ DbAccess.prototype.compute_signature = function(input) {
  * @param root_node
  * @return Boolean
  */
-DbAccess.prototype.is_fact = function(root_node) {
+DbAccess.is_fact = function(root_node) {
 
 	if (!(root_node instanceof Functor))
 		return false;
@@ -116,7 +141,7 @@ DbAccess.prototype.is_fact = function(root_node) {
  * @param root_node
  * @returns {Boolean}
  */
-DbAccess.prototype.is_rule = function(root_node) {
+DbAccess.is_rule = function(root_node) {
 	
 	if (!(root_node instanceof Functor))
 		return false;
@@ -133,7 +158,7 @@ DbAccess.prototype.is_rule = function(root_node) {
  * @return Object (should probably just be a Functor)
  * @raise Error
  */
-DbAccess.prototype.extract_head_of_rule = function(root_node) {
+DbAccess.extract_head_of_rule = function(root_node) {
 
 	if (!(root_node instanceof Functor) || (root_node.name != 'rule'))
 		throw new Error("Expecting a `rule`, got: "+root_node.name);
@@ -147,7 +172,7 @@ DbAccess.prototype.extract_head_of_rule = function(root_node) {
  * @param node
  * @return {String}
  */
-DbAccess.prototype.get_functor_signature = function(node){
+DbAccess.get_functor_signature = function(node){
 
 	if (!(node instanceof Functor))
 		throw new Error("Expecting Functor, got: "+JSON.stringify(node));
@@ -1004,10 +1029,10 @@ if (typeof module!= 'undefined') {
  *
  * @param exp: the expression to linearalize
  */
-function ParserL4(exp, result_var) {
+function ParserL4(exp, stack, result_var) {
 	this.exp = exp;
 	this.result_var = result_var || "?result";
-	this.stack = [];
+	this.stack = stack || [];
 };
 
 /**
@@ -1094,6 +1119,7 @@ ParserL4.prototype._process = function(node, variable_counter) {
 	//  of the present Functor
 	//
 	var nnode = new Functor('call');
+	var args = [];
 	
 	nnode.args.push(node.name);
 	
@@ -1103,10 +1129,10 @@ ParserL4.prototype._process = function(node, variable_counter) {
 		
 		if (bnode instanceof Functor) {
 			variable_counter = this._process(bnode, variable_counter);
-			nnode.args.push(new Var("?var"+variable_counter));
+			args.push(new Var("?var"+variable_counter));
 			variable_counter++;
 		} else {
-			nnode.args.push(bnode);
+			args.push(bnode);
 		};
 		
 	};// for args
@@ -1116,6 +1142,7 @@ ParserL4.prototype._process = function(node, variable_counter) {
 	else
 		nnode.args.unshift("?var"+variable_counter);
 		
+	nnode.args.push(args);
 	this.stack.unshift(nnode);
 	
 	return variable_counter;
@@ -1522,22 +1549,38 @@ function Functor(name, maybe_arguments_list) {
 };
 
 Functor.prototype.inspect = function(){
-	return "Functor("+this.name+"/"+this.args.length+this.format_args()+")";
+	var fargs = this.format_args(this.args);
+	return "Functor("+this.name+"/"+this.args.length+","+fargs+")";
 };
 
-Functor.prototype.format_args = function () {
+Functor.prototype.format_args = function (input) {
 	
 	var result = "";
-	for (var index =0; index<this.args.length; index++) {
-		var arg = this.args[index];
+	for (var index = 0; index<input.length; index++) {
+		var arg = input[index];
 		
-		if (arg && arg.inspect)
-			result += ","+arg.inspect();
-		else
-			result += ","+JSON.stringify(arg);
+		if (index>0)
+			result += ',';
+		
+		if (Array.isArray(arg)) {
+			result += '[';
+			result += this.format_args(arg);
+			result += ']';
+		} else 
+			result = this.format_arg(result, arg);
 	};
 	
 	return result;
+};
+
+Functor.prototype.format_arg = function(result, arg){
+	
+	if (arg && arg.inspect)
+		result += arg.inspect();
+	else
+		result += JSON.stringify(arg);
+	
+	return result;	
 };
 
 Functor.prototype.get_args = function(){
@@ -1568,3 +1611,11 @@ if (typeof module!= 'undefined') {
 	module.exports.OpNode = OpNode;
 	module.exports.Result = Result;
 };
+Utils = {};
+
+
+
+if (typeof module!= 'undefined') {
+	module.exports.Utils = Utils;
+};
+

@@ -51,6 +51,19 @@ Database.prototype.insert = function(root_node){
 	return functor_signature;
 };
 
+
+/**
+ * Define a Functor in the database
+ * 
+ * @param root_node
+ */
+Database.prototype.define = function(root_node){
+	
+	var functor_signature = this.al.compute_signature(root_node);
+	this.db[functor_signature] = root_node;
+};
+
+
 Database.prototype.lookup_functor = function(functor_signature){
 	
 	return this.db[functor_signature] || null;

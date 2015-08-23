@@ -400,22 +400,38 @@ function Functor(name, maybe_arguments_list) {
 };
 
 Functor.prototype.inspect = function(){
-	return "Functor("+this.name+"/"+this.args.length+this.format_args()+")";
+	var fargs = this.format_args(this.args);
+	return "Functor("+this.name+"/"+this.args.length+","+fargs+")";
 };
 
-Functor.prototype.format_args = function () {
+Functor.prototype.format_args = function (input) {
 	
 	var result = "";
-	for (var index =0; index<this.args.length; index++) {
-		var arg = this.args[index];
+	for (var index = 0; index<input.length; index++) {
+		var arg = input[index];
 		
-		if (arg && arg.inspect)
-			result += ","+arg.inspect();
-		else
-			result += ","+JSON.stringify(arg);
+		if (index>0)
+			result += ',';
+		
+		if (Array.isArray(arg)) {
+			result += '[';
+			result += this.format_args(arg);
+			result += ']';
+		} else 
+			result = this.format_arg(result, arg);
 	};
 	
 	return result;
+};
+
+Functor.prototype.format_arg = function(result, arg){
+	
+	if (arg && arg.inspect)
+		result += arg.inspect();
+	else
+		result += JSON.stringify(arg);
+	
+	return result;	
 };
 
 Functor.prototype.get_args = function(){

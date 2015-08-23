@@ -18,9 +18,7 @@ var DbAccess = pr.DbAccess;
 
 it('DbAccess - compute signature - 1a', function(){
 
-	var dba = new DbAccess();
-	
-	var result = dba.compute_signature(new Functor("f1"));
+	var result = DbAccess.compute_signature(new Functor("f1"));
 	
 	//console.log(result);
 	
@@ -29,9 +27,7 @@ it('DbAccess - compute signature - 1a', function(){
 
 it('DbAccess - compute signature - 1b', function(){
 
-	var dba = new DbAccess();
-	
-	var result = dba.compute_signature(new Functor("f1",1,2,3));
+	var result = DbAccess.compute_signature(new Functor("f1",1,2,3));
 	
 	//console.log(result);
 	
@@ -40,9 +36,7 @@ it('DbAccess - compute signature - 1b', function(){
 
 it('DbAccess - compute signature - 2a', function(){
 
-	var dba = new DbAccess();
-	
-	var result = dba.compute_signature(new Functor("rule", new Functor('f1')));
+	var result = DbAccess.compute_signature(new Functor("rule", new Functor('f1')));
 	
 	//console.log(result);
 	
@@ -51,9 +45,7 @@ it('DbAccess - compute signature - 2a', function(){
 
 it('DbAccess - compute signature - 2b', function(){
 
-	var dba = new DbAccess();
-	
-	var result = dba.compute_signature(new Functor("rule", new Functor('f1',1,2,3)));
+	var result = DbAccess.compute_signature(new Functor("rule", new Functor('f1',1,2,3)));
 	
 	//console.log(result);
 	
@@ -62,9 +54,7 @@ it('DbAccess - compute signature - 2b', function(){
 
 it('DbAccess - extract head of rule - 1', function(){
 
-	var dba = new DbAccess();
-	
-	var result = dba.extract_head_of_rule(new Functor("rule", new Functor('f1')));
+	var result = DbAccess.extract_head_of_rule(new Functor("rule", new Functor('f1')));
 	
 	//console.log(result);
 	
@@ -73,9 +63,7 @@ it('DbAccess - extract head of rule - 1', function(){
 
 it('DbAccess - extract head of rule - 2', function(){
 
-	var dba = new DbAccess();
-	
-	var result = dba.extract_head_of_rule(new Functor("rule", new Functor('f1', 1, 2, 3)));
+	var result = DbAccess.extract_head_of_rule(new Functor("rule", new Functor('f1', 1, 2, 3)));
 	
 	//console.log(result);
 	
@@ -86,8 +74,7 @@ it('DbAccess - extract head of rule - 2', function(){
 
 it('Database - insert 1', function(){
 
-	var dba = new DbAccess();
-	var db = new Database(dba);
+	var db = new Database(DbAccess);
 	
 	var sig = db.insert(new Functor("rule", new Functor('f1',1,2,3)));
 
@@ -103,8 +90,7 @@ it('Database - insert 1', function(){
 
 it('Database - insert 2', function(){
 
-	var dba = new DbAccess();
-	var db = new Database(dba);
+	var db = new Database(DbAccess);
 	
 	db.insert(new Functor('rule', new Functor('f1',1,2,3)));
 	db.insert(new Functor('rule', new Functor('f1',4,5,6)));

@@ -11,10 +11,10 @@
  *
  * @param exp: the expression to linearalize
  */
-function ParserL4(exp, result_var) {
+function ParserL4(exp, stack, result_var) {
 	this.exp = exp;
 	this.result_var = result_var || "?result";
-	this.stack = [];
+	this.stack = stack || [];
 };
 
 /**
@@ -101,6 +101,7 @@ ParserL4.prototype._process = function(node, variable_counter) {
 	//  of the present Functor
 	//
 	var nnode = new Functor('call');
+	var args = [];
 	
 	nnode.args.push(node.name);
 	
@@ -110,10 +111,10 @@ ParserL4.prototype._process = function(node, variable_counter) {
 		
 		if (bnode instanceof Functor) {
 			variable_counter = this._process(bnode, variable_counter);
-			nnode.args.push(new Var("?var"+variable_counter));
+			args.push(new Var("?var"+variable_counter));
 			variable_counter++;
 		} else {
-			nnode.args.push(bnode);
+			args.push(bnode);
 		};
 		
 	};// for args
@@ -123,6 +124,7 @@ ParserL4.prototype._process = function(node, variable_counter) {
 	else
 		nnode.args.unshift("?var"+variable_counter);
 		
+	nnode.args.push(args);
 	this.stack.unshift(nnode);
 	
 	return variable_counter;
