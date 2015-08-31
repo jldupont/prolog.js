@@ -209,6 +209,47 @@ it('ParserL3 - expression - 4 ', function(){
 	process(text, expected);
 });
 
+it('ParserL3 - expression - 5 ', function(){
+	
+	var text = "f1(a), f2(a), f3(a), f4(a).";
+	
+	var expected =  [ [ 
+	                    'Functor(conj/2,'+
+	                    	'Functor(conj/2,'+
+	                    		'Functor(conj/2,'+
+	                    			'Functor(f1/1,Token(term,a)),Functor(f2/1,Token(term,a))),' +
+	                    		'Functor(f3/1,Token(term,a))),Functor(f4/1,Token(term,a)))' 
+	                    ] ];
+	
+	process(text, expected);
+});
+
+it('ParserL3 - expression - 6 ', function(){
+	
+	var text = "f1(a) ; f2(a) ; f3(a) ; f4(a).";
+	
+	var expected =  [ [ 
+	                    'Functor(disj/2,'+
+	                    		'Functor(disj/2,'+
+	                    				'Functor(disj/2,Functor(f1/1,Token(term,a)),Functor(f2/1,Token(term,a))),'+
+	                    				'Functor(f3/1,Token(term,a))),'+
+	                    		'Functor(f4/1,Token(term,a)))' ] ];
+	
+	process(text, expected);
+});
+
+
+it('ParserL3 - expression - 7 ', function(){
+	
+	var text = "f1(f2(f3(a,b))).";
+	
+	var expected =  [ [ 
+	                    'Functor(f1/1,Functor(f2/1,Functor(f3/2,Token(term,a),Token(term,b))))' 
+	                    ] ];
+	
+	process(text, expected);
+});
+
 
 it('ParserL3 - list - 1', function(){
 	

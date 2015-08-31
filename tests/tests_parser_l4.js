@@ -190,7 +190,7 @@ it('ParserL4 - complex - 4 ', function(){
 	process(text, expected);
 });
 
-it('ParserL4 - complex - 5 ', function(){
+it('ParserL4 - complex - 5a', function(){
 	
 	var text = "append([H|T],L2,[H|L3])  :-  append(T,L2,L3).";
 	
@@ -204,6 +204,22 @@ it('ParserL4 - complex - 5 ', function(){
 	
 	process(text, expected);
 });
+
+it('ParserL4 - complex - 5b', function(){
+	
+	var text = "append([H|T],L2,[H|L3])  :-  append(T,L2,L3).";
+	
+	var expected = [ [ 
+	                   'Functor(call/3,"?var0","list",[Var(H),Token(list:tail,|),Var(T)])',
+	                   'Functor(call/3,"?var1","list",[Var(H),Token(list:tail,|),Var(L3)])',
+	                   'Functor(call/3,"?var2","append",[Var(?var0),Var(L2),Var(?var1)])',
+	                   'Functor(call/3,"?var3","append",[Var(T),Var(L2),Var(L3)])',
+	                   'Functor(call/3,"?result","rule",[Var(?var2),Var(?var3)])' 
+	                   ]];
+	
+	process(text, expected, true);
+});
+
 
 it('ParserL4 - complex - 6a ', function(){
 	
@@ -289,3 +305,16 @@ it('ParserL4 - question - 2 ', function(){
 	process(text, expected);
 });
 
+/*
+ *  TODO: support for empty list ... 
+ *
+it('ParserL4 - question - 3 ', function(){
+	
+	var text = "concat([], L, L).";
+	
+	var expected = [[
+	                ]];
+	
+	process(text, expected);
+});
+*/
