@@ -993,6 +993,19 @@ ParserL1.prototype.next = function() {
 		this.reached_end = true;
 	};
 
+	if (head_plus_one && head_plus_one.name == 'list:close') {
+		if (head.name == 'list:open') {
+			
+			//  functor(  ==>  functor
+			//
+			//  i.e. remove parens_open
+			//
+			head.name = 'nil';
+			return [head];
+		};
+	};
+	
+	
 	if (head_plus_one && head_plus_one.name == 'parens_open') {
 		if (head.name == 'term' || head.name == 'string') {
 			
@@ -1027,6 +1040,10 @@ ParserL1.prototype.next = function() {
 		
 		
 	return [head];
+};
+
+ParserL1._handleList = function(){
+	
 };
 
 ParserL1.isLetter = function(char) {
