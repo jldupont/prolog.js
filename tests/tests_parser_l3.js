@@ -184,10 +184,8 @@ it('ParserL3 - expression - 3', function(){
 	
 	var text = "append([H|T],L2,[H|L3])  :-  append(T,L2,L3).";
 	var expected = [[
-	                	'Functor(rule/2,Functor(append/3,Functor(list/3,Var(H),Token(list:tail,|),Var(T)),Var(L2),'+
-	                	'Functor(list/3,Var(H),Token(list:tail,|),Var(L3))),'+
-	                	'Functor(append/3,Var(T),Var(L2),Var(L3)))'
-	                ]];
+	                 'Functor(rule/2,Functor(append/3,Functor(cons/2,Var(H),Var(T)),Var(L2),Functor(cons/2,Var(H),Var(L3))),Functor(append/3,Var(T),Var(L2),Var(L3)))'	                
+	                 ]];
 	
 	process(text, expected);
 });
@@ -254,7 +252,7 @@ it('ParserL3 - expression - 7 ', function(){
 it('ParserL3 - list - 1', function(){
 	
 	var text = "[A,B | T ].";
-	var expected = [['Functor(list/4,Var(A),Var(B),Token(list:tail,|),Var(T))']];
+	var expected = [['Functor(cons/2,Var(A),Functor(cons/2,Var(B),Var(T)))']];
 	
 	process(text, expected);
 });

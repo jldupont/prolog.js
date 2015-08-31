@@ -164,7 +164,7 @@ it('ParserL2 - operator - 1', function(){
 it('ParserL2 - operator - 2', function(){
 
 	var text = "love(julianne, charlot).";
-	var expected = [ 'Functor(love/3,Token(term,julianne),Token(sep,,),Token(term,charlot))' ];
+	var expected = [ 'Functor(love/2,Token(term,julianne),Token(term,charlot))' ];
 	
 	process(text, expected);
 });
@@ -238,7 +238,7 @@ it('ParserL2 - list - 1', function(){
 
 	var text = "[1,2,3]";
 	var expected =  [ 
-	                  'Functor(list/5,Token(number,1),Token(sep,,),Token(number,2),Token(sep,,),Token(number,3))' 
+	                  'Functor(cons/2,Token(number,1),Functor(cons/2,Token(number,2),Functor(cons/1,Token(number,3))))' 
 	                  ];
 	
 	process(text, expected);
@@ -247,7 +247,7 @@ it('ParserL2 - list - 1', function(){
 it('ParserL2 - list - 2', function(){
 
 	var text = "[A,B | T]";
-	var expected = [ 'Functor(list/5,Var(A),Token(sep,,),Var(B),Token(list:tail,|),Var(T))' ];
+	var expected = [ 'Functor(cons/2,Var(A),Functor(cons/2,Var(B),Var(T)))' ];
 	
 	process(text, expected);
 });

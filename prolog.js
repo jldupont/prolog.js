@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-08-30 */
+/*! prolog.js - v0.0.1 - 2015-08-31 */
 
 /**
  *  Token
@@ -961,6 +961,7 @@ function ParserL1(token_list, options) {
 	this.list = token_list;
 	this.reached_end = false;
 	this.options = options || default_options;
+	
 };
 
 /**
@@ -1040,10 +1041,6 @@ ParserL1.prototype.next = function() {
 		
 		
 	return [head];
-};
-
-ParserL1._handleList = function(){
-	
 };
 
 ParserL1.isLetter = function(char) {
@@ -1147,6 +1144,8 @@ ParserL2.prototype.process = function(){
 	var expression = null;
 	var token = null;
 	var token_next = null;
+	var toggle = false;
+	var depth = 0;
 	
 	expression = new Array();
 	
@@ -1177,26 +1176,44 @@ ParserL2.prototype.process = function(){
 			token.prec = 0;
 			token.is_operator = false;
 		};
+
+		if (this.context.diving_list && token.name == 'list:tail')
+			continue;
 		
 		if (token.is_operator) {
 
-			// If we are in a functor definition,
-			//  we need to swap `op:conj` for a separator token
-			if (this.context.diving_functor || this.context.diving_list) {
+			if (this.context.diving_functor && token.name == 'op:conj')
+				continue;
+
+
+			// If we are in a functor / list definition,
+			//  we need to get rid of `op:conj` 
+			if (this.context.diving_list) {
+				
 				if (token.name == 'op:conj') {
-					token.is_operator = false;
-					token.name = 'sep';
-					expression.push(token);
-					continue;
-				};
+			
+					var result = this._handleList();
+					var new_index = result.index;
 					
+					this.index = new_index;
+					
+					var functor_node = new Functor('cons');
+					functor_node.args = result.terms[0];
+					functor_node.line = token.line;
+					functor_node.col  = token.col;
+					
+					expression.push( functor_node );
+					continue;			
+					
+				};
+				
 			};
 			
 			
 			// Look ahead 1 more token
 			//  in order to handle the `- -` etc. replacements
 			token_next = this.tokens[this.index] || null;
-			
+						
 			if (token_next && token_next.is_operator) {
 				
 				var maybe_replacement_opnode = ParserL2.compute_ops_replacement(token, token_next);
@@ -1250,6 +1267,7 @@ ParserL2.prototype.process = function(){
 			
 			if (this.context.diving_list)
 				return this._handleEnd( expression );
+			
 			continue;
 		};
 
@@ -1300,7 +1318,7 @@ ParserL2.prototype.process = function(){
 			
 			this.index = new_index;
 			
-			var functor_node = new Functor('list');
+			var functor_node = new Functor('cons');
 			functor_node.args = result.terms[0];
 			functor_node.line = token.line;
 			functor_node.col  = token.col;

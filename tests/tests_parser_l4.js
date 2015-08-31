@@ -198,8 +198,8 @@ it('ParserL4 - complex - 5a', function(){
 						'Functor(call/3,"?result","rule",[Var(?var2),Var(?var3)])',
 						'Functor(call/3,"?var3","append",[Var(T),Var(L2),Var(L3)])',
 						'Functor(call/3,"?var2","append",[Var(?var0),Var(L2),Var(?var1)])',
-						'Functor(call/3,"?var1","list",[Var(H),Token(list:tail,|),Var(L3)])',
-						'Functor(call/3,"?var0","list",[Var(H),Token(list:tail,|),Var(T)])'	                
+						'Functor(call/3,"?var1","cons",[Var(H),Token(list:tail,|),Var(L3)])',
+						'Functor(call/3,"?var0","cons",[Var(H),Token(list:tail,|),Var(T)])'	                
 	                ]];
 	
 	process(text, expected);
@@ -210,8 +210,8 @@ it('ParserL4 - complex - 5b', function(){
 	var text = "append([H|T],L2,[H|L3])  :-  append(T,L2,L3).";
 	
 	var expected = [ [ 
-	                   'Functor(call/3,"?var0","list",[Var(H),Token(list:tail,|),Var(T)])',
-	                   'Functor(call/3,"?var1","list",[Var(H),Token(list:tail,|),Var(L3)])',
+	                   'Functor(call/3,"?var0","cons",[Var(H),Token(list:tail,|),Var(T)])',
+	                   'Functor(call/3,"?var1","cons",[Var(H),Token(list:tail,|),Var(L3)])',
 	                   'Functor(call/3,"?var2","append",[Var(?var0),Var(L2),Var(?var1)])',
 	                   'Functor(call/3,"?var3","append",[Var(T),Var(L2),Var(L3)])',
 	                   'Functor(call/3,"?result","rule",[Var(?var2),Var(?var3)])' 
@@ -298,8 +298,8 @@ it('ParserL4 - question - 2 ', function(){
 	
 	var expected = [[
 						'Functor(call/3,"?result","append",[Var(?var0),Var(?var1),Var(X)])',
-						'Functor(call/3,"?var1","list",[Token(term,c),Token(term,d)])',
-						'Functor(call/3,"?var0","list",[Token(term,a),Token(term,b)])'	                
+						'Functor(call/3,"?var1","cons",[Token(term,c),Token(term,d)])',
+						'Functor(call/3,"?var0","cons",[Token(term,a),Token(term,b)])'	                
 	                ]];
 	
 	process(text, expected);
