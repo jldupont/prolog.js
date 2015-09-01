@@ -198,8 +198,8 @@ it('ParserL4 - complex - 5a', function(){
 						'Functor(call/3,"?result","rule",[Var(?var2),Var(?var3)])',
 						'Functor(call/3,"?var3","append",[Var(T),Var(L2),Var(L3)])',
 						'Functor(call/3,"?var2","append",[Var(?var0),Var(L2),Var(?var1)])',
-						'Functor(call/3,"?var1","cons",[Var(H),Token(list:tail,|),Var(L3)])',
-						'Functor(call/3,"?var0","cons",[Var(H),Token(list:tail,|),Var(T)])'	                
+						'Functor(call/3,"?var1","cons",[Var(H),Var(L3)])',
+						'Functor(call/3,"?var0","cons",[Var(H),Var(T)])'	                
 	                ]];
 	
 	process(text, expected);
@@ -210,8 +210,8 @@ it('ParserL4 - complex - 5b', function(){
 	var text = "append([H|T],L2,[H|L3])  :-  append(T,L2,L3).";
 	
 	var expected = [ [ 
-	                   'Functor(call/3,"?var0","cons",[Var(H),Token(list:tail,|),Var(T)])',
-	                   'Functor(call/3,"?var1","cons",[Var(H),Token(list:tail,|),Var(L3)])',
+	                   'Functor(call/3,"?var0","cons",[Var(H),Var(T)])',
+	                   'Functor(call/3,"?var1","cons",[Var(H),Var(L3)])',
 	                   'Functor(call/3,"?var2","append",[Var(?var0),Var(L2),Var(?var1)])',
 	                   'Functor(call/3,"?var3","append",[Var(T),Var(L2),Var(L3)])',
 	                   'Functor(call/3,"?result","rule",[Var(?var2),Var(?var3)])' 
@@ -296,25 +296,26 @@ it('ParserL4 - question - 2 ', function(){
 	
 	var text = "append([a,b], [c,d], X).";
 	
-	var expected = [[
-						'Functor(call/3,"?result","append",[Var(?var0),Var(?var1),Var(X)])',
-						'Functor(call/3,"?var1","cons",[Token(term,c),Token(term,d)])',
-						'Functor(call/3,"?var0","cons",[Token(term,a),Token(term,b)])'	                
-	                ]];
+	var expected = [[ 
+	                  'Functor(call/3,"?result","append",[Var(?var5)])',
+	                  'Functor(call/3,"?var5","cons",[Token(term,a),Var(?var0),Var(?var4)])',
+	                  'Functor(call/3,"?var4","cons",[Var(?var3)])',
+	                  'Functor(call/3,"?var3","cons",[Token(term,c),Var(?var1),Var(?var2)])',
+	                  'Functor(call/3,"?var2","cons",[Var(X)])',
+	                  'Functor(call/3,"?var1","cons",[Token(term,d)])',
+	                  'Functor(call/3,"?var0","cons",[Token(term,b)])' 
+	                  ]];
 	
 	process(text, expected);
 });
 
-/*
- *  TODO: support for empty list ... 
- *
 it('ParserL4 - question - 3 ', function(){
 	
 	var text = "concat([], L, L).";
 	
 	var expected = [[
+	                 'Functor(call/3,"?result","concat",[Token(nil,null),Var(L),Var(L)])'
 	                ]];
 	
 	process(text, expected);
 });
-*/

@@ -1477,11 +1477,6 @@ ParserL3._process_expression = function(opcode, expression){
 		
 		var node = expression[node_index];
 			
-		// The Token(sep) is not helpful anymore
-		if (node instanceof Token)
-			if (node.name == 'sep')
-				continue;
-		
 		// The recursion case first of course
 		if (node instanceof Functor) {
 			var exp_from_args = node.args;
