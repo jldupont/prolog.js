@@ -28,7 +28,7 @@ Visitor.prototype.process = function() {
 	if (!(this.exp.args))
 		throw new Error("Expecting a rooted tree, got: "+JSON.stringify(exp));
 	
-	this._process(this.exp, 0);
+	this._process(0, this.exp, 0);
 };
 
 /**
@@ -37,7 +37,7 @@ Visitor.prototype.process = function() {
  *  @raise Error
  *  
  */
-Visitor.prototype._process = function(node, depth) {
+Visitor.prototype._process = function(var_counter, node, depth) {
 	
 	//console.log("Visitor: ",node, " depth: ",depth);
 	
@@ -45,7 +45,7 @@ Visitor.prototype._process = function(node, depth) {
 	if (!node)
 		throw new Error("Visitor: got an undefined node.");
 	
-	this.cb(node, depth, null);
+	this.cb({ vc: var_counter, n: node, d: depth, is_struct: true});
 	
 	// Recursively go through all arguments
 	//  of the present Functor
@@ -54,13 +54,17 @@ Visitor.prototype._process = function(node, depth) {
 		
 		var bnode = node.args[index];
 		
-		this.cb(bnode, depth, index);
+		this.cb({ vc: var_counter, n: bnode, d: depth, i: index, is_arg: true});
+		
+		var_counter ++;
 		
 		if (bnode.args && bnode.args.length>0) {
-			this._process(bnode, depth+1);
+			var_counter = this._process(var_counter, bnode, depth+1);
 		}
 
 	};// for args
+	
+	return var_counter;
 }; // _preprocess
 
 

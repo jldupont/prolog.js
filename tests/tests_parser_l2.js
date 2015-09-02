@@ -17,8 +17,15 @@ var Functor = pr.Functor;
 var ParserL1 = pr.ParserL1;
 var OpNode = pr.OpNode;
 
+
+
+
+
 var setup = function(text, convert_fact) {
 
+	Functor.inspect_short_version = false;
+	Token.inspect_quoted = false;
+	
 	var l = new Lexer(text);
 	var tokens = l.process();
 
@@ -69,7 +76,6 @@ var process = function(text, expected) {
  *   we have not stepped the process further along
  */
 it('ParserL2 - simple - no fact to rule', function(){
-	
 	
 	var text = "love(charlot).\n";
 	var expected = [ 'Functor(love/1,Token(term,charlot))' ];

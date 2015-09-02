@@ -14,6 +14,8 @@ var Functor = pr.Functor;
 var Op = pr.Op;
 var OpNode = pr.OpNode;
 
+Functor.inspect_short_version = false;
+
 /**
  * 
  */

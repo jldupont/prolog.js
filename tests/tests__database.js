@@ -16,6 +16,8 @@ var OpNode = pr.OpNode;
 var Op = pr.Op;
 var DbAccess = pr.DbAccess;
 
+Functor.inspect_short_version = false;
+
 it('DbAccess - compute signature - 1a', function(){
 
 	var result = DbAccess.compute_signature(new Functor("f1"));

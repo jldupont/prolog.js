@@ -267,6 +267,38 @@ it('ParserL4 - complex - 6 - LTR', function(){
 	process(text, expected, true);
 });
 
+it('ParserL4 - complex - 7', function(){
+	
+	var text = "f1(a,f2(f3(f4(b,c),d),e),f).";
+	
+	var expected = [[
+	                 'Functor(call/3,"?result","f1",[Token(term,a),Var(?var2),Token(term,f)])',
+	                 'Functor(call/3,"?var2","f2",[Var(?var1),Token(term,e)])',
+	                 'Functor(call/3,"?var1","f3",[Var(?var0),Token(term,d)])',
+	                 'Functor(call/3,"?var0","f4",[Token(term,b),Token(term,c)])',	                 
+	                ]];
+	/*
+	 *  GNU PROLOG CODE
+	 * 
+	    clause(f1(a,f2(f3(f4(b,c),d),e),f),[
+		    get_atom(a,0),
+		    
+		    get_structure(f2/2,1),
+		    unify_variable(x(0)),
+		    unify_atom(e),
+		    get_structure(f3/2,0),
+		    unify_variable(x(0)),
+		    unify_atom(d),
+		    get_structure(f4/2,0),
+		    unify_atom(b),
+		    unify_atom(c),
+		    
+		    get_atom(f,2),
+		    proceed]).
+	 */
+	process(text, expected);
+});
+
 it('ParserL4 - multi-expression - 1', function(){
 	
 	var text = "f1(a,b,c). \n f2(d,e,f). \n f3(x,y,z).\n";

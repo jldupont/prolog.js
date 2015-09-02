@@ -21,9 +21,16 @@ var ParserL2 = pr.ParserL2;
 var ParserL3 = pr.ParserL3;
 var Visitor = pr.Visitor;
 
+Functor.inspect_short_version = true;
+Token.inspect_quoted = true;
 
 var setup = function(text) {
 
+	Functor.inspect_short_version = true;
+	Functor.inspect_quoted = true;
+	
+	Token.inspect_quoted = true;
+	
 	var l = new Lexer(text);
 	var tokens = l.process();
 
@@ -56,8 +63,8 @@ var process = function(input_text, expecteds, left_to_right) {
 		if (!expression)
 			return false;
 		
-		var cb = function(node, depth, index){
-			results.push([node.name, depth, index]);
+		var cb = function(ctx){
+			results.push(ctx);
 		};
 		
 		//console.log("Expression: ", expression[0]);
@@ -105,52 +112,26 @@ var compare = function(input, expected) {
 };
 
 
-it('Visitor - basic', function(){
+it('Visitor - basic - 1', function(){
 	
-	var text = "f1(A).";
+	var text = "f1(a,f2(f3( f4(b,c) ,d), e),f).";
 	var expected = [
-	                 [ 'f1', 0, null ]
-	                ,[ 'A',  0, 0]
+{ vc: 0, n: 'Functor(f1/3)', d: 0, is_struct: true },
+{ vc: 0, n: 'Token(term,a)', d: 0, i: 0, is_arg: true },
+{ vc: 1, n: 'Functor(f2/2)', d: 0, i: 1, is_arg: true },
+{ vc: 2, n: 'Functor(f2/2)', d: 1, is_struct: true },
+{ vc: 2, n: 'Functor(f3/2)', d: 1, i: 0, is_arg: true },
+{ vc: 3, n: 'Functor(f3/2)', d: 2, is_struct: true },
+{ vc: 3, n: 'Functor(f4/2)', d: 2, i: 0, is_arg: true },
+{ vc: 4, n: 'Functor(f4/2)', d: 3, is_struct: true },
+{ vc: 4, n: 'Token(term,b)', d: 3, i: 0, is_arg: true },
+{ vc: 5, n: 'Token(term,c)', d: 3, i: 1, is_arg: true },
+{ vc: 6, n: 'Token(term,d)', d: 2, i: 1, is_arg: true },
+{ vc: 7, n: 'Token(term,e)', d: 1, i: 1, is_arg: true },
+{ vc: 8, n: 'Token(term,f)', d: 0, i: 2, is_arg: true }	                
 	                 ];
 	
 	process(text, expected);
 });
 
-it('Visitor - basic - 2', function(){
-	
-	var text = "f1(f2(A,B)).";
-	var expected = [
-	                 [ 'f1',  0, null ]
-	                ,[ 'f2',  0, 0 ]
-	                ,[ 'f2',  1, null ]
-	                 ,[ 'A', 1, 0 ]
-	                 ,[ 'B', 1, 1 ]	                 
-	                 ];
-	
-	process(text, expected);
-});
 
-it('Visitor - basic - 3', function(){
-	
-	var text = "f1(f2(A,B)), f3(C), f4(D).";
-	//
-	//  conj(conj(f1(f2), f3), f4)
-	//
-	var expected = [ [ 'conj', 0, null ],
-	                 [ 'conj', 0, 0 ],
-	                 [ 'conj', 1, null ],
-	                 [ 'f1', 1, 0 ],
-	                 [ 'f1', 2, null ],
-	                 [ 'f2', 2, 0 ],
-	                 [ 'f2', 3, null ],
-	                 [ 'A', 3, 0 ],
-	                 [ 'B', 3, 1 ],
-	                 [ 'f3', 1, 1 ],
-	                 [ 'f3', 2, null ],
-	                 [ 'C', 2, 0 ],
-	                 [ 'f4', 0, 1 ],
-	                 [ 'f4', 1, null ],
-	                 [ 'D', 1, 0 ] ];
-	
-	process(text, expected);
-});

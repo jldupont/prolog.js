@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-08-31 */
+/*! prolog.js - v0.0.1 - 2015-09-02 */
 
 /**
  *  Token
@@ -27,8 +27,17 @@ function Token(name, maybe_value, maybe_attrs) {
 	
 };
 
+Token.inspect_quoted = false;
+
 Token.prototype.inspect = function(){
-	return "Token("+this.name+","+this.value+")";
+	var result = "";
+	
+	result = "Token("+this.name+","+this.value+")";
+	
+	if (Token.inspect_quoted)
+		result = "'"+result+"'";
+	
+	return result;
 };
 
 /**
@@ -395,9 +404,24 @@ function Functor(name, maybe_arguments_list) {
 		this.args = [];
 };
 
+Functor.inspect_short_version = false;
+Functor.inspect_quoted = false;
+
 Functor.prototype.inspect = function(){
-	var fargs = this.format_args(this.args);
-	return "Functor("+this.name+"/"+this.args.length+","+fargs+")";
+	
+	var result = "";
+	
+	if (Functor.inspect_short_version)
+		result = "Functor("+this.name+"/"+this.args.length+")";
+	else {
+		var fargs = this.format_args(this.args);
+		result = "Functor("+this.name+"/"+this.args.length+","+fargs+")";
+	}
+	
+	if (Functor.inspect_quoted)
+		result = "'"+result+"'";
+	
+	return result;
 };
 
 Functor.prototype.format_args = function (input) {
@@ -507,16 +531,45 @@ function Compiler() {
  * 
  * Expecting a `rule` i.e. 1 root node Functor(":-", ...)
  *  OR a `fact`  i.e. 1 root node Functor(name, ...)
+ *
+ * A `fact` is a body-less rule (just a `head`)
+ *  (or a rule with a body 'true').
+ *
+ *  -------------------------------------------------------------
+ *  
+ *  
+ *  
+ * 
  * 
  * @raise Error
  */
-Compiler.prototype.process_rule_or_fact = function() {
+Compiler.prototype.process_rule_or_fact = function(exp) {
+	
+};
+
+/**
+ *  Just compiles the expression assuming it is a `head`
+ * 
+ *  Generate "pattern matching" code for the input structure
+ *  Go "depth-first"
+ *  
+ */
+Compiler.prototype.process_head = function(exp) {
 	
 };
 
 
 /**
- * Process a `query` expression
+ *  Just compiles the expression assuming it is a `body`
+ * 
+ */
+Compiler.prototype.process_body = function(exp) {
+	
+};
+
+
+/**
+ * Process a `query` expression  (i.e. just a `body`)
  * 
  * Expecting 1 root node
  * - conj Functor
@@ -525,7 +578,7 @@ Compiler.prototype.process_rule_or_fact = function() {
  * 
  * @raise Error
  */
-Compiler.prototype.process_query = function() {
+Compiler.prototype.process_query = function(exp) {
 	
 };
 
@@ -1790,7 +1843,7 @@ Visitor.prototype.process = function() {
 	if (!(this.exp.args))
 		throw new Error("Expecting a rooted tree, got: "+JSON.stringify(exp));
 	
-	this._process(this.exp, 0);
+	this._process(0, this.exp, 0);
 };
 
 /**
@@ -1799,7 +1852,7 @@ Visitor.prototype.process = function() {
  *  @raise Error
  *  
  */
-Visitor.prototype._process = function(node, depth) {
+Visitor.prototype._process = function(var_counter, node, depth) {
 	
 	//console.log("Visitor: ",node, " depth: ",depth);
 	
@@ -1807,7 +1860,7 @@ Visitor.prototype._process = function(node, depth) {
 	if (!node)
 		throw new Error("Visitor: got an undefined node.");
 	
-	this.cb(node, depth, null);
+	this.cb({ vc: var_counter, n: node, d: depth, is_struct: true});
 	
 	// Recursively go through all arguments
 	//  of the present Functor
@@ -1816,13 +1869,17 @@ Visitor.prototype._process = function(node, depth) {
 		
 		var bnode = node.args[index];
 		
-		this.cb(bnode, depth, index);
+		this.cb({ vc: var_counter, n: bnode, d: depth, i: index, is_arg: true});
+		
+		var_counter ++;
 		
 		if (bnode.args && bnode.args.length>0) {
-			this._process(bnode, depth+1);
+			var_counter = this._process(var_counter, bnode, depth+1);
 		}
 
 	};// for args
+	
+	return var_counter;
 }; // _preprocess
 
 

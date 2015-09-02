@@ -33,8 +33,17 @@ function Token(name, maybe_value, maybe_attrs) {
 	
 };
 
+Token.inspect_quoted = false;
+
 Token.prototype.inspect = function(){
-	return "Token("+this.name+","+this.value+")";
+	var result = "";
+	
+	result = "Token("+this.name+","+this.value+")";
+	
+	if (Token.inspect_quoted)
+		result = "'"+result+"'";
+	
+	return result;
 };
 
 /**
@@ -401,9 +410,24 @@ function Functor(name, maybe_arguments_list) {
 		this.args = [];
 };
 
+Functor.inspect_short_version = false;
+Functor.inspect_quoted = false;
+
 Functor.prototype.inspect = function(){
-	var fargs = this.format_args(this.args);
-	return "Functor("+this.name+"/"+this.args.length+","+fargs+")";
+	
+	var result = "";
+	
+	if (Functor.inspect_short_version)
+		result = "Functor("+this.name+"/"+this.args.length+")";
+	else {
+		var fargs = this.format_args(this.args);
+		result = "Functor("+this.name+"/"+this.args.length+","+fargs+")";
+	}
+	
+	if (Functor.inspect_quoted)
+		result = "'"+result+"'";
+	
+	return result;
 };
 
 Functor.prototype.format_args = function (input) {
