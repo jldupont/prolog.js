@@ -74,7 +74,7 @@ var process = function(input_text, expecteds, left_to_right) {
 		i.process(cb);
 	};
 	
-	//console.log(results);
+	console.log(results);
 	
 	for (var index=0; index < results.length; index++) {
 		
