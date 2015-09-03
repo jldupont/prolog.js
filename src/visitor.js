@@ -12,9 +12,9 @@
  *
  * @param exp: the expression to process
  */
-function Visitor(exp, callback_fnc) {
+function Visitor(exp) {
 	this.exp = exp;
-	this.cb = callback_fnc;
+	this.cb = null;
 };
 
 /**
@@ -23,10 +23,12 @@ function Visitor(exp, callback_fnc) {
  * 
  * @raise Error
  */
-Visitor.prototype.process = function() {
+Visitor.prototype.process = function(callback_function) {
 	
 	if (!(this.exp.args))
 		throw new Error("Expecting a rooted tree, got: "+JSON.stringify(exp));
+	
+	this.cb = callback_function;
 	
 	this._process(0, this.exp, 0);
 };

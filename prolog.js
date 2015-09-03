@@ -488,6 +488,12 @@ Builtins.define = function(name, arity, functor){
 	Builtins.db[sig] = functor;
 };
 
+function ErrorExpectingFunctor() {};
+
+ErrorExpectingFunctor.prototype = Error.prototype;
+
+function ErrorInvalidHead() {};
+ErrorInvalidHead.prototype = Error.prototype;
 
 
 if (typeof module!= 'undefined') {
@@ -499,6 +505,10 @@ if (typeof module!= 'undefined') {
 	module.exports.OpNode = OpNode;
 	module.exports.Result = Result;
 	module.exports.Builtins = Builtins;
+	
+	// Errors
+	module.ErrorExpectingFunctor = ErrorExpectingFunctor;
+	module.ErrorInvalidHead = ErrorInvalidHead;
 };
 /**
  *  The builtin 'call' functor
@@ -553,9 +563,73 @@ Compiler.prototype.process_rule_or_fact = function(exp) {
  *  Generate "pattern matching" code for the input structure
  *  Go "depth-first"
  *  
+ *  A `head` structure must be 
+ *  - single element `Functor`
+ *  - not a Conjunction nor a Disjunction
+ *  
+ *  * The root Functor is stripped
+ *  * 
+ *  
+ *  
+ *  @raise ErrorExpectingFunctor
+ *  @raise ErrorInvalidHead
  */
 Compiler.prototype.process_head = function(exp) {
 	
+	var root;
+	
+	if (exp instanceof Array)
+		root = exp[0];
+	else
+		root = exp;
+	
+	if (!(root instanceof Functor))
+		throw new ErrorExpectingFunctor();
+	
+	if (root.name == 'conj' || (root.name == 'disj'))
+		throw new ErrorInvalidHead();
+	
+	var v = new Visitor(root);
+	var top_functor_is_stripped = false;
+	var result = []; 
+		
+	v.process(function(ctx){
+		
+		if (ctx.n instanceof Functor) {
+			
+			if (!top_functor_is_stripped) {
+				top_functor_is_stripped = true;
+				return;
+			}
+			
+			
+		};//if Functor
+		
+		if (ctx.n instanceof Token) {
+			if (ctx.n.name == 'term') {
+				result.push(Compiler.handle_head_term(ctx));
+				return;
+			};
+				
+			if (ctx.n.name == 'number') {
+				result.push(Compiler.handle_head_number(ctx));
+				return;
+			};
+			
+		};// If Token
+		
+		
+	});//callback
+	
+	return result;
+};
+
+Compiler.handle_head_term = function(ctx){
+	return { c: "get_term", o: ctx.n.value };
+};
+
+Compiler.handle_head_number = function(ctx){
+	return { c: "get_number", o: ctx.n.value };
 };
 
 
@@ -1827,9 +1901,9 @@ if (typeof module!= 'undefined') {
  *
  * @param exp: the expression to process
  */
-function Visitor(exp, callback_fnc) {
+function Visitor(exp) {
 	this.exp = exp;
-	this.cb = callback_fnc;
+	this.cb = null;
 };
 
 /**
@@ -1838,10 +1912,12 @@ function Visitor(exp, callback_fnc) {
  * 
  * @raise Error
  */
-Visitor.prototype.process = function() {
+Visitor.prototype.process = function(callback_function) {
 	
 	if (!(this.exp.args))
 		throw new Error("Expecting a rooted tree, got: "+JSON.stringify(exp));
+	
+	this.cb = callback_function;
 	
 	this._process(0, this.exp, 0);
 };

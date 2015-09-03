@@ -494,6 +494,12 @@ Builtins.define = function(name, arity, functor){
 	Builtins.db[sig] = functor;
 };
 
+function ErrorExpectingFunctor() {};
+
+ErrorExpectingFunctor.prototype = Error.prototype;
+
+function ErrorInvalidHead() {};
+ErrorInvalidHead.prototype = Error.prototype;
 
 
 if (typeof module!= 'undefined') {
@@ -505,4 +511,8 @@ if (typeof module!= 'undefined') {
 	module.exports.OpNode = OpNode;
 	module.exports.Result = Result;
 	module.exports.Builtins = Builtins;
+	
+	// Errors
+	module.ErrorExpectingFunctor = ErrorExpectingFunctor;
+	module.ErrorInvalidHead = ErrorInvalidHead;
 };

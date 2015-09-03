@@ -47,9 +47,73 @@ Compiler.prototype.process_rule_or_fact = function(exp) {
  *  Generate "pattern matching" code for the input structure
  *  Go "depth-first"
  *  
+ *  A `head` structure must be 
+ *  - single element `Functor`
+ *  - not a Conjunction nor a Disjunction
+ *  
+ *  * The root Functor is stripped
+ *  * 
+ *  
+ *  
+ *  @raise ErrorExpectingFunctor
+ *  @raise ErrorInvalidHead
  */
 Compiler.prototype.process_head = function(exp) {
 	
+	var root;
+	
+	if (exp instanceof Array)
+		root = exp[0];
+	else
+		root = exp;
+	
+	if (!(root instanceof Functor))
+		throw new ErrorExpectingFunctor();
+	
+	if (root.name == 'conj' || (root.name == 'disj'))
+		throw new ErrorInvalidHead();
+	
+	var v = new Visitor(root);
+	var top_functor_is_stripped = false;
+	var result = []; 
+		
+	v.process(function(ctx){
+		
+		if (ctx.n instanceof Functor) {
+			
+			if (!top_functor_is_stripped) {
+				top_functor_is_stripped = true;
+				return;
+			}
+			
+			
+		};//if Functor
+		
+		if (ctx.n instanceof Token) {
+			if (ctx.n.name == 'term') {
+				result.push(Compiler.handle_head_term(ctx));
+				return;
+			};
+				
+			if (ctx.n.name == 'number') {
+				result.push(Compiler.handle_head_number(ctx));
+				return;
+			};
+			
+		};// If Token
+		
+		
+	});//callback
+	
+	return result;
+};
+
+Compiler.handle_head_term = function(ctx){
+	return { c: "get_term", o: ctx.n.value };
+};
+
+Compiler.handle_head_number = function(ctx){
+	return { c: "get_number", o: ctx.n.value };
 };
 
 
