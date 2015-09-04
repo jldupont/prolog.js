@@ -31,9 +31,9 @@ Token.inspect_quoted = true;
 var setup = function(text) {
 
 	Functor.inspect_short_version = true;
-	//Functor.inspect_quoted = true;
+	Functor.inspect_quoted = true;
 	
-	//Token.inspect_quoted = true;
+	Token.inspect_quoted = false;
 	
 	var l = new Lexer(text);
 	var tokens = l.process();

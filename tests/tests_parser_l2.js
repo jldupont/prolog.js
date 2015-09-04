@@ -24,6 +24,8 @@ var OpNode = pr.OpNode;
 var setup = function(text, convert_fact) {
 
 	Functor.inspect_short_version = false;
+	
+	Functor.inspect_quoted = false;
 	Token.inspect_quoted = false;
 	
 	var l = new Lexer(text);
