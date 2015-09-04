@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-09-03 */
+/*! prolog.js - v0.0.1 - 2015-09-04 */
 
 /**
  *  Token
@@ -589,11 +589,22 @@ Compiler.prototype.process_head = function(exp) {
 	if (root.name == 'conj' || (root.name == 'disj'))
 		throw new ErrorInvalidHead();
 	
-	var v = new Visitor(root);
+	var breadth_first = false;
+	
+	var v = new Visitor(root, breadth_first);
 	var top_functor_is_stripped = false;
 	var result = []; 
 		
+	
+	
 	v.process(function(ctx){
+		
+		result.push(ctx);
+		/*
+		// Temporary variable used for
+		//  traversing the tree
+		var tmp_var = ctx.col < 2 ? 0: ctx.col-1;
+		
 		
 		if (ctx.n instanceof Functor) {
 			
@@ -602,7 +613,17 @@ Compiler.prototype.process_head = function(exp) {
 				return;
 			}
 			
-			
+			if (ctx.is_struct) {
+				if (ctx.d == 1) {
+					result.push(Compiler.handle_head_structure(ctx, ctx.col));
+					result.push(Compiler.handle_head_unify_variable(ctx, tmp_var));
+					return;
+				} else {
+					result.push(Compiler.handle_head_structure(ctx, tmp_var));
+					result.push(Compiler.handle_head_unify_variable(ctx, tmp_var));
+					return;
+				};
+			};
 		};//if Functor
 		
 		if (ctx.n instanceof Token) {
@@ -617,19 +638,28 @@ Compiler.prototype.process_head = function(exp) {
 			};
 			
 		};// If Token
-		
+		*/
 		
 	});//callback
 	
 	return result;
 };
 
+Compiler.handle_head_unify_variable = function(ctx, var_index){
+	return { c: "unify_variable", o2: var_index };
+};
+
+Compiler.handle_head_structure = function(ctx, var_index){
+	return { c: "get_structure", o0:ctx.n.name, o1:ctx.n.args.length, o2: var_index };
+};
+
+
 Compiler.handle_head_term = function(ctx){
-	return { c: "get_term", o: ctx.n.value };
+	return { c: "get_term", o2: ctx.n.value };
 };
 
 Compiler.handle_head_number = function(ctx){
-	return { c: "get_number", o: ctx.n.value };
+	return { c: "get_number", o2: ctx.n.value };
 };
 
 
@@ -1901,10 +1931,14 @@ if (typeof module!= 'undefined') {
  *
  * @param exp: the expression to process
  */
-function Visitor(exp) {
+function Visitor(exp, breadth_first) {
 	this.exp = exp;
 	this.cb = null;
-	this.is_root = false;
+	
+	if (breadth_first == true)
+		this.breadth = true;
+	else
+		this.depth = true;
 };
 
 /**
@@ -1919,9 +1953,12 @@ Visitor.prototype.process = function(callback_function) {
 		throw new Error("Expecting a rooted tree, got: "+JSON.stringify(exp));
 	
 	this.cb = callback_function;
-	this.is_root = true;
 	
-	this._process(0, this.exp, 0, 0);
+	if (this.depth)
+		//return this._process_depth({n: this.exp, is_root: true, depth: 0});
+		return this._process_depth(this.exp);
+	else
+		this._process_breadth(this.exp, 0, 0);
 };
 
 /**
@@ -1930,43 +1967,116 @@ Visitor.prototype.process = function(callback_function) {
  *  @raise Error
  *  
  */
-Visitor.prototype._process = function(var_counter, node, depth, col) {
+Visitor.prototype._process_depth = function(node) {
 	
-	var root = this.is_root;
+	//console.log("Visitor: Process Depth");
 	
 	// that should happen
 	if (!node)
 		throw new Error("Visitor: got an undefined node.");
-	
-	this.cb({ vc: var_counter, n: node, d: depth, 
-				is_struct: true, is_root: this.is_root, col: col});
-	
-	this.is_root = false;
-	
-	// Recursively go through all arguments
-	//  of the present Functor
-	//
-	for (var index=0;index<node.args.length;index++) {
-		
-		var c = (root ? index:col);
-		
-		var bnode = node.args[index];
-		
-		this.cb({ vc: var_counter, n: bnode, d: depth, i: index, 
-					is_arg: true, col: c});
-		
-		var_counter ++;
-		
-		if (bnode.args && bnode.args.length>0) {
-			var_counter = this._process(var_counter, bnode, depth+1, c);
-		}
 
-	};// for args
+	return this.__process_depth(node);
+}; // process depth
+
+Visitor.prototype.__process_depth = function(node){
+
+	var result = [];
+	var stack = [ node ];
+	
+	node.is_root = true;
+	
+	for (;;) {
+
+		var bnode = stack.pop();
+		if (!bnode)
+			break;
+		
+		var v = bnode.v;
+		
+		if (v != undefined)
+			this.cb({ n: bnode, is_struct: true, v: v});
+		else
+			this.cb({ n: bnode, is_struct: true});
+		
+		//console.log("Process Depth Column: ", bnode);
+		
+		for (var index=0;index<bnode.args.length;index++) {
+			
+			var n = bnode.args[index];
+			
+			if (n.args && n.args.length>0) {
+				
+				this.cb({ n: n, is_struct: true, i:index});
+				n.v = index;
+				stack.unshift(n);
+				
+			} else {
+				if (v !=undefined )
+					this.cb({ n: n, i: index, v: v });
+				else
+					this.cb({ n: n, i: index});
+			}
+			
+		}; // for args
+		
+	}; // for stack
+
+	return result;
+};
+
+
+/**
+ *  Performs the actual processing
+ *  
+ *  @raise Error
+ *  
+ */
+Visitor.prototype._process_breadth = function(root_node, depth, col) {
+	
+	var root = true;
+	var stack = [ root_node ];
+	
+	// that should happen
+	if (!root_node)
+		throw new Error("Visitor: got an undefined node.");
+	
+	for(;;) {
+
+		var node = stack.shift();
+		if (!node)
+			break;
+
+		this.cb({ n: node, d: depth, 
+			is_struct: true, is_root: root, col: col});
+		
+		// Recursively go through all arguments
+		//  of the present Functor
+		//
+		for (var index=0;index<node.args.length;index++) {
+			
+			var col = (root ? index:node.col);
+			
+			var bnode = node.args[index];
+			
+			this.cb({ n: bnode, d: depth, i: index, 
+						is_arg: true, col: col});
+			
+			if (bnode.args && bnode.args.length>0) {
+				
+				if (root)
+					bnode.col = index;
+				stack.push(bnode);
+			}
+
+		};// for args
+		
+		root = false;
+		depth++;
+		
+	}; // for
 	
 	
-	
-	return var_counter;
-}; // _preprocess
+}; // breadth
 
 
 

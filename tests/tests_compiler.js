@@ -138,7 +138,7 @@ it('Compiler - check - 1', function(){
 
 it('Compiler - basic - 1', function(){
 	
-	var text = "f1(a,f2(f3( f4(b,c) ,d), e),666).";
+	var text = "h1(a, h2( h3a(h3a), h3b(h3b), h3c(h3c)) ,z).";
 	var expected = [
 	                
 	                 ];

@@ -73,11 +73,22 @@ Compiler.prototype.process_head = function(exp) {
 	if (root.name == 'conj' || (root.name == 'disj'))
 		throw new ErrorInvalidHead();
 	
-	var v = new Visitor(root);
+	var breadth_first = false;
+	
+	var v = new Visitor(root, breadth_first);
 	var top_functor_is_stripped = false;
 	var result = []; 
 		
+	
+	
 	v.process(function(ctx){
+		
+		result.push(ctx);
+		/*
+		// Temporary variable used for
+		//  traversing the tree
+		var tmp_var = ctx.col < 2 ? 0: ctx.col-1;
+		
 		
 		if (ctx.n instanceof Functor) {
 			
@@ -86,7 +97,17 @@ Compiler.prototype.process_head = function(exp) {
 				return;
 			}
 			
-			
+			if (ctx.is_struct) {
+				if (ctx.d == 1) {
+					result.push(Compiler.handle_head_structure(ctx, ctx.col));
+					result.push(Compiler.handle_head_unify_variable(ctx, tmp_var));
+					return;
+				} else {
+					result.push(Compiler.handle_head_structure(ctx, tmp_var));
+					result.push(Compiler.handle_head_unify_variable(ctx, tmp_var));
+					return;
+				};
+			};
 		};//if Functor
 		
 		if (ctx.n instanceof Token) {
@@ -101,19 +122,28 @@ Compiler.prototype.process_head = function(exp) {
 			};
 			
 		};// If Token
-		
+		*/
 		
 	});//callback
 	
 	return result;
 };
 
+Compiler.handle_head_unify_variable = function(ctx, var_index){
+	return { c: "unify_variable", o2: var_index };
+};
+
+Compiler.handle_head_structure = function(ctx, var_index){
+	return { c: "get_structure", o0:ctx.n.name, o1:ctx.n.args.length, o2: var_index };
+};
+
+
 Compiler.handle_head_term = function(ctx){
-	return { c: "get_term", o: ctx.n.value };
+	return { c: "get_term", o2: ctx.n.value };
 };
 
 Compiler.handle_head_number = function(ctx){
-	return { c: "get_number", o: ctx.n.value };
+	return { c: "get_number", o2: ctx.n.value };
 };
 
 
