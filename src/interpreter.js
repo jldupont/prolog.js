@@ -32,12 +32,18 @@ Interpreter.prototype.get_stack = function(){
 /**
  * Set the `question` to get an answer to
  * 
- * The `question` must be a
+ * The `question` must be an expression (not a rule)
+ *  organized as a single root node.
  * 
  * @param question
+ * 
+ * @raise ErrorExpectingFunctor
  */
 Interpreter.prototype.set_question = function(question){
 	this.question = question;
+	
+	if (!(question instanceof Functor))
+		throw new ErrorExpectingFunctor();
 };
 
 

@@ -21,15 +21,18 @@ var ParserL2 = pr.ParserL2;
 var ParserL3 = pr.ParserL3;
 var Visitor = pr.Visitor;
 var Compiler = pr.Compiler;
+var Instruction = pr.Instruction;
 
 var ErrorInvalidHead = pr.ErrorInvalidHead;
 
 
 var setup = function(text) {
 
-	Functor.inspect_short_version = true;
-	Functor.inspect_quoted = false;
-	Token.inspect_quoted = false;
+	//Functor.inspect_short_version = true;
+	//Functor.inspect_quoted = true;
+	//Token.inspect_quoted = true;
+	
+	Instruction.inspect_quoted = true;
 	
 	var l = new Lexer(text);
 	var tokens = l.process();
@@ -72,10 +75,10 @@ var process_head = function(input_text, expecteds) {
 		results.push(result);
 	};
 	
-	console.log(results);
+	//console.log(results);
 	
-	if (expecteds.length!=results.length)
-		return false;
+	//if (expecteds.length!=results.length)
+	//	throw new Error();
 	
 	for (var index=0; index < results.length; index++) {
 		
@@ -102,10 +105,11 @@ var compare = function(input, expected) {
 
 function isEquivalent(input, expected) {
 	
-	for (var key in expected) {
-		
-		var ri = ""+util.inspect(input[key]);
-		var e  = ""+expected[key];
+	for (var index in expected) {
+
+		var i = input[index];
+		var ri = util.inspect(i);
+		var e  = "'"+expected[index]+"'";
 		
 		//console.log("Key: ", key);
 		//console.log("input: ",ri);
@@ -132,33 +136,37 @@ it('Compiler - check - 1', function(){
 });
 
 
-it('Compiler - basic - 1', function(){
+it('Compiler - basic - 0', function(){
 	
-	/**
- [ [ 
-    { n: Functor(h1/3), is_struct: true, i: 0 },
-    { n: Token(term,a), i: 0 },
-    { n: Functor(h2/3), is_struct: true, i: 1 },
-    { n: Token(term,z), i: 2 },
-    { n: Functor(h2/3), is_struct: true, v: 1 },
-    { n: Functor(h3a/1), is_struct: true, i: 0 },
-    { n: Functor(h3b/1), is_struct: true, i: 1 },
-    { n: Functor(h3c/1), is_struct: true, i: 2 },
-    { n: Functor(h3a/1), is_struct: true, v: 0 },
-    { n: Token(term,h3a), i: 0, v: 0 },
-    { n: Functor(h3b/1), is_struct: true, v: 1 },
-    { n: Token(term,h3b), i: 0, v: 1 },
-    { n: Functor(h3c/1), is_struct: true, v: 2 },
-    { n: Token(term,h3c), i: 0, v: 2 } 
-    ] ]
-	 */
-	
-	var text = "h1(a, h2( h3a(h3a), h3b(h3b), h3c(h3c)) ,666).";
-	var expected = [
-	                
-	                 ];
+	var text = "h1(666).";
+	var expected = [[ 
+	               'get_struct   ( h1/1, x(0) )', 
+	               'get_number   ( p(666) )' 
+	               ]];
 	
 	process_head(text, expected);
 });
 
 
+it('Compiler - basic - 1', function(){
+	
+	var text = "h1(a, h2( h3a(h3a), h3b(h3b), h3c(h3c)) ,666).";
+	var expected = [[ 
+  'get_struct   ( h1/3, x(0) )',
+  'get_term     ( p("a") )',
+  'unif_var     ( x(1) )',
+  'get_number   ( p(666) )',
+  'get_struct   ( h2/3, x(1) )',
+  'unif_var     ( x(2) )',
+  'unif_var     ( x(3) )',
+  'unif_var     ( x(4) )',
+  'get_struct   ( h3a/1, x(2) )',
+  'get_term     ( p("h3a") )',
+  'get_struct   ( h3b/1, x(3) )',
+  'get_term     ( p("h3b") )',
+  'get_struct   ( h3c/1, x(4) )',
+  'get_term     ( p("h3c") )' 
+  ]];
+	
+	process_head(text, expected);
+});

@@ -546,11 +546,13 @@ Instruction.prototype.inspect = function(){
 // ============================================================ Errors
 
 function ErrorExpectingFunctor() {};
-
 ErrorExpectingFunctor.prototype = Error.prototype;
 
 function ErrorInvalidHead() {};
 ErrorInvalidHead.prototype = Error.prototype;
+
+function ErrorRuleInQuestion() {};
+ErrorRuleInQuestion.prototype = Error.prototype;
 
 
 if (typeof module!= 'undefined') {
@@ -565,6 +567,7 @@ if (typeof module!= 'undefined') {
 	module.exports.Builtins = Builtins;
 	
 	// Errors
-	module.ErrorExpectingFunctor = ErrorExpectingFunctor;
-	module.ErrorInvalidHead = ErrorInvalidHead;
+	module.exports.ErrorExpectingFunctor = ErrorExpectingFunctor;
+	module.exports.ErrorInvalidHead = ErrorInvalidHead;
+	module.exports.ErrorRuleInQuestion = ErrorRuleInQuestion;
 };

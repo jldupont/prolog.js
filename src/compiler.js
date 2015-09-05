@@ -75,7 +75,6 @@ Compiler.prototype.process_head = function(exp) {
 	
 	var v = new Visitor(root);
 	
-	//var top_functor_is_stripped = false;
 	var result = []; 
 		
 	
@@ -89,12 +88,6 @@ Compiler.prototype.process_head = function(exp) {
 	
 	v.process(function(ctx){
 		
-		//result.push(ctx);
-		
-		// Temporary variable used for
-		//  traversing the tree
-		
-		// /*
 		if (ctx.is_struct) {
 			
 			// We are seeing this functor node for the first time
@@ -124,19 +117,33 @@ Compiler.prototype.process_head = function(exp) {
 			};
 			
 		};// If Token
-		// */
 		
 	});//callback
 	
 	return result;
 };
 
-Compiler.handle_head_unify_variable = function(ctx, var_index){
-	return { c: "unify_variable", o2: var_index };
-};
 
-Compiler.handle_head_structure = function(ctx, var_index){
-	return { c: "get_structure", o0:ctx.n.name, o1:ctx.n.args.length, o2: var_index };
+/**
+ * Process a `query` expression  (i.e. just a `body`)
+ * 
+ * Expecting 1 root node
+ * - conj Functor
+ * - disjunction Functor
+ * - Functor(name, ...)
+ * 
+ * @raise ErrorExpectingFunctor
+ * @raise ErrorRuleInQuestion
+ */
+Compiler.prototype.process_query = function(exp) {
+	
+	if (!(root instanceof Functor))
+		throw new ErrorExpectingFunctor();
+	
+	if (root.name == 'rule')
+		throw new ErrorRuleInQuestion();
+	
+	return this.process_body(exp);
 };
 
 
@@ -150,19 +157,6 @@ Compiler.prototype.process_body = function(exp) {
 };
 
 
-/**
- * Process a `query` expression  (i.e. just a `body`)
- * 
- * Expecting 1 root node
- * - conj Functor
- * - disjunction Functor
- * - Functor(name, ...)
- * 
- * @raise Error
- */
-Compiler.prototype.process_query = function(exp) {
-	
-};
 
 
 
