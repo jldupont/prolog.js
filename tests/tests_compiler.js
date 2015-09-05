@@ -116,7 +116,7 @@ var process_goal = function(input_text, expecteds) {
 		results.push(result);
 	};
 	
-	console.log(results);
+	//console.log(results);
 	
 	//if (expecteds.length!=results.length)
 	//	throw new Error();
@@ -206,7 +206,14 @@ it('Compiler - goal - basic - 1', function(){
 	
 	var text = "h1(a, h2(b, h3(c))).";
 	var expected = [[
-	                 
+	'put_struct   ( h3/1, x(1) )',
+	'put_term     ( p("c") )',
+	'put_struct   ( h2/2, x(2) )',
+	'put_term     ( p("b") )',
+	'put_var      ( x(1) )',
+	'put_struct   ( h1/2, x(0) )',
+	'put_term     ( p("a") )',
+	'put_var      ( x(2) )'	                 
 	]];
 	
 	process_goal(text, expected);
