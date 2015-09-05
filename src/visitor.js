@@ -36,10 +36,9 @@ Visitor.prototype.process = function(callback_function) {
 	this.cb = callback_function;
 	
 	if (this.depth)
-		//return this._process_depth({n: this.exp, is_root: true, depth: 0});
 		return this._process_depth(this.exp);
 	else
-		this._process_breadth(this.exp, 0, 0);
+		return this._process_breadth(this.exp, 0, 0);
 };
 
 /**
@@ -50,19 +49,33 @@ Visitor.prototype.process = function(callback_function) {
  */
 Visitor.prototype._process_depth = function(node) {
 	
-	//console.log("Visitor: Process Depth");
-	
-	// that should happen
+	// that should not happen
 	if (!node)
 		throw new Error("Visitor: got an undefined node.");
 
 	return this.__process_depth(node);
 }; // process depth
 
+/**
+ * Depth-First visitor with callback
+ * 
+ * v: denotes the variable index that should be used
+ *    to unify the term
+ *    
+ * i: index in the arguments list
+ * 
+ * is_struct
+ * 
+ * 
+ * @param node
+ * @returns {Array}
+ */
 Visitor.prototype.__process_depth = function(node){
 
+	var variable_counter = 0;
 	var result = [];
 	var stack = [ node ];
+	var ctx = {};
 	
 	node.is_root = true;
 	
@@ -72,30 +85,38 @@ Visitor.prototype.__process_depth = function(node){
 		if (!bnode)
 			break;
 		
-		var v = bnode.v;
+		ctx = {
+			 n: bnode
+			,v: bnode.v || variable_counter++
+			,is_struct: (bnode instanceof Functor)
+		};
+
+		/*
+		 *  Announces 'root' node
+		 *   and nodes at a 2nd pass
+		 */
+		this.cb(ctx);
 		
-		if (v != undefined)
-			this.cb({ n: bnode, is_struct: true, v: v});
-		else
-			this.cb({ n: bnode, is_struct: true});
-		
-		//console.log("Process Depth Column: ", bnode);
-		
-		for (var index=0;index<bnode.args.length;index++) {
+		for (var index=0; index<bnode.args.length; index++) {
 			
 			var n = bnode.args[index];
 			
 			if (n.args && n.args.length>0) {
 				
-				this.cb({ n: n, is_struct: true, i:index});
-				n.v = index;
+				// 1st time announce for structures
+				//
+				n.v = variable_counter++;
+
+				this.cb({ n: n, is_struct: true, i:index, v: n.v, as_param: true});
+
+				// Schedule for revisiting (i.e. continue down the tree)
 				stack.unshift(n);
 				
 			} else {
-				if (v !=undefined )
-					this.cb({ n: n, i: index, v: v });
-				else
-					this.cb({ n: n, i: index});
+				
+				// This covers all other node types
+				//  e.g. terms such as Numbers and Atoms
+				this.cb({ n: n, i: index});
 			}
 			
 		}; // for args

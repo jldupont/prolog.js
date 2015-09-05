@@ -494,6 +494,57 @@ Builtins.define = function(name, arity, functor){
 	Builtins.db[sig] = functor;
 };
 
+//============================================================ Instruction
+
+/**
+ *  Context:
+ *  a: arity
+ *  f: functor name
+ *  p: input parameter
+ *  
+ *  x: target register number
+ *  y: target argument index
+ */
+function Instruction(opcode, ctx) {
+	this.opcode = opcode;
+	this.ctx = ctx;
+};
+
+Instruction.inspect_quoted = false;
+
+
+Instruction.prototype.inspect = function(){
+	
+	const params = [ 'p', 'x', 'y', 'i' ];
+	var result = this.opcode + (Array(13 - this.opcode.length).join(" "));
+	
+	result += " ( ";
+	
+	if (this.ctx.f)
+		result += this.ctx.f+"/"+this.ctx.a;
+	
+	for (var i=0, inserted=false;i<params.length;i++) {
+		
+		if (this.ctx[params[i]] !=undefined ) {
+			
+			if (inserted || (this.ctx.f && !inserted))
+				result += ", ";
+			
+			result += params[i] + "("+ JSON.stringify(this.ctx[params[i]])+")";
+			inserted= true;
+		}
+	};
+	
+	result += " )";
+	
+	if (Instruction.inspect_quoted)
+		result = "'"+result+"'";
+	
+	return result;
+};
+
+// ============================================================ Errors
+
 function ErrorExpectingFunctor() {};
 
 ErrorExpectingFunctor.prototype = Error.prototype;
@@ -510,6 +561,7 @@ if (typeof module!= 'undefined') {
 	module.exports.Var = Var;
 	module.exports.OpNode = OpNode;
 	module.exports.Result = Result;
+	module.exports.Instruction = Instruction;
 	module.exports.Builtins = Builtins;
 	
 	// Errors

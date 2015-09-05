@@ -25,14 +25,10 @@ var Compiler = pr.Compiler;
 var ErrorInvalidHead = pr.ErrorInvalidHead;
 
 
-Functor.inspect_short_version = true;
-Token.inspect_quoted = true;
-
 var setup = function(text) {
 
 	Functor.inspect_short_version = true;
-	Functor.inspect_quoted = true;
-	
+	Functor.inspect_quoted = false;
 	Token.inspect_quoted = false;
 	
 	var l = new Lexer(text);
@@ -138,7 +134,26 @@ it('Compiler - check - 1', function(){
 
 it('Compiler - basic - 1', function(){
 	
-	var text = "h1(a, h2( h3a(h3a), h3b(h3b), h3c(h3c)) ,z).";
+	/**
+ [ [ 
+    { n: Functor(h1/3), is_struct: true, i: 0 },
+    { n: Token(term,a), i: 0 },
+    { n: Functor(h2/3), is_struct: true, i: 1 },
+    { n: Token(term,z), i: 2 },
+    { n: Functor(h2/3), is_struct: true, v: 1 },
+    { n: Functor(h3a/1), is_struct: true, i: 0 },
+    { n: Functor(h3b/1), is_struct: true, i: 1 },
+    { n: Functor(h3c/1), is_struct: true, i: 2 },
+    { n: Functor(h3a/1), is_struct: true, v: 0 },
+    { n: Token(term,h3a), i: 0, v: 0 },
+    { n: Functor(h3b/1), is_struct: true, v: 1 },
+    { n: Token(term,h3b), i: 0, v: 1 },
+    { n: Functor(h3c/1), is_struct: true, v: 2 },
+    { n: Token(term,h3c), i: 0, v: 2 } 
+    ] ]
+	 */
+	
+	var text = "h1(a, h2( h3a(h3a), h3b(h3b), h3c(h3c)) ,666).";
 	var expected = [
 	                
 	                 ];

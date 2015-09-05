@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-09-04 */
+/*! prolog.js - v0.0.1 - 2015-09-05 */
 
 /**
  *  Token
@@ -488,6 +488,57 @@ Builtins.define = function(name, arity, functor){
 	Builtins.db[sig] = functor;
 };
 
+//============================================================ Instruction
+
+/**
+ *  Context:
+ *  a: arity
+ *  f: functor name
+ *  p: input parameter
+ *  
+ *  x: target register number
+ *  y: target argument index
+ */
+function Instruction(opcode, ctx) {
+	this.opcode = opcode;
+	this.ctx = ctx;
+};
+
+Instruction.inspect_quoted = false;
+
+
+Instruction.prototype.inspect = function(){
+	
+	const params = [ 'p', 'x', 'y', 'i' ];
+	var result = this.opcode + (Array(13 - this.opcode.length).join(" "));
+	
+	result += " ( ";
+	
+	if (this.ctx.f)
+		result += this.ctx.f+"/"+this.ctx.a;
+	
+	for (var i=0, inserted=false;i<params.length;i++) {
+		
+		if (this.ctx[params[i]] !=undefined ) {
+			
+			if (inserted || (this.ctx.f && !inserted))
+				result += ", ";
+			
+			result += params[i] + "("+ JSON.stringify(this.ctx[params[i]])+")";
+			inserted= true;
+		}
+	};
+	
+	result += " )";
+	
+	if (Instruction.inspect_quoted)
+		result = "'"+result+"'";
+	
+	return result;
+};
+
+// ============================================================ Errors
+
 function ErrorExpectingFunctor() {};
 
 ErrorExpectingFunctor.prototype = Error.prototype;
@@ -504,6 +555,7 @@ if (typeof module!= 'undefined') {
 	module.exports.Var = Var;
 	module.exports.OpNode = OpNode;
 	module.exports.Result = Result;
+	module.exports.Instruction = Instruction;
 	module.exports.Builtins = Builtins;
 	
 	// Errors
@@ -589,56 +641,58 @@ Compiler.prototype.process_head = function(exp) {
 	if (root.name == 'conj' || (root.name == 'disj'))
 		throw new ErrorInvalidHead();
 	
-	var breadth_first = false;
+	var v = new Visitor(root);
 	
-	var v = new Visitor(root, breadth_first);
-	var top_functor_is_stripped = false;
+	//var top_functor_is_stripped = false;
 	var result = []; 
 		
 	
+	/**
+	 *   Functor
+	 *   	- root ==> attribute in `ctx`
+	 *   	- 1st time seen (and thus as a parameter to another Functor)
+	 *   	- 2nd time seen (to process its arguments)
+	 * 
+	 */
 	
 	v.process(function(ctx){
 		
-		result.push(ctx);
-		/*
+		//result.push(ctx);
+		
 		// Temporary variable used for
 		//  traversing the tree
-		var tmp_var = ctx.col < 2 ? 0: ctx.col-1;
 		
-		
-		if (ctx.n instanceof Functor) {
+		// /*
+		if (ctx.is_struct) {
 			
-			if (!top_functor_is_stripped) {
-				top_functor_is_stripped = true;
+			// We are seeing this functor node for the first time
+			//  and so it is a root
+			//
+			
+			if (ctx.as_param) {
+				result.push(new Instruction("unif_var", {x:ctx.v}));
 				return;
-			}
-			
-			if (ctx.is_struct) {
-				if (ctx.d == 1) {
-					result.push(Compiler.handle_head_structure(ctx, ctx.col));
-					result.push(Compiler.handle_head_unify_variable(ctx, tmp_var));
-					return;
-				} else {
-					result.push(Compiler.handle_head_structure(ctx, tmp_var));
-					result.push(Compiler.handle_head_unify_variable(ctx, tmp_var));
-					return;
-				};
+			} else {
+				result.push(new Instruction("get_struct", {f: ctx.n.name, a:ctx.n.args.length, x:ctx.v}));
+				return;
+				
 			};
-		};//if Functor
+			
+		};
 		
 		if (ctx.n instanceof Token) {
 			if (ctx.n.name == 'term') {
-				result.push(Compiler.handle_head_term(ctx));
+				result.push(new Instruction('get_term', { p: ctx.n.value }));
 				return;
 			};
 				
 			if (ctx.n.name == 'number') {
-				result.push(Compiler.handle_head_number(ctx));
+				result.push(new Instruction('get_number', { p: ctx.n.value }));
 				return;
 			};
 			
 		};// If Token
-		*/
+		// */
 		
 	});//callback
 	
@@ -653,14 +707,6 @@ Compiler.handle_head_structure = function(ctx, var_index){
 	return { c: "get_structure", o0:ctx.n.name, o1:ctx.n.args.length, o2: var_index };
 };
 
-
-Compiler.handle_head_term = function(ctx){
-	return { c: "get_term", o2: ctx.n.value };
-};
-
-Compiler.handle_head_number = function(ctx){
-	return { c: "get_number", o2: ctx.n.value };
-};
 
 
 /**
@@ -1955,10 +2001,9 @@ Visitor.prototype.process = function(callback_function) {
 	this.cb = callback_function;
 	
 	if (this.depth)
-		//return this._process_depth({n: this.exp, is_root: true, depth: 0});
 		return this._process_depth(this.exp);
 	else
-		this._process_breadth(this.exp, 0, 0);
+		return this._process_breadth(this.exp, 0, 0);
 };
 
 /**
@@ -1969,19 +2014,33 @@ Visitor.prototype.process = function(callback_function) {
  */
 Visitor.prototype._process_depth = function(node) {
 	
-	//console.log("Visitor: Process Depth");
-	
-	// that should happen
+	// that should not happen
 	if (!node)
 		throw new Error("Visitor: got an undefined node.");
 
 	return this.__process_depth(node);
 }; // process depth
 
+/**
+ * Depth-First visitor with callback
+ * 
+ * v: denotes the variable index that should be used
+ *    to unify the term
+ *    
+ * i: index in the arguments list
+ * 
+ * is_struct
+ * 
+ * 
+ * @param node
+ * @returns {Array}
+ */
 Visitor.prototype.__process_depth = function(node){
 
+	var variable_counter = 0;
 	var result = [];
 	var stack = [ node ];
+	var ctx = {};
 	
 	node.is_root = true;
 	
@@ -1991,30 +2050,38 @@ Visitor.prototype.__process_depth = function(node){
 		if (!bnode)
 			break;
 		
-		var v = bnode.v;
+		ctx = {
+			 n: bnode
+			,v: bnode.v || variable_counter++
+			,is_struct: (bnode instanceof Functor)
+		};
+
+		/*
+		 *  Announces 'root' node
+		 *   and nodes at a 2nd pass
+		 */
+		this.cb(ctx);
 		
-		if (v != undefined)
-			this.cb({ n: bnode, is_struct: true, v: v});
-		else
-			this.cb({ n: bnode, is_struct: true});
-		
-		//console.log("Process Depth Column: ", bnode);
-		
-		for (var index=0;index<bnode.args.length;index++) {
+		for (var index=0; index<bnode.args.length; index++) {
 			
 			var n = bnode.args[index];
 			
 			if (n.args && n.args.length>0) {
 				
-				this.cb({ n: n, is_struct: true, i:index});
-				n.v = index;
+				// 1st time announce for structures
+				//
+				n.v = variable_counter++;
+
+				this.cb({ n: n, is_struct: true, i:index, v: n.v, as_param: true});
+
+				// Schedule for revisiting (i.e. continue down the tree)
 				stack.unshift(n);
 				
 			} else {
-				if (v !=undefined )
-					this.cb({ n: n, i: index, v: v });
-				else
-					this.cb({ n: n, i: index});
+				
+				// This covers all other node types
+				//  e.g. terms such as Numbers and Atoms
+				this.cb({ n: n, i: index});
 			}
 			
 		}; // for args
