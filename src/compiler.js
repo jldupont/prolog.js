@@ -157,6 +157,55 @@ Compiler.prototype.process_body = function(exp) {
 };
 
 
+/**
+ *  Just compiles an expression consisting of a single `goal`
+ *   i.e. no conjunction / disjunction
+ *   
+ *   f1( ... )
+ *   X is ...  ==>  is(X, ...) 
+ *  
+ *   
+ *  The root node gets a CALL to the target predicate,
+ *   the rest of the expression is treated as a structure.
+ *   
+ */
+Compiler.prototype.process_goal = function(exp) {
+	
+	var v = new Visitor2(exp);
+	
+	var results = [];
+	
+	v.process(function(ctx){
+		
+		var struct_ctx = { f: ctx.n.name, a:ctx.n.args.length , x: ctx.vc };
+		if (ctx.root)
+			struct_ctx.x = 0;
+		
+		results.push(new Instruction("put_struct", struct_ctx));
+		
+		for (var index=0; index<ctx.args.length; index++) {
+			
+			var n = ctx.args[index];
+			
+			if (n instanceof Var) {
+				results.push(new Instruction("put_var", {x: n.name}));
+			};
+			
+			if (n instanceof Token) {
+				if (n.name == 'number')
+					results.push(new Instruction("put_number", {p: n.value}));
+				
+				if (n.name == 'term')
+					results.push(new Instruction("put_term", {p: n.value}));
+				
+			};
+			
+		};//for
+		
+	});
+	
+	return results;
+};
 
 
 

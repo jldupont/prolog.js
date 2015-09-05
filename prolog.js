@@ -728,6 +728,55 @@ Compiler.prototype.process_body = function(exp) {
 };
 
 
+/**
+ *  Just compiles an expression consisting of a single `goal`
+ *   i.e. no conjunction / disjunction
+ *   
+ *   f1( ... )
+ *   X is ...  ==>  is(X, ...) 
+ *  
+ *   
+ *  The root node gets a CALL to the target predicate,
+ *   the rest of the expression is treated as a structure.
+ *   
+ */
+Compiler.prototype.process_goal = function(exp) {
+	
+	var v = new Visitor2(exp);
+	
+	var results = [];
+	
+	v.process(function(ctx){
+		
+		var struct_ctx = { f: ctx.n.name, a:ctx.n.args.length , x: ctx.vc };
+		if (ctx.root)
+			struct_ctx.x = 0;
+		
+		results.push(new Instruction("put_struct", struct_ctx));
+		
+		for (var index=0; index<ctx.args.length; index++) {
+			
+			var n = ctx.args[index];
+			
+			if (n instanceof Var) {
+				results.push(new Instruction("put_var", {x: n.name}));
+			};
+			
+			if (n instanceof Token) {
+				if (n.name == 'number')
+					results.push(new Instruction("put_number", {p: n.value}));
+				
+				if (n.name == 'term')
+					results.push(new Instruction("put_term", {p: n.value}));
+				
+			};
+			
+		};//for
+		
+	});
+	
+	return results;
+};
 
 
 
@@ -1980,14 +2029,9 @@ if (typeof module!= 'undefined') {
  *
  * @param exp: the expression to process
  */
-function Visitor(exp, breadth_first) {
+function Visitor(exp) {
 	this.exp = exp;
 	this.cb = null;
-	
-	if (breadth_first == true)
-		this.breadth = true;
-	else
-		this.depth = true;
 };
 
 /**
@@ -2003,10 +2047,7 @@ Visitor.prototype.process = function(callback_function) {
 	
 	this.cb = callback_function;
 	
-	if (this.depth)
-		return this._process_depth(this.exp);
-	else
-		return this._process_breadth(this.exp, 0, 0);
+	return this._process_depth(this.exp);
 };
 
 /**
@@ -2094,63 +2135,86 @@ Visitor.prototype.__process_depth = function(node){
 	return result;
 };
 
+// =============================================================================== VISITOR2
+
+function Visitor2(exp) {
+	this.exp = exp;
+	this.cb = null;
+};
 
 /**
- *  Performs the actual processing
- *  
- *  @raise Error
- *  
+ * 
+ * @param callback
+ * @returns
+ * 
+ * @raise ErrorExpectingFunctor
  */
-Visitor.prototype._process_breadth = function(root_node, depth, col) {
+Visitor2.prototype.process = function(callback) {
+
+	//console.log("Visitor2.process, exp: ", this.exp instanceof Functor);
 	
-	var root = true;
-	var stack = [ root_node ];
+	if (!(this.exp instanceof Functor))
+		throw new ErrorExpectingFunctor("Expecting a rooted tree, got: "+JSON.stringify(this.exp));
+	
+	this.exp.root = true;
+	
+	this.cb = callback;
+	this._process(this.exp);
+	
+};
+
+/**
+ * 
+ * @param node
+ * @param variable_counter
+ * 
+ * @raise ErrorExpectingFunctor
+ */
+Visitor2.prototype._process = function(node, variable_counter) {
+	
+	var is_root = variable_counter == undefined;
+	variable_counter = variable_counter || 1;
 	
 	// that should happen
-	if (!root_node)
-		throw new Error("Visitor: got an undefined node.");
+	if (!node)
+		throw new ErrorExpectingFunctor("Visitor2: got an undefined node.");
 	
-	for(;;) {
-
-		var node = stack.shift();
-		if (!node)
-			break;
-
-		this.cb({ n: node, d: depth, 
-			is_struct: true, is_root: root, col: col});
-		
-		// Recursively go through all arguments
-		//  of the present Functor
-		//
-		for (var index=0;index<node.args.length;index++) {
-			
-			var col = (root ? index:node.col);
-			
-			var bnode = node.args[index];
-			
-			this.cb({ n: bnode, d: depth, i: index, 
-						is_arg: true, col: col});
-			
-			if (bnode.args && bnode.args.length>0) {
-				
-				if (root)
-					bnode.col = index;
-				stack.push(bnode);
-			}
-
-		};// for args
-		
-		root = false;
-		depth++;
-		
-	}; // for
+	if (!(node instanceof Functor)) 
+		throw new ErrorExpectingFunctor("Visitor: expecting a Functor, got: ", node);
 	
+	/*
+	 *  Depth-First
+	 */
+	var args = [];
 	
-}; // breadth
-
+	for (var index=0;index<node.args.length;index++) {
+		
+		var bnode = node.args[index];
+		
+		if (bnode instanceof Functor) {
+			variable_counter = this._process(bnode, variable_counter);
+			
+			args.push(new Var(variable_counter));
+			variable_counter++;
+		} else {
+			args.push(bnode);
+		};
+		
+	};// for args
+	
+	//console.log("args: ", args);
+	
+	var ctx = { n: node, args: args, vc: variable_counter };
+	if (node.root)
+		ctx['root'] = true;
+	this.cb(ctx);
+	
+	return variable_counter;
+}; // _process
 
 
 if (typeof module!= 'undefined') {
 	module.exports.Visitor = Visitor;
+	module.exports.Visitor2 = Visitor2;
 };
 
