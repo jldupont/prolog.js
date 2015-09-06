@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-09-05 */
+/*! prolog.js - v0.0.1 - 2015-09-06 */
 
 /**
  *  Token
@@ -606,11 +606,38 @@ function Compiler() {
  *  
  * 
  * 
- * @raise Error
+ * @raise ErrorExpectingFunctor
  */
 Compiler.prototype.process_rule_or_fact = function(exp) {
 	
+	if (!(root instanceof Functor))
+		throw new ErrorExpectingFunctor();
+	
+	if (root.name == 'rule')
+		return this.process_rule(exp);
+
+	return this.process_head(exp);
 };
+
+/**
+ * Process assuming a `rule`
+ * 
+ * @param exp
+ * @raise ErrorExpectingFunctor
+ */
+Compiler.prototype.process_rule = function(exp) {
+
+	var head = exp.args[0];
+	var body = exp.args[1];
+	
+	var result = this.process_body(body);
+	
+	result['head'] = this.process_head(head);
+	
+	return result;
+};
+
+
 
 /**
  *  Just compiles the expression assuming it is a `head`
@@ -631,20 +658,13 @@ Compiler.prototype.process_rule_or_fact = function(exp) {
  */
 Compiler.prototype.process_head = function(exp) {
 	
-	var root;
-	
-	if (exp instanceof Array)
-		root = exp[0];
-	else
-		root = exp;
-	
-	if (!(root instanceof Functor))
+	if (!(exp instanceof Functor))
 		throw new ErrorExpectingFunctor();
 	
-	if (root.name == 'conj' || (root.name == 'disj'))
+	if (exp.name == 'conj' || (exp.name == 'disj'))
 		throw new ErrorInvalidHead();
 	
-	var v = new Visitor(root);
+	var v = new Visitor(exp);
 	
 	var result = []; 
 		
@@ -721,10 +741,33 @@ Compiler.prototype.process_query = function(exp) {
 
 /**
  *  Just compiles the expression assuming it is a `body`
- * 
+ *  
+ *  The body is constituted of 1 or more `goals`.
+ *  
+ *  Each goal can be joined using
+ *   conjunctions and/or disjunctions.
+ *   
+ *   @raise
  */
 Compiler.prototype.process_body = function(exp) {
 	
+	var result = {};
+	
+	var v = new Visitor3(exp);
+	
+	v.process(function(type, left_or_root, right_maybe){
+		
+		var ctx = left_or_root;
+		
+		if (type == 'root')
+			result['g0'] = this.process_goal( ctx.n );
+		
+		
+		
+	});
+	
+	
+	return result;
 };
 
 
@@ -2036,7 +2079,7 @@ Visitor2.prototype._process = function(node, variable_counter) {
 		throw new ErrorExpectingFunctor("Visitor2: got an undefined node.");
 	
 	if (!(node instanceof Functor)) 
-		throw new ErrorExpectingFunctor("Visitor: expecting a Functor, got: ", node);
+		throw new ErrorExpectingFunctor("Visitor2: expecting a Functor, got: ", node);
 	
 	/*
 	 *  Depth-First
@@ -2048,29 +2091,74 @@ Visitor2.prototype._process = function(node, variable_counter) {
 		var bnode = node.args[index];
 		
 		if (bnode instanceof Functor) {
-			variable_counter = this._process(bnode, variable_counter);
 			
-			args.push(new Var(variable_counter));
-			variable_counter++;
+			variable_counter = this._process(bnode, variable_counter);
+			args.push(new Var(variable_counter++));
+			
 		} else {
 			args.push(bnode);
 		};
 		
 	};// for args
 	
-	//console.log("args: ", args);
-	
-	var ctx = { n: node, args: args, vc: variable_counter };
-	if (node.root)
-		ctx['root'] = true;
-	this.cb(ctx);
+	this.cb({ n: node, args: args, vc: variable_counter, root: node.root });
 	
 	return variable_counter;
 }; // _process
 
 
+function Visitor3(exp) {
+	this.exp = exp;
+	this.cb = null;
+};
+
+Visitor3.prototype.process = function(callback) {
+	this.cb = callback;
+	this._process(this.exp);
+};
+
+Visitor3.prototype._process = function(node, vc) {
+
+	var is_root = vc == undefined;
+	vc = vc || 1;
+	
+	// that should happen
+	if (!node)
+		throw new ErrorExpectingFunctor("Visitor3: got an undefined node.");
+	
+	if (!(node instanceof Functor)) 
+		throw new ErrorExpectingFunctor("Visitor3: expecting a Functor, got: ", node);
+	
+	/*
+	 * Since we are only just concerned about Conjunctions and Disjunctions
+	 *  and those are of binary arity, we only have to deal with 'left' and 'right' nodes
+	 */
+	if (!(node.name == 'conj' || (node.name == 'disj'))) {
+		
+		if (is_root)
+			this.cb('root', vc, { n: node }, null);
+		
+		return vc;
+	};
+		
+		
+	var left  = node.args[0];
+	var right = node.args[1];
+	
+	var lvc = this._process(left, vc+1);
+	var rvc = this._process(right, lvc++);
+
+	this.cb(node.name, vc, {n: left, vc: lvc}, {n:right, vc: rvc});
+	
+	return vc++;
+};
+
+
+
+
 if (typeof module!= 'undefined') {
 	module.exports.Visitor = Visitor;
 	module.exports.Visitor2 = Visitor2;
+	module.exports.Visitor3 = Visitor3;
 };
 

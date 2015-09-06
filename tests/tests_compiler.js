@@ -61,7 +61,7 @@ var process_head = function(input_text, expecteds) {
 	
 	for (var index = 0; index<expressions.length; index++) {
 		
-		var expression = expressions[index];
+		var expression = expressions[index][0];
 		
 		if (!expression)
 			return false;

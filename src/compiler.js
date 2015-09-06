@@ -35,11 +35,38 @@ function Compiler() {
  *  
  * 
  * 
- * @raise Error
+ * @raise ErrorExpectingFunctor
  */
 Compiler.prototype.process_rule_or_fact = function(exp) {
 	
+	if (!(root instanceof Functor))
+		throw new ErrorExpectingFunctor();
+	
+	if (root.name == 'rule')
+		return this.process_rule(exp);
+
+	return this.process_head(exp);
 };
+
+/**
+ * Process assuming a `rule`
+ * 
+ * @param exp
+ * @raise ErrorExpectingFunctor
+ */
+Compiler.prototype.process_rule = function(exp) {
+
+	var head = exp.args[0];
+	var body = exp.args[1];
+	
+	var result = this.process_body(body);
+	
+	result['head'] = this.process_head(head);
+	
+	return result;
+};
+
+
 
 /**
  *  Just compiles the expression assuming it is a `head`
@@ -60,20 +87,13 @@ Compiler.prototype.process_rule_or_fact = function(exp) {
  */
 Compiler.prototype.process_head = function(exp) {
 	
-	var root;
-	
-	if (exp instanceof Array)
-		root = exp[0];
-	else
-		root = exp;
-	
-	if (!(root instanceof Functor))
+	if (!(exp instanceof Functor))
 		throw new ErrorExpectingFunctor();
 	
-	if (root.name == 'conj' || (root.name == 'disj'))
+	if (exp.name == 'conj' || (exp.name == 'disj'))
 		throw new ErrorInvalidHead();
 	
-	var v = new Visitor(root);
+	var v = new Visitor(exp);
 	
 	var result = []; 
 		
@@ -150,10 +170,33 @@ Compiler.prototype.process_query = function(exp) {
 
 /**
  *  Just compiles the expression assuming it is a `body`
- * 
+ *  
+ *  The body is constituted of 1 or more `goals`.
+ *  
+ *  Each goal can be joined using
+ *   conjunctions and/or disjunctions.
+ *   
+ *   @raise
  */
 Compiler.prototype.process_body = function(exp) {
 	
+	var result = {};
+	
+	var v = new Visitor3(exp);
+	
+	v.process(function(type, left_or_root, right_maybe){
+		
+		var ctx = left_or_root;
+		
+		if (type == 'root')
+			result['g0'] = this.process_goal( ctx.n );
+		
+		
+		
+	});
+	
+	
+	return result;
 };
 
 
