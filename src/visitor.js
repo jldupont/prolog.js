@@ -204,7 +204,7 @@ Visitor3.prototype.process = function(callback) {
 Visitor3.prototype._process = function(node, vc) {
 
 	var is_root = vc == undefined;
-	vc = vc || 1;
+	vc = vc || 0;
 	
 	// that should happen
 	if (!node)
@@ -219,33 +219,39 @@ Visitor3.prototype._process = function(node, vc) {
 	 */
 	if (!(node.name == 'conj' || (node.name == 'disj'))) {
 		
-		// vc == 1
+		// vc == 0
 		//
 		if (is_root)
 			return this.cb('root', vc, { n: node }, null);
 		
-		return { vc: vc, is_junction: false, n: node };
+		return { vc: vc, n: node, is_junction: false };
 	};
-		
 		
 	var left  = node.args[0];
 	var right = node.args[1];
 	
-	var lctx = this._process(left, vc+1);
-	var rctx = this._process(right, lctx.vc+1);
+	var lctx = this._process(left,  vc+1);
+	
+	var rvc = lctx.vc+1;
+	
+	var rctx = this._process(right, rvc);
 
-	if (!lctx.is_junction)
-		delete lctx.vc;
+	rctx.vc = rvc;
+	lctx.vc = vc+1;
+	
+	if (rctx.is_junction)
+		delete rctx.n;
+	
+	if (lctx.is_junction)
+		delete lctx.n;
+	
+	delete lctx.is_junction
+	delete rctx.is_junction
 
-	if (!rctx.is_junction)
-		delete rctx.vc;
-
-	delete lctx.is_junction;
-	delete rctx.is_junction;
 	
 	this.cb(node.name, vc, lctx, rctx);
 	
-	return { vc: vc, is_junction: true };
+	return { vc: rctx.vc, is_junction: true };
 };
 
 

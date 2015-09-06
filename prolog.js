@@ -510,7 +510,12 @@ Instruction.inspect_quoted = false;
 Instruction.prototype.inspect = function(){
 	
 	const params = [ 'p', 'x', 'y', 'i' ];
-	var result = this.opcode + (Array(13 - this.opcode.length).join(" "));
+	var result = ""; 
+	
+	if (this.ctx.l)
+		result = this.ctx.l + "  ";
+		
+	result += this.opcode + (Array(13 - this.opcode.length).join(" "));
 	
 	result += " ( ";
 	
@@ -747,6 +752,8 @@ Compiler.prototype.process_query = function(exp) {
  *  Each goal can be joined using
  *   conjunctions and/or disjunctions.
  *   
+ *  Goal index starts at 0.
+ *   
  *   @raise
  */
 Compiler.prototype.process_body = function(exp) {
@@ -755,16 +762,52 @@ Compiler.prototype.process_body = function(exp) {
 	
 	var v = new Visitor3(exp);
 	
-	v.process(function(type, left_or_root, right_maybe){
+	var that = this;
+	
+	v.process(function(type, goal_id, left_or_root, right_maybe){
 		
+		var label = type+goal_id;
 		var ctx = left_or_root;
 		
-		if (type == 'root')
-			result['g0'] = this.process_goal( ctx.n );
+		if (type == 'root') {
+			label = 'g0';
+			
+			result[label] = that.process_goal( ctx.n );
+			return;
+		}
+		
+		/*
+		 *   Cases:
+		 *     left:  node | goal ref
+		 *     right: node | goal ref
+		 *     
+		 *     type:  conj | disj
+		 */
+		
+		var lcode = that.process_goal(left_or_root.n);
+		var rcode = that.process_goal(right_maybe.n);
+
+		var llabel = "g" + left_or_root.vc;
+		var rlabel = "g" + maybe_right.vc;
+		
+		if (lcode)
+			result[llabel] = lcode;
+		
+		if (rcode)
+			result[rlabel] = rcode;
+		
+		if (type == 'conj') {
+			lcode.push(new Instruction("goto", {p: rlabel}));
+		};
+		
+		if (type == 'disj') {
+			lcode.unshift(new Instruction("goto", {p: llabel}));
+			lcode.unshift(new Instruction("try_else", {l: label, p: rlabel}));
+			
+		};
 		
 		
-		
-	});
+	});// process
 	
 	
 	return result;
@@ -784,6 +827,9 @@ Compiler.prototype.process_body = function(exp) {
  *   
  */
 Compiler.prototype.process_goal = function(exp) {
+	
+	if (exp == undefined)
+		return undefined;
 	
 	var v = new Visitor2(exp);
 	
@@ -2120,7 +2166,7 @@ Visitor3.prototype.process = function(callback) {
 Visitor3.prototype._process = function(node, vc) {
 
 	var is_root = vc == undefined;
-	vc = vc || 1;
+	vc = vc || 0;
 	
 	// that should happen
 	if (!node)
@@ -2135,33 +2181,39 @@ Visitor3.prototype._process = function(node, vc) {
 	 */
 	if (!(node.name == 'conj' || (node.name == 'disj'))) {
 		
-		// vc == 1
+		// vc == 0
 		//
 		if (is_root)
 			return this.cb('root', vc, { n: node }, null);
 		
-		return { vc: vc, is_junction: false, n: node };
+		return { vc: vc, n: node, is_junction: false };
 	};
-		
 		
 	var left  = node.args[0];
 	var right = node.args[1];
 	
-	var lctx = this._process(left, vc+1);
-	var rctx = this._process(right, lctx.vc+1);
+	var lctx = this._process(left,  vc+1);
+	
+	var rvc = lctx.vc+1;
+	
+	var rctx = this._process(right, rvc);
 
-	if (!lctx.is_junction)
-		delete lctx.vc;
+	rctx.vc = rvc;
+	lctx.vc = vc+1;
+	
+	if (rctx.is_junction)
+		delete rctx.n;
+	
+	if (lctx.is_junction)
+		delete lctx.n;
+	
+	delete lctx.is_junction
+	delete rctx.is_junction
 
-	if (!rctx.is_junction)
-		delete rctx.vc;
-
-	delete lctx.is_junction;
-	delete rctx.is_junction;
 	
 	this.cb(node.name, vc, lctx, rctx);
 	
-	return { vc: vc, is_junction: true };
+	return { vc: rctx.vc, is_junction: true };
 };
 
 

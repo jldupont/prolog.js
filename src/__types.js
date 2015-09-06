@@ -516,7 +516,12 @@ Instruction.inspect_quoted = false;
 Instruction.prototype.inspect = function(){
 	
 	const params = [ 'p', 'x', 'y', 'i' ];
-	var result = this.opcode + (Array(13 - this.opcode.length).join(" "));
+	var result = ""; 
+	
+	if (this.ctx.l)
+		result = this.ctx.l + "  ";
+		
+	result += this.opcode + (Array(13 - this.opcode.length).join(" "));
 	
 	result += " ( ";
 	

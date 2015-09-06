@@ -133,6 +133,49 @@ var process_goal = function(input_text, expecteds) {
 
 };
 
+
+var process_body = function(input_text, expecteds) {
+	
+	var expressions = setup(input_text);
+	
+	var results = [];
+	
+	//console.log(expressions);
+	
+	for (var index = 0; index<expressions.length; index++) {
+		
+		var expression = expressions[index][0];
+		
+		if (!expression)
+			break;
+
+		var c = new Compiler();
+		
+		//console.log("Expression: ", expression);
+
+		var result = c.process_body(expression);
+		
+		results.push(result);
+	};
+	
+	//console.log(results);
+	
+	//if (expecteds.length!=results.length)
+	//	throw new Error();
+	
+	for (var index=0; index < results.length; index++) {
+		
+		var ri = results[index];
+		var expected = expecteds[index];
+		
+		var result = isEquivalent(ri, expected);
+		should.equal(result, true, "expected: " + util.inspect(results));
+	};
+
+
+};
+
+
 function isEquivalent(input, expected) {
 	
 	for (var index in expected) {
@@ -217,4 +260,15 @@ it('Compiler - goal - basic - 1', function(){
 	]];
 	
 	process_goal(text, expected);
+});
+
+
+it('Compiler - body - basic - 2', function(){
+	
+	var text = "h1(a).";
+	var expected = [
+	                { g0: [ 'put_struct   ( h1/1, x(0) )', 'put_term     ( p("a") )' ] }
+	];
+	
+	process_body(text, expected);
 });

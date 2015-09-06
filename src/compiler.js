@@ -176,6 +176,8 @@ Compiler.prototype.process_query = function(exp) {
  *  Each goal can be joined using
  *   conjunctions and/or disjunctions.
  *   
+ *  Goal index starts at 0.
+ *   
  *   @raise
  */
 Compiler.prototype.process_body = function(exp) {
@@ -184,16 +186,52 @@ Compiler.prototype.process_body = function(exp) {
 	
 	var v = new Visitor3(exp);
 	
-	v.process(function(type, left_or_root, right_maybe){
+	var that = this;
+	
+	v.process(function(type, goal_id, left_or_root, right_maybe){
 		
+		var label = type+goal_id;
 		var ctx = left_or_root;
 		
-		if (type == 'root')
-			result['g0'] = this.process_goal( ctx.n );
+		if (type == 'root') {
+			label = 'g0';
+			
+			result[label] = that.process_goal( ctx.n );
+			return;
+		}
+		
+		/*
+		 *   Cases:
+		 *     left:  node | goal ref
+		 *     right: node | goal ref
+		 *     
+		 *     type:  conj | disj
+		 */
+		
+		var lcode = that.process_goal(left_or_root.n);
+		var rcode = that.process_goal(right_maybe.n);
+
+		var llabel = "g" + left_or_root.vc;
+		var rlabel = "g" + maybe_right.vc;
+		
+		if (lcode)
+			result[llabel] = lcode;
+		
+		if (rcode)
+			result[rlabel] = rcode;
+		
+		if (type == 'conj') {
+			lcode.push(new Instruction("goto", {p: rlabel}));
+		};
+		
+		if (type == 'disj') {
+			lcode.unshift(new Instruction("goto", {p: llabel}));
+			lcode.unshift(new Instruction("try_else", {l: label, p: rlabel}));
+			
+		};
 		
 		
-		
-	});
+	});// process
 	
 	
 	return result;
@@ -213,6 +251,9 @@ Compiler.prototype.process_body = function(exp) {
  *   
  */
 Compiler.prototype.process_goal = function(exp) {
+	
+	if (exp == undefined)
+		return undefined;
 	
 	var v = new Visitor2(exp);
 	
