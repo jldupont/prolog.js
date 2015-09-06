@@ -2135,22 +2135,33 @@ Visitor3.prototype._process = function(node, vc) {
 	 */
 	if (!(node.name == 'conj' || (node.name == 'disj'))) {
 		
+		// vc == 1
+		//
 		if (is_root)
-			this.cb('root', vc, { n: node }, null);
+			return this.cb('root', vc, { n: node }, null);
 		
-		return vc;
+		return { vc: vc, is_junction: false, n: node };
 	};
 		
 		
 	var left  = node.args[0];
 	var right = node.args[1];
 	
-	var lvc = this._process(left, vc+1);
-	var rvc = this._process(right, lvc++);
+	var lctx = this._process(left, vc+1);
+	var rctx = this._process(right, lctx.vc+1);
 
-	this.cb(node.name, vc, {n: left, vc: lvc}, {n:right, vc: rvc});
+	if (!lctx.is_junction)
+		delete lctx.vc;
+
+	if (!rctx.is_junction)
+		delete rctx.vc;
+
+	delete lctx.is_junction;
+	delete rctx.is_junction;
 	
-	return vc++;
+	this.cb(node.name, vc, lctx, rctx);
+	
+	return { vc: vc, is_junction: true };
 };
 
 

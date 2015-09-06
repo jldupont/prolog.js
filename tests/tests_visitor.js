@@ -116,30 +116,76 @@ it('Visitor - basic - 2', function(){
 	
 	var text = "f1(a), f2(b).";
 	var expected = [
-	                [ 'conj', 1, { n: 'Functor(f1/1)', vc: 3 },
-	                          { n: 'Functor(f2/1)', vc: 2 } 
-	                ] 
-	               ];
+[ 'conj',
+  1,
+  { n: 'Functor(f1/1)' },
+  { n: 'Functor(f2/1)' } ]
+];
 	
 
 	process(text, expected);
 });
 
-it('Visitor - basic - 2', function(){
+it('Visitor - basic - 3', function(){
 	
 	var text = "f1(a), f2(b) ; f3(c)";
 	var expected = [
 	                
-[ 'conj', 2,
-  { n: 'Functor(f1/1)', vc: 4 },
-  { n: 'Functor(f2/1)', vc: 3 } ],
+[ 'conj',
   
-[ 'disj', 1,
-  { n: 'Functor(conj/2)', vc: 3 },
-  { n: 'Functor(f3/1)', vc: 2 } ]	               
+    2,
+    { n: 'Functor(f1/1)' },
+    { n: 'Functor(f2/1)' } ],
+    
+  [ 'disj',
+    1,
+    { vc: 2 }, // points to conj node id 2
+    { n: 'Functor(f3/1)' } ]
 
 ];
 	
+
+	process(text, expected);
+});
+
+it('Visitor - basic - 4', function(){
+	
+	var text = "f1(a), f2(b) ; f3(c), f4(d)";
+	var expected = [
+
+	// left side conj
+	[ 'conj',
+	    2,
+	    { n: 'Functor(f1/1)' },
+	    { n: 'Functor(f2/1)' } ],
+	    
+	// right side conj
+	  [ 'conj',
+	    3,
+	    { n: 'Functor(f3/1)' },
+	    { n: 'Functor(f4/1)' } ],
+	    
+	// root disjunction
+	  [ 'disj',
+	    1,
+	    { vc: 2 },
+	    { vc: 3 } ]
+
+];
+
+	process(text, expected);
+});
+
+
+it('Visitor - basic - 5', function(){
+	
+	var text = "f1(a) ; f3(c), f4(d)";
+	var expected = [
+
+			[ 'conj', 3, { n: 'Functor(f3/1)' }, { n: 'Functor(f4/1)' } ],
+			[ 'disj', 1, { n: 'Functor(f1/1)' }, { vc: 3 } ]
+
+		];
 
 	process(text, expected);
 });
