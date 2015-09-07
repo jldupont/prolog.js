@@ -215,6 +215,47 @@ var process_rule = function(input_text, expecteds) {
 
 };
 
+var process = function(input_text, expecteds) {
+	
+	var expressions = setup(input_text);
+	
+	var results = [];
+	
+	//console.log(expressions);
+	
+	for (var index = 0; index<expressions.length; index++) {
+		
+		var expression = expressions[index][0];
+		
+		if (!expression)
+			break;
+
+		var c = new Compiler();
+		
+		//console.log("Expression: ", expression);
+
+		var result = c.process_rule_or_fact(expression);
+		
+		results.push(result);
+	};
+	
+	//console.log(results);
+	
+	//if (expecteds.length!=results.length)
+	//	throw new Error();
+	
+	for (var index=0; index < results.length; index++) {
+		
+		var ri = results[index];
+		var expected = expecteds[index];
+		
+		var result = Utils.compare_objects(expected, ri);
+		should.equal(result, true, "input: " + util.inspect(ri));
+	};
+
+
+};
+
 // ==================================================== HEAD
 //
 it('Compiler - check - 1', function(){
@@ -451,3 +492,50 @@ it('Compiler - rule - basic - 1', function(){
 });
 
 
+//==================================================== RULE OR FACT
+//
+
+
+it('Compiler - rule/fact - basic - 0', function(){
+	
+	var text = "likes(jld, chocolat).";
+	var expected = [
+
+		[ 
+		  'get_struct   ( likes/2, x(0) )',
+		  'get_term     ( p("jld") )',
+		  'get_term     ( p("chocolat") )' 
+		  ]	                
+	];
+	
+	process(text, expected);
+});
+
+it('Compiler - rule/fact - basic - 1', function(){
+	
+	var text = "f1(A) :- f2(A), f3(A).";
+	var expected = [
+
+		{ 
+			g0: 
+			   [ 'allocate',
+			     'put_struct   ( f2/1, x(0) )',
+			     'put_var      ( x("A") )',
+			     'call',
+			     'deallocate',
+			     'allocate',
+			     'put_struct   ( f3/1, x(0) )',
+			     'put_var      ( x("A") )',
+			     'call',
+			     'deallocate'			     
+			     ],
+		  head: [ 
+		           'get_struct   ( f1/1, x(0) )'
+		          ,'unif_var     ( x("A") )'
+		          ] 
+		}	                
+	                
+	];
+	
+	process_rule(text, expected);
+});

@@ -16,9 +16,7 @@
  * @constructor
  *
  */
-function Compiler() {
-
-};
+function Compiler() {};
 
 /**
  * Process a `rule` or `fact` expression
@@ -39,10 +37,10 @@ function Compiler() {
  */
 Compiler.prototype.process_rule_or_fact = function(exp) {
 	
-	if (!(root instanceof Functor))
-		throw new ErrorExpectingFunctor();
+	if (!(exp instanceof Functor))
+		throw new ErrorExpectingFunctor("Expecting Functor, got: "+JSON.stringify(exp));
 	
-	if (root.name == 'rule')
+	if (exp.name == 'rule')
 		return this.process_rule(exp);
 
 	return this.process_head(exp);
