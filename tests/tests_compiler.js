@@ -253,29 +253,59 @@ it('Compiler - body - basic - 2', function(){
 	
 	var text = "f1(a), f2(b).";
 	var expected = [
-{ g1: 
-    [ 'put_struct   ( f1/1, x(0) )',
-      'put_term     ( p("a") )',
-      'goto         ( p("g2") )' ],
-   g2: [ 'put_struct   ( f2/1, x(0) )', 'put_term     ( p("b") )' ] }
+	       
+		{ g0: 
+		    [ 'put_struct   ( f1/1, x(0) )',
+		      'put_term     ( p("a") )',
+		      'put_struct   ( f2/1, x(0) )',
+		      'put_term     ( p("b") )' ] }
+
 	];
 	
 	process_body(text, expected);
 });
 
-/*
 it('Compiler - body - basic - 3', function(){
 	
-	var text = "f1(a), f2(b) ; f3(c).";
+	var text = "f1(a), f2(f3(b)).";
 	var expected = [
-{ g1: 
-    [ 'put_struct   ( f1/1, x(0) )',
-      'put_term     ( p("a") )',
-      'goto         ( p("g2") )' ],
-   g2: [ 'put_struct   ( f2/1, x(0) )', 'put_term     ( p("b") )' ] }
+	       
+		{ g0: 
+   [ 'put_struct   ( f1/1, x(0) )',
+     'put_term     ( p("a") )',
+     'put_struct   ( f3/1, x(1) )',
+     'put_term     ( p("b") )',
+     'put_struct   ( f2/1, x(0) )',
+     'put_var      ( x(1) )' ] }
+
 	];
 	
 	process_body(text, expected);
 });
-*/
+
+
+
+it('Compiler - body - complex - 1', function(){
+	
+	var text = "f1(a), f2(b) ; f3(c).";
+	var expected = [
+
+		{ g4: [ 
+		        'put_struct   ( f3/1, x(0) )', 
+		        'put_term     ( p("c") )' 
+		        ],
+			  g0: 
+			   [ 'try_else     ( p("g4") )',
+			     'put_struct   ( f1/1, x(0) )',
+			     'put_term     ( p("a") )',
+			     'put_struct   ( f2/1, x(0) )',
+			     'put_term     ( p("b") )' 
+			     ] 
+		}	                
+	                
+	];
+	
+	process_body(text, expected);
+});
+
 

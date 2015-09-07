@@ -191,19 +191,61 @@ Compiler.prototype.process_body = function(exp) {
 	/**
 	 *  Link code across a conjunction
 	 *  
-	 *  Cases:
-	 *  a) jnode is root && lnode 
-	 *  b) 
+	 *  Conj(Gx, L, R ) ==> Gx: L R
+	 *  
+	 *    Combine code of L and R under label Gx
 	 *  
 	 */
 	var conj_link = function(jctx, lctx, rctx) {
 		
-	};
-	
-	
-	var disj_link = function(jctx, lctx, rctx){
+		// Step 1, combine code of R under code for L
+		//      
+		var llabel = "g"+lctx.vc;
+		var rlabel = "g"+rctx.vc;
 		
+		result[llabel] = result[llabel].concat(result[rlabel]);
+		
+		// Step 2, get rid of R
+		delete result[rlabel];
+		
+		// Step 3, move everything under the Conjunction's label
+		var jlabel = "g"+jctx.vc;
+		
+		result[jlabel] = result[llabel];
+		
+		// Step 4, finally get rid of L
+		delete result[llabel];
 	};
+
+	
+	/**
+	 *  Link code across a disjunction
+	 * 
+	 *  Disj(Gx, L, R)
+	 *  
+	 *    - Bring L code under the label Gx
+	 *    - Add link code on top of Gx code
+	 * 
+	 */
+	var disj_link = function(jctx, lctx, rctx){
+
+		// Step 1, combine code of L under code for Gx
+		//
+		var jlabel = "g"+jctx.vc;
+		var llabel = "g"+lctx.vc;
+		
+		result[jlabel] = result[llabel];
+		
+		// Step 2, we don't need the L label anymore
+		delete result[llabel];
+		
+		// Step 3, link
+		var rlabel = "g"+rctx.vc;
+		
+		result[jlabel].unshift(new Instruction('try_else', {p: rlabel}));
+	};
+	
+	
 	
 	v.process(function(jctx, left_or_root, right_maybe){
 		
