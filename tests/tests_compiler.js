@@ -241,7 +241,7 @@ it('Compiler - goal - basic - 1', function(){
 	'put_struct   ( h1/2, x(0) )',
 	'put_term     ( p("a") )',
 	'put_value    ( x(2) )',
-	'call        '
+	'call'
 	]];
 	
 	process_goal(text, expected);
@@ -253,7 +253,7 @@ it('Compiler - goal - basic - 2', function(){
 	var expected = [[
                  'put_struct   ( h1/1, x(0) )',
                  'put_var      ( x("A") )',
-                 'call        '
+                 'call'
 	]];
 	
 	process_goal(text, expected);
@@ -271,7 +271,7 @@ it('Compiler - body - basic - 1', function(){
 	      { g0: [ 
 	              'put_struct   ( h1/1, x(0) )', 
 	              'put_term     ( p("a") )',
-	              'call        '
+	              'call'
 	              ] 
 	      }        
 	];
@@ -288,10 +288,10 @@ it('Compiler - body - basic - 2', function(){
 		{ g0: 
 		    [ 'put_struct   ( f1/1, x(0) )',
 		      'put_term     ( p("a") )',
-		      'call        ',
+		      'call',
 		      'put_struct   ( f2/1, x(0) )',
 		      'put_term     ( p("b") )',
-		      'call        '
+		      'call'
 		      ] }
 
 	];
@@ -305,15 +305,15 @@ it('Compiler - body - basic - 3', function(){
 	var expected = [
 	       
 		{ g0: 
-   [ 'put_struct   ( f1/1, x(0) )',
-     'put_term     ( p("a") )',
-     'call        ',
-     'put_struct   ( f3/1, x(1) )',
-     'put_term     ( p("b") )',
-     'put_struct   ( f2/1, x(0) )',
-     'put_value    ( x(1) )',
-     'call        '
-     ] }
+		   [ 'put_struct   ( f1/1, x(0) )',
+		     'put_term     ( p("a") )',
+		     'call',
+		     'put_struct   ( f3/1, x(1) )',
+		     'put_term     ( p("b") )',
+		     'put_struct   ( f2/1, x(0) )',
+		     'put_value    ( x(1) )',
+		     'call'
+		     ] }
 
 	];
 	
@@ -331,16 +331,16 @@ it('Compiler - body - complex - 1', function(){
 		 g4:   [ 
 		        'put_struct   ( f3/1, x(0) )', 
 		        'put_term     ( p("c") )',
-		        'call        '
+		        'call'
 		        ],
 		  g0:  [ 
 		         'try_else     ( p("g4") )',
 			     'put_struct   ( f1/1, x(0) )',
 			     'put_term     ( p("a") )',
-			     'call        ',
+			     'call',
 			     'put_struct   ( f2/1, x(0) )',
 			     'put_term     ( p("b") )',
-			     'call        '
+			     'call'
 		     ] 
 		}	                
 	                

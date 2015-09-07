@@ -58,6 +58,13 @@ Utils.compare_objects = function(expected, input, use_throw){
 			
 			if (repr == expected)
 				return true;
+
+			// Trim leading and trailing spaces
+			repr = repr.replace(/^\s+|\s+$/g,'');
+
+			if (repr == expected)
+				return true;
+			
 		};
 		
 	};
