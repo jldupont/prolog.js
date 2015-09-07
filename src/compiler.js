@@ -164,10 +164,10 @@ Compiler.prototype.process_head = function(exp) {
  */
 Compiler.prototype.process_query = function(exp) {
 	
-	if (!(root instanceof Functor))
+	if (!(exp instanceof Functor))
 		throw new ErrorExpectingFunctor();
 	
-	if (root.name == 'rule')
+	if (exp.name == 'rule')
 		throw new ErrorRuleInQuestion();
 	
 	return this.process_body(exp);

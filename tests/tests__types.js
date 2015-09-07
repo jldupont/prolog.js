@@ -14,6 +14,7 @@ var Functor = pr.Functor;
 var Op = pr.Op;
 var OpNode = pr.OpNode;
 var Utils = pr.Utils;
+var Instruction = pr.Instruction;
 
 Functor.inspect_short_version = false;
 
@@ -373,6 +374,19 @@ it('_Types - Compare Objects - Object 2', function(){
 
 	var o1 = { n: new Functor('f') };
 	var o2 = { n: new Functor('f'), whatever: true };
+	
+	// Extra attributes in the input do not matter
+	
+	var result = Utils.compare_objects(o1, o2, true);
+	
+	should.equal(result, true);
+	
+});
+
+it('_Types - Compare Objects - Object 3', function(){
+
+	var o1 = { n: new Instruction('allocate') };
+	var o2 = { n: new Instruction('allocate'), whatever: true };
 	
 	// Extra attributes in the input do not matter
 	
