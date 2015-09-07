@@ -120,8 +120,12 @@ var process_goal = function(input_text, expecteds) {
 		
 		var ri = results[index];
 		var expected = expecteds[index];
+
+		//console.log("Input:  ", ri);
+		//console.log("Expect: ", expected);
 		
 		var result = Utils.compare_objects(expected, ri);
+		
 		should.equal(result, true, "expected: " + util.inspect(results));
 	};
 
@@ -170,7 +174,8 @@ var process_body = function(input_text, expecteds) {
 
 };
 
-
+// ==================================================== HEAD
+//
 it('Compiler - check - 1', function(){
 	
 	var text = "f1(a), f2(b).";
@@ -220,6 +225,9 @@ it('Compiler - basic - 1', function(){
 	process_head(text, expected);
 });
 
+//==================================================== GOAL
+//
+
 
 it('Compiler - goal - basic - 1', function(){
 	
@@ -232,7 +240,8 @@ it('Compiler - goal - basic - 1', function(){
 	'put_var      ( x(1) )',
 	'put_struct   ( h1/2, x(0) )',
 	'put_term     ( p("a") )',
-	'put_var      ( x(2) )'	                 
+	'put_var      ( x(2) )',
+	'call        '
 	]];
 	
 	process_goal(text, expected);
@@ -242,7 +251,12 @@ it('Compiler - body - basic - 1', function(){
 	
 	var text = "h1(a).";
 	var expected = [
-	{ g0: [ 'put_struct   ( h1/1, x(0) )', 'put_term     ( p("a") )' ] }        
+	      { g0: [ 
+	              'put_struct   ( h1/1, x(0) )', 
+	              'put_term     ( p("a") )',
+	              'call        '
+	              ] 
+	      }        
 	];
 	
 	process_body(text, expected);
@@ -257,8 +271,11 @@ it('Compiler - body - basic - 2', function(){
 		{ g0: 
 		    [ 'put_struct   ( f1/1, x(0) )',
 		      'put_term     ( p("a") )',
+		      'call        ',
 		      'put_struct   ( f2/1, x(0) )',
-		      'put_term     ( p("b") )' ] }
+		      'put_term     ( p("b") )',
+		      'call        '
+		      ] }
 
 	];
 	
@@ -273,10 +290,13 @@ it('Compiler - body - basic - 3', function(){
 		{ g0: 
    [ 'put_struct   ( f1/1, x(0) )',
      'put_term     ( p("a") )',
+     'call        ',
      'put_struct   ( f3/1, x(1) )',
      'put_term     ( p("b") )',
      'put_struct   ( f2/1, x(0) )',
-     'put_var      ( x(1) )' ] }
+     'put_var      ( x(1) )',
+     'call        '
+     ] }
 
 	];
 	
@@ -290,17 +310,21 @@ it('Compiler - body - complex - 1', function(){
 	var text = "f1(a), f2(b) ; f3(c).";
 	var expected = [
 
-		{ g4: [ 
+		{ 
+		 g4:   [ 
 		        'put_struct   ( f3/1, x(0) )', 
-		        'put_term     ( p("c") )' 
+		        'put_term     ( p("c") )',
+		        'call        '
 		        ],
-			  g0: 
-			   [ 'try_else     ( p("g4") )',
+		  g0:  [ 
+		         'try_else     ( p("g4") )',
 			     'put_struct   ( f1/1, x(0) )',
 			     'put_term     ( p("a") )',
+			     'call        ',
 			     'put_struct   ( f2/1, x(0) )',
-			     'put_term     ( p("b") )' 
-			     ] 
+			     'put_term     ( p("b") )',
+			     'call        '
+		     ] 
 		}	                
 	                
 	];

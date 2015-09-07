@@ -24,6 +24,12 @@ Utils.compare_objects = function(expected, input, use_throw){
 	//
 	if (expected instanceof Array) {
 		
+		if (!(input instanceof Array))
+			return false;
+		
+		if (input.length != expected.length)
+			return false;
+		
 		for (var index = 0; index<expected.length; index++)
 			if (!Utils.compare_objects(expected[index], input[index], use_throw))
 				return false;
@@ -108,8 +114,8 @@ Utils.compare_objects = function(expected, input, use_throw){
 		return true;
 	};// object
 
-	console.log("Comparing: expected: ", expected);
-	console.log("Comparing: input:    ", input);
+	//console.log("Comparing: expected: ", expected);
+	//console.log("Comparing: input:    ", input);
 	
 	if (use_throw)
 		throw new Error("Unsupported check, expected: " + JSON.stringify(expected));

@@ -501,7 +501,7 @@ Builtins.define = function(name, arity, functor){
  */
 function Instruction(opcode, ctx) {
 	this.opcode = opcode;
-	this.ctx = ctx;
+	this.ctx = ctx || null;
 };
 
 Instruction.inspect_quoted = false;
@@ -512,10 +512,13 @@ Instruction.prototype.inspect = function(){
 	const params = [ 'p', 'x', 'y', 'i' ];
 	var result = ""; 
 	
-	if (this.ctx.l)
+	if (this.ctx && this.ctx.l)
 		result = this.ctx.l + "  ";
 		
 	result += this.opcode + (Array(13 - this.opcode.length).join(" "));
+	
+	if (this.ctx == null)
+		return result;
 	
 	result += " ( ";
 	
@@ -666,6 +669,9 @@ Compiler.prototype.process_head = function(exp) {
 	if (!(exp instanceof Functor))
 		throw new ErrorExpectingFunctor();
 	
+	// Of course we can't be seeing conjunctions or disjunctions
+	//  in the head of a rule.
+	//
 	if (exp.name == 'conj' || (exp.name == 'disj'))
 		throw new ErrorInvalidHead();
 	
@@ -936,6 +942,11 @@ Compiler.prototype.process_goal = function(exp) {
 			};
 			
 		};//for
+		
+		// Only root functor gets a CALL
+		//
+		if (ctx.root)
+			results.push(new Instruction('call'));
 		
 	});
 	
@@ -2049,6 +2060,12 @@ Utils.compare_objects = function(expected, input, use_throw){
 	//
 	if (expected instanceof Array) {
 		
+		if (!(input instanceof Array))
+			return false;
+		
+		if (input.length != expected.length)
+			return false;
+		
 		for (var index = 0; index<expected.length; index++)
 			if (!Utils.compare_objects(expected[index], input[index], use_throw))
 				return false;
@@ -2133,8 +2150,8 @@ Utils.compare_objects = function(expected, input, use_throw){
 		return true;
 	};// object
 
-	console.log("Comparing: expected: ", expected);
-	console.log("Comparing: input:    ", input);
+	//console.log("Comparing: expected: ", expected);
+	//console.log("Comparing: input:    ", input);
 	
 	if (use_throw)
 		throw new Error("Unsupported check, expected: " + JSON.stringify(expected));
@@ -2192,6 +2209,8 @@ Visitor.prototype._process_depth = function(node) {
 }; // process depth
 
 /**
+ * Visitor targeted at processing `head` of a rule.
+ * 
  * Depth-First visitor with callback
  * 
  * v: denotes the variable index that should be used
@@ -2261,7 +2280,7 @@ Visitor.prototype.__process_depth = function(node){
 	return result;
 };
 
-// =============================================================================== VISITOR2
+//============================================================================== VISITOR2
 
 function Visitor2(exp) {
 	this.exp = exp;
@@ -2269,7 +2288,8 @@ function Visitor2(exp) {
 };
 
 /**
- * 
+ * Visitor targeted at the processing of individual goals
+ *  
  * @param callback
  * @returns
  * 
@@ -2277,8 +2297,6 @@ function Visitor2(exp) {
  */
 Visitor2.prototype.process = function(callback) {
 
-	//console.log("Visitor2.process, exp: ", this.exp instanceof Functor);
-	
 	if (!(this.exp instanceof Functor))
 		throw new ErrorExpectingFunctor("Expecting a rooted tree, got: "+JSON.stringify(this.exp));
 	
@@ -2289,19 +2307,10 @@ Visitor2.prototype.process = function(callback) {
 	
 };
 
-/**
- * 
- * @param node
- * @param variable_counter
- * 
- * @raise ErrorExpectingFunctor
- */
 Visitor2.prototype._process = function(node, variable_counter) {
 	
-	var is_root = variable_counter == undefined;
 	variable_counter = variable_counter || 1;
 	
-	// that should happen
 	if (!node)
 		throw new ErrorExpectingFunctor("Visitor2: got an undefined node.");
 	
@@ -2334,6 +2343,17 @@ Visitor2.prototype._process = function(node, variable_counter) {
 }; // _process
 
 
+// ============================================================================== VISITOR3
+
+/**
+ *  Visitor targeted mainly at the `body` of a rule (or a query).
+ *  
+ *  Each node gets an 'id' upon first encounter.
+ *  
+ *  Nodes are traversed depth-first.
+ *  
+ *  A junction:  'conjunction' or 'disjunction'
+ */
 function Visitor3(exp) {
 	this.exp = exp;
 	this.cb = null;
@@ -2375,13 +2395,23 @@ Visitor3.prototype._process = function(node, vc) {
 	
 	var lctx = this._process(left,  vc+1);
 	
+	// Start distributing id's on the right-hand side
+	//  following the last id distributed on the left-hand side
+	//
 	var rvc = lctx.vc+1;
 	
 	var rctx = this._process(right, rvc);
 
+	// Report the id's as they were
+	//  attributed on the left node and right node
+	//
 	rctx.vc = rvc;
 	lctx.vc = vc+1;
 	
+	// Remove extraneous information
+	//  so that we don't get tempted to use
+	//  it downstream.
+	//
 	if (rctx.is_junction)
 		delete rctx.n;
 	

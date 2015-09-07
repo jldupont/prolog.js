@@ -507,7 +507,7 @@ Builtins.define = function(name, arity, functor){
  */
 function Instruction(opcode, ctx) {
 	this.opcode = opcode;
-	this.ctx = ctx;
+	this.ctx = ctx || null;
 };
 
 Instruction.inspect_quoted = false;
@@ -518,10 +518,13 @@ Instruction.prototype.inspect = function(){
 	const params = [ 'p', 'x', 'y', 'i' ];
 	var result = ""; 
 	
-	if (this.ctx.l)
+	if (this.ctx && this.ctx.l)
 		result = this.ctx.l + "  ";
 		
 	result += this.opcode + (Array(13 - this.opcode.length).join(" "));
+	
+	if (this.ctx == null)
+		return result;
 	
 	result += " ( ";
 	

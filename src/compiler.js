@@ -90,6 +90,9 @@ Compiler.prototype.process_head = function(exp) {
 	if (!(exp instanceof Functor))
 		throw new ErrorExpectingFunctor();
 	
+	// Of course we can't be seeing conjunctions or disjunctions
+	//  in the head of a rule.
+	//
 	if (exp.name == 'conj' || (exp.name == 'disj'))
 		throw new ErrorInvalidHead();
 	
@@ -360,6 +363,11 @@ Compiler.prototype.process_goal = function(exp) {
 			};
 			
 		};//for
+		
+		// Only root functor gets a CALL
+		//
+		if (ctx.root)
+			results.push(new Instruction('call'));
 		
 	});
 	

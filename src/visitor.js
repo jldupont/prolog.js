@@ -49,6 +49,8 @@ Visitor.prototype._process_depth = function(node) {
 }; // process depth
 
 /**
+ * Visitor targeted at processing `head` of a rule.
+ * 
  * Depth-First visitor with callback
  * 
  * v: denotes the variable index that should be used
@@ -118,7 +120,7 @@ Visitor.prototype.__process_depth = function(node){
 	return result;
 };
 
-// =============================================================================== VISITOR2
+//============================================================================== VISITOR2
 
 function Visitor2(exp) {
 	this.exp = exp;
@@ -126,7 +128,8 @@ function Visitor2(exp) {
 };
 
 /**
- * 
+ * Visitor targeted at the processing of individual goals
+ *  
  * @param callback
  * @returns
  * 
@@ -134,8 +137,6 @@ function Visitor2(exp) {
  */
 Visitor2.prototype.process = function(callback) {
 
-	//console.log("Visitor2.process, exp: ", this.exp instanceof Functor);
-	
 	if (!(this.exp instanceof Functor))
 		throw new ErrorExpectingFunctor("Expecting a rooted tree, got: "+JSON.stringify(this.exp));
 	
@@ -146,19 +147,10 @@ Visitor2.prototype.process = function(callback) {
 	
 };
 
-/**
- * 
- * @param node
- * @param variable_counter
- * 
- * @raise ErrorExpectingFunctor
- */
 Visitor2.prototype._process = function(node, variable_counter) {
 	
-	var is_root = variable_counter == undefined;
 	variable_counter = variable_counter || 1;
 	
-	// that should happen
 	if (!node)
 		throw new ErrorExpectingFunctor("Visitor2: got an undefined node.");
 	
@@ -191,6 +183,17 @@ Visitor2.prototype._process = function(node, variable_counter) {
 }; // _process
 
 
+// ============================================================================== VISITOR3
+
+/**
+ *  Visitor targeted mainly at the `body` of a rule (or a query).
+ *  
+ *  Each node gets an 'id' upon first encounter.
+ *  
+ *  Nodes are traversed depth-first.
+ *  
+ *  A junction:  'conjunction' or 'disjunction'
+ */
 function Visitor3(exp) {
 	this.exp = exp;
 	this.cb = null;
@@ -232,13 +235,23 @@ Visitor3.prototype._process = function(node, vc) {
 	
 	var lctx = this._process(left,  vc+1);
 	
+	// Start distributing id's on the right-hand side
+	//  following the last id distributed on the left-hand side
+	//
 	var rvc = lctx.vc+1;
 	
 	var rctx = this._process(right, rvc);
 
+	// Report the id's as they were
+	//  attributed on the left node and right node
+	//
 	rctx.vc = rvc;
 	lctx.vc = vc+1;
 	
+	// Remove extraneous information
+	//  so that we don't get tempted to use
+	//  it downstream.
+	//
 	if (rctx.is_junction)
 		delete rctx.n;
 	
