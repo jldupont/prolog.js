@@ -222,7 +222,7 @@ Visitor3.prototype._process = function(node, vc) {
 		// vc == 0
 		//
 		if (is_root)
-			return this.cb('root', vc, { n: node }, null);
+			return this.cb({type: 'root', vc:vc }, { n: node }, null);
 		
 		return { vc: vc, n: node, is_junction: false };
 	};
@@ -249,7 +249,7 @@ Visitor3.prototype._process = function(node, vc) {
 	delete rctx.is_junction
 
 	
-	this.cb(node.name, vc, lctx, rctx);
+	this.cb({type: node.name, vc:vc, root: is_root}, lctx, rctx);
 	
 	return { vc: rctx.vc, is_junction: true };
 };

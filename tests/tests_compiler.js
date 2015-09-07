@@ -22,18 +22,13 @@ var ParserL3 = pr.ParserL3;
 var Visitor = pr.Visitor;
 var Compiler = pr.Compiler;
 var Instruction = pr.Instruction;
+var Utils = pr.Utils;
 
 var ErrorInvalidHead = pr.ErrorInvalidHead;
 
 
 var setup = function(text) {
 
-	//Functor.inspect_short_version = true;
-	//Functor.inspect_quoted = true;
-	//Token.inspect_quoted = true;
-	
-	Instruction.inspect_quoted = true;
-	
 	var l = new Lexer(text);
 	var tokens = l.process();
 
@@ -85,7 +80,7 @@ var process_head = function(input_text, expecteds) {
 		var ri = results[index];
 		var expected = expecteds[index];
 		
-		var result = isEquivalent(ri, expected);
+		var result = Utils.compare_objects(expected, ri, true);
 		should.equal(result, true, "expected: " + util.inspect(results));
 	};
 
@@ -126,7 +121,7 @@ var process_goal = function(input_text, expecteds) {
 		var ri = results[index];
 		var expected = expecteds[index];
 		
-		var result = isEquivalent(ri, expected);
+		var result = Utils.compare_objects(expected, ri);
 		should.equal(result, true, "expected: " + util.inspect(results));
 	};
 
@@ -168,32 +163,13 @@ var process_body = function(input_text, expecteds) {
 		var ri = results[index];
 		var expected = expecteds[index];
 		
-		var result = isEquivalent(ri, expected);
-		should.equal(result, true, "expected: " + util.inspect(results));
+		var result = Utils.compare_objects(expected, ri, true);
+		should.equal(result, true, "input: " + util.inspect(ri));
 	};
 
 
 };
 
-
-function isEquivalent(input, expected) {
-	
-	for (var index in expected) {
-
-		var i = input[index];
-		var ri = util.inspect(i);
-		var e  = "'"+expected[index]+"'";
-		
-		//console.log("Key: ", key);
-		//console.log("input: ",ri);
-		//console.log("expected: ",e);
-		
-		if (ri != e)
-			return false;
-	}
-	
-    return true;
-}
 
 it('Compiler - check - 1', function(){
 	
@@ -213,9 +189,9 @@ it('Compiler - basic - 0', function(){
 	
 	var text = "h1(666).";
 	var expected = [[ 
-	               'get_struct   ( h1/1, x(0) )', 
-	               'get_number   ( p(666) )' 
-	               ]];
+	'get_struct   ( h1/1, x(0) )', 
+	'get_number   ( p(666) )'	               
+	]];
 	
 	process_head(text, expected);
 });
@@ -262,13 +238,44 @@ it('Compiler - goal - basic - 1', function(){
 	process_goal(text, expected);
 });
 
-
-it('Compiler - body - basic - 2', function(){
+it('Compiler - body - basic - 1', function(){
 	
 	var text = "h1(a).";
 	var expected = [
-	                { g0: [ 'put_struct   ( h1/1, x(0) )', 'put_term     ( p("a") )' ] }
+	{ g0: [ 'put_struct   ( h1/1, x(0) )', 'put_term     ( p("a") )' ] }        
 	];
 	
 	process_body(text, expected);
 });
+
+
+it('Compiler - body - basic - 2', function(){
+	
+	var text = "f1(a), f2(b).";
+	var expected = [
+{ g1: 
+    [ 'put_struct   ( f1/1, x(0) )',
+      'put_term     ( p("a") )',
+      'goto         ( p("g2") )' ],
+   g2: [ 'put_struct   ( f2/1, x(0) )', 'put_term     ( p("b") )' ] }
+	];
+	
+	process_body(text, expected);
+});
+
+/*
+it('Compiler - body - basic - 3', function(){
+	
+	var text = "f1(a), f2(b) ; f3(c).";
+	var expected = [
+{ g1: 
+    [ 'put_struct   ( f1/1, x(0) )',
+      'put_term     ( p("a") )',
+      'goto         ( p("g2") )' ],
+   g2: [ 'put_struct   ( f2/1, x(0) )', 'put_term     ( p("b") )' ] }
+	];
+	
+	process_body(text, expected);
+});
+*/
+

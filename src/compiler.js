@@ -188,10 +188,36 @@ Compiler.prototype.process_body = function(exp) {
 	
 	var that = this;
 	
-	v.process(function(type, goal_id, left_or_root, right_maybe){
+	/**
+	 *  Link code across a conjunction
+	 *  
+	 *  Cases:
+	 *  a) jnode is root && lnode 
+	 *  b) 
+	 *  
+	 */
+	var conj_link = function(jctx, lctx, rctx) {
+		
+	};
+	
+	
+	var disj_link = function(jctx, lctx, rctx){
+		
+	};
+	
+	v.process(function(jctx, left_or_root, right_maybe){
+		
+		var type = jctx.type;
+		var goal_id = jctx.goal_id;
+		var is_root = jctx.root;
+		
+		var inst, inst2;
 		
 		var label = type+goal_id;
 		var ctx = left_or_root;
+		
+		if (is_root)
+			label = 'g0';
 		
 		if (type == 'root') {
 			label = 'g0';
@@ -211,8 +237,13 @@ Compiler.prototype.process_body = function(exp) {
 		var lcode = that.process_goal(left_or_root.n);
 		var rcode = that.process_goal(right_maybe.n);
 
+		
+		// CAUTION: lcode/rcode *may* be undefined
+		//          This is intended behavior.
+		
+		
 		var llabel = "g" + left_or_root.vc;
-		var rlabel = "g" + maybe_right.vc;
+		var rlabel = "g" + right_maybe.vc;
 		
 		if (lcode)
 			result[llabel] = lcode;
@@ -221,12 +252,14 @@ Compiler.prototype.process_body = function(exp) {
 			result[rlabel] = rcode;
 		
 		if (type == 'conj') {
-			lcode.push(new Instruction("goto", {p: rlabel}));
+			
+			conj_link(jctx, left_or_root, right_maybe);
+			
 		};
 		
 		if (type == 'disj') {
-			lcode.unshift(new Instruction("goto", {p: llabel}));
-			lcode.unshift(new Instruction("try_else", {l: label, p: rlabel}));
+
+			disj_link(jctx, left_or_root, right_maybe);
 			
 		};
 		

@@ -764,10 +764,36 @@ Compiler.prototype.process_body = function(exp) {
 	
 	var that = this;
 	
-	v.process(function(type, goal_id, left_or_root, right_maybe){
+	/**
+	 *  Link code across a conjunction
+	 *  
+	 *  Cases:
+	 *  a) jnode is root && lnode 
+	 *  b) 
+	 *  
+	 */
+	var conj_link = function(jctx, lctx, rctx) {
+		
+	};
+	
+	
+	var disj_link = function(jctx, lctx, rctx){
+		
+	};
+	
+	v.process(function(jctx, left_or_root, right_maybe){
+		
+		var type = jctx.type;
+		var goal_id = jctx.goal_id;
+		var is_root = jctx.root;
+		
+		var inst, inst2;
 		
 		var label = type+goal_id;
 		var ctx = left_or_root;
+		
+		if (is_root)
+			label = 'g0';
 		
 		if (type == 'root') {
 			label = 'g0';
@@ -787,8 +813,13 @@ Compiler.prototype.process_body = function(exp) {
 		var lcode = that.process_goal(left_or_root.n);
 		var rcode = that.process_goal(right_maybe.n);
 
+		
+		// CAUTION: lcode/rcode *may* be undefined
+		//          This is intended behavior.
+		
+		
 		var llabel = "g" + left_or_root.vc;
-		var rlabel = "g" + maybe_right.vc;
+		var rlabel = "g" + right_maybe.vc;
 		
 		if (lcode)
 			result[llabel] = lcode;
@@ -797,12 +828,14 @@ Compiler.prototype.process_body = function(exp) {
 			result[rlabel] = rcode;
 		
 		if (type == 'conj') {
-			lcode.push(new Instruction("goto", {p: rlabel}));
+			
+			conj_link(jctx, left_or_root, right_maybe);
+			
 		};
 		
 		if (type == 'disj') {
-			lcode.unshift(new Instruction("goto", {p: llabel}));
-			lcode.unshift(new Instruction("try_else", {l: label, p: rlabel}));
+
+			disj_link(jctx, left_or_root, right_maybe);
 			
 		};
 		
@@ -1958,8 +1991,114 @@ if (typeof module!= 'undefined') {
 	module.exports.ParserL3 = ParserL3;
 };
 
-Utils = {};
+function Utils() {};
 
+/**
+ * Compare Objects
+ * 
+ * @param expected
+ * @param input
+ * 
+ * @returns Boolean
+ */
+Utils.compare_objects = function(expected, input, use_throw){
+	
+	// ARRAY
+	//
+	if (expected instanceof Array) {
+		
+		for (var index = 0; index<expected.length; index++)
+			if (!Utils.compare_objects(expected[index], input[index], use_throw))
+				return false;
+		
+		return true;
+	};
+	
+	// Shortcut
+	//
+	if (expected === input)
+		return true;
+	
+	
+	/*
+	 *  Check if we are dealing with the case
+	 *   where we have a string representation
+	 *   of a function
+	 */
+	if ((typeof input == 'function') || typeof expected == 'string'){
+		
+		if (input.inspect) {
+			var repr = input.inspect();
+			
+			//console.log("CHECK, input    repr: ", repr);
+			//console.log("CHECK, expected repr: ", expected);
+			
+			if (repr == expected)
+				return true;
+		};
+		
+	};
+	
+	
+	if (expected && expected.inspect) {
+		if (input && !input.inspect) {
+			if (use_throw)
+				throw new Error("Expecting 'inspect' method on: " + JSON.stringify(input));
+			return false;
+		}
+		
+		//console.log("Comparing: expected: ", expected);
+		//console.log("Comparing: input:    ", input);
+		
+		if (expected.inspect() != input.inspect() ) {
+			if (use_throw)
+				throw new Error("Expecting match using inspect: " + JSON.stringify(expected));
+			return false;
+		};
+
+	}
+	
+	
+	
+	if (typeof expected == 'object') {
+		
+		if (typeof input != 'object') {
+			if (use_throw)
+				throw new Error("Expecting "+JSON.stringify(expected)+" object, got: "+JSON.stringify(input));
+			return false;
+		}
+		
+		for (var key in expected) {
+			
+			var e = expected[key];
+			var i = input[key];
+
+			if (e === i)
+				continue;
+			
+			if (e.hasOwnProperty(key) !== i.hasOwnProperty(key)) {
+				if (use_throw)
+					throw new Error("Expecting property: " + key);
+				
+				return false;
+			}
+			
+			if (!Utils.compare_objects(e, i))
+				return false;
+						
+		};// all object keys
+		
+		return true;
+	};// object
+
+	console.log("Comparing: expected: ", expected);
+	console.log("Comparing: input:    ", input);
+	
+	if (use_throw)
+		throw new Error("Unsupported check, expected: " + JSON.stringify(expected));
+	
+	return false;
+};//compare_objects
 
 
 if (typeof module!= 'undefined') {
@@ -2184,7 +2323,7 @@ Visitor3.prototype._process = function(node, vc) {
 		// vc == 0
 		//
 		if (is_root)
-			return this.cb('root', vc, { n: node }, null);
+			return this.cb({type: 'root', vc:vc }, { n: node }, null);
 		
 		return { vc: vc, n: node, is_junction: false };
 	};
@@ -2211,7 +2350,7 @@ Visitor3.prototype._process = function(node, vc) {
 	delete rctx.is_junction
 
 	
-	this.cb(node.name, vc, lctx, rctx);
+	this.cb({type: node.name, vc:vc, root: is_root}, lctx, rctx);
 	
 	return { vc: rctx.vc, is_junction: true };
 };

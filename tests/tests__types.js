@@ -13,6 +13,7 @@ var Token = pr.Token;
 var Functor = pr.Functor;
 var Op = pr.Op;
 var OpNode = pr.OpNode;
+var Utils = pr.Utils;
 
 Functor.inspect_short_version = false;
 
@@ -314,5 +315,69 @@ it('_Types - Op - check unary - 2', function(){
 
 	var result = Op.is_unary("xfy");
 	should.equal(result, false);
+	
+});
+
+it('_Types - Compare Objects - basic 1', function(){
+
+	var result = Utils.compare_objects(new Functor('f'), new Functor('f'), true);
+	should.equal(result, true);
+	
+});
+
+it('_Types - Compare Objects - basic 2', function(){
+
+	var result = Utils.compare_objects('allo', 'allo');
+	should.equal(result, true);
+	
+});
+
+it('_Types - Compare Objects - basic 3', function(){
+
+	var result = Utils.compare_objects(666, 666);
+	should.equal(result, true);
+	
+});
+
+it('_Types - Compare Objects - basic 4', function(){
+
+	var result = Utils.compare_objects(666.666, 666.666);
+	should.equal(result, true);
+	
+});
+
+
+it('_Types - Compare Objects - list 1', function(){
+
+	var o1 = [1,2,3];
+	var o2 = [1,2,3];
+	
+	var result = Utils.compare_objects(o1, o2, true);
+	
+	should.equal(result, true);
+	
+});
+
+it('_Types - Compare Objects - Object 1', function(){
+
+	var o1 = { n: new Functor('f') };
+	var o2 = { n: new Functor('f') };
+	
+	var result = Utils.compare_objects(o1, o2, true);
+	
+	should.equal(result, true);
+	
+});
+
+it('_Types - Compare Objects - Object 2', function(){
+
+	var o1 = { n: new Functor('f') };
+	var o2 = { n: new Functor('f'), whatever: true };
+	
+	// Extra attributes in the input do not matter
+	
+	var result = Utils.compare_objects(o1, o2, true);
+	
+	should.equal(result, true);
 	
 });
