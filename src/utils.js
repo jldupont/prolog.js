@@ -122,7 +122,7 @@ Utils.compare_objects = function(expected, input, use_throw){
 	};// object
 
 	//console.log("Comparing: expected: ", expected);
-	//console.log("Comparing: input:    ", input);
+	//console.log("Comparing: input:    ", JSON.stringify(input));
 	
 	if (use_throw)
 		throw new Error("Unsupported check, expected: " + JSON.stringify(expected));

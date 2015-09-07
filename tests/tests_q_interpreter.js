@@ -19,7 +19,7 @@ var Op = pr.Op;
 var ParserL1 = pr.ParserL1;
 var ParserL2 = pr.ParserL2;
 var ParserL3 = pr.ParserL3;
-var ParserL4 = pr.ParserL4;
+var Compiler = pr.Compiler;
 
 
 var setup = function(text) {

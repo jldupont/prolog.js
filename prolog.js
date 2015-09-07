@@ -716,6 +716,12 @@ Compiler.prototype.process_head = function(exp) {
 			
 		};
 		
+		if (ctx.n instanceof Var) {
+			
+			result.push(new Instruction("unif_var", {x:ctx.n.name}));
+			return;
+		};
+		
 		if (ctx.n instanceof Token) {
 			if (ctx.n.name == 'term') {
 				result.push(new Instruction('get_term', { p: ctx.n.value }));
@@ -2178,7 +2184,7 @@ Utils.compare_objects = function(expected, input, use_throw){
 	};// object
 
 	//console.log("Comparing: expected: ", expected);
-	//console.log("Comparing: input:    ", input);
+	//console.log("Comparing: input:    ", JSON.stringify(input));
 	
 	if (use_throw)
 		throw new Error("Unsupported check, expected: " + JSON.stringify(expected));

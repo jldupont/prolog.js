@@ -174,6 +174,47 @@ var process_body = function(input_text, expecteds) {
 
 };
 
+var process_rule = function(input_text, expecteds) {
+	
+	var expressions = setup(input_text);
+	
+	var results = [];
+	
+	//console.log(expressions);
+	
+	for (var index = 0; index<expressions.length; index++) {
+		
+		var expression = expressions[index][0];
+		
+		if (!expression)
+			break;
+
+		var c = new Compiler();
+		
+		//console.log("Expression: ", expression);
+
+		var result = c.process_rule(expression);
+		
+		results.push(result);
+	};
+	
+	//console.log(results);
+	
+	//if (expecteds.length!=results.length)
+	//	throw new Error();
+	
+	for (var index=0; index < results.length; index++) {
+		
+		var ri = results[index];
+		var expected = expecteds[index];
+		
+		var result = Utils.compare_objects(expected, ri);
+		should.equal(result, true, "input: " + util.inspect(ri));
+	};
+
+
+};
+
 // ==================================================== HEAD
 //
 it('Compiler - check - 1', function(){
@@ -203,6 +244,18 @@ it('Compiler - basic - 0', function(){
 
 
 it('Compiler - basic - 1', function(){
+	
+	var text = "f(A).";
+	var expected = [[ 
+	'get_struct   ( f/1, x(0) )', 
+	'unif_var     ( x("A") )'               
+	]];
+	
+	process_head(text, expected);
+});
+
+
+it('Compiler - basic - 2', function(){
 	
 	var text = "h1(a, h2( h3a(h3a), h3b(h3b), h3c(h3c)) ,666).";
 	var expected = [[ 
@@ -369,6 +422,32 @@ it('Compiler - body - complex - 1', function(){
 	];
 	
 	process_body(text, expected);
+});
+
+//==================================================== RULE
+//
+
+it('Compiler - rule - basic - 1', function(){
+	
+	var text = "f1(A) :- f2(A).";
+	var expected = [
+
+		{ 
+			g0: 
+			   [ 'allocate',
+			     'put_struct   ( f2/1, x(0) )',
+			     'put_var      ( x("A") )',
+			     'call',
+			     'deallocate'],
+		  head: [ 
+		           'get_struct   ( f1/1, x(0) )'
+		          ,'unif_var     ( x("A") )'
+		          ] 
+		}	                
+	                
+	];
+	
+	process_rule(text, expected);
 });
 
 
