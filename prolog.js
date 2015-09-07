@@ -474,6 +474,14 @@ Var.prototype.inspect = function(){
 };
 
 
+function Value(name) {
+	this.name = name;
+};
+
+Value.prototype.inspect = function(){
+	return "Value("+this.name+")";
+};
+
 
 Builtins = {};
 
@@ -563,6 +571,7 @@ if (typeof module!= 'undefined') {
 	module.exports.Functor = Functor;
 	module.exports.Op = Op;
 	module.exports.Var = Var;
+	module.exports.Value = Value;
 	module.exports.OpNode = OpNode;
 	module.exports.Result = Result;
 	module.exports.Instruction = Instruction;
@@ -930,6 +939,10 @@ Compiler.prototype.process_goal = function(exp) {
 			
 			if (n instanceof Var) {
 				results.push(new Instruction("put_var", {x: n.name}));
+			};
+
+			if (n instanceof Value) {
+				results.push(new Instruction("put_value", {x: n.name}));
 			};
 			
 			if (n instanceof Token) {
@@ -2329,7 +2342,7 @@ Visitor2.prototype._process = function(node, variable_counter) {
 		if (bnode instanceof Functor) {
 			
 			variable_counter = this._process(bnode, variable_counter);
-			args.push(new Var(variable_counter++));
+			args.push(new Value(variable_counter++));
 			
 		} else {
 			args.push(bnode);

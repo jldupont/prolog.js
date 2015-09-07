@@ -352,6 +352,10 @@ Compiler.prototype.process_goal = function(exp) {
 			if (n instanceof Var) {
 				results.push(new Instruction("put_var", {x: n.name}));
 			};
+
+			if (n instanceof Value) {
+				results.push(new Instruction("put_value", {x: n.name}));
+			};
 			
 			if (n instanceof Token) {
 				if (n.name == 'number')

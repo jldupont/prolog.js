@@ -480,6 +480,14 @@ Var.prototype.inspect = function(){
 };
 
 
+function Value(name) {
+	this.name = name;
+};
+
+Value.prototype.inspect = function(){
+	return "Value("+this.name+")";
+};
+
 
 Builtins = {};
 
@@ -569,6 +577,7 @@ if (typeof module!= 'undefined') {
 	module.exports.Functor = Functor;
 	module.exports.Op = Op;
 	module.exports.Var = Var;
+	module.exports.Value = Value;
 	module.exports.OpNode = OpNode;
 	module.exports.Result = Result;
 	module.exports.Instruction = Instruction;

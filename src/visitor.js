@@ -169,7 +169,7 @@ Visitor2.prototype._process = function(node, variable_counter) {
 		if (bnode instanceof Functor) {
 			
 			variable_counter = this._process(bnode, variable_counter);
-			args.push(new Var(variable_counter++));
+			args.push(new Value(variable_counter++));
 			
 		} else {
 			args.push(bnode);

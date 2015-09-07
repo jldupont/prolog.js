@@ -126,7 +126,7 @@ var process_goal = function(input_text, expecteds) {
 		
 		var result = Utils.compare_objects(expected, ri);
 		
-		should.equal(result, true, "expected: " + util.inspect(results));
+		should.equal(result, true, "input: " + util.inspect(ri));
 	};
 
 
@@ -237,15 +237,32 @@ it('Compiler - goal - basic - 1', function(){
 	'put_term     ( p("c") )',
 	'put_struct   ( h2/2, x(2) )',
 	'put_term     ( p("b") )',
-	'put_var      ( x(1) )',
+	'put_value    ( x(1) )',
 	'put_struct   ( h1/2, x(0) )',
 	'put_term     ( p("a") )',
-	'put_var      ( x(2) )',
+	'put_value    ( x(2) )',
 	'call        '
 	]];
 	
 	process_goal(text, expected);
 });
+
+it('Compiler - goal - basic - 2', function(){
+	
+	var text = "h1(A).";
+	var expected = [[
+                 'put_struct   ( h1/1, x(0) )',
+                 'put_var      ( x("A") )',
+                 'call        '
+	]];
+	
+	process_goal(text, expected);
+});
+
+
+//==================================================== BODY
+//
+
 
 it('Compiler - body - basic - 1', function(){
 	
@@ -294,7 +311,7 @@ it('Compiler - body - basic - 3', function(){
      'put_struct   ( f3/1, x(1) )',
      'put_term     ( p("b") )',
      'put_struct   ( f2/1, x(0) )',
-     'put_var      ( x(1) )',
+     'put_value    ( x(1) )',
      'call        '
      ] }
 
