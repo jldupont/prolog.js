@@ -233,6 +233,7 @@ it('Compiler - goal - basic - 1', function(){
 	
 	var text = "h1(a, h2(b, h3(c))).";
 	var expected = [[
+	'allocate',
 	'put_struct   ( h3/1, x(1) )',
 	'put_term     ( p("c") )',
 	'put_struct   ( h2/2, x(2) )',
@@ -241,7 +242,8 @@ it('Compiler - goal - basic - 1', function(){
 	'put_struct   ( h1/2, x(0) )',
 	'put_term     ( p("a") )',
 	'put_value    ( x(2) )',
-	'call'
+	'call',
+	'deallocate'
 	]];
 	
 	process_goal(text, expected);
@@ -251,9 +253,11 @@ it('Compiler - goal - basic - 2', function(){
 	
 	var text = "h1(A).";
 	var expected = [[
+	             'allocate',
                  'put_struct   ( h1/1, x(0) )',
                  'put_var      ( x("A") )',
-                 'call'
+                 'call',
+                 'deallocate'
 	]];
 	
 	process_goal(text, expected);
@@ -269,9 +273,11 @@ it('Compiler - body - basic - 1', function(){
 	var text = "h1(a).";
 	var expected = [
 	      { g0: [ 
+	             'allocate',
 	              'put_struct   ( h1/1, x(0) )', 
 	              'put_term     ( p("a") )',
 	              'call'
+	              ,'deallocate'
 	              ] 
 	      }        
 	];
@@ -286,12 +292,17 @@ it('Compiler - body - basic - 2', function(){
 	var expected = [
 	       
 		{ g0: 
-		    [ 'put_struct   ( f1/1, x(0) )',
+		    [ 
+		      'allocate',
+		      'put_struct   ( f1/1, x(0) )',
 		      'put_term     ( p("a") )',
 		      'call',
+		      'deallocate',
+		      'allocate',
 		      'put_struct   ( f2/1, x(0) )',
 		      'put_term     ( p("b") )',
-		      'call'
+		      'call',
+		      'deallocate'
 		      ] }
 
 	];
@@ -305,14 +316,19 @@ it('Compiler - body - basic - 3', function(){
 	var expected = [
 	       
 		{ g0: 
-		   [ 'put_struct   ( f1/1, x(0) )',
+		   [ 
+		     'allocate',
+		     'put_struct   ( f1/1, x(0) )',
 		     'put_term     ( p("a") )',
 		     'call',
+		     'deallocate',
+		     'allocate',
 		     'put_struct   ( f3/1, x(1) )',
 		     'put_term     ( p("b") )',
 		     'put_struct   ( f2/1, x(0) )',
 		     'put_value    ( x(1) )',
-		     'call'
+		     'call',
+		     'deallocate'
 		     ] }
 
 	];
@@ -329,18 +345,24 @@ it('Compiler - body - complex - 1', function(){
 
 		{ 
 		 g4:   [ 
+		        'allocate',
 		        'put_struct   ( f3/1, x(0) )', 
 		        'put_term     ( p("c") )',
-		        'call'
+		        'call',
+		        'deallocate'
 		        ],
 		  g0:  [ 
 		         'try_else     ( p("g4") )',
+		         'allocate',
 			     'put_struct   ( f1/1, x(0) )',
 			     'put_term     ( p("a") )',
 			     'call',
+			     'deallocate',
+			     'allocate',
 			     'put_struct   ( f2/1, x(0) )',
 			     'put_term     ( p("b") )',
-			     'call'
+			     'call',
+			     'deallocate'
 		     ] 
 		}	                
 	                

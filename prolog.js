@@ -924,12 +924,16 @@ Compiler.prototype.process_goal = function(exp) {
 	var v = new Visitor2(exp);
 	
 	var results = [];
+
+	results.push(new Instruction('allocate'));
 	
 	v.process(function(ctx){
 		
 		var struct_ctx = { f: ctx.n.name, a:ctx.n.args.length , x: ctx.vc };
-		if (ctx.root)
+		
+		if (ctx.root) {
 			struct_ctx.x = 0;
+		};
 		
 		results.push(new Instruction("put_struct", struct_ctx));
 		
@@ -958,8 +962,11 @@ Compiler.prototype.process_goal = function(exp) {
 		
 		// Only root functor gets a CALL
 		//
-		if (ctx.root)
+		if (ctx.root) {
 			results.push(new Instruction('call'));
+			results.push(new Instruction('deallocate'));
+		};
+			
 		
 	});
 	
