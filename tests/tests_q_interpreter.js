@@ -41,36 +41,49 @@ var setup = function(text) {
 	return r3;
 };
 
-var process = function(input_text, expected, left_to_right) {
+var compile_rule = function(input_text) {
 	
-	var expression = setup(input_text)[0][0];
-
-	var i = new ParserL4(expression);
+	var expressions = setup(input_text);
 	
-	i.dir_left_to_right = left_to_right || false;
+	var results = [];
 	
-	var ri = i.process();
+	//console.log(expressions);
 	
-	var result = compare(ri, expected);
-	
-	should.equal(result, true, "Got: " + util.inspect(ri));
-};
-
-var compare = function(input, expected) {
-	
-	if (input.length != expected.length)
-		return false;
-	
-	for (var index=0;index<expected.length;index++) {
+	for (var index = 0; index<expressions.length; index++) {
 		
-		var i = input[index];
-		var re = expected[index];
+		var expression = expressions[index][0];
 		
-		var ri = util.inspect(i, {depth: null});
-		if (ri!=re)
-			return false;
+		var c = new Compiler();
+		
+		var result = c.process_rule_or_fact(expression);
+		
+		results.push(result);
 	};
 	
-	return true;
+	return results;
 };
+
+var compile_query = function(text) {
+
+	var expressions = setup(input_text);
+	
+	var results = [];
+	
+	//console.log(expressions);
+	
+	for (var index = 0; index<expressions.length; index++) {
+		
+		var expression = expressions[index][0];
+		
+		var c = new Compiler();
+		
+		var result = c.process_query(expression);
+		
+		results.push(result);
+	};
+	
+	return results;
+	
+};
+
 
