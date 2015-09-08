@@ -87,6 +87,15 @@ it('Interpreter - basic - 0', function(){
 	
 	//console.log("Qcode: ", qcode);
 	
+	/*
+	 * { g0: 
+		   [ allocate    ,
+		     put_struct   ( q/1, x(0) ),
+		     put_var      ( x("A") ),
+		     call        ,
+		     deallocate   ] }
+	 */
+	
 	var db = {};
 	var builtins = {};
 	
@@ -103,6 +112,11 @@ it('Interpreter - basic - 0', function(){
 	var result = Utils.compare_objects(new Instruction('allocate'), inst);
 	
 	should.equal(result, true, "input: " + util.inspect(inst));
+	
+	it.step();
 });
 
 
+it('Interpreter - basic - 0', function(){
+	
+});

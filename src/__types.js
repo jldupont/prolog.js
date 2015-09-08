@@ -520,6 +520,9 @@ function Instruction(opcode, ctx) {
 
 Instruction.inspect_quoted = false;
 
+Instruction.prototype.is = function(opcode) {
+	return this.opcode == opcode;
+};
 
 Instruction.prototype.inspect = function(){
 	
@@ -586,6 +589,11 @@ function ErrorNoMoreInstruction(msg) {
 };
 ErrorNoMoreInstruction.prototype = Error.prototype;
 
+function ErrorInvalidInstruction(msg) {
+	this.message = msg;
+};
+ErrorInvalidInstruction.prototype = Error.prototype;
+
 
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
@@ -605,4 +613,5 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorRuleInQuestion = ErrorRuleInQuestion;
 	module.exports.ErrorExpectingGoal = ErrorExpectingGoal;
 	module.exports.ErrorNoMoreInstruction = ErrorNoMoreInstruction;
+	module.exports.ErrorInvalidInstruction = ErrorInvalidInstruction;
 };

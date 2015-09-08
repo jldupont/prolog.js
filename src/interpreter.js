@@ -68,6 +68,15 @@ Interpreter.prototype.set_question = function(question_code){
 		//
 		,cc: null
 		
+		
+		// The current variable in the target choice point
+		//
+		// Used to track the construction of a structure in the
+		//  target choice point.
+		//
+		,cpv: null
+		
+		
 	};
 	
 	try {
@@ -80,15 +89,140 @@ Interpreter.prototype.set_question = function(question_code){
 
 
 /**
+ *   Instruction "allocate"
+ *   
+ *   Denotes beginning of a "choice point" code block
+ *   
+ *   Create an environment for this choice point and
+ *    and push a link in the current environment.
+ */
+Interpreter.prototype.inst_allocate = function() {
+	
+	console.log("Instruction: 'allocate'");
+	
+};
+
+/**
+ *   Instruction "deallocate"
+ * 
+ *   Deallocates, if possible, a "choice point" environment.
+ * 
+ *   Cases:
+ *   - Choice Point succeeds : do not deallocate environment
+ *   - Choice Point fails & no other clause : deallocate environment
+ */
+Interpreter.prototype.inst_deallocate = function() {
+	
+	console.log("Instruction: 'deallocate'");
+	
+};
+
+/**
+ *   Instruction "put_struct $x"
+ * 
+ *   Used to construct a structure in the target choice point
+ *    environment.  Starts building the structure in the
+ *    choice point environment at variable $x.
+ * 
+ *   The target variable $x is retain the current environment
+ *    as to help with the remainder of the construction  (cpv).
+ * 
+ */
+Interpreter.prototype.inst_put_struct = function() {
+	
+	console.log("Instruction: 'put_struct'");
+	
+};
+
+/**
+ *   Instruction "put_term"
+ * 
+ *   Inserts a 'term' in the structure being built.
+ */
+Interpreter.prototype.inst_put_term = function() {
+	
+	console.log("Instruction: 'put_term'");
+	
+};
+
+/**
+ *   Instruction "put_number"
+ * 
+ *   Inserts a 'number' in the structure being built.
+ */
+Interpreter.prototype.inst_put_number = function() {
+	
+	console.log("Instruction: 'put_number'");
+	
+};
+
+
+/**
+ *   Instruction "put_var"
+ * 
+ *   Inserts a 'var' in the structure being built.
+ */
+Interpreter.prototype.inst_put_var = function() {
+	
+	console.log("Instruction: 'put_var'");
+	
+};
+
+/**
+ *   Instruction "put_value"
+ * 
+ *   Inserts a 'value' in the structure being built.
+ *   
+ *   The 'value' is obtained through dereferencing
+ *    the variable.
+ */
+Interpreter.prototype.inst_put_value = function() {
+	
+	console.log("Instruction: 'put_value'");
+	
+};
+
+/*   Instruction "try_else $target"
+ * 
+ *   Denotes a disjunctive choice point
+ * 
+ *   Insert choice point to $target in the current environment.
+ *   
+ *   If the following choice point about to be tried fails,
+ *    it will be removed from the choice point list and the
+ *    one inserted to $target will be tried next.
+ *   
+ */
+Interpreter.prototype.inst_try_else = function() {
+	
+	console.log("Instruction: 'try_else'");
+	
+};
+
+
+
+/**
  * Take 1 processing step
  * 
  * @return true | false | null where `null` signifies `not done yet`
- * @raise Error
+ * 
+ * @raise ErrorNoMoreInstruction
+ * @raise ErrorInvalidInstruction
  */
 Interpreter.prototype.step = function() {
 
+	var inst = this.fetch_next_instruction();
 	
-};
+	var fnc_name = "inst_" + inst.opcode;
+	
+	var fnc = this[fnc_name];
+	if (!fnc)
+		throw new ErrorInvalidInstruction(inst.opcode);
+	
+	// Execute the instruction
+	this[fnc_name].apply(this);	
+
+};// step
 
 /**
  *  Cases:
@@ -109,7 +243,6 @@ Interpreter.prototype.fetch_next_instruction = function(){
 		return inst;
 	
 	// Are we at the end of `head` ?
-	
 	
 	if (this.env.p.f == 'head') {
 		
@@ -136,7 +269,7 @@ Interpreter.prototype._fetch = function(){
 	
 	this.env.p.i++;
 	
-	return inst;
+	return inst || null;
 };
 
 Interpreter.prototype._fetch_code = function(){
