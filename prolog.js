@@ -1248,6 +1248,10 @@ Interpreter.prototype.set_question = function(question_code){
 		,cpv: null
 		
 		
+		/*  Continuation Point
+		 * 
+		 */
+		,cp: null
 	};
 	
 	try {
@@ -1257,6 +1261,94 @@ Interpreter.prototype.set_question = function(question_code){
 	};
 
 };
+
+
+
+/**
+ * Take 1 processing step
+ * 
+ * @return true | false | null where `null` signifies `not done yet`
+ * 
+ * @raise ErrorNoMoreInstruction
+ * @raise ErrorInvalidInstruction
+ */
+Interpreter.prototype.step = function() {
+
+	var inst = this.fetch_next_instruction();
+	
+	var fnc_name = "inst_" + inst.opcode;
+	
+	var fnc = this[fnc_name];
+	if (!fnc)
+		throw new ErrorInvalidInstruction(inst.opcode);
+	
+	// Execute the instruction
+	this[fnc_name].apply(this);	
+
+};// step
+
+/**
+ *  Cases:
+ *  
+ *  a)  null --> *p     i.e. at initialization  (already taken care of)
+ *  b)  HEAD --> G0     i.e. when executing a functor
+ *  c)  Gx   --> Gx'    i.e. when executing inside a functor
+ * 
+ * @return Instruction | null
+ * 
+ */
+Interpreter.prototype.fetch_next_instruction = function(){
+	
+	// Just try fetching next instruction from env.cc
+	var inst = this._fetch();
+	
+	if (inst)
+		return inst;
+	
+	// Are we at the end of `head` ?
+	
+	if (this.env.p.f == 'head') {
+		
+		// update pointer to 1st goal then
+		this.env.p.f = 'g0';
+		this.env.p.i = 0;
+		this._fetch_code();
+		
+	} else {
+		
+		// If we are inside a goal, try the next one.
+		// In the current implementation, this should not
+		//  happen directly: some branching would have occurred.
+		throw new ErrorNoMoreInstruction();
+	};
+	
+	return this._fetch();
+};
+
+Interpreter.prototype._fetch = function(){
+	
+	// Just try fetching next instruction from env.cc
+	var inst = this.env.cc[this.env.p.i];
+	
+	this.env.p.i++;
+	
+	return inst || null;
+};
+
+Interpreter.prototype._fetch_code = function(){
+	
+	var cc = this.db[this.env.p.f];
+	this.env.p.i = 0;
+	this.env.cc = cc;
+};
+
+
+//
+//
+// ======================================================================== INSTRUCTIONS
+//
+//
+
 
 
 /**
@@ -1353,7 +1445,8 @@ Interpreter.prototype.inst_put_value = function() {
 	
 };
 
-/*   Instruction "try_else $target"
+/**
+ *   Instruction "try_else $target"
  * 
  *   Denotes a disjunctive choice point
  * 
@@ -1371,85 +1464,78 @@ Interpreter.prototype.inst_try_else = function() {
 };
 
 
+/**
+ *   Instruction "call"
+ * 
+ *   Executes the Functor pointed to by $x0
+ *    in the target environment.
+ *    
+ *   The Continuation Point (CP) will be saved
+ *    in the current environment.
+ *   
+ */
+Interpreter.prototype.inst_call = function() {
+	
+	console.log("Instruction: 'call'");
+	
+};
 
 /**
- * Take 1 processing step
+ *   Instruction "get_struct" $f, $a, $x
+ *   
+ *   Expects a structure of name $f and arity $a 
+ *    at the current variable $x being
+ *    matched in the environment.
  * 
- * @return true | false | null where `null` signifies `not done yet`
- * 
- * @raise ErrorNoMoreInstruction
- * @raise ErrorInvalidInstruction
  */
-Interpreter.prototype.step = function() {
+Interpreter.prototype.inst_get_struct = function() {
+	
+	console.log("Instruction: 'get_struct'");
+	
+};
 
-	var inst = this.fetch_next_instruction();
-	
-	var fnc_name = "inst_" + inst.opcode;
-	
-	var fnc = this[fnc_name];
-	if (!fnc)
-		throw new ErrorInvalidInstruction(inst.opcode);
-	
-	// Execute the instruction
-	this[fnc_name].apply(this);	
-
-};// step
 
 /**
- *  Cases:
- *  
- *  a)  null --> *p     i.e. at initialization  (already taken care of)
- *  b)  HEAD --> G0     i.e. when executing a functor
- *  c)  Gx   --> Gx'    i.e. when executing inside a functor
- * 
- * @return Instruction | null
+ *   Instruction "get_term" $p
+ *   
+ *   Expects a 'term' $p at the current variable being
+ *    matched in the environment.
  * 
  */
-Interpreter.prototype.fetch_next_instruction = function(){
+Interpreter.prototype.inst_get_term = function() {
 	
-	// Just try fetching next instruction from env.cc
-	var inst = this._fetch();
+	console.log("Instruction: 'get_term'");
 	
-	if (inst)
-		return inst;
-	
-	// Are we at the end of `head` ?
-	
-	if (this.env.p.f == 'head') {
-		
-		// update pointer to 1st goal then
-		this.env.p.f = 'g0';
-		this.env.p.i = 0;
-		this._fetch_code();
-		
-	} else {
-		
-		// If we are inside a goal, try the next one.
-		// In the current implementation, this should not
-		//  happen directly: some branching would have occurred.
-		throw new ErrorNoMoreInstruction();
-	};
-	
-	return this._fetch();
 };
 
-Interpreter.prototype._fetch = function(){
+
+/**
+ *   Instruction "get_number" $p
+ *   
+ *   Expects a 'number' $p at the current variable being
+ *    matched in the environment.
+ * 
+ */
+Interpreter.prototype.inst_get_number = function() {
 	
-	// Just try fetching next instruction from env.cc
-	var inst = this.env.cc[this.env.p.i];
+	console.log("Instruction: 'get_number'");
 	
-	this.env.p.i++;
-	
-	return inst || null;
 };
 
-Interpreter.prototype._fetch_code = function(){
-	
-	var cc = this.db[this.env.p.f];
-	this.env.p.i = 0;
-	this.env.cc = cc;
-};
 
+/**
+ *   Instruction "unif_var" $x
+ *   
+ *   Unify the value at the current variable
+ *    being matched in the environment.
+ *   
+ * 
+ */
+Interpreter.prototype.inst_unif_var = function() {
+	
+	console.log("Instruction: 'unif_var'");
+	
+};
 
 
 if (typeof module != 'undefined') {
