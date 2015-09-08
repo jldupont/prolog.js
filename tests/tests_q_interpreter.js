@@ -108,15 +108,42 @@ it('Interpreter - basic - 0', function(){
 	var inst = it.fetch_next_instruction();
 	
 	//console.log("Inst: ", JSON.stringify(inst));
+	//it.step();
 	
 	var result = Utils.compare_objects(new Instruction('allocate'), inst);
 	
 	should.equal(result, true, "input: " + util.inspect(inst));
 	
-	it.step();
+	//it.step();
 });
 
 
-it('Interpreter - basic - 0', function(){
+it('Interpreter - basic - 1', function(){
 	
+	var qtext = "q(666).";
+	var qcode = compile_query(qtext);
+	
+	//console.log("Qcode: ", qcode);
+	
+	/*
+	 * { g0: 
+		   [ allocate    ,
+		     put_struct   ( q/1, x(0) ),
+		     put_var      ( x("A") ),
+		     call        ,
+		     deallocate   ] }
+	 */
+	
+	var db = {};
+	var builtins = {};
+	
+	var it = new Interpreter(db, builtins);
+	
+	it.set_question(qcode);
+	
+	it.step(); // allocate
+	it.step(); // put_struct
+	it.step(); // put_number
+	
+	console.log( it.get_env_var("ce") );
 });

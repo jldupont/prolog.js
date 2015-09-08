@@ -402,6 +402,10 @@ function Functor(name, maybe_arguments_list) {
 		this.args = Array.prototype.splice.call(arguments, 1);
 	else
 		this.args = [];
+	
+	// Target Arity
+	//  Used in the context of the interpreter
+	this.arity = null;
 };
 
 Functor.inspect_short_version = false;
@@ -411,11 +415,13 @@ Functor.prototype.inspect = function(){
 	
 	var result = "";
 	
+	var arity = this.arity || this.args.length;
+	
 	if (Functor.inspect_short_version)
-		result = "Functor("+this.name+"/"+this.args.length+")";
+		result = "Functor("+this.name+"/"+arity+")";
 	else {
 		var fargs = this.format_args(this.args);
-		result = "Functor("+this.name+"/"+this.args.length+","+fargs+")";
+		result = "Functor("+this.name+"/"+arity+","+fargs+")";
 	}
 	
 	if (Functor.inspect_quoted)
@@ -1262,6 +1268,11 @@ Interpreter.prototype.set_question = function(question_code){
 		 */
 		,ce: {}
 		
+		/*
+		 *  Variable used in the current structure 
+		 */
+		,cv: null
+		
 	};
 	
 	try {
@@ -1352,6 +1363,9 @@ Interpreter.prototype._fetch_code = function(){
 	this.env.cc = cc;
 };
 
+Interpreter.prototype.get_env_var = function(evar) {
+	return this.env[evar];
+};
 
 //
 //
@@ -1373,7 +1387,7 @@ Interpreter.prototype.inst_allocate = function() {
 	
 	console.log("Instruction: 'allocate'");
 	
-	var env = {};
+	var env = { vars: {} };
 	this.env.ce = env;
 	this.stack.push(env);
 	
@@ -1409,10 +1423,16 @@ Interpreter.prototype.inst_put_struct = function(inst) {
 	
 	var f = new Functor(inst.get('f'));
 	var a = inst.get('a');
-	var x = inst.get('x');
+	f.arity = a;
 	
-	console.log("Instruction: 'put_struct': "+inst.get('f')+"/"+a);
+	var x = "x" + inst.get('x');
 	
+	this.env.cv = x;
+	this.env.ce.vars[x] = f;
+
+	//console.log("Instruction: 'put_struct': "+inst.get('f')+"/"+a+", "+x);
+	//console.log("Env: ", this.env);
+
 };
 
 /**
@@ -1431,10 +1451,16 @@ Interpreter.prototype.inst_put_term = function() {
  * 
  *   Inserts a 'number' in the structure being built.
  */
-Interpreter.prototype.inst_put_number = function() {
+Interpreter.prototype.inst_put_number = function(inst) {
 	
-	console.log("Instruction: 'put_number'");
+	var num = inst.get("p");
 	
+	console.log("Instruction: 'put_number': ", num);
+	
+	var cv = this.env.cv;
+	var struct = this.env.ce.vars[cv];
+	
+	struct.push_arg(num);
 };
 
 

@@ -408,6 +408,10 @@ function Functor(name, maybe_arguments_list) {
 		this.args = Array.prototype.splice.call(arguments, 1);
 	else
 		this.args = [];
+	
+	// Target Arity
+	//  Used in the context of the interpreter
+	this.arity = null;
 };
 
 Functor.inspect_short_version = false;
@@ -417,11 +421,13 @@ Functor.prototype.inspect = function(){
 	
 	var result = "";
 	
+	var arity = this.arity || this.args.length;
+	
 	if (Functor.inspect_short_version)
-		result = "Functor("+this.name+"/"+this.args.length+")";
+		result = "Functor("+this.name+"/"+arity+")";
 	else {
 		var fargs = this.format_args(this.args);
-		result = "Functor("+this.name+"/"+this.args.length+","+fargs+")";
+		result = "Functor("+this.name+"/"+arity+","+fargs+")";
 	}
 	
 	if (Functor.inspect_quoted)
