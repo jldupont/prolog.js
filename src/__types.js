@@ -524,6 +524,10 @@ Instruction.prototype.is = function(opcode) {
 	return this.opcode == opcode;
 };
 
+Instruction.prototype.get = function(param) {
+	return this.ctx[param];
+};
+
 Instruction.prototype.inspect = function(){
 	
 	const params = [ 'p', 'x', 'y', 'i' ];

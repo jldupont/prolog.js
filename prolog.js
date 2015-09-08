@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-09-07 */
+/*! prolog.js - v0.0.1 - 2015-09-08 */
 
 /**
  *  Token
@@ -516,6 +516,10 @@ Instruction.inspect_quoted = false;
 
 Instruction.prototype.is = function(opcode) {
 	return this.opcode == opcode;
+};
+
+Instruction.prototype.get = function(param) {
+	return this.ctx[param];
 };
 
 Instruction.prototype.inspect = function(){
@@ -1252,6 +1256,12 @@ Interpreter.prototype.set_question = function(question_code){
 		 * 
 		 */
 		,cp: null
+		
+		/*
+		 *  Current target env frame on the stack
+		 */
+		,ce: {}
+		
 	};
 	
 	try {
@@ -1283,7 +1293,7 @@ Interpreter.prototype.step = function() {
 		throw new ErrorInvalidInstruction(inst.opcode);
 	
 	// Execute the instruction
-	this[fnc_name].apply(this);	
+	this[fnc_name].apply(this, [inst]);	
 
 };// step
 
@@ -1363,6 +1373,10 @@ Interpreter.prototype.inst_allocate = function() {
 	
 	console.log("Instruction: 'allocate'");
 	
+	var env = {};
+	this.env.ce = env;
+	this.stack.push(env);
+	
 };
 
 /**
@@ -1381,19 +1395,23 @@ Interpreter.prototype.inst_deallocate = function() {
 };
 
 /**
- *   Instruction "put_struct $x"
+ *   Instruction "put_struct $f $a $x"
  * 
- *   Used to construct a structure in the target choice point
- *    environment.  Starts building the structure in the
+ *   Used to construct a structure $f or arity $a in the 
+ *   target choice point environment.  Starts building the structure in the
  *    choice point environment at variable $x.
  * 
  *   The target variable $x is retain the current environment
  *    as to help with the remainder of the construction  (cpv).
  * 
  */
-Interpreter.prototype.inst_put_struct = function() {
+Interpreter.prototype.inst_put_struct = function(inst) {
 	
-	console.log("Instruction: 'put_struct'");
+	var f = new Functor(inst.get('f'));
+	var a = inst.get('a');
+	var x = inst.get('x');
+	
+	console.log("Instruction: 'put_struct': "+inst.get('f')+"/"+a);
 	
 };
 
