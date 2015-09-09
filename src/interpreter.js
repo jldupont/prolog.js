@@ -316,10 +316,21 @@ Interpreter.prototype.inst_put_var = function(inst) {
  *   The 'value' is obtained through dereferencing
  *    the variable.
  */
-Interpreter.prototype.inst_put_value = function() {
+Interpreter.prototype.inst_put_value = function(inst) {
 	
-	console.log("Instruction: 'put_value'");
 	
+	
+	var vname = "x" + inst.get("p");
+	
+	var value = this.env.ce.vars[vname];
+	
+	//console.log("Instruction: 'put_value': ", value);
+	
+	// The current structure being worked on
+	var cv = this.env.cv;
+	var struct = this.env.ce.vars[cv];
+
+	struct.push_arg(value);
 };
 
 /**

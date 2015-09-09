@@ -172,3 +172,46 @@ it('Interpreter - basic - 2', function(){
 	var result = Utils.compare_objects(expected, ce_vars);
 	should.equal(result, true, "ce vars: " + util.inspect(ce_vars));
 });
+
+it('Interpreter - basic - 3', function(){
+	
+	var qtext = "q1(q2(666)).";
+	
+	var expected = { vars: { x1: 'Functor(q2/1,666)', x0: 'Functor(q1/1,Functor(q2/1,666))' } };
+	
+	var qcode = compile_query(qtext);
+	
+	//console.log(qcode);
+	
+	/*
+		{ g0: 
+		   [ allocate    ,
+		     put_struct   ( q2/1, p(1) ),
+		     put_number   ( p(666) ),
+		     put_struct   ( q1/1, p(0) ),
+		     put_value    ( p(1) ),
+		     call        ,
+		     deallocate   ] }
+	 */
+	
+	var db = {};
+	var builtins = {};
+	
+	var it = new Interpreter(db, builtins);
+	
+	it.set_question(qcode);
+	
+	it.step(); // allocate
+	it.step(); // put_struct
+	it.step(); // put_number
+	it.step(); // put_struct
+	it.step(); // put_value
+	
+	
+	var ce_vars = it.get_env_var("ce");
+	
+	//console.log( it.get_env_var("ce") );
+	
+	var result = Utils.compare_objects(expected, ce_vars);
+	should.equal(result, true, "ce vars: " + util.inspect(ce_vars));
+});
