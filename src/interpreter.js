@@ -204,7 +204,7 @@ Interpreter.prototype.get_env_var = function(evar) {
  */
 Interpreter.prototype.inst_allocate = function() {
 	
-	console.log("Instruction: 'allocate'");
+	//console.log("Instruction: 'allocate'");
 	
 	var env = { vars: {} };
 	this.env.ce = env;
@@ -244,7 +244,7 @@ Interpreter.prototype.inst_put_struct = function(inst) {
 	var a = inst.get('a');
 	f.arity = a;
 	
-	var x = "x" + inst.get('x');
+	var x = "x" + inst.get('p');
 	
 	this.env.cv = x;
 	this.env.ce.vars[x] = f;
@@ -259,9 +259,16 @@ Interpreter.prototype.inst_put_struct = function(inst) {
  * 
  *   Inserts a 'term' in the structure being built.
  */
-Interpreter.prototype.inst_put_term = function() {
+Interpreter.prototype.inst_put_term = function(inst) {
 	
-	console.log("Instruction: 'put_term'");
+	var term = inst.get("p");
+	
+	//console.log("Instruction: 'put_term':", term);
+
+	var cv = this.env.cv;
+	var struct = this.env.ce.vars[cv];
+	
+	struct.push_arg(term);
 	
 };
 
@@ -274,7 +281,7 @@ Interpreter.prototype.inst_put_number = function(inst) {
 	
 	var num = inst.get("p");
 	
-	console.log("Instruction: 'put_number': ", num);
+	//console.log("Instruction: 'put_number': ", num);
 	
 	var cv = this.env.cv;
 	var struct = this.env.ce.vars[cv];
@@ -288,9 +295,16 @@ Interpreter.prototype.inst_put_number = function(inst) {
  * 
  *   Inserts a 'var' in the structure being built.
  */
-Interpreter.prototype.inst_put_var = function() {
+Interpreter.prototype.inst_put_var = function(inst) {
 	
-	console.log("Instruction: 'put_var'");
+	var vname = inst.get("p");
+	
+	//console.log("Instruction: 'put_var'");
+
+	var cv = this.env.cv;
+	var struct = this.env.ce.vars[cv];
+	
+	struct.push_arg(new Var(vname));
 	
 };
 

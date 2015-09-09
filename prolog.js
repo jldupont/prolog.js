@@ -741,10 +741,10 @@ Compiler.prototype.process_head = function(exp) {
 			//
 			
 			if (ctx.as_param) {
-				result.push(new Instruction("unif_var", {x:ctx.v}));
+				result.push(new Instruction("unif_var", {p:ctx.v}));
 				return;
 			} else {
-				result.push(new Instruction("get_struct", {f: ctx.n.name, a:ctx.n.args.length, x:ctx.v}));
+				result.push(new Instruction("get_struct", {f: ctx.n.name, a:ctx.n.args.length, p:ctx.v}));
 				return;
 				
 			};
@@ -753,7 +753,7 @@ Compiler.prototype.process_head = function(exp) {
 		
 		if (ctx.n instanceof Var) {
 			
-			result.push(new Instruction("unif_var", {x:ctx.n.name}));
+			result.push(new Instruction("unif_var", {p:ctx.n.name}));
 			return;
 		};
 		
@@ -970,10 +970,10 @@ Compiler.prototype.process_goal = function(exp) {
 	
 	v.process(function(ctx){
 		
-		var struct_ctx = { f: ctx.n.name, a:ctx.n.args.length , x: ctx.vc };
+		var struct_ctx = { f: ctx.n.name, a:ctx.n.args.length , p: ctx.vc };
 		
 		if (ctx.root) {
-			struct_ctx.x = 0;
+			struct_ctx.p = 0;
 		};
 		
 		results.push(new Instruction("put_struct", struct_ctx));
@@ -983,11 +983,11 @@ Compiler.prototype.process_goal = function(exp) {
 			var n = ctx.args[index];
 			
 			if (n instanceof Var) {
-				results.push(new Instruction("put_var", {x: n.name}));
+				results.push(new Instruction("put_var", {p: n.name}));
 			};
 
 			if (n instanceof Value) {
-				results.push(new Instruction("put_value", {x: n.name}));
+				results.push(new Instruction("put_value", {p: n.name}));
 			};
 			
 			if (n instanceof Token) {
@@ -1385,7 +1385,7 @@ Interpreter.prototype.get_env_var = function(evar) {
  */
 Interpreter.prototype.inst_allocate = function() {
 	
-	console.log("Instruction: 'allocate'");
+	//console.log("Instruction: 'allocate'");
 	
 	var env = { vars: {} };
 	this.env.ce = env;
@@ -1425,7 +1425,7 @@ Interpreter.prototype.inst_put_struct = function(inst) {
 	var a = inst.get('a');
 	f.arity = a;
 	
-	var x = "x" + inst.get('x');
+	var x = "x" + inst.get('p');
 	
 	this.env.cv = x;
 	this.env.ce.vars[x] = f;
@@ -1440,9 +1440,16 @@ Interpreter.prototype.inst_put_struct = function(inst) {
  * 
  *   Inserts a 'term' in the structure being built.
  */
-Interpreter.prototype.inst_put_term = function() {
+Interpreter.prototype.inst_put_term = function(inst) {
 	
-	console.log("Instruction: 'put_term'");
+	var term = inst.get("p");
+	
+	//console.log("Instruction: 'put_term':", term);
+
+	var cv = this.env.cv;
+	var struct = this.env.ce.vars[cv];
+	
+	struct.push_arg(term);
 	
 };
 
@@ -1455,7 +1462,7 @@ Interpreter.prototype.inst_put_number = function(inst) {
 	
 	var num = inst.get("p");
 	
-	console.log("Instruction: 'put_number': ", num);
+	//console.log("Instruction: 'put_number': ", num);
 	
 	var cv = this.env.cv;
 	var struct = this.env.ce.vars[cv];
@@ -1469,9 +1476,16 @@ Interpreter.prototype.inst_put_number = function(inst) {
  * 
  *   Inserts a 'var' in the structure being built.
  */
-Interpreter.prototype.inst_put_var = function() {
+Interpreter.prototype.inst_put_var = function(inst) {
 	
-	console.log("Instruction: 'put_var'");
+	var vname = inst.get("p");
+	
+	//console.log("Instruction: 'put_var'");
+
+	var cv = this.env.cv;
+	var struct = this.env.ce.vars[cv];
+	
+	struct.push_arg(new Var(vname));
 	
 };
 
@@ -2463,11 +2477,20 @@ Utils.compare_objects = function(expected, input, use_throw){
 	//
 	if (expected instanceof Array) {
 		
-		if (!(input instanceof Array))
+		if (!(input instanceof Array)) {
+			if (use_throw)
+				throw new Error("Expecting an array");
+			
 			return false;
+		};
+			
 		
-		if (input.length != expected.length)
+		if (input.length != expected.length) {
+			if (use_throw)
+				throw new Error("Expecting arrays of same arity");
 			return false;
+		};
+			
 		
 		for (var index = 0; index<expected.length; index++)
 			if (!Utils.compare_objects(expected[index], input[index], use_throw))
@@ -2542,8 +2565,15 @@ Utils.compare_objects = function(expected, input, use_throw){
 			var e = expected[key];
 			var i = input[key];
 
-			if (e === i)
+			if (e == i)
 				continue;
+			
+			if (!e || !i) {
+				if (use_throw)
+					throw new Error("Expected/Input got undefined: e="+JSON.stringify(e)+", i:"+JSON.stringify(i));
+				return false;
+			};
+				
 			
 			if (e.hasOwnProperty(key) !== i.hasOwnProperty(key)) {
 				if (use_throw)

@@ -116,10 +116,10 @@ Compiler.prototype.process_head = function(exp) {
 			//
 			
 			if (ctx.as_param) {
-				result.push(new Instruction("unif_var", {x:ctx.v}));
+				result.push(new Instruction("unif_var", {p:ctx.v}));
 				return;
 			} else {
-				result.push(new Instruction("get_struct", {f: ctx.n.name, a:ctx.n.args.length, x:ctx.v}));
+				result.push(new Instruction("get_struct", {f: ctx.n.name, a:ctx.n.args.length, p:ctx.v}));
 				return;
 				
 			};
@@ -128,7 +128,7 @@ Compiler.prototype.process_head = function(exp) {
 		
 		if (ctx.n instanceof Var) {
 			
-			result.push(new Instruction("unif_var", {x:ctx.n.name}));
+			result.push(new Instruction("unif_var", {p:ctx.n.name}));
 			return;
 		};
 		
@@ -345,10 +345,10 @@ Compiler.prototype.process_goal = function(exp) {
 	
 	v.process(function(ctx){
 		
-		var struct_ctx = { f: ctx.n.name, a:ctx.n.args.length , x: ctx.vc };
+		var struct_ctx = { f: ctx.n.name, a:ctx.n.args.length , p: ctx.vc };
 		
 		if (ctx.root) {
-			struct_ctx.x = 0;
+			struct_ctx.p = 0;
 		};
 		
 		results.push(new Instruction("put_struct", struct_ctx));
@@ -358,11 +358,11 @@ Compiler.prototype.process_goal = function(exp) {
 			var n = ctx.args[index];
 			
 			if (n instanceof Var) {
-				results.push(new Instruction("put_var", {x: n.name}));
+				results.push(new Instruction("put_var", {p: n.name}));
 			};
 
 			if (n instanceof Value) {
-				results.push(new Instruction("put_value", {x: n.name}));
+				results.push(new Instruction("put_value", {p: n.name}));
 			};
 			
 			if (n instanceof Token) {

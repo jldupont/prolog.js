@@ -120,19 +120,11 @@ it('Interpreter - basic - 0', function(){
 
 it('Interpreter - basic - 1', function(){
 	
-	var qtext = "q(666).";
+	var qtext = "q(666, a).";
+	
+	var expected = { vars: { x0: 'Functor(q/2,666,"a")' } };
+	
 	var qcode = compile_query(qtext);
-	
-	//console.log("Qcode: ", qcode);
-	
-	/*
-	 * { g0: 
-		   [ allocate    ,
-		     put_struct   ( q/1, x(0) ),
-		     put_var      ( x("A") ),
-		     call        ,
-		     deallocate   ] }
-	 */
 	
 	var db = {};
 	var builtins = {};
@@ -144,6 +136,39 @@ it('Interpreter - basic - 1', function(){
 	it.step(); // allocate
 	it.step(); // put_struct
 	it.step(); // put_number
+	it.step(); // put_term
 	
-	console.log( it.get_env_var("ce") );
+	var ce_vars = it.get_env_var("ce");
+	
+	//console.log( it.get_env_var("ce") );
+	
+	var result = Utils.compare_objects(expected, ce_vars);
+	should.equal(result, true, "ce vars: " + util.inspect(ce_vars));
+});
+
+it('Interpreter - basic - 2', function(){
+	
+	var qtext = "q(A).";
+	
+	var expected = { vars: { x0: 'Functor(q/1,Var(A))' } };
+	
+	var qcode = compile_query(qtext);
+	
+	var db = {};
+	var builtins = {};
+	
+	var it = new Interpreter(db, builtins);
+	
+	it.set_question(qcode);
+	
+	it.step(); // allocate
+	it.step(); // put_struct
+	it.step(); // put_var
+	
+	var ce_vars = it.get_env_var("ce");
+	
+	//console.log( it.get_env_var("ce") );
+	
+	var result = Utils.compare_objects(expected, ce_vars);
+	should.equal(result, true, "ce vars: " + util.inspect(ce_vars));
 });

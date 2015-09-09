@@ -24,11 +24,20 @@ Utils.compare_objects = function(expected, input, use_throw){
 	//
 	if (expected instanceof Array) {
 		
-		if (!(input instanceof Array))
+		if (!(input instanceof Array)) {
+			if (use_throw)
+				throw new Error("Expecting an array");
+			
 			return false;
+		};
+			
 		
-		if (input.length != expected.length)
+		if (input.length != expected.length) {
+			if (use_throw)
+				throw new Error("Expecting arrays of same arity");
 			return false;
+		};
+			
 		
 		for (var index = 0; index<expected.length; index++)
 			if (!Utils.compare_objects(expected[index], input[index], use_throw))
@@ -103,8 +112,15 @@ Utils.compare_objects = function(expected, input, use_throw){
 			var e = expected[key];
 			var i = input[key];
 
-			if (e === i)
+			if (e == i)
 				continue;
+			
+			if (!e || !i) {
+				if (use_throw)
+					throw new Error("Expected/Input got undefined: e="+JSON.stringify(e)+", i:"+JSON.stringify(i));
+				return false;
+			};
+				
 			
 			if (e.hasOwnProperty(key) !== i.hasOwnProperty(key)) {
 				if (use_throw)
