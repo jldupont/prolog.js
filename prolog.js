@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-09-08 */
+/*! prolog.js - v0.0.1 - 2015-09-09 */
 
 /**
  *  Token
@@ -1078,6 +1078,16 @@ Database.prototype.insert = function(root_node){
 	return functor_signature;
 };
 
+/**
+ *  Retrieve clause(s) from looking up
+ *   an input Functor node 
+ */
+Database.prototype.get = function(functor_node) {
+	
+	var functor_signature = this.al.compute_signature(functor_node);
+	return this.db[functor_signature] || null;
+	
+};
 
 /**
  * Define a Functor in the database
@@ -1561,9 +1571,16 @@ Interpreter.prototype.inst_try_else = function() {
  *    in the current environment.
  *   
  */
-Interpreter.prototype.inst_call = function() {
+Interpreter.prototype.inst_call = function(inst) {
 	
 	console.log("Instruction: 'call'");
+	
+	// Get functor name & arity from the 
+	//  environment variable x0
+	var x0 = this.env.ce.vars['x0'];
+	
+	// Consult the database
+	
 	
 };
 
@@ -1624,7 +1641,7 @@ Interpreter.prototype.inst_get_term = function(inst) {
 	
 	var p = inst.get('p');
 	
-	console.log("Instruction: 'get_term': ", p);
+	//console.log("Instruction: 'get_term': ", p);
 	
 	var value = this.env.cv.get_arg( this.env.cvi++ );	
 	

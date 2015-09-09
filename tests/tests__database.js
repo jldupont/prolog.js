@@ -112,3 +112,23 @@ it('Database - insert 2', function(){
 	should.equal(result[1].args[0] instanceof Functor, true);
 	should.equal(result[1].args[0].name,'f1');
 });
+
+it('Database - lookup - 1', function(){
+
+	var db = new Database(DbAccess);
+	
+	var sig = db.insert(new Functor("rule", new Functor('f1',1,2,3)));
+
+	// still the same signature
+	var result = db.get(new Functor("f1", 4,5,6));
+	
+	console.log(result);
+	
+	should.equal(result[0] instanceof Functor, true);
+	should.equal(result[0].name, 'rule');
+	should.equal(result[0].args.length, 1);
+	
+	should.equal(result[0].args[0] instanceof Functor, true);
+	should.equal(result[0].args[0].name,'f1');
+	
+});

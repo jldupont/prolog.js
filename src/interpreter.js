@@ -365,9 +365,16 @@ Interpreter.prototype.inst_try_else = function() {
  *    in the current environment.
  *   
  */
-Interpreter.prototype.inst_call = function() {
+Interpreter.prototype.inst_call = function(inst) {
 	
 	console.log("Instruction: 'call'");
+	
+	// Get functor name & arity from the 
+	//  environment variable x0
+	var x0 = this.env.ce.vars['x0'];
+	
+	// Consult the database
+	
 	
 };
 
@@ -428,7 +435,7 @@ Interpreter.prototype.inst_get_term = function(inst) {
 	
 	var p = inst.get('p');
 	
-	console.log("Instruction: 'get_term': ", p);
+	//console.log("Instruction: 'get_term': ", p);
 	
 	var value = this.env.cv.get_arg( this.env.cvi++ );	
 	
