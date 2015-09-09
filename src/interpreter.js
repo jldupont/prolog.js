@@ -91,7 +91,12 @@ Interpreter.prototype.set_question = function(question_code){
 		 *  Variable used in the current structure 
 		 */
 		,cv: null
+		,cvi: 0
 		
+		/*
+		 *  Current unification status
+		 */
+		,cu: null
 	};
 	
 	try {
@@ -318,8 +323,6 @@ Interpreter.prototype.inst_put_var = function(inst) {
  */
 Interpreter.prototype.inst_put_value = function(inst) {
 	
-	
-	
 	var vname = "x" + inst.get("p");
 	
 	var value = this.env.ce.vars[vname];
@@ -376,10 +379,41 @@ Interpreter.prototype.inst_call = function() {
  *    matched in the environment.
  * 
  */
-Interpreter.prototype.inst_get_struct = function() {
+Interpreter.prototype.inst_get_struct = function(inst) {
 	
-	console.log("Instruction: 'get_struct'");
+	//console.log("Instruction: 'get_struct'");
 	
+	var fname  = inst.get('f');
+	var farity = inst.get('a');
+	var x      = "x" + inst.get('p');
+	
+	// The current value
+	//
+	// Assume this will fail to be on the safe side
+	//
+	this.env.cv = null;
+	this.env.cu = false;
+	
+	// Fetch the value from the target input variable
+	var maybe_struct = this.env.ce.vars[x];
+	
+	if (!(maybe_struct instanceof Functor)) {
+		// Not a structure ...
+		return;
+	};
+	
+	if (maybe_struct.get_name() != fname) {
+		return;	
+	};
+
+	if (maybe_struct.get_arity() != +farity ) {
+		return;
+	};
+	
+	// Everything checks out
+	this.env.cv = maybe_struct;
+	this.env.cvi = 0;
+	this.env.cu = true;
 };
 
 
@@ -390,10 +424,15 @@ Interpreter.prototype.inst_get_struct = function() {
  *    matched in the environment.
  * 
  */
-Interpreter.prototype.inst_get_term = function() {
+Interpreter.prototype.inst_get_term = function(inst) {
 	
-	console.log("Instruction: 'get_term'");
+	var p = inst.get('p');
 	
+	console.log("Instruction: 'get_term': ", p);
+	
+	var value = this.env.cv.get_arg( this.env.cvi++ );	
+	
+	this.env.cu = ( p == value );
 };
 
 

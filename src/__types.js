@@ -414,6 +414,14 @@ function Functor(name, maybe_arguments_list) {
 	this.arity = null;
 };
 
+Functor.prototype.get_arity = function() {
+	return this.arity || this.args.length;
+};
+
+Functor.prototype.get_name = function(){
+	return this.name;
+};
+
 Functor.inspect_short_version = false;
 Functor.inspect_quoted = false;
 
@@ -473,6 +481,13 @@ Functor.prototype.get_args = function(){
 Functor.prototype.push_arg = function(arg) {
 	this.args.push(arg);
 };
+
+Functor.prototype.get_arg = function(index) {
+	this.args[index];
+};
+
+
+
 
 function Var(name) {
 	this.prec = 0;
