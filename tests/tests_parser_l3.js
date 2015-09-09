@@ -163,7 +163,19 @@ it('ParserL3 - complex - 6', function(){
 	var text = "sibling(X, Y) :- parent_child(Z, X), parent_child(Z, Y).";
 	var expected = [['Functor(rule/2,Functor(sibling/2,Var(X),Var(Y)),Functor(conj/2,Functor(parent_child/2,Var(Z),Var(X)),Functor(parent_child/2,Var(Z),Var(Y))))']];
 	
-	process(text, expected);});
+	process(text, expected);}
+);
+
+it('ParserL3 - complex - 7', function(){
+	
+	var text = "f1(a) ;f2(b) ; f3(c) ; f4(d).";
+	var expected = [[
+'Functor(disj/2,Functor(disj/2,Functor(disj/2,Functor(f1/1,Token(term,a)),Functor(f2/1,Token(term,b))),Functor(f3/1,Token(term,c))),Functor(f4/1,Token(term,d)))'	                 
+	                 ]];
+	
+	process(text, expected);}
+);
+
 
 it('ParserL3 - expression - 1', function(){
 	

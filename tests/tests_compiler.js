@@ -465,6 +465,83 @@ it('Compiler - body - complex - 1', function(){
 	process_body(text, expected);
 });
 
+it('Compiler - body - complex - 2', function(){
+	
+	var text = "f1(a), f2(b) ; f3(c), f4(d).";
+	var expected = [
+
+		{ 
+		 g4:   [ 
+		        'allocate',
+		        'put_struct   ( f3/1, p(0) )', 
+		        'put_term     ( p("c") )',
+		        'call',
+		        'deallocate',
+		        'allocate',
+		        'put_struct   ( f4/1, p(0) )',
+		        'put_term     ( p("d") )',
+		        'call',		        
+		        'deallocate'
+		        ],
+		  g0:  [ 
+		         'try_else     ( p("g4") )',
+		         'allocate',
+			     'put_struct   ( f1/1, p(0) )',
+			     'put_term     ( p("a") )',
+			     'call',
+			     'deallocate',
+			     'allocate',
+			     'put_struct   ( f2/1, p(0) )',
+			     'put_term     ( p("b") )',
+			     'call',
+			     'deallocate'
+		     ] 
+		}	                
+	                
+	];
+	
+	process_body(text, expected);
+});
+
+it('Compiler - body - complex - 3', function(){
+	
+	var text = "f1(a) ; f2(b) ; f3(c) ; f4(d).";
+	var expected = [
+
+		{   g4: 
+			   [ 'allocate',
+			     'put_struct   ( f2/1, p(0) )',
+			     'put_term     ( p("b") )',
+			     'call'        ,
+			     'deallocate'   ],
+            g5: 
+			   [ 'allocate'    ,
+			     'put_struct   ( f3/1, p(0) )',
+			     'put_term     ( p("c") )',
+			     'call'        ,
+			     'deallocate'   ],
+            g6:
+			   [ 'allocate'    ,
+			     'put_struct   ( f4/1, p(0) )',
+			     'put_term     ( p("d") )',
+			     'call'        ,
+			     'deallocate'   ],
+			g0: 
+			   [ 'try_else     ( p("g6") )',
+			     'try_else     ( p("g5") )',
+			     'try_else     ( p("g4") )',
+			     'allocate'    ,
+			     'put_struct   ( f1/1, p(0) )',
+			     'put_term     ( p("a") )',
+			     'call'        ,
+			     'deallocate'   ] 
+		}	                
+	                
+	];
+	
+	process_body(text, expected);
+});
+
 //==================================================== RULE
 //
 
