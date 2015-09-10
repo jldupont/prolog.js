@@ -49,7 +49,7 @@ Interpreter.prototype.set_question = function(question_code){
 	
 	this.db['.q.'] = question_code;
 	
-	this.stack = [];
+	this.stack = [{is_question: true, vars: {}}];
 	
 	// Initialize top of stack
 	//  to point to question in the database
@@ -86,6 +86,7 @@ Interpreter.prototype.set_question = function(question_code){
 		 *  Current target env frame on the stack
 		 */
 		,ce: {}
+		,cei: 0  // current index on stack
 		
 		/*
 		 *  Variable used in the current structure 
@@ -214,6 +215,7 @@ Interpreter.prototype.inst_allocate = function() {
 	var env = { vars: {} };
 	this.env.ce = env;
 	this.stack.push(env);
+	this.env.cei++;
 	
 };
 
@@ -228,7 +230,7 @@ Interpreter.prototype.inst_allocate = function() {
  */
 Interpreter.prototype.inst_deallocate = function() {
 	
-	console.log("Instruction: 'deallocate'");
+	//console.log("Instruction: 'deallocate'");
 	
 };
 

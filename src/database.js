@@ -51,6 +51,15 @@ Database.prototype.insert = function(root_node){
 	return functor_signature;
 };
 
+Database.prototype.insert_code = function(functor, arity, code) {
+	
+	var functor_signature = this.al.compute_signature([functor, arity]);
+
+	var maybe_entries = this.db[functor_signature] || [];
+	maybe_entries.push(code);
+	
+};
+
 /**
  *  Retrieve clause(s) from looking up
  *   an input Functor node 

@@ -1078,6 +1078,15 @@ Database.prototype.insert = function(root_node){
 	return functor_signature;
 };
 
+Database.prototype.insert_code = function(functor, arity, code) {
+	
+	var functor_signature = this.al.compute_signature([functor, arity]);
+
+	var maybe_entries = this.db[functor_signature] || [];
+	maybe_entries.push(code);
+	
+};
+
 /**
  *  Retrieve clause(s) from looking up
  *   an input Functor node 
@@ -1131,6 +1140,13 @@ function DbAccess() {
  * @raise Error
  */
 DbAccess.compute_signature = function(input) {
+	
+	if (input instanceof Array) {
+		var fname = input[0];
+		var arity = input[1];
+		
+		return fname+"/"+arity;
+	};
 	
 	var sig = null;
 	
@@ -1255,7 +1271,7 @@ Interpreter.prototype.set_question = function(question_code){
 	
 	this.db['.q.'] = question_code;
 	
-	this.stack = [];
+	this.stack = [{is_question: true, vars: {}}];
 	
 	// Initialize top of stack
 	//  to point to question in the database
@@ -1292,6 +1308,7 @@ Interpreter.prototype.set_question = function(question_code){
 		 *  Current target env frame on the stack
 		 */
 		,ce: {}
+		,cei: 0  // current index on stack
 		
 		/*
 		 *  Variable used in the current structure 
@@ -1420,6 +1437,7 @@ Interpreter.prototype.inst_allocate = function() {
 	var env = { vars: {} };
 	this.env.ce = env;
 	this.stack.push(env);
+	this.env.cei++;
 	
 };
 
@@ -1434,7 +1452,7 @@ Interpreter.prototype.inst_allocate = function() {
  */
 Interpreter.prototype.inst_deallocate = function() {
 	
-	console.log("Instruction: 'deallocate'");
+	//console.log("Instruction: 'deallocate'");
 	
 };
 

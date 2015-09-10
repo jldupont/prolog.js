@@ -16,6 +16,8 @@ var OpNode = pr.OpNode;
 var Functor = pr.Functor;
 var Op = pr.Op;
 var Utils = pr.Utils;
+var Database = pr.Database;
+var DbAccess = pr.DbAccess;
 
 var ParserL1 = pr.ParserL1;
 var ParserL2 = pr.ParserL2;
@@ -59,6 +61,28 @@ var compile_rule = function(input_text) {
 		var c = new Compiler();
 		
 		var result = c.process_rule_or_fact(expression);
+		
+		results.push(result);
+	};
+	
+	return results;
+};
+
+var compile_fact = function(input_text) {
+	
+	var expressions = setup(input_text);
+	
+	var results = [];
+	
+	//console.log(expressions);
+	
+	for (var index = 0; index<expressions.length; index++) {
+		
+		var expression = expressions[index][0];
+		
+		var c = new Compiler();
+		
+		var result = c.process_head(expression);
 		
 		results.push(result);
 	};
@@ -214,4 +238,63 @@ it('Interpreter - basic - 3', function(){
 	
 	var result = Utils.compare_objects(expected, ce_vars);
 	should.equal(result, true, "ce vars: " + util.inspect(ce_vars));
+});
+
+
+it('Interpreter - complex - 1', function(){
+	
+	var db = new Database(DbAccess);
+	
+	// SETUP
+	var fact = "f1(666).";
+	
+	/*
+	 get_struct   ( f1/1, p(0) ), 
+	 get_number   ( p(666) )
+	 */
+	
+	var fcode = compile_fact(fact);
+	
+	//console.log(fcode);
+	
+	db.insert_code(["f1", 1],fcode);
+	
+	// QUERY
+	
+	var qtext = "f1(A).";
+	
+	var qcode = compile_query(qtext);
+	
+	//console.log(qcode);
+	
+	/*
+		{ g0: 
+		   [ allocate    ,
+		     put_struct   ( f1/1, p(0) ),
+		     put_var      ( p("A") ),
+		     call        ,
+		     deallocate   ] }
+	 */
+	
+	var builtins = {};
+	
+	var it = new Interpreter(db, builtins);
+	
+	it.set_question(qcode);
+	
+	it.step(); // allocate
+	it.step(); // put_struct
+	it.step(); // put_var
+	it.step(); // call
+	
+	//it.step(); // put_value
+	
+	console.log("it stack: ", it.stack);
+	
+	var ce_vars = it.get_env_var("ce");
+	
+	console.log( it.get_env_var("ce") );
+	
+	//var result = Utils.compare_objects(expected, ce_vars);
+	//should.equal(result, true, "ce vars: " + util.inspect(ce_vars));
 });

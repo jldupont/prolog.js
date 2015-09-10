@@ -36,6 +36,13 @@ function DbAccess() {
  */
 DbAccess.compute_signature = function(input) {
 	
+	if (input instanceof Array) {
+		var fname = input[0];
+		var arity = input[1];
+		
+		return fname+"/"+arity;
+	};
+	
 	var sig = null;
 	
 	try {
