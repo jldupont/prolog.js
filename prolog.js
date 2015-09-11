@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-09-09 */
+/*! prolog.js - v0.0.1 - 2015-09-11 */
 
 /**
  *  Token
@@ -1271,13 +1271,11 @@ Interpreter.prototype.set_question = function(question_code){
 	
 	this.db['.q.'] = question_code;
 	
-	this.stack = [{is_question: true, vars: {}}];
-	
-	// Initialize top of stack
-	//  to point to question in the database
-	//
-	this.env = {
-		
+	/*
+	 *  Interpreter Context
+	 */
+	this.ctx = {
+
 		// The current instruction pointer
 		//
 		p: { 
@@ -1289,7 +1287,38 @@ Interpreter.prototype.set_question = function(question_code){
 		// The current code inside functor:label pointed to by 'p'
 		//
 		,cc: null
+
+		/*
+		 *  Variable used in the current structure 
+		 */
+		,cv: null
+		,cvi: 0
 		
+		/*
+		 *  Current unification status
+		 */
+		,cu: null
+		
+		/*  Top of stack environment
+		 *   i.e. the latest 'allocated'
+		 */
+		,tse: null
+		
+		/*  Current Environment
+		 * 
+		 */
+		,cse: null
+		
+	};
+	
+	this.stack = [];
+	
+	// Initialize top of stack
+	//  to point to question in the database
+	//
+	qenv = {
+
+		qenv: true
 		
 		// The current variable in the target choice point
 		//
@@ -1310,20 +1339,18 @@ Interpreter.prototype.set_question = function(question_code){
 		,ce: {}
 		,cei: 0  // current index on stack
 		
-		/*
-		 *  Variable used in the current structure 
-		 */
-		,cv: null
-		,cvi: 0
 		
-		/*
-		 *  Current unification status
-		 */
-		,cu: null
 	};
 	
+	// The question's environment
+	//
+	this.stack.push(qenv);
+	
+	this.ctx.tse = qenv;
+	this.ctx.cse = qenv;
+	
 	try {
-		this.env.cc = this.db['.q.']['g0'];	
+		this.ctx.cc = this.db['.q.']['g0'];	
 	} catch (e){
 		throw new ErrorExpectingGoal("Expecting at least 1 goal in question");
 	};
@@ -1375,11 +1402,11 @@ Interpreter.prototype.fetch_next_instruction = function(){
 	
 	// Are we at the end of `head` ?
 	
-	if (this.env.p.f == 'head') {
+	if (this.ctx.p.f == 'head') {
 		
 		// update pointer to 1st goal then
-		this.env.p.f = 'g0';
-		this.env.p.i = 0;
+		this.ctx.p.f = 'g0';
+		this.ctx.p.i = 0;
 		this._fetch_code();
 		
 	} else {
@@ -1395,24 +1422,26 @@ Interpreter.prototype.fetch_next_instruction = function(){
 
 Interpreter.prototype._fetch = function(){
 	
-	// Just try fetching next instruction from env.cc
-	var inst = this.env.cc[this.env.p.i];
+	// Just try fetching next instruction
+	var inst = this.ctx.cc[this.ctx.p.i];
 	
-	this.env.p.i++;
+	this.ctx.p.i++;
 	
 	return inst || null;
 };
 
 Interpreter.prototype._fetch_code = function(){
 	
-	var cc = this.db[this.env.p.f];
-	this.env.p.i = 0;
-	this.env.cc = cc;
+	var cc = this.db[this.ctx.p.f];
+	this.ctx.p.i = 0;
+	this.ctx.cc = cc;
 };
 
-Interpreter.prototype.get_env_var = function(evar) {
-	return this.env[evar];
+
+Interpreter.prototype.get_current_ctx_var = function(evar) {
+	return this.ctx[evar];
 };
+
 
 //
 //
@@ -1435,10 +1464,8 @@ Interpreter.prototype.inst_allocate = function() {
 	//console.log("Instruction: 'allocate'");
 	
 	var env = { vars: {} };
-	this.env.ce = env;
+	this.ctx.tse = env;
 	this.stack.push(env);
-	this.env.cei++;
-	
 };
 
 /**
@@ -1475,8 +1502,8 @@ Interpreter.prototype.inst_put_struct = function(inst) {
 	
 	var x = "x" + inst.get('p');
 	
-	this.env.cv = x;
-	this.env.ce.vars[x] = f;
+	this.ctx.cv = x;
+	this.ctx.tse.vars[x] = f;
 
 	//console.log("Instruction: 'put_struct': "+inst.get('f')+"/"+a+", "+x);
 	//console.log("Env: ", this.env);
@@ -1494,8 +1521,8 @@ Interpreter.prototype.inst_put_term = function(inst) {
 	
 	//console.log("Instruction: 'put_term':", term);
 
-	var cv = this.env.cv;
-	var struct = this.env.ce.vars[cv];
+	var cv = this.ctx.cv;
+	var struct = this.ctx.tse.vars[cv];
 	
 	struct.push_arg(term);
 	
@@ -1512,8 +1539,8 @@ Interpreter.prototype.inst_put_number = function(inst) {
 	
 	//console.log("Instruction: 'put_number': ", num);
 	
-	var cv = this.env.cv;
-	var struct = this.env.ce.vars[cv];
+	var cv = this.ctx.cv;
+	var struct = this.ctx.tse.vars[cv];
 	
 	struct.push_arg(num);
 };
@@ -1530,8 +1557,8 @@ Interpreter.prototype.inst_put_var = function(inst) {
 	
 	//console.log("Instruction: 'put_var'");
 
-	var cv = this.env.cv;
-	var struct = this.env.ce.vars[cv];
+	var cv = this.ctx.cv;
+	var struct = this.ctx.tse.vars[cv];
 	
 	struct.push_arg(new Var(vname));
 	
@@ -1549,13 +1576,13 @@ Interpreter.prototype.inst_put_value = function(inst) {
 	
 	var vname = "x" + inst.get("p");
 	
-	var value = this.env.ce.vars[vname];
+	var value = this.ctx.tse.vars[vname];
 	
 	//console.log("Instruction: 'put_value': ", value);
 	
 	// The current structure being worked on
-	var cv = this.env.cv;
-	var struct = this.env.ce.vars[cv];
+	var cv = this.ctx.cv;
+	var struct = this.ctx.tse.vars[cv];
 
 	struct.push_arg(value);
 };
@@ -1595,7 +1622,7 @@ Interpreter.prototype.inst_call = function(inst) {
 	
 	// Get functor name & arity from the 
 	//  environment variable x0
-	var x0 = this.env.ce.vars['x0'];
+	var x0 = this.ctx.tse.vars['x0'];
 	
 	// Consult the database
 	
@@ -1622,11 +1649,11 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	//
 	// Assume this will fail to be on the safe side
 	//
-	this.env.cv = null;
-	this.env.cu = false;
+	this.ctx.cv = null;
+	this.ctx.cu = false;
 	
 	// Fetch the value from the target input variable
-	var maybe_struct = this.env.ce.vars[x];
+	var maybe_struct = this.ctx.tse.vars[x];
 	
 	if (!(maybe_struct instanceof Functor)) {
 		// Not a structure ...
@@ -1642,9 +1669,10 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	};
 	
 	// Everything checks out
-	this.env.cv = maybe_struct;
-	this.env.cvi = 0;
-	this.env.cu = true;
+	this.ctx.cvi = 0;
+	this.ctx.cv = maybe_struct;
+	this.ctx.cu = true;
+	
 };
 
 
@@ -1661,9 +1689,9 @@ Interpreter.prototype.inst_get_term = function(inst) {
 	
 	//console.log("Instruction: 'get_term': ", p);
 	
-	var value = this.env.cv.get_arg( this.env.cvi++ );	
+	var value = this.ctx.cv.get_arg( this.ctx.cvi++ );	
 	
-	this.env.cu = ( p == value );
+	this.ctx.cu = ( p == value );
 };
 
 

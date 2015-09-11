@@ -162,12 +162,12 @@ it('Interpreter - basic - 1', function(){
 	it.step(); // put_number
 	it.step(); // put_term
 	
-	var ce_vars = it.get_env_var("ce");
+	var tse_vars = it.get_current_ctx_var("tse");
 	
 	//console.log( it.get_env_var("ce") );
 	
-	var result = Utils.compare_objects(expected, ce_vars);
-	should.equal(result, true, "ce vars: " + util.inspect(ce_vars));
+	var result = Utils.compare_objects(expected, tse_vars);
+	should.equal(result, true, "ce vars: " + util.inspect(tse_vars));
 });
 
 it('Interpreter - basic - 2', function(){
@@ -189,12 +189,12 @@ it('Interpreter - basic - 2', function(){
 	it.step(); // put_struct
 	it.step(); // put_var
 	
-	var ce_vars = it.get_env_var("ce");
+	var tse_vars = it.get_current_ctx_var("tse");
 	
 	//console.log( it.get_env_var("ce") );
 	
-	var result = Utils.compare_objects(expected, ce_vars);
-	should.equal(result, true, "ce vars: " + util.inspect(ce_vars));
+	var result = Utils.compare_objects(expected, tse_vars);
+	should.equal(result, true, "ce vars: " + util.inspect(tse_vars));
 });
 
 it('Interpreter - basic - 3', function(){
@@ -232,12 +232,12 @@ it('Interpreter - basic - 3', function(){
 	it.step(); // put_value
 	
 	
-	var ce_vars = it.get_env_var("ce");
+	var tse_vars = it.get_current_ctx_var("tse");
 	
 	//console.log( it.get_env_var("ce") );
 	
-	var result = Utils.compare_objects(expected, ce_vars);
-	should.equal(result, true, "ce vars: " + util.inspect(ce_vars));
+	var result = Utils.compare_objects(expected, tse_vars);
+	should.equal(result, true, "ce vars: " + util.inspect(tse_vars));
 });
 
 
@@ -291,9 +291,9 @@ it('Interpreter - complex - 1', function(){
 	
 	console.log("it stack: ", it.stack);
 	
-	var ce_vars = it.get_env_var("ce");
+	var tse_vars = it.get_current_ctx_var("tse");
 	
-	console.log( it.get_env_var("ce") );
+	console.log( tse_vars );
 	
 	//var result = Utils.compare_objects(expected, ce_vars);
 	//should.equal(result, true, "ce vars: " + util.inspect(ce_vars));
