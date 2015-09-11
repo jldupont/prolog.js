@@ -46,8 +46,10 @@ Interpreter.prototype.set_question = function(question_code){
 
 	// Enter the `question` in the database
 	//  as to only have 1 location to work on from
-	
-	this.db['.q.'] = question_code;
+	if (!(question_code instanceof Array))
+		this.db['.q.'] = [question_code];
+	else
+		this.db['.q.'] = question_code;
 	
 	/*
 	 *  Interpreter Context
@@ -91,9 +93,12 @@ Interpreter.prototype.set_question = function(question_code){
 	
 	this.stack = [];
 	
-	// Initialize top of stack
-	//  to point to question in the database
-	//
+	/*   Initialize top of stack
+	 *    to point to question in the database
+	 *    
+	 *   The definitions contained herein
+	 *    apply to all environment stack frames.
+	 */
 	qenv = {
 
 		qenv: true
@@ -111,14 +116,14 @@ Interpreter.prototype.set_question = function(question_code){
 		 */
 		,cp: null
 		
-		/*
-		 *  Current target env frame on the stack
+		
+		/* Clause Index
+		 * 
+		 * Which clause is being tried
 		 */
-		,ce: {}
-		,cei: 0  // current index on stack
+		,ci: 0
 		
-		
-	};
+	};//
 	
 	// The question's environment
 	//
@@ -128,9 +133,9 @@ Interpreter.prototype.set_question = function(question_code){
 	this.ctx.cse = qenv;
 	
 	try {
-		this.ctx.cc = this.db['.q.']['g0'];	
+		this.ctx.cc = this.db['.q.'][0]['g0'];	
 	} catch (e){
-		throw new ErrorExpectingGoal("Expecting at least 1 goal in question");
+		throw new ErrorExpectingGoal("Expecting at least 1 goal in question: "+e);
 	};
 
 };
@@ -226,6 +231,49 @@ Interpreter.prototype.get_current_ctx_var = function(evar) {
 // ======================================================================== INSTRUCTIONS
 //
 //
+
+/**
+ *   Instruction "call"
+ * 
+ *   Executes the Functor pointed to by $x0
+ *    in the target environment.
+ *    
+ *   The Continuation Point (CP) will be saved
+ *    in the current environment.
+ *   
+ */
+Interpreter.prototype.inst_call = function(inst) {
+	
+	console.log("Instruction: 'call'");
+	
+	// I know it's pessimistic
+	this.ctx.cu = false
+	
+	// Get functor name & arity from the 
+	//  environment variable x0
+	var x0 = this.ctx.tse.vars['x0'];
+	
+	var fname = x0.name;
+	var arity = x0.args.length;
+	
+	// Clause Index
+	var ci = this.ctx.tse.ci || 0;
+	
+	//console.log(fname, arity);
+	
+	// Consult the database
+	var code_clauses = this.db.get_code(fname, arity);
+	
+	var code_for_clause = code_clauses[ci];
+	
+	// Reached end of clause list ?
+	//  No more choice point + fail
+	if (!code_for_clause) {
+		
+		return;
+	};
+	
+}; // CALL
 
 
 
@@ -384,28 +432,6 @@ Interpreter.prototype.inst_try_else = function() {
 };
 
 
-/**
- *   Instruction "call"
- * 
- *   Executes the Functor pointed to by $x0
- *    in the target environment.
- *    
- *   The Continuation Point (CP) will be saved
- *    in the current environment.
- *   
- */
-Interpreter.prototype.inst_call = function(inst) {
-	
-	console.log("Instruction: 'call'");
-	
-	// Get functor name & arity from the 
-	//  environment variable x0
-	var x0 = this.ctx.tse.vars['x0'];
-	
-	// Consult the database
-	
-	
-};
 
 /**
  *   Instruction "get_struct" $f, $a, $x
