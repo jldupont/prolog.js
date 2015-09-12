@@ -43,7 +43,11 @@ Compiler.prototype.process_rule_or_fact = function(exp) {
 	if (exp.name == 'rule')
 		return this.process_rule(exp);
 
-	return this.process_head(exp);
+	var result = {
+		'head': this.process_head(exp)
+	};
+	
+	return result;
 };
 
 /**

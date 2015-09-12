@@ -58,6 +58,7 @@ Database.prototype.insert_code = function(functor, arity, code) {
 	var maybe_entries = this.db[functor_signature] || [];
 	maybe_entries.push(code);
 	
+	this.db[functor_signature] = maybe_entries;
 };
 
 Database.prototype.get_code = function(functor, arity) {

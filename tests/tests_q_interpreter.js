@@ -104,6 +104,20 @@ var compile_query = function(input_text) {
 	
 };
 
+var compile_rule_or_fact = function(input_text) {
+	
+	var expressions = setup(input_text);
+	
+	//console.log("Expressions: ", expressions);
+	
+	var c = new Compiler();
+	
+	var result = c.process_rule_or_fact(expressions[0][0]);
+		
+	return result;
+	
+};
+
 it('Interpreter - basic - 0', function(){
 	
 	var qtext = "q(A).";
@@ -249,15 +263,17 @@ it('Interpreter - complex - 1', function(){
 	var fact = "f1(666).";
 	
 	/*
-	 get_struct   ( f1/1, p(0) ), 
-	 get_number   ( p(666) )
+	 head: { [
+	 	get_struct   ( f1/1, p(0) ), 
+	 	get_number   ( p(666) )
+	 	]}
 	 */
 	
-	var fcode = compile_fact(fact);
+	var fcode = compile_rule_or_fact(fact);
 	
-	//console.log(fcode);
+	//console.log("Fcode:", fcode);
 	
-	db.insert_code(["f1", 1],fcode);
+	db.insert_code("f1", 1, fcode);
 	
 	// QUERY
 	
@@ -265,7 +281,7 @@ it('Interpreter - complex - 1', function(){
 	
 	var qcode = compile_query(qtext);
 	
-	//console.log(qcode);
+	//console.log(db.db);
 	
 	/*
 		{ g0: 
@@ -287,13 +303,18 @@ it('Interpreter - complex - 1', function(){
 	it.step(); // put_var
 	it.step(); // call
 	
+	// In f1 fact
+	it.step(); //
+	it.step(); // 
+	
+	
 	//it.step(); // put_value
 	
-	console.log("it stack: ", it.stack);
+	console.log("it ctx: ", it.ctx);
 	
 	var tse_vars = it.get_current_ctx_var("tse");
 	
-	console.log( tse_vars );
+	//console.log( tse_vars );
 	
 	//var result = Utils.compare_objects(expected, ce_vars);
 	//should.equal(result, true, "ce vars: " + util.inspect(ce_vars));

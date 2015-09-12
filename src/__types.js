@@ -589,10 +589,17 @@ Instruction.prototype.inspect = function(){
 
 // ============================================================ Errors
 
-function ErrorExpectingFunctor(msg) {
+function ErrorExpectingFunctor(msg, _args) {
 	this.message = msg;
+	this.args = args_;
 };
 ErrorExpectingFunctor.prototype = Error.prototype;
+
+function ErrorFunctorNotFound(msg, _args) {
+	this.message = msg;
+	this.args = args_;
+};
+ErrorFunctorNotFound.prototype = Error.prototype;
 
 function ErrorExpectingGoal(msg) {
 	this.message = msg;
@@ -639,4 +646,5 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorExpectingGoal = ErrorExpectingGoal;
 	module.exports.ErrorNoMoreInstruction = ErrorNoMoreInstruction;
 	module.exports.ErrorInvalidInstruction = ErrorInvalidInstruction;
+	module.exports.ErrorFunctorNotFound = ErrorFunctorNotFound;
 };

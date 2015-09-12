@@ -578,11 +578,12 @@ it('Compiler - rule/fact - basic - 0', function(){
 	var text = "likes(jld, chocolat).";
 	var expected = [
 
-		[ 
+		{head: [ 
+		 
 		  'get_struct   ( likes/2, p(0) )',
 		  'get_term     ( p("jld") )',
 		  'get_term     ( p("chocolat") )' 
-		  ]	                
+		  ]}             
 	];
 	
 	process(text, expected);

@@ -583,10 +583,17 @@ Instruction.prototype.inspect = function(){
 
 // ============================================================ Errors
 
-function ErrorExpectingFunctor(msg) {
+function ErrorExpectingFunctor(msg, _args) {
 	this.message = msg;
+	this.args = args_;
 };
 ErrorExpectingFunctor.prototype = Error.prototype;
+
+function ErrorFunctorNotFound(msg, _args) {
+	this.message = msg;
+	this.args = args_;
+};
+ErrorFunctorNotFound.prototype = Error.prototype;
 
 function ErrorExpectingGoal(msg) {
 	this.message = msg;
@@ -633,6 +640,7 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorExpectingGoal = ErrorExpectingGoal;
 	module.exports.ErrorNoMoreInstruction = ErrorNoMoreInstruction;
 	module.exports.ErrorInvalidInstruction = ErrorInvalidInstruction;
+	module.exports.ErrorFunctorNotFound = ErrorFunctorNotFound;
 };
 /**
  *  The builtin 'call' functor
@@ -683,7 +691,11 @@ Compiler.prototype.process_rule_or_fact = function(exp) {
 	if (exp.name == 'rule')
 		return this.process_rule(exp);
 
-	return this.process_head(exp);
+	var result = {
+		'head': this.process_head(exp)
+	};
+	
+	return result;
 };
 
 /**
@@ -1085,6 +1097,7 @@ Database.prototype.insert_code = function(functor, arity, code) {
 	var maybe_entries = this.db[functor_signature] || [];
 	maybe_entries.push(code);
 	
+	this.db[functor_signature] = maybe_entries;
 };
 
 Database.prototype.get_code = function(functor, arity) {
@@ -1365,7 +1378,7 @@ Interpreter.prototype.set_question = function(question_code){
 	this.ctx.cse = qenv;
 	
 	try {
-		this.ctx.cc = this.db['.q.'][0]['g0'];	
+		this.ctx.cc = this.db['.q.'][0];	
 	} catch (e){
 		throw new ErrorExpectingGoal("Expecting at least 1 goal in question: "+e);
 	};
@@ -1384,9 +1397,13 @@ Interpreter.prototype.set_question = function(question_code){
  */
 Interpreter.prototype.step = function() {
 
+	//console.log("step: BEGIN");
+	
 	var inst = this.fetch_next_instruction();
 	
 	var fnc_name = "inst_" + inst.opcode;
+	
+	//console.log("step: inst: ", inst);
 	
 	var fnc = this[fnc_name];
 	if (!fnc)
@@ -1395,6 +1412,8 @@ Interpreter.prototype.step = function() {
 	// Execute the instruction
 	this[fnc_name].apply(this, [inst]);	
 
+	//console.log("step: END");
+	
 };// step
 
 /**
@@ -1417,10 +1436,10 @@ Interpreter.prototype.fetch_next_instruction = function(){
 	
 	// Are we at the end of `head` ?
 	
-	if (this.ctx.p.f == 'head') {
+	if (this.ctx.p.l == 'head') {
 		
 		// update pointer to 1st goal then
-		this.ctx.p.f = 'g0';
+		this.ctx.p.l = 'g0';
 		this.ctx.p.i = 0;
 		this._fetch_code();
 		
@@ -1432,13 +1451,14 @@ Interpreter.prototype.fetch_next_instruction = function(){
 		throw new ErrorNoMoreInstruction();
 	};
 	
+	
 	return this._fetch();
 };
 
 Interpreter.prototype._fetch = function(){
 	
 	// Just try fetching next instruction
-	var inst = this.ctx.cc[this.ctx.p.i];
+	var inst = this.ctx.cc[this.ctx.p.l][this.ctx.p.i];
 	
 	this.ctx.p.i++;
 	
@@ -1476,7 +1496,7 @@ Interpreter.prototype.get_current_ctx_var = function(evar) {
  */
 Interpreter.prototype.inst_call = function(inst) {
 	
-	console.log("Instruction: 'call'");
+	//console.log("Instruction: 'call'");
 	
 	// I know it's pessimistic
 	this.ctx.cu = false
@@ -1491,19 +1511,51 @@ Interpreter.prototype.inst_call = function(inst) {
 	// Clause Index
 	var ci = this.ctx.tse.ci || 0;
 	
-	//console.log(fname, arity);
+	//console.log("CALL: ", fname, arity);
 	
 	// Consult the database
 	var code_clauses = this.db.get_code(fname, arity);
 	
+	//console.log("Code for clauses: ", code_clauses);
+	
+	if (!code_clauses)
+		throw new ErrorFunctorNotFound("Functor: "+fname+"/"+arity, [fname, arity]);
+	
+	
 	var code_for_clause = code_clauses[ci];
 	
 	// Reached end of clause list ?
-	//  No more choice point + fail
+	//  No more disjunctive goal ?
+	//          choice point ?
 	if (!code_for_clause) {
+		
+		//console.log("No code for clause...");
 		
 		return;
 	};
+	
+	//console.log("Code clause: ", code_for_clause);
+	
+	// Save continuation
+	this.ctx.tse.cp = {
+		 f: this.ctx.p.f
+		,l: this.ctx.p.l
+		,i: this.ctx.p.i + 1
+	};
+	
+	var l = code_for_clause.head ? 'head': 'g0';
+	
+	// Make the jump
+	//
+	this.ctx.p = {
+		 f: fname
+		,l: l
+		,i: 0
+	};
+	
+	this.ctx.cc = code_for_clause;
+	
+	console.log(this.ctx);
 	
 }; // CALL
 
@@ -1521,7 +1573,7 @@ Interpreter.prototype.inst_allocate = function() {
 	
 	//console.log("Instruction: 'allocate'");
 	
-	var env = { vars: {} };
+	var env = { vars: {}, cp: {} };
 	this.ctx.tse = env;
 	this.stack.push(env);
 };
@@ -1675,7 +1727,7 @@ Interpreter.prototype.inst_try_else = function() {
  */
 Interpreter.prototype.inst_get_struct = function(inst) {
 	
-	//console.log("Instruction: 'get_struct'");
+	console.log("Instruction: 'get_struct'");
 	
 	var fname  = inst.get('f');
 	var farity = inst.get('a');
