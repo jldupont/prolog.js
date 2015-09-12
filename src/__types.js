@@ -494,11 +494,60 @@ function Var(name) {
 	this.name = name;
 	this.col = null;
 	this.line = null;
+	
+	this.value = null;
 };
 
 Var.prototype.inspect = function(){
 	return "Var("+this.name+")";
 };
+
+Var.prototype.bind = function(value) {
+	
+	if (value == null)
+		throw new ErrorInvalidValue("Var("+this.name+"), attempted to bind 'null'");
+	
+	if (this.value != null)
+		throw new ErrorAlreadyBound("Var("+this.name+")");
+	
+	this.value = value;
+	
+	//console.log("Var("+this.name+", "+JSON.stringify(this.value)+")");
+};
+
+Var.prototype.is_bound = function(){
+	return this.value != null;
+};
+
+Var.prototype.unbind = function(){
+	return this.value = null;
+};
+
+Var.prototype.get_value = function() {
+
+	if (this.value == null)
+		throw new ErrorNotBound("Var("+this.name+")");
+
+	return this.value;
+};
+
+/**
+ *   Var(X, Var(Y, Var(Z, 666) ) ) ==> Var(X, 666)
+ * 
+ */
+Var.prototype.deref = function(){
+
+	//console.log("Var("+this.name+", "+this.value+").deref()");
+	
+	if (this.value == null)
+		throw new ErrorNotBound("Var("+this.name+")");
+
+	if (this.value instanceof Var)
+		return this.value.deref();
+	
+	return this.value;
+};
+
 
 
 function Value(name) {
@@ -631,6 +680,20 @@ function ErrorInternal(msg) {
 };
 ErrorInternal.prototype = Error.prototype;
 
+function ErrorInvalidValue(msg) {
+	this.message = msg;
+};
+ErrorInvalidValue.prototype = Error.prototype;
+
+function ErrorAlreadyBound(msg) {
+	this.message = msg;
+};
+ErrorAlreadyBound.prototype = Error.prototype;
+
+function ErrorNotBound(msg) {
+	this.message = msg;
+};
+ErrorNotBound.prototype = Error.prototype;
 
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
@@ -653,4 +716,6 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorInvalidInstruction = ErrorInvalidInstruction;
 	module.exports.ErrorFunctorNotFound = ErrorFunctorNotFound;
 	module.exports.ErrorInternal = ErrorInternal;
+	module.exports.ErrorAlreadyBound = ErrorAlreadyBound;
+	module.exports.ErrorNotBound = ErrorNotBound;
 };

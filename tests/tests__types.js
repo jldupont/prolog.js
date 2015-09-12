@@ -12,9 +12,14 @@ var pr = require("../prolog.js");
 var Token = pr.Token;
 var Functor = pr.Functor;
 var Op = pr.Op;
+var Var = pr.Var;
 var OpNode = pr.OpNode;
 var Utils = pr.Utils;
 var Instruction = pr.Instruction;
+var ErrorAlreadyBound = pr.ErrorAlreadyBound;
+var ErrorNotBound = pr.ErrorNotBound;
+var ErrorInvalidValue = pr.ErrorInvalidValue;
+
 
 Functor.inspect_short_version = false;
 
@@ -394,4 +399,69 @@ it('_Types - Compare Objects - Object 3', function(){
 	
 	should.equal(result, true);
 	
+});
+
+it('_Types - Var - Deref - 0', function(){
+
+	var v1 = new Var('X');
+	
+	should.throws(function(){
+		v1.bind(null);
+	}, ErrorInvalidValue);
+	
+});
+
+
+it('_Types - Var - Deref - 1', function(){
+
+	var v1 = new Var('X');
+	
+	should.throws(function(){
+		v1.get_value();
+	}, ErrorNotBound);
+	
+});
+
+it('_Types - Var - Deref - 2', function(){
+
+	var v1 = new Var('X');
+	v1.bind(666);
+	
+	should.throws(function(){
+		v1.bind(777);
+	}, ErrorAlreadyBound);
+	
+});
+
+it('_Types - Var - Deref - 3', function(){
+
+	var v1 = new Var('X');
+	var v2 = new Var('Y');
+	var v3 = new Var('Z');
+	
+	v1.bind( v2 );
+	v2.bind( v3 );
+	v3.bind( 666 );
+	
+	var value = v1.deref();
+
+	should.equal(value, 666);
+});
+
+it('_Types - Var - Deref - 4', function(){
+
+	var v1 = new Var('X');
+	var v2 = new Var('Y');
+	var v3 = new Var('Z');
+	
+	v1.bind( v2 );
+	v2.bind( v3 );
+	
+	// Var(X, Var(Y, Var(Z) ) )
+
+	should.throws(function(){
+		console.log( v1.deref() );
+	}, ErrorNotBound);
+	
+
 });
