@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-09-11 */
+/*! prolog.js - v0.0.1 - 2015-09-12 */
 
 /**
  *  Token
@@ -76,7 +76,7 @@ Token.check_for_match = function(input_list, expected_list, also_index){
 		var expected_token = expected_list[index] || new Token('null');
 	
 		if (!Token.equal(input_token, expected_token)) {
-			console.log("match fail: "+JSON.stringify(input_token));
+			//console.log("match fail: "+JSON.stringify(input_token));
 			return false;
 		}
 			
@@ -477,7 +477,7 @@ Functor.prototype.push_arg = function(arg) {
 };
 
 Functor.prototype.get_arg = function(index) {
-	this.args[index];
+	return this.args[index];
 };
 
 
@@ -620,6 +620,11 @@ function ErrorInvalidInstruction(msg) {
 };
 ErrorInvalidInstruction.prototype = Error.prototype;
 
+function ErrorInternal(msg) {
+	this.message = msg;
+};
+ErrorInternal.prototype = Error.prototype;
+
 
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
@@ -641,6 +646,7 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorNoMoreInstruction = ErrorNoMoreInstruction;
 	module.exports.ErrorInvalidInstruction = ErrorInvalidInstruction;
 	module.exports.ErrorFunctorNotFound = ErrorFunctorNotFound;
+	module.exports.ErrorInternal = ErrorInternal;
 };
 /**
  *  The builtin 'call' functor
@@ -1313,11 +1319,28 @@ Interpreter.prototype.set_question = function(question_code){
 		//
 		,cc: null
 
-		/*
-		 *  Variable used in the current structure 
+		/*  Related to `HEAD` Processing
+		 * 
+		 *   csx:  The current index of the argument 
+		 *          in the `head` functor.
+		 * 
+		 *   cs:   The current structure being worked on
+		 *         This is retrieved through the "get_struct" instruction.
+		 *       
+		 *   csi:  The current index in the arguments of `cs`.
+		 *         We need this index pointer because we can't be
+		 *         destructively `popping` the arguments from the structure.
+		 *         This should not be confused with the parent's `head functor` arguments.
+		 *         
+		 *   csm:  The current mode, either "r" or "w".
+		 *   
+		 *   csv:  The current variable being used in "w" mode.
 		 */
-		,cv: null
-		,cvi: 0
+		,cs:  null
+		,csx: null   
+		,csi: 0     
+		,csm: 'r'   
+		,csv: null  
 		
 		/*
 		 *  Current unification status
@@ -1555,7 +1578,7 @@ Interpreter.prototype.inst_call = function(inst) {
 	
 	this.ctx.cc = code_for_clause;
 	
-	console.log(this.ctx);
+	//console.log(this.ctx);
 	
 }; // CALL
 
@@ -1727,21 +1750,72 @@ Interpreter.prototype.inst_try_else = function() {
  */
 Interpreter.prototype.inst_get_struct = function(inst) {
 	
-	console.log("Instruction: 'get_struct'");
+	//console.log("Instruction: 'get_struct'");
+	var x      = "x" + inst.get('p');
+	
+	// Are we switching argument in the `head` functor?
+	//
+	//  If this is the case, we need to reset the 'mode'
+	//   and associated variable used to construct a 
+	//   structure in `write` mode.
+	//
+	if (x != this.ctx.csx) {
+		this.ctx.csm = 'r';
+		this.ctx.csv = null;
+		this.ctx.csx = x;
+		
+	} else {
+		/*
+		 *  If we are indeed trying to "get_struct"
+		 *  on the same argument we were already processing,
+		 *  this means something is terribly wrong,
+		 *  probably a bug in the compiler.
+		 */
+		throw new ErrorInternal("Attempting to 'get_struct' again on same argument: " + x);
+	};
 	
 	var fname  = inst.get('f');
 	var farity = inst.get('a');
-	var x      = "x" + inst.get('p');
+	
 	
 	// The current value
 	//
 	// Assume this will fail to be on the safe side
 	//
-	this.ctx.cv = null;
+	this.ctx.cs = null;
 	this.ctx.cu = false;
 	
 	// Fetch the value from the target input variable
 	var maybe_struct = this.ctx.tse.vars[x];
+	
+	/*
+	 *   We have the following cases:
+	 *   ----------------------------
+	 *   
+	 *   1) There is actually a structure present
+	 *   2) There is a variable
+	 * 
+	 *   In case (1), we proceed in "read mode".
+	 *   
+	 *   In case (2), we switch to "write mode"
+	 */
+	
+	// CASE (2)
+	//
+	if (maybe_struct instanceof Var) {
+		this.ctx.cvm = "w";
+		
+		var struct = new Functor(fname);
+		this.ctx.csv = struct;
+		
+		// Also update the current environment
+		this.ctx.tse.vars[x] = struct;
+
+		// We are successful
+		this.ctx.cu = true;
+		return;
+	};
+	
 	
 	if (!(maybe_struct instanceof Functor)) {
 		// Not a structure ...
@@ -1761,6 +1835,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	this.ctx.cv = maybe_struct;
 	this.ctx.cu = true;
 	
+	//console.log("Instruction: 'get_struct': ", this.ctx);
 };
 
 
@@ -1775,9 +1850,9 @@ Interpreter.prototype.inst_get_term = function(inst) {
 	
 	var p = inst.get('p');
 	
-	//console.log("Instruction: 'get_term': ", p);
-	
 	var value = this.ctx.cv.get_arg( this.ctx.cvi++ );	
+	
+	//console.log("Instruction: 'get_term': ", p, value);
 	
 	this.ctx.cu = ( p == value );
 };
@@ -1790,10 +1865,28 @@ Interpreter.prototype.inst_get_term = function(inst) {
  *    matched in the environment.
  * 
  */
-Interpreter.prototype.inst_get_number = function() {
+Interpreter.prototype.inst_get_number = function(inst) {
 	
-	console.log("Instruction: 'get_number'");
+	var value = null;
 	
+	var p = inst.get('p');
+
+	//console.log("cv: ", this.ctx.cv);
+	//console.log("cvi: ", this.ctx.cvi);
+	
+	var value_or_var = this.ctx.cv.get_arg( this.ctx.cvi++ );
+	
+	//console.log(value_or_var);
+	
+	if (value_or_var instanceof Var) {
+		var var_name = value_or_var.name;
+		value = this.ctx.tse.vars[var_name];
+	} else
+		value = value_or_var;
+	
+	//console.log("Instruction: 'get_number': ",p, value);
+	
+	this.ctx.cu = (p == value);
 };
 
 

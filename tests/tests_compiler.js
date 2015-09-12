@@ -617,3 +617,62 @@ it('Compiler - rule/fact - basic - 1', function(){
 	
 	process_rule(text, expected);
 });
+
+it('Compiler - rule/fact - complex - 1', function(){
+	
+	var text = "f1(A) :- f2(f3(f4(A))).";
+	var expected = [
+
+		{ 
+			g0: 
+			   [ 	'allocate'    ,
+			       'put_struct   ( f4/1, p(1) )',
+			       'put_var      ( p("A") )',
+			       'put_struct   ( f3/1, p(2) )',
+			       'put_value    ( p(1) )',
+			       'put_struct   ( f2/1, p(0) )',
+			       'put_value    ( p(2) )',
+			       'call'        ,
+			       'deallocate' 
+			     ],
+		  head: [ 
+		           'get_struct   ( f1/1, p(0) )'
+		          ,'unif_var     ( p("A") )'
+		          ] 
+		}	                
+	                
+	];
+	
+	process_rule(text, expected);
+});
+
+
+it('Compiler - rule/fact - complex - 2', function(){
+	
+	var text = "f1(g1(A)) :- f2(f3(f4(A))).";
+	var expected = [
+
+		{ 
+			g0: 
+			   [ 	'allocate'    ,
+			       'put_struct   ( f4/1, p(1) )',
+			       'put_var      ( p("A") )',
+			       'put_struct   ( f3/1, p(2) )',
+			       'put_value    ( p(1) )',
+			       'put_struct   ( f2/1, p(0) )',
+			       'put_value    ( p(2) )',
+			       'call'        ,
+			       'deallocate' 
+			     ],
+		  head: [
+					'get_struct   ( f1/1, p(0) )',
+					'unif_var     ( p(1) )',
+					'get_struct   ( g1/1, p(1) )',
+					'unif_var     ( p("A") )'		         
+		          ] 
+		}	                
+	                
+	];
+	
+	process_rule(text, expected);
+});

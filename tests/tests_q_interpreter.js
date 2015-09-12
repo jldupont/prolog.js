@@ -310,7 +310,7 @@ it('Interpreter - complex - 1', function(){
 	
 	//it.step(); // put_value
 	
-	console.log("it ctx: ", it.ctx);
+	//console.log("it ctx: ", it.ctx);
 	
 	var tse_vars = it.get_current_ctx_var("tse");
 	

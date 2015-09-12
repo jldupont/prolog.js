@@ -82,7 +82,7 @@ Token.check_for_match = function(input_list, expected_list, also_index){
 		var expected_token = expected_list[index] || new Token('null');
 	
 		if (!Token.equal(input_token, expected_token)) {
-			console.log("match fail: "+JSON.stringify(input_token));
+			//console.log("match fail: "+JSON.stringify(input_token));
 			return false;
 		}
 			
@@ -483,7 +483,7 @@ Functor.prototype.push_arg = function(arg) {
 };
 
 Functor.prototype.get_arg = function(index) {
-	this.args[index];
+	return this.args[index];
 };
 
 
@@ -626,6 +626,11 @@ function ErrorInvalidInstruction(msg) {
 };
 ErrorInvalidInstruction.prototype = Error.prototype;
 
+function ErrorInternal(msg) {
+	this.message = msg;
+};
+ErrorInternal.prototype = Error.prototype;
+
 
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
@@ -647,4 +652,5 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorNoMoreInstruction = ErrorNoMoreInstruction;
 	module.exports.ErrorInvalidInstruction = ErrorInvalidInstruction;
 	module.exports.ErrorFunctorNotFound = ErrorFunctorNotFound;
+	module.exports.ErrorInternal = ErrorInternal;
 };

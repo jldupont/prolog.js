@@ -122,7 +122,7 @@ it('Database - lookup - 1', function(){
 	// still the same signature
 	var result = db.get(new Functor("f1", 4,5,6));
 	
-	console.log(result);
+	//console.log(result);
 	
 	should.equal(result[0] instanceof Functor, true);
 	should.equal(result[0].name, 'rule');
