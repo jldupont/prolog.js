@@ -533,13 +533,13 @@ Var.prototype.deref = function(){
 
 	//console.log("Var("+this.name+", "+this.value+").deref()");
 	
-	if (this.value == null)
-		throw new ErrorNotBound("Var("+this.name+")");
+	//if (this.value == null)
+	//	throw new ErrorNotBound("Var("+this.name+")");
 
 	if (this.value instanceof Var)
 		return this.value.deref();
 	
-	return this.value;
+	return this;
 };
 
 
@@ -1624,6 +1624,11 @@ Interpreter.prototype.inst_call = function(inst) {
 	
 	//console.log("Code clause: ", code_for_clause);
 	
+	// Get ready for `head` related instructions
+	this.ctx.cs = null;
+	this.ctx.csx = 0;
+	
+	
 	// Save continuation
 	this.ctx.tse.cp = {
 		 f: this.ctx.p.f
@@ -1851,7 +1856,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	this.ctx.cu = false;
 	
 	// Fetch the value from the target input variable
-	var maybe_struct = this.ctx.tse.vars[x];
+	var input_node = this.ctx.tse.vars[x];
 	
 	/*
 	 *   We have the following cases:
@@ -1859,15 +1864,63 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	 *   
 	 *   1) There is actually a structure present
 	 *   2) There is a variable
+	 *      a) The variable is bound   ==> "read" mode
+	 *         1) The variable dereferences to a struct
+	 *         2) The variable dereferences to something else than a struct
+	 *         
+	 *      b) The variable is unbound ==> "write" mode 
 	 * 
-	 *   In case (1), we proceed in "read mode".
-	 *   
-	 *   In case (2), we switch to "write mode"
 	 */
-	
-	// CASE (2)
+
+	var nvar = null; 
+		
+	var value;
+
+	// First, we need to check if are dealing with a Var
 	//
-	if (maybe_struct instanceof Var) {
+	if (input_node instanceof Var) {
+		
+		nvar = input_node.deref();
+		
+		try {
+			value = nvar.get_value();
+		} catch( e ) {
+			value = null;
+		};
+		
+	} else {
+		value = input_node;
+	};
+	
+	// Cases (1) and (2a1)
+	
+	if (value instanceof Functor) {
+		
+		
+		if (value.get_name() != fname) {
+			return; // fail	
+		};
+
+		if (value.get_arity() != +farity ) {
+			return; // fail
+		};
+		
+		this.ctx.cs = value;
+		this.ctx.csi = 0;
+		this.ctx.cu = true;
+		this.ctx.csm = 'r';
+		return;
+	};
+	
+	// Case  (2a2)
+	//
+	if (value != null) {
+		return; //fail
+	};
+	
+	// CASE (2b)
+	//
+	if (nvar) {
 		this.ctx.cvm = "w";
 		
 		var struct = new Functor(fname);
@@ -1876,29 +1929,16 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 		// Also update the current environment
 		this.ctx.tse.vars[x] = struct;
 
+		// And don't forget to actually perform
+		//  the 'write'!
+		nvar.bind( struct );
+		
 		// We are successful
 		this.ctx.cu = true;
 		return;
 	};
 	
-	
-	if (!(maybe_struct instanceof Functor)) {
-		// Not a structure ...
-		return;
-	};
-	
-	if (maybe_struct.get_name() != fname) {
-		return;	
-	};
-
-	if (maybe_struct.get_arity() != +farity ) {
-		return;
-	};
-	
-	// Everything checks out
-	this.ctx.cvi = 0;
-	this.ctx.cv = maybe_struct;
-	this.ctx.cu = true;
+	throw new ErrorInternal("get_struct: got unexpected node: "+JSON.stringify(maybe_struct));
 	
 	//console.log("Instruction: 'get_struct': ", this.ctx);
 };

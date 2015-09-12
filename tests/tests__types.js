@@ -443,9 +443,9 @@ it('_Types - Var - Deref - 3', function(){
 	v2.bind( v3 );
 	v3.bind( 666 );
 	
-	var value = v1.deref();
+	var var1 = v1.deref();
 
-	should.equal(value, 666);
+	should.equal(var1.get_value(), 666);
 });
 
 it('_Types - Var - Deref - 4', function(){
@@ -459,9 +459,8 @@ it('_Types - Var - Deref - 4', function(){
 	
 	// Var(X, Var(Y, Var(Z) ) )
 
-	should.throws(function(){
-		console.log( v1.deref() );
-	}, ErrorNotBound);
+	var should_be_a_var = v1.deref();
 	
+	should.equal(should_be_a_var.name, "Z");
 
 });
