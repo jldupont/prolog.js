@@ -89,7 +89,6 @@ Interpreter.prototype.set_question = function(question_code){
 		,csx: null   
 		,csi: 0     
 		,csm: 'r'   
-		,csv: null  
 		
 		/*
 		 *  Current unification status
@@ -106,6 +105,10 @@ Interpreter.prototype.set_question = function(question_code){
 		 */
 		,cse: null
 		
+		/*  Related to building a structure for a CALL instruction
+		 * 
+		 */
+		,cv: null  // the name of variable where to find the structure being built
 	};
 	
 	this.stack = [];
@@ -608,7 +611,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 		this.ctx.cvm = "w";
 		
 		var struct = new Functor(fname);
-		this.ctx.csv = struct;
+		this.ctx.cs = struct;
 		
 		// Also update the current environment
 		this.ctx.tse.vars[x] = struct;
@@ -627,6 +630,19 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	//console.log("Instruction: 'get_struct': ", this.ctx);
 };
 
+/**
+ *   Instruction "get_number" $p
+ *   
+ *   Expects a 'number' $p at the current variable being
+ *    matched in the environment.
+ * 
+ */
+Interpreter.prototype.inst_get_number = function(inst) {
+
+	return this._get_x(inst, 'number');
+};
+
+
 
 /**
  *   Instruction "get_term" $p
@@ -636,47 +652,71 @@ Interpreter.prototype.inst_get_struct = function(inst) {
  * 
  */
 Interpreter.prototype.inst_get_term = function(inst) {
-	
-	var p = inst.get('p');
-	
-	var value = this.ctx.cv.get_arg( this.ctx.cvi++ );	
-	
-	//console.log("Instruction: 'get_term': ", p, value);
-	
-	this.ctx.cu = ( p == value );
+
+	return this._get_x(inst, 'term');
 };
 
-
-/**
- *   Instruction "get_number" $p
- *   
- *   Expects a 'number' $p at the current variable being
- *    matched in the environment.
- * 
- */
-Interpreter.prototype.inst_get_number = function(inst) {
-	
-	var value = null;
+Interpreter.prototype._get_x = function(inst, type) {
 	
 	var p = inst.get('p');
 
+	this.ctx.cu = false;
+	
+	//console.log("ctx: ", this.ctx);
 	//console.log("cv: ", this.ctx.cv);
 	//console.log("cvi: ", this.ctx.cvi);
 	
-	var value_or_var = this.ctx.cv.get_arg( this.ctx.cvi++ );
+	if (this.ctx.csm == 'w') {
+		this.ctx.cs.push_arg( p );
+		this.ctx.cu = true;
+		return;
+	};
+	
+	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
 	//console.log(value_or_var);
+
+	/*  Cases:
+	 *  a) unbound variable ==> bind to expected number
+	 *  b) bound variable   ==> unification
+	 *  c) token(number) 
+	 */
+
 	
-	if (value_or_var instanceof Var) {
-		var var_name = value_or_var.name;
-		value = this.ctx.tse.vars[var_name];
-	} else
-		value = value_or_var;
+	// CASE (C)
+	//
+	if (value_or_var instanceof Token) {
+		if (value_or_var.name == type) {
+			this.ctx.cu = ( value_or_var.value == p);
+			return;
+		};
+	};
 	
-	//console.log("Instruction: 'get_number': ",p, value);
+	if ((!value_or_var instanceof Var)) {
+		return; // fail
+	}
+
+	var variable = value_or_var;
+		
+	var dvar = variable.deref();
 	
-	this.ctx.cu = (p == value);
+	// Case (B)
+	//
+	if (dvar.is_bound()) {
+		this.ctx.cu = (dvar.get_value() == p);
+		return;
+	};
+	
+	// Case (A)
+	//
+	dvar.bind(p);
+	this.ctx.cu = true;
+	
+	//console.log("Instruction: 'get_number': ",p, dvar);
+	
 };
+
+
 
 
 /**

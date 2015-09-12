@@ -499,6 +499,15 @@ function Var(name) {
 };
 
 Var.prototype.inspect = function(){
+	
+	if (this.value) {
+		
+		var value = this.value.inspect? this.value.inspect() : this.value;
+		
+		return "Var("+this.name+", "+value+")";
+	};
+		
+	
 	return "Var("+this.name+")";
 };
 

@@ -304,13 +304,13 @@ it('Interpreter - complex - 1', function(){
 	it.step(); // call
 	
 	// In f1 fact
-	it.step(); //
-	it.step(); // 
+	it.step(); //  get_struct
+	it.step(); //  get_number
 	
 	
 	//it.step(); // put_value
 	
-	//console.log("it ctx: ", it.ctx);
+	console.log("it ctx: ", it.ctx);
 	
 	var tse_vars = it.get_current_ctx_var("tse");
 	
