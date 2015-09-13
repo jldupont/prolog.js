@@ -1011,7 +1011,7 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 		//  so point it to the right side node
 		if (lctx.n) {
 			
-			result[llabel].push(new Instruction('try_else', {p: rlabel}));
+			result[llabel].unshift(new Instruction('try_else', {p: rlabel}));
 			
 		} else {
 			
@@ -1030,7 +1030,7 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 			
 			//console.log("Result: ", result);
 			
-			result[dlabel].push(new Instruction('try_else', {p: rlabel}));
+			result[dlabel].unshift(new Instruction('try_else', {p: rlabel}));
 		};
 
 		result[jlabel] = result[llabel];

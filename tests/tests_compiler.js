@@ -461,6 +461,7 @@ it('Compiler - body - complex - 1', function(){
 		        'deallocate'
 		        ],
 		  g0:  [ 
+		        'try_else     ( p("g4") )',
 		         'allocate',
 			     'put_struct   ( f1/1, p(0) )',
 			     'put_term     ( p("a") )',
@@ -473,7 +474,7 @@ it('Compiler - body - complex - 1', function(){
 			     'call',
 			     'maybe_retry',
 			     'deallocate',
-		         'try_else     ( p("g4") )'			     
+		         			     
 		     ] 
 		}	                
 	                
@@ -506,6 +507,7 @@ it('Compiler - body - complex - 2', function(){
 		        'deallocate'
 		        ],
 		  g0:  [ 
+		        'try_else     ( p("g4") )',
 		         'allocate',
 			     'put_struct   ( f1/1, p(0) )',
 			     'put_term     ( p("a") )',
@@ -518,7 +520,7 @@ it('Compiler - body - complex - 2', function(){
 			     'call',
 			     'maybe_retry',
 			     'deallocate',
-			     'try_else     ( p("g4") )'
+			     
 		     ] 
 		}	                
 	                
@@ -546,22 +548,26 @@ it('Compiler - body - complex - 3', function(){
 	var expected = [
 
 		{   g4: 
-			   [ 'allocate',
+			   [ 
+			     'try_else     ( p("g5") )',
+			     'allocate',
 			     'put_struct   ( f2/1, p(0) )',
 			     'put_term     ( p("b") )',
 			     'call'        ,
 			     'maybe_retry',
 			     'deallocate',
-			     'try_else     ( p("g5") )'
+			     
 			     ],
             g5: 
-			   [ 'allocate'    ,
+			   [ 
+			     'try_else     ( p("g6") )',
+			     'allocate'    ,
 			     'put_struct   ( f3/1, p(0) )',
 			     'put_term     ( p("c") )',
 			     'call'        ,
 			     'maybe_retry',
 			     'deallocate',
-			     'try_else     ( p("g6") )',
+			     
 			     ],
             g6:
 			   [ 'allocate'    ,
@@ -572,13 +578,14 @@ it('Compiler - body - complex - 3', function(){
 			     'deallocate'   ],
 			g0: 
 			   [ 
+			     'try_else     ( p("g4") )',
 			     'allocate'    ,
 			     'put_struct   ( f1/1, p(0) )',
 			     'put_term     ( p("a") )',
 			     'call'        ,
 			     'maybe_retry',
 			     'deallocate',
-			     'try_else     ( p("g4") )'
+			     
 			     ] 
 		}	                
 	                
@@ -598,7 +605,9 @@ it('Compiler - body - complex - 4', function(){
 	var expected = [
 
 		{ g3: 
-			   [ 'allocate'    ,
+			   [ 
+			    'try_else     ( p("g4") )',
+			     'allocate'    ,
 			     'put_struct   ( f2/1, p(0) )',
 			     'put_term     ( p("b") )',
 			     'call'        ,
@@ -610,7 +619,7 @@ it('Compiler - body - complex - 4', function(){
 			     'call'        ,
 			     'maybe_retry' ,
 			     'deallocate'  ,
-			     'try_else     ( p("g4") )' 
+			      
 			     ],
 			  g4: 
 			   [ 
@@ -623,13 +632,14 @@ it('Compiler - body - complex - 4', function(){
 			     ],
 			  g0: 
 			   [ 
+			    'try_else     ( p("g3") )',
 			     'allocate'    ,
 			     'put_struct   ( f1/1, p(0) )',
 			     'put_term     ( p("a") )',
 			     'call'        ,
 			     'maybe_retry' ,
 			     'deallocate'  ,
-			     'try_else     ( p("g3") )'
+			     
 			     ] 
 		}
 
