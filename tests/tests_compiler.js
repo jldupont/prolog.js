@@ -455,6 +455,7 @@ it('Compiler - body - complex - 1', function(){
 
 		{ 
 		 g4:   [ 
+		        'try_finally',
 		        'allocate',
 		        'put_struct   ( f3/1, p(0) )', 
 		        'put_term     ( p("c") )',
@@ -496,6 +497,7 @@ it('Compiler - body - complex - 2', function(){
 
 		{ 
 		 g4:   [ 
+		        'try_finally',
 		        'allocate',
 		        'put_struct   ( f3/1, p(0) )', 
 		        'put_term     ( p("c") )',
@@ -575,7 +577,9 @@ it('Compiler - body - complex - 3', function(){
 			     
 			     ],
             g6:
-			   [ 'allocate'    ,
+			   [ 
+			    'try_finally',
+			     'allocate'    ,
 			     'put_struct   ( f4/1, p(0) )',
 			     'put_term     ( p("d") )',
 			     'call'        ,
@@ -602,10 +606,19 @@ it('Compiler - body - complex - 3', function(){
 
 it('Compiler - body - complex - 4', function(){
 	
-	//console.log("\n***complex 3***\n");
+	//console.log("\n***complex 4***\n");
 	
 	var text = "f1(a) ; f2(b) , f3(c) ; f4(d).";
 	
+	/*
+		Functor(disj/2,
+			Functor(disj/2,
+				Functor(f1/1,'Token(term,a)'),
+				Functor(conj/2,
+					Functor(f2/1,'Token(term,b)'),
+					Functor(f3/1,'Token(term,c)'))),
+			Functor(f4/1,'Token(term,d)'))
+	 */
 	
 	var expected = [
 
@@ -629,7 +642,8 @@ it('Compiler - body - complex - 4', function(){
 			     ],
 			  g4: 
 			   [ 
-			     'allocate'    ,
+			    'try_finally',
+			    'allocate'    ,
 			     'put_struct   ( f4/1, p(0) )',
 			     'put_term     ( p("d") )',
 			     'call'        ,
@@ -646,6 +660,93 @@ it('Compiler - body - complex - 4', function(){
 			     'maybe_retry' ,
 			     'deallocate'  ,
 			     
+			     ] 
+		}
+
+	];
+	
+	process_body(text, expected);
+});
+
+it('Compiler - body - complex - 5', function(){
+	
+	//console.log("\n***complex 5***\n");
+	
+	var text = "f1(a) ; f2(b) , f3(c) ; f4(d), f5(e).";
+	
+	/*
+		Functor(disj/2,
+			Functor(disj/2,
+				Functor(f1/1,'Token(term,a)'),
+				Functor(conj/2,
+					Functor(f2/1,'Token(term,b)'),
+					Functor(f3/1,'Token(term,c)'))),
+			Functor(conj/2,
+				Functor(f4/1,'Token(term,d)'),
+				Functor(f5/1,'Token(term,e)')))
+	 */
+	/*
+		jctx:  { type: 'conj', vc: 3, root: false }
+		lctx:  { vc: 4, n: Functor(f2/1,'Token(term,b)') }
+		rctx:  { vc: 5, n: Functor(f3/1,'Token(term,c)') } 
+		
+		jctx:  { type: 'disj', vc: 1, root: false }
+		lctx:  { vc: 2, n: Functor(f1/1,'Token(term,a)') }
+		rctx:  { vc: 3 } 
+		
+		jctx:  { type: 'conj', vc: 4, root: false }
+		lctx:  { vc: 5, n: Functor(f4/1,'Token(term,d)') }
+		rctx:  { vc: 6, n: Functor(f5/1,'Token(term,e)') } 
+		
+		jctx:  { type: 'disj', vc: 0, root: true }
+		lctx:  { vc: 1 }
+		rctx:  { vc: 4 } 
+	 */
+	var expected = [
+
+		{ g3: 
+			   [ 
+			     'try_else     ( p("g4") )',
+			     'allocate'    ,
+			     'put_struct   ( f2/1, p(0) )',
+			     'put_term     ( p("b") )',
+			     'call'        ,
+			     'maybe_retry' ,
+			     'deallocate'  ,
+			     'maybe_fail'  ,
+			     'allocate'    ,
+			     'put_struct   ( f3/1, p(0) )',
+			     'put_term     ( p("c") )',
+			     'call'        ,
+			     'maybe_retry' ,
+			     'deallocate'   
+			     ],
+			  g4: 
+			   [ 
+			     'try_finally',
+			     'allocate'    ,
+			     'put_struct   ( f4/1, p(0) )',
+			     'put_term     ( p("d") )',
+			     'call'        ,
+			     'maybe_retry' ,
+			     'deallocate'  ,
+			     'maybe_fail'  ,
+			     'allocate'    ,
+			     'put_struct   ( f5/1, p(0) )',
+			     'put_term     ( p("e") )',
+			     'call'        ,
+			     'maybe_retry' ,
+			     'deallocate'   
+			     ],
+			  g0: 
+			   [ 
+			     'try_else     ( p("g3") )',
+			     'allocate'    ,
+			     'put_struct   ( f1/1, p(0) )',
+			     'put_term     ( p("a") )',
+			     'call'        ,
+			     'maybe_retry' ,
+			     'deallocate'   
 			     ] 
 		}
 

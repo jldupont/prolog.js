@@ -211,6 +211,7 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 				
 		var merged = merges[label];
 		
+		// Yes it can happen to have no derefencing to perform
 		if (!last && !merged)
 			return label;
 		
@@ -280,6 +281,7 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 			result[llabel].unshift(new Instruction('try_else', {p: rlabel}));
 			
 		} else {
+			
 			/*
 			 *  More difficult case: 
 			 *   We've got just a label on the left side
@@ -300,6 +302,12 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 		// Track merges
 		//
 		merges[llabel] = jlabel;
+		
+		// If we are at root with this disjunction,
+		//  let's help the interpreter with an additional hint
+		if (jctx.root) {
+			result[rlabel].unshift(new Instruction("try_finally"));
+		};
 		
 		delete result[llabel];
 	};

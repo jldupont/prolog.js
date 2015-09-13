@@ -939,6 +939,7 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 				
 		var merged = merges[label];
 		
+		// Yes it can happen to have no derefencing to perform
 		if (!last && !merged)
 			return label;
 		
@@ -1008,6 +1009,7 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 			result[llabel].unshift(new Instruction('try_else', {p: rlabel}));
 			
 		} else {
+			
 			/*
 			 *  More difficult case: 
 			 *   We've got just a label on the left side
@@ -1028,6 +1030,12 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 		// Track merges
 		//
 		merges[llabel] = jlabel;
+		
+		// If we are at root with this disjunction,
+		//  let's help the interpreter with an additional hint
+		if (jctx.root) {
+			result[rlabel].unshift(new Instruction("try_finally"));
+		};
 		
 		delete result[llabel];
 	};
@@ -1414,7 +1422,7 @@ function Interpreter(db, builtins, optional_stack) {
 	this.builtins = builtins;
 	this.stack = optional_stack || [];
 	
-	this.env = {};	
+
 	this.reached_end_question = false;
 };
 
@@ -1513,42 +1521,36 @@ Interpreter.prototype.set_question = function(question_code){
 		qenv: true
 
 		/*  Choice Point list
-		 * 
 		 */
 		,choices: null
 		
 		/*  Continuation Environment
-		 * 
-		 *  Used to return from a 'call'
+		 *    Used to return from a 'call'
 		 */
 		,ce: null
 		
 		/*  Continuation Point
-		 * 
-		 *  Used to return from a 'call'
-		 *  
+		 *    Used to return from a 'call' 
 		 */
 		,cp: null
 		
 		/*  Trail
-		 * 
 		 */
 		,tr: []
 		
 		/* Clause Index
-		 * 
-		 * Which clause is being tried
+		 *   Which clause is being tried
 		 */
 		,ci: 0
 
+		// TRY_ELSE continuation
+		,te: null
 		
 		/*  Related to building a structure for a CALL instruction
-		 * 
 		 */
 		,cv: null  // the name of variable where to find the structure being built
 		
 		/* The index of this environment on the stack
-		 * 
 		 */
 		,si: 0
 		
@@ -1596,22 +1598,6 @@ Interpreter.prototype.step = function() {
 	// Execute the instruction
 	this[fnc_name].apply(this, [inst]);	
 
-	
-	/*  We are faced with a failed goal
-	 * 
-	 *  Step 1: see if there are other
-	 *          clauses left to try
-	 * 
-	 * 
-	 *  Step 2: see if there are disjunctive
-	 *          left to try
-	 * 
-	 *  
-	 */
-	if (!this.ctx.cu) {
-		
-	};
-	
 	//console.log("step: END");
 	
 };// step
@@ -1919,16 +1905,38 @@ Interpreter.prototype.inst_put_value = function(inst) {
  *    one inserted to $target will be tried next.
  *   
  */
-Interpreter.prototype.inst_try_else = function() {
+Interpreter.prototype.inst_try_else = function( inst ) {
 	
-	console.log("Instruction: 'try_else'");
+	var vname = "g" + inst.get("p");
+	this.ctx.cse.te = vname;
 	
+	console.log("Instruction: 'try_else' @ "+vname);
+};
+
+/**
+ *   Instruction "try_finally"
+ * 
+ *   Last goal of a disjunction   
+ */
+Interpreter.prototype.inst_try_finally = function( ) {
+	
+	this.ctx.cse.te = null;
+	
+	console.log("Instruction: 'try_finally'");
 };
 
 /**
  *   Instruction "maybe_retry"
  * 
- *   Used to retry the preceding 'CALL'
+ *   When used, this instruction **must** 
+ *     always follow a 'CALL' instruction.
+ * 
+ *   Used to retry the preceding 'CALL' if a failure occurred.
+ *   
+ *   * Increment clause index
+ *   * IF the clause index == # of clauses ==> failure
+ *   * ELSE
+ *   *   p--
  * 
  */
 Interpreter.prototype.inst_maybe_retry = function() {
@@ -1938,10 +1946,31 @@ Interpreter.prototype.inst_maybe_retry = function() {
 };
 
 /**
+ *   Instruction  "jump"
+ * 
+ *   Used to jump between labels within a clause
+ * 
+ */
+Interpreter.prototype.inst_jump = function( inst ) {
+	
+	var vname = "g" + inst.get("p");
+	
+	console.log("Instruction: 'jump' @ "+ vname);
+	
+};
+
+
+/**
  *   Instruction "maybe_fail"
  *   
  *   Used to 'fail' the goal if the result
  *    of the preceding 'CALL' failed.
+ *  
+ *  
+ *   IF a goal was loaded by a 'try_else' instruction,
+ *     JUMP to this goal.
+ *     
+ *   ELSE jump to continuation point.
  *   
  */
 Interpreter.prototype.inst_maybe_fail = function() {
