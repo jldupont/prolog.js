@@ -104,11 +104,7 @@ Interpreter.prototype.set_question = function(question_code){
 		 * 
 		 */
 		,cse: null
-		
-		/*  Related to building a structure for a CALL instruction
-		 * 
-		 */
-		,cv: null  // the name of variable where to find the structure being built
+
 	};
 	
 	this.stack = [];
@@ -122,26 +118,46 @@ Interpreter.prototype.set_question = function(question_code){
 	qenv = {
 
 		qenv: true
+
+		/*  Choice Point list
+		 * 
+		 */
+		,choices: null
 		
-		// The current variable in the target choice point
-		//
-		// Used to track the construction of a structure in the
-		//  target choice point.
-		//
-		,cpv: null
-		
+		/*  Continuation Environment
+		 * 
+		 *  Used to return from a 'call'
+		 */
+		,ce: null
 		
 		/*  Continuation Point
 		 * 
+		 *  Used to return from a 'call'
+		 *  
 		 */
 		,cp: null
 		
+		/*  Trail
+		 * 
+		 */
+		,tr: []
 		
 		/* Clause Index
 		 * 
 		 * Which clause is being tried
 		 */
 		,ci: 0
+
+		
+		/*  Related to building a structure for a CALL instruction
+		 * 
+		 */
+		,cv: null  // the name of variable where to find the structure being built
+		
+		/* The index of this environment on the stack
+		 * 
+		 */
+		,si: 0
 		
 	};//
 	
@@ -187,6 +203,22 @@ Interpreter.prototype.step = function() {
 	// Execute the instruction
 	this[fnc_name].apply(this, [inst]);	
 
+	
+	/*  We are faced with a failed goal
+	 * 
+	 *  Step 1: see if there are other
+	 *          clauses left to try
+	 * 
+	 * 
+	 *  Step 2: see if there are disjunctive
+	 *          left to try
+	 * 
+	 *  
+	 */
+	if (!this.ctx.cu) {
+		
+	};
+	
 	//console.log("step: END");
 	
 };// step
@@ -217,22 +249,21 @@ Interpreter.prototype.fetch_next_instruction = function(){
 		this.ctx.p.l = 'g0';
 		this.ctx.p.i = 0;
 		this._fetch_code();
-		
-	} else {
-		
-		// If we are inside a goal, try the next one.
-		// In the current implementation, this should not
-		//  happen directly: some branching would have occurred.
-		throw new ErrorNoMoreInstruction();
-	};
+		return this._fetch();
+	}
 	
+		
+	// If we are inside a goal, try the next one.
+	// In the current implementation, this should not
+	//  happen directly: some branching would have occurred.
+	throw new ErrorNoMoreInstruction();
 	
-	return this._fetch();
 };
 
 Interpreter.prototype._fetch = function(){
 	
 	// Just try fetching next instruction
+	//
 	var inst = this.ctx.cc[this.ctx.p.l][this.ctx.p.i];
 	
 	this.ctx.p.i++;
@@ -255,7 +286,7 @@ Interpreter.prototype.get_current_ctx_var = function(evar) {
 
 //
 //
-// ======================================================================== INSTRUCTIONS
+// ================================================================================= INSTRUCTIONS
 //
 //
 
@@ -285,8 +316,6 @@ Interpreter.prototype.inst_call = function(inst) {
 	
 	// Clause Index
 	var ci = this.ctx.tse.ci || 0;
-	
-	//console.log("CALL: ", fname, arity);
 	
 	// Consult the database
 	var code_clauses = this.db.get_code(fname, arity);
@@ -353,9 +382,10 @@ Interpreter.prototype.inst_allocate = function() {
 	
 	//console.log("Instruction: 'allocate'");
 	
-	var env = { vars: {}, cp: {} };
+	var env = { vars: {}, cp: {}, si: this.stack.length+1 };
 	this.ctx.tse = env;
 	this.stack.push(env);
+
 };
 
 /**
@@ -371,6 +401,13 @@ Interpreter.prototype.inst_deallocate = function() {
 	
 	//console.log("Instruction: 'deallocate'");
 	
+	var stack_index = this.ctx.cse.si;
+	var choices = this.ctx.cse.choices || [];
+	
+	if (choices.length == 0) {
+		var si = this.ctx.tse.si;
+		
+	};
 };
 
 /**
@@ -381,7 +418,7 @@ Interpreter.prototype.inst_deallocate = function() {
  *    choice point environment at variable $x.
  * 
  *   The target variable $x is retain the current environment
- *    as to help with the remainder of the construction  (cpv).
+ *    as to help with the remainder of the construction.
  * 
  */
 Interpreter.prototype.inst_put_struct = function(inst) {
@@ -535,12 +572,11 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	var farity = inst.get('a');
 	
 	
-	// The current value
-	//
 	// Assume this will fail to be on the safe side
 	//
 	this.ctx.cs = null;
 	this.ctx.cu = false;
+
 	
 	// Fetch the value from the target input variable
 	var input_node = this.ctx.tse.vars[x];
@@ -656,15 +692,13 @@ Interpreter.prototype.inst_get_term = function(inst) {
 	return this._get_x(inst, 'term');
 };
 
+
+
 Interpreter.prototype._get_x = function(inst, type) {
 	
 	var p = inst.get('p');
 
 	this.ctx.cu = false;
-	
-	//console.log("ctx: ", this.ctx);
-	//console.log("cv: ", this.ctx.cv);
-	//console.log("cvi: ", this.ctx.cvi);
 	
 	if (this.ctx.csm == 'w') {
 		this.ctx.cs.push_arg( p );
@@ -727,9 +761,11 @@ Interpreter.prototype._get_x = function(inst, type) {
  *   
  * 
  */
-Interpreter.prototype.inst_unif_var = function() {
+Interpreter.prototype.inst_unif_var = function(inst) {
 	
 	console.log("Instruction: 'unif_var'");
+	
+	var p = inst.get('p');
 	
 };
 

@@ -191,13 +191,34 @@ Compiler.prototype.process_query = function(exp) {
  *   
  *   @raise
  */
-Compiler.prototype.process_body = function(exp) {
+Compiler.prototype.process_body = function(exp, show_debug) {
 	
+	var map = {};
 	var result = {};
+	var merges = {};
 	
 	var v = new Visitor3(exp);
 	
 	var that = this;
+	
+	/*
+	 *  Dereference the label
+	 *   through the merges that 
+	 *   occurred during the 'conj' and 'disj'
+	 *   compilation
+	 */
+	var deref = function(label, last) {
+				
+		var merged = merges[label];
+		
+		if (!last && !merged)
+			return label;
+		
+		if (merged)
+			return deref(merged, merged);
+		
+		return last;
+	};
 	
 	/**
 	 *  Link code across a conjunction
@@ -216,6 +237,8 @@ Compiler.prototype.process_body = function(exp) {
 		
 		result[llabel] = result[llabel].concat(result[rlabel]);
 		
+		merges[rlabel] = llabel;
+		
 		// Step 2, get rid of R
 		delete result[rlabel];
 		
@@ -223,6 +246,8 @@ Compiler.prototype.process_body = function(exp) {
 		var jlabel = "g"+jctx.vc;
 		
 		result[jlabel] = result[llabel];
+		
+		merges[llabel] = jlabel;
 		
 		// Step 4, finally get rid of L
 		delete result[llabel];
@@ -240,25 +265,65 @@ Compiler.prototype.process_body = function(exp) {
 	 */
 	var disj_link = function(jctx, lctx, rctx){
 
+		
+		if (show_debug) {
+			console.log("DISJ: jctx: ", jctx);
+			console.log("DISJ: lctx: ", lctx);
+			console.log("DISJ: rctx: ", rctx, "\n");
+		};
+		
+		
 		// Step 1, combine code of L under code for Gx
 		//
 		var jlabel = "g"+jctx.vc;
 		var llabel = "g"+lctx.vc;
-		
-		result[jlabel] = result[llabel];
-		
-		// Step 2, we don't need the L label anymore
-		delete result[llabel];
-		
-		// Step 3, link
 		var rlabel = "g"+rctx.vc;
 		
-		result[jlabel].unshift(new Instruction('try_else', {p: rlabel}));
+		// We've got a Functor node on the left side,
+		//  so point it to the right side node
+		if (lctx.n) {
+			
+			result[llabel].push(new Instruction('try_else', {p: rlabel}));
+			
+		} else {
+			
+			//console.log("Map:    ", map, "\n");
+			//console.log("Merges: ", merges, "\n");
+			
+			var lmap = map[llabel];
+			var rnode_label = lmap.r;
+			
+			var dlabel = deref(rnode_label);
+			
+			//console.log("rnode_label: ", rnode_label);
+			//console.log("deref label: ", dlabel);
+			
+			//console.log("result[rnode_label]: ", result[rnode_label]);
+			
+			//console.log("Result: ", result);
+			
+			result[dlabel].push(new Instruction('try_else', {p: rlabel}));
+		};
+
+		result[jlabel] = result[llabel];
+		
+		merges[llabel] = jlabel;
+		
+		delete result[llabel];
 	};
 	
 	
 	
 	v.process(function(jctx, left_or_root, right_maybe){
+
+		
+		if (show_debug) {
+			console.log("jctx: ", jctx);
+			console.log("lctx: ", left_or_root);
+			console.log("rctx: ", right_maybe, "\n");
+		};
+		
+		
 		
 		var type = jctx.type;
 		var goal_id = jctx.goal_id;
@@ -294,9 +359,13 @@ Compiler.prototype.process_body = function(exp) {
 		// CAUTION: lcode/rcode *may* be undefined
 		//          This is intended behavior.
 		
-		
+		var jlabel = "g" + jctx.vc;
 		var llabel = "g" + left_or_root.vc;
 		var rlabel = "g" + right_maybe.vc;
+		
+		
+		map[jlabel] = {l: llabel, r: rlabel };
+		
 		
 		if (lcode)
 			result[llabel] = lcode;
@@ -314,6 +383,12 @@ Compiler.prototype.process_body = function(exp) {
 
 			disj_link(jctx, left_or_root, right_maybe);
 			
+			//var target_label = merges[llabel] || llabel;
+			
+			//console.log("Merges: ", merges);
+			//console.log("Target Label: ", target_label);
+			
+			//result[target_label].push(new Instruction('try_else', {p: rlabel}));
 		};
 		
 		
@@ -384,6 +459,7 @@ Compiler.prototype.process_goal = function(exp) {
 		//
 		if (ctx.root) {
 			results.push(new Instruction('call'));
+			results.push(new Instruction('maybe_retry'));
 			results.push(new Instruction('deallocate'));
 		};
 			

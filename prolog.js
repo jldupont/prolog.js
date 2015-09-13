@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-09-12 */
+/*! prolog.js - v0.0.1 - 2015-09-13 */
 
 /**
  *  Token
@@ -919,13 +919,34 @@ Compiler.prototype.process_query = function(exp) {
  *   
  *   @raise
  */
-Compiler.prototype.process_body = function(exp) {
+Compiler.prototype.process_body = function(exp, show_debug) {
 	
+	var map = {};
 	var result = {};
+	var merges = {};
 	
 	var v = new Visitor3(exp);
 	
 	var that = this;
+	
+	/*
+	 *  Dereference the label
+	 *   through the merges that 
+	 *   occurred during the 'conj' and 'disj'
+	 *   compilation
+	 */
+	var deref = function(label, last) {
+				
+		var merged = merges[label];
+		
+		if (!last && !merged)
+			return label;
+		
+		if (merged)
+			return deref(merged, merged);
+		
+		return last;
+	};
 	
 	/**
 	 *  Link code across a conjunction
@@ -944,6 +965,8 @@ Compiler.prototype.process_body = function(exp) {
 		
 		result[llabel] = result[llabel].concat(result[rlabel]);
 		
+		merges[rlabel] = llabel;
+		
 		// Step 2, get rid of R
 		delete result[rlabel];
 		
@@ -951,6 +974,8 @@ Compiler.prototype.process_body = function(exp) {
 		var jlabel = "g"+jctx.vc;
 		
 		result[jlabel] = result[llabel];
+		
+		merges[llabel] = jlabel;
 		
 		// Step 4, finally get rid of L
 		delete result[llabel];
@@ -968,25 +993,65 @@ Compiler.prototype.process_body = function(exp) {
 	 */
 	var disj_link = function(jctx, lctx, rctx){
 
+		
+		if (show_debug) {
+			console.log("DISJ: jctx: ", jctx);
+			console.log("DISJ: lctx: ", lctx);
+			console.log("DISJ: rctx: ", rctx, "\n");
+		};
+		
+		
 		// Step 1, combine code of L under code for Gx
 		//
 		var jlabel = "g"+jctx.vc;
 		var llabel = "g"+lctx.vc;
-		
-		result[jlabel] = result[llabel];
-		
-		// Step 2, we don't need the L label anymore
-		delete result[llabel];
-		
-		// Step 3, link
 		var rlabel = "g"+rctx.vc;
 		
-		result[jlabel].unshift(new Instruction('try_else', {p: rlabel}));
+		// We've got a Functor node on the left side,
+		//  so point it to the right side node
+		if (lctx.n) {
+			
+			result[llabel].push(new Instruction('try_else', {p: rlabel}));
+			
+		} else {
+			
+			//console.log("Map:    ", map, "\n");
+			//console.log("Merges: ", merges, "\n");
+			
+			var lmap = map[llabel];
+			var rnode_label = lmap.r;
+			
+			var dlabel = deref(rnode_label);
+			
+			//console.log("rnode_label: ", rnode_label);
+			//console.log("deref label: ", dlabel);
+			
+			//console.log("result[rnode_label]: ", result[rnode_label]);
+			
+			//console.log("Result: ", result);
+			
+			result[dlabel].push(new Instruction('try_else', {p: rlabel}));
+		};
+
+		result[jlabel] = result[llabel];
+		
+		merges[llabel] = jlabel;
+		
+		delete result[llabel];
 	};
 	
 	
 	
 	v.process(function(jctx, left_or_root, right_maybe){
+
+		
+		if (show_debug) {
+			console.log("jctx: ", jctx);
+			console.log("lctx: ", left_or_root);
+			console.log("rctx: ", right_maybe, "\n");
+		};
+		
+		
 		
 		var type = jctx.type;
 		var goal_id = jctx.goal_id;
@@ -1022,9 +1087,13 @@ Compiler.prototype.process_body = function(exp) {
 		// CAUTION: lcode/rcode *may* be undefined
 		//          This is intended behavior.
 		
-		
+		var jlabel = "g" + jctx.vc;
 		var llabel = "g" + left_or_root.vc;
 		var rlabel = "g" + right_maybe.vc;
+		
+		
+		map[jlabel] = {l: llabel, r: rlabel };
+		
 		
 		if (lcode)
 			result[llabel] = lcode;
@@ -1042,6 +1111,12 @@ Compiler.prototype.process_body = function(exp) {
 
 			disj_link(jctx, left_or_root, right_maybe);
 			
+			//var target_label = merges[llabel] || llabel;
+			
+			//console.log("Merges: ", merges);
+			//console.log("Target Label: ", target_label);
+			
+			//result[target_label].push(new Instruction('try_else', {p: rlabel}));
 		};
 		
 		
@@ -1112,6 +1187,7 @@ Compiler.prototype.process_goal = function(exp) {
 		//
 		if (ctx.root) {
 			results.push(new Instruction('call'));
+			results.push(new Instruction('maybe_retry'));
 			results.push(new Instruction('deallocate'));
 		};
 			
@@ -1429,11 +1505,7 @@ Interpreter.prototype.set_question = function(question_code){
 		 * 
 		 */
 		,cse: null
-		
-		/*  Related to building a structure for a CALL instruction
-		 * 
-		 */
-		,cv: null  // the name of variable where to find the structure being built
+
 	};
 	
 	this.stack = [];
@@ -1447,26 +1519,46 @@ Interpreter.prototype.set_question = function(question_code){
 	qenv = {
 
 		qenv: true
+
+		/*  Choice Point list
+		 * 
+		 */
+		,choices: null
 		
-		// The current variable in the target choice point
-		//
-		// Used to track the construction of a structure in the
-		//  target choice point.
-		//
-		,cpv: null
-		
+		/*  Continuation Environment
+		 * 
+		 *  Used to return from a 'call'
+		 */
+		,ce: null
 		
 		/*  Continuation Point
 		 * 
+		 *  Used to return from a 'call'
+		 *  
 		 */
 		,cp: null
 		
+		/*  Trail
+		 * 
+		 */
+		,tr: []
 		
 		/* Clause Index
 		 * 
 		 * Which clause is being tried
 		 */
 		,ci: 0
+
+		
+		/*  Related to building a structure for a CALL instruction
+		 * 
+		 */
+		,cv: null  // the name of variable where to find the structure being built
+		
+		/* The index of this environment on the stack
+		 * 
+		 */
+		,si: 0
 		
 	};//
 	
@@ -1512,6 +1604,22 @@ Interpreter.prototype.step = function() {
 	// Execute the instruction
 	this[fnc_name].apply(this, [inst]);	
 
+	
+	/*  We are faced with a failed goal
+	 * 
+	 *  Step 1: see if there are other
+	 *          clauses left to try
+	 * 
+	 * 
+	 *  Step 2: see if there are disjunctive
+	 *          left to try
+	 * 
+	 *  
+	 */
+	if (!this.ctx.cu) {
+		
+	};
+	
 	//console.log("step: END");
 	
 };// step
@@ -1542,22 +1650,21 @@ Interpreter.prototype.fetch_next_instruction = function(){
 		this.ctx.p.l = 'g0';
 		this.ctx.p.i = 0;
 		this._fetch_code();
-		
-	} else {
-		
-		// If we are inside a goal, try the next one.
-		// In the current implementation, this should not
-		//  happen directly: some branching would have occurred.
-		throw new ErrorNoMoreInstruction();
-	};
+		return this._fetch();
+	}
 	
+		
+	// If we are inside a goal, try the next one.
+	// In the current implementation, this should not
+	//  happen directly: some branching would have occurred.
+	throw new ErrorNoMoreInstruction();
 	
-	return this._fetch();
 };
 
 Interpreter.prototype._fetch = function(){
 	
 	// Just try fetching next instruction
+	//
 	var inst = this.ctx.cc[this.ctx.p.l][this.ctx.p.i];
 	
 	this.ctx.p.i++;
@@ -1580,7 +1687,7 @@ Interpreter.prototype.get_current_ctx_var = function(evar) {
 
 //
 //
-// ======================================================================== INSTRUCTIONS
+// ================================================================================= INSTRUCTIONS
 //
 //
 
@@ -1610,8 +1717,6 @@ Interpreter.prototype.inst_call = function(inst) {
 	
 	// Clause Index
 	var ci = this.ctx.tse.ci || 0;
-	
-	//console.log("CALL: ", fname, arity);
 	
 	// Consult the database
 	var code_clauses = this.db.get_code(fname, arity);
@@ -1678,9 +1783,10 @@ Interpreter.prototype.inst_allocate = function() {
 	
 	//console.log("Instruction: 'allocate'");
 	
-	var env = { vars: {}, cp: {} };
+	var env = { vars: {}, cp: {}, si: this.stack.length+1 };
 	this.ctx.tse = env;
 	this.stack.push(env);
+
 };
 
 /**
@@ -1696,6 +1802,13 @@ Interpreter.prototype.inst_deallocate = function() {
 	
 	//console.log("Instruction: 'deallocate'");
 	
+	var stack_index = this.ctx.cse.si;
+	var choices = this.ctx.cse.choices || [];
+	
+	if (choices.length == 0) {
+		var si = this.ctx.tse.si;
+		
+	};
 };
 
 /**
@@ -1706,7 +1819,7 @@ Interpreter.prototype.inst_deallocate = function() {
  *    choice point environment at variable $x.
  * 
  *   The target variable $x is retain the current environment
- *    as to help with the remainder of the construction  (cpv).
+ *    as to help with the remainder of the construction.
  * 
  */
 Interpreter.prototype.inst_put_struct = function(inst) {
@@ -1860,12 +1973,11 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	var farity = inst.get('a');
 	
 	
-	// The current value
-	//
 	// Assume this will fail to be on the safe side
 	//
 	this.ctx.cs = null;
 	this.ctx.cu = false;
+
 	
 	// Fetch the value from the target input variable
 	var input_node = this.ctx.tse.vars[x];
@@ -1981,15 +2093,13 @@ Interpreter.prototype.inst_get_term = function(inst) {
 	return this._get_x(inst, 'term');
 };
 
+
+
 Interpreter.prototype._get_x = function(inst, type) {
 	
 	var p = inst.get('p');
 
 	this.ctx.cu = false;
-	
-	//console.log("ctx: ", this.ctx);
-	//console.log("cv: ", this.ctx.cv);
-	//console.log("cvi: ", this.ctx.cvi);
 	
 	if (this.ctx.csm == 'w') {
 		this.ctx.cs.push_arg( p );
@@ -2052,9 +2162,11 @@ Interpreter.prototype._get_x = function(inst, type) {
  *   
  * 
  */
-Interpreter.prototype.inst_unif_var = function() {
+Interpreter.prototype.inst_unif_var = function(inst) {
 	
 	console.log("Instruction: 'unif_var'");
+	
+	var p = inst.get('p');
 	
 };
 

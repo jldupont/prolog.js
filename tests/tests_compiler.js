@@ -133,13 +133,19 @@ var process_goal = function(input_text, expecteds) {
 };
 
 
-var process_body = function(input_text, expecteds) {
+var process_body = function(input_text, expecteds, show_results) {
+	
+	Functor.inspect_short_version = false;
 	
 	var expressions = setup(input_text);
 	
 	var results = [];
 	
-	//console.log(expressions);
+	if (show_results) {
+		console.log(expressions[0][0]);
+		console.log("\n");
+	}
+		
 	
 	for (var index = 0; index<expressions.length; index++) {
 		
@@ -152,12 +158,13 @@ var process_body = function(input_text, expecteds) {
 		
 		//console.log("Expression: ", expression);
 
-		var result = c.process_body(expression);
+		var result = c.process_body(expression, show_results);
 		
 		results.push(result);
 	};
 	
-	//console.log(results);
+	if (show_results)
+		console.log(results);
 	
 	//if (expecteds.length!=results.length)
 	//	throw new Error();
@@ -337,6 +344,7 @@ it('Compiler - goal - basic - 1', function(){
 	'put_term     ( p("a") )',
 	'put_value    ( p(2) )',
 	'call',
+	'maybe_retry',
 	'deallocate'
 	]];
 	
@@ -351,6 +359,7 @@ it('Compiler - goal - basic - 2', function(){
                  'put_struct   ( h1/1, p(0) )',
                  'put_var      ( p("A") )',
                  'call',
+                 'maybe_retry',
                  'deallocate'
 	]];
 	
@@ -370,8 +379,9 @@ it('Compiler - body - basic - 1', function(){
 	             'allocate',
 	              'put_struct   ( h1/1, p(0) )', 
 	              'put_term     ( p("a") )',
-	              'call'
-	              ,'deallocate'
+	              'call',
+	              'maybe_retry',
+	              'deallocate'
 	              ] 
 	      }        
 	];
@@ -391,11 +401,13 @@ it('Compiler - body - basic - 2', function(){
 		      'put_struct   ( f1/1, p(0) )',
 		      'put_term     ( p("a") )',
 		      'call',
+		      'maybe_retry',
 		      'deallocate',
 		      'allocate',
 		      'put_struct   ( f2/1, p(0) )',
 		      'put_term     ( p("b") )',
 		      'call',
+		      'maybe_retry',
 		      'deallocate'
 		      ] }
 
@@ -415,6 +427,7 @@ it('Compiler - body - basic - 3', function(){
 		     'put_struct   ( f1/1, p(0) )',
 		     'put_term     ( p("a") )',
 		     'call',
+		     'maybe_retry',
 		     'deallocate',
 		     'allocate',
 		     'put_struct   ( f3/1, p(1) )',
@@ -422,6 +435,7 @@ it('Compiler - body - basic - 3', function(){
 		     'put_struct   ( f2/1, p(0) )',
 		     'put_value    ( p(1) )',
 		     'call',
+		     'maybe_retry',
 		     'deallocate'
 		     ] }
 
@@ -443,20 +457,23 @@ it('Compiler - body - complex - 1', function(){
 		        'put_struct   ( f3/1, p(0) )', 
 		        'put_term     ( p("c") )',
 		        'call',
+		        'maybe_retry',
 		        'deallocate'
 		        ],
 		  g0:  [ 
-		         'try_else     ( p("g4") )',
 		         'allocate',
 			     'put_struct   ( f1/1, p(0) )',
 			     'put_term     ( p("a") )',
 			     'call',
+			     'maybe_retry',
 			     'deallocate',
 			     'allocate',
 			     'put_struct   ( f2/1, p(0) )',
 			     'put_term     ( p("b") )',
 			     'call',
-			     'deallocate'
+			     'maybe_retry',
+			     'deallocate',
+		         'try_else     ( p("g4") )'			     
 		     ] 
 		}	                
 	                
@@ -465,7 +482,10 @@ it('Compiler - body - complex - 1', function(){
 	process_body(text, expected);
 });
 
+
 it('Compiler - body - complex - 2', function(){
+	
+	//console.log("\n****body - complex 2***\n");
 	
 	var text = "f1(a), f2(b) ; f3(c), f4(d).";
 	var expected = [
@@ -476,25 +496,29 @@ it('Compiler - body - complex - 2', function(){
 		        'put_struct   ( f3/1, p(0) )', 
 		        'put_term     ( p("c") )',
 		        'call',
+		        'maybe_retry',
 		        'deallocate',
 		        'allocate',
 		        'put_struct   ( f4/1, p(0) )',
 		        'put_term     ( p("d") )',
-		        'call',		        
+		        'call',		  
+		        'maybe_retry',
 		        'deallocate'
 		        ],
 		  g0:  [ 
-		         'try_else     ( p("g4") )',
 		         'allocate',
 			     'put_struct   ( f1/1, p(0) )',
 			     'put_term     ( p("a") )',
 			     'call',
+			     'maybe_retry',
 			     'deallocate',
 			     'allocate',
 			     'put_struct   ( f2/1, p(0) )',
 			     'put_term     ( p("b") )',
 			     'call',
-			     'deallocate'
+			     'maybe_retry',
+			     'deallocate',
+			     'try_else     ( p("g4") )'
 		     ] 
 		}	                
 	                
@@ -503,9 +527,22 @@ it('Compiler - body - complex - 2', function(){
 	process_body(text, expected);
 });
 
+
+
 it('Compiler - body - complex - 3', function(){
 	
+	//console.log("\n***complex 3***\n");
+	
 	var text = "f1(a) ; f2(b) ; f3(c) ; f4(d).";
+	
+	//
+	//	Functor(disj/2,
+	//		Functor(disj/2,
+	//			Functor(disj/2,Functor(f1/1,'Token(term,a)'),Functor(f2/1,'Token(term,b)')),
+	//			Functor(f3/1,'Token(term,c)')),
+	//		Functor(f4/1,'Token(term,d)'))
+	
+	
 	var expected = [
 
 		{   g4: 
@@ -513,34 +550,43 @@ it('Compiler - body - complex - 3', function(){
 			     'put_struct   ( f2/1, p(0) )',
 			     'put_term     ( p("b") )',
 			     'call'        ,
-			     'deallocate'   ],
+			     'maybe_retry',
+			     'deallocate',
+			     'try_else     ( p("g5") )'
+			     ],
             g5: 
 			   [ 'allocate'    ,
 			     'put_struct   ( f3/1, p(0) )',
 			     'put_term     ( p("c") )',
 			     'call'        ,
-			     'deallocate'   ],
+			     'maybe_retry',
+			     'deallocate',
+			     'try_else     ( p("g6") )',
+			     ],
             g6:
 			   [ 'allocate'    ,
 			     'put_struct   ( f4/1, p(0) )',
 			     'put_term     ( p("d") )',
 			     'call'        ,
+			     'maybe_retry',
 			     'deallocate'   ],
 			g0: 
-			   [ 'try_else     ( p("g6") )',
-			     'try_else     ( p("g5") )',
-			     'try_else     ( p("g4") )',
+			   [ 
 			     'allocate'    ,
 			     'put_struct   ( f1/1, p(0) )',
 			     'put_term     ( p("a") )',
 			     'call'        ,
-			     'deallocate'   ] 
+			     'maybe_retry',
+			     'deallocate',
+			     'try_else     ( p("g4") )'
+			     ] 
 		}	                
 	                
 	];
 	
 	process_body(text, expected);
 });
+
 
 //==================================================== RULE
 //
@@ -556,6 +602,7 @@ it('Compiler - rule - basic - 1', function(){
 			     'put_struct   ( f2/1, p(0) )',
 			     'put_var      ( p("A") )',
 			     'call',
+			     'maybe_retry',
 			     'deallocate'],
 		  head: [ 
 		           'get_struct   ( f1/1, p(0) )'
@@ -600,11 +647,13 @@ it('Compiler - rule/fact - basic - 1', function(){
 			     'put_struct   ( f2/1, p(0) )',
 			     'put_var      ( p("A") )',
 			     'call',
+			     'maybe_retry',
 			     'deallocate',
 			     'allocate',
 			     'put_struct   ( f3/1, p(0) )',
 			     'put_var      ( p("A") )',
 			     'call',
+			     'maybe_retry',
 			     'deallocate'			     
 			     ],
 		  head: [ 
@@ -633,6 +682,7 @@ it('Compiler - rule/fact - complex - 1', function(){
 			       'put_struct   ( f2/1, p(0) )',
 			       'put_value    ( p(2) )',
 			       'call'        ,
+			       'maybe_retry',
 			       'deallocate' 
 			     ],
 		  head: [ 
@@ -662,6 +712,7 @@ it('Compiler - rule/fact - complex - 2', function(){
 			       'put_struct   ( f2/1, p(0) )',
 			       'put_value    ( p(2) )',
 			       'call'        ,
+			       'maybe_retry',
 			       'deallocate' 
 			     ],
 		  head: [
