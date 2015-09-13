@@ -588,6 +588,57 @@ it('Compiler - body - complex - 3', function(){
 });
 
 
+it('Compiler - body - complex - 4', function(){
+	
+	//console.log("\n***complex 3***\n");
+	
+	var text = "f1(a) ; f2(b) , f3(c) ; f4(d).";
+	
+	
+	var expected = [
+
+		{ g3: 
+			   [ 'allocate'    ,
+			     'put_struct   ( f2/1, p(0) )',
+			     'put_term     ( p("b") )',
+			     'call'        ,
+			     'maybe_retry' ,
+			     'deallocate'  ,
+			     'allocate'    ,
+			     'put_struct   ( f3/1, p(0) )',
+			     'put_term     ( p("c") )',
+			     'call'        ,
+			     'maybe_retry' ,
+			     'deallocate'  ,
+			     'try_else     ( p("g4") )' 
+			     ],
+			  g4: 
+			   [ 
+			     'allocate'    ,
+			     'put_struct   ( f4/1, p(0) )',
+			     'put_term     ( p("d") )',
+			     'call'        ,
+			     'maybe_retry' ,
+			     'deallocate'
+			     ],
+			  g0: 
+			   [ 
+			     'allocate'    ,
+			     'put_struct   ( f1/1, p(0) )',
+			     'put_term     ( p("a") )',
+			     'call'        ,
+			     'maybe_retry' ,
+			     'deallocate'  ,
+			     'try_else     ( p("g3") )'
+			     ] 
+		}
+
+	];
+	
+	process_body(text, expected);
+});
+
+
 //==================================================== RULE
 //
 
