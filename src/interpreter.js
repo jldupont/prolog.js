@@ -532,6 +532,30 @@ Interpreter.prototype.inst_try_else = function() {
 	
 };
 
+/**
+ *   Instruction "maybe_retry"
+ * 
+ *   Used to retry the preceding 'CALL'
+ * 
+ */
+Interpreter.prototype.inst_maybe_retry = function() {
+	
+	console.log("Instruction: 'maybe_retry'");
+	
+};
+
+/**
+ *   Instruction "maybe_fail"
+ *   
+ *   Used to 'fail' the goal if the result
+ *    of the preceding 'CALL' failed.
+ *   
+ */
+Interpreter.prototype.inst_maybe_fail = function() {
+	
+	console.log("Instruction: 'maybe_fail'");
+	
+};
 
 
 /**

@@ -229,14 +229,20 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 	 *  
 	 */
 	var conj_link = function(jctx, lctx, rctx) {
+
+		var llabel = "g"+lctx.vc;
+		var rlabel = "g"+rctx.vc;
+				
+		// Step 0: include the boundary instruction
+		//         between the 2 goals forming a conjunction
+		
+		result[llabel].push(new Instruction("maybe_fail"));
 		
 		// Step 1, combine code of R under code for L
 		//      
-		var llabel = "g"+lctx.vc;
-		var rlabel = "g"+rctx.vc;
-		
 		result[llabel] = result[llabel].concat(result[rlabel]);
 		
+		// Everytime there is a merge, we track it
 		merges[rlabel] = llabel;
 		
 		// Step 2, get rid of R
@@ -247,6 +253,7 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 		
 		result[jlabel] = result[llabel];
 		
+		// Of course here too...
 		merges[llabel] = jlabel;
 		
 		// Step 4, finally get rid of L
@@ -259,22 +266,9 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 	 * 
 	 *  Disj(Gx, L, R)
 	 *  
-	 *    - Bring L code under the label Gx
-	 *    - Add link code on top of Gx code
-	 * 
 	 */
 	var disj_link = function(jctx, lctx, rctx){
 
-		
-		if (show_debug) {
-			console.log("DISJ: jctx: ", jctx);
-			console.log("DISJ: lctx: ", lctx);
-			console.log("DISJ: rctx: ", rctx, "\n");
-		};
-		
-		
-		// Step 1, combine code of L under code for Gx
-		//
 		var jlabel = "g"+jctx.vc;
 		var llabel = "g"+lctx.vc;
 		var rlabel = "g"+rctx.vc;
@@ -286,27 +280,25 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 			result[llabel].unshift(new Instruction('try_else', {p: rlabel}));
 			
 		} else {
-			
-			//console.log("Map:    ", map, "\n");
-			//console.log("Merges: ", merges, "\n");
+			/*
+			 *  More difficult case: 
+			 *   We've got just a label on the left side
+			 *   and so we must deref until we find the right side
+			 *   code node under the label.
+			 */
 			
 			var lmap = map[llabel];
 			var rnode_label = lmap.r;
 			
 			var dlabel = deref(rnode_label);
 			
-			//console.log("rnode_label: ", rnode_label);
-			//console.log("deref label: ", dlabel);
-			
-			//console.log("result[rnode_label]: ", result[rnode_label]);
-			
-			//console.log("Result: ", result);
-			
 			result[dlabel].unshift(new Instruction('try_else', {p: rlabel}));
 		};
 
 		result[jlabel] = result[llabel];
 		
+		// Track merges
+		//
 		merges[llabel] = jlabel;
 		
 		delete result[llabel];
