@@ -43,8 +43,10 @@ Compiler.prototype.process_rule_or_fact = function(exp) {
 	if (exp.name == 'rule')
 		return this.process_rule(exp);
 
+	var with_body = false;
+	
 	var result = {
-		'head': this.process_head(exp)
+		'head': this.process_head(exp, with_body)
 	};
 	
 	return result;
@@ -63,7 +65,8 @@ Compiler.prototype.process_rule = function(exp) {
 	
 	var result = this.process_body(body);
 	
-	result['head'] = this.process_head(head);
+	var with_body = true;
+	result['head'] = this.process_head(head, with_body);
 	
 	return result;
 };
@@ -87,7 +90,7 @@ Compiler.prototype.process_rule = function(exp) {
  *  @raise ErrorExpectingFunctor
  *  @raise ErrorInvalidHead
  */
-Compiler.prototype.process_head = function(exp) {
+Compiler.prototype.process_head = function(exp, with_body) {
 	
 	if (!(exp instanceof Functor))
 		throw new ErrorExpectingFunctor();
@@ -151,7 +154,10 @@ Compiler.prototype.process_head = function(exp) {
 		
 	});//callback
 	
-	result.push(new Instruction("jump", {p:'g0'}));
+	if (with_body)
+		result.push(new Instruction("jump", {p:'g0'}));
+	else
+		result.push(new Instruction("proceed"));
 	
 	return result;
 };
@@ -190,6 +196,9 @@ Compiler.prototype.process_query = function(exp) {
  *   conjunctions and/or disjunctions.
  *   
  *  Goal index starts at 0.
+ *   
+ *  'proceed' goes on each branch of disjunctions
+ *  but only goes on the right-hand side of conjunctions.
  *   
  *   @raise
  */
@@ -235,7 +244,17 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 
 		var llabel = "g"+lctx.vc;
 		var rlabel = "g"+rctx.vc;
-				
+
+		
+		// Step -1
+		// Get rid of 'proceed' in between conjunction terms (if any)
+		var lcode = result[llabel];
+		var last_instruction_on_left = lcode[lcode.length-1];
+		
+		if (last_instruction_on_left.opcode == 'proceed')
+			lcode.pop();
+		
+		
 		// Step 0: include the boundary instruction
 		//         between the 2 goals forming a conjunction
 		
@@ -463,6 +482,9 @@ Compiler.prototype.process_goal = function(exp) {
 			results.push(new Instruction('call'));
 			results.push(new Instruction('maybe_retry'));
 			results.push(new Instruction('deallocate'));
+			
+			//
+			results.push(new Instruction('proceed'));
 		};
 			
 		

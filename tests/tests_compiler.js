@@ -285,7 +285,7 @@ it('Compiler - basic - 0', function(){
 	var expected = [[ 
 	'get_struct   ( h1/1, p(0) )', 
 	'get_number   ( p(666) )',
-	'jump         ( p("g0") )'
+	'proceed'
 	]];
 	
 	process_head(text, expected);
@@ -298,7 +298,7 @@ it('Compiler - basic - 1', function(){
 	var expected = [[ 
 	'get_struct   ( f/1, p(0) )', 
 	'unif_var     ( p("A") )',
-	'jump         ( p("g0") )'
+	'proceed'
 	]];
 	
 	process_head(text, expected);
@@ -323,7 +323,7 @@ it('Compiler - basic - 2', function(){
   'get_term     ( p("h3b") )',
   'get_struct   ( h3c/1, p(4) )',
   'get_term     ( p("h3c") )',
-  'jump         ( p("g0") )'
+  'proceed'
   ]];
 	
 	process_head(text, expected);
@@ -349,6 +349,7 @@ it('Compiler - goal - basic - 1', function(){
 	'call',
 	'maybe_retry',
 	'deallocate'
+	,'proceed'
 	]];
 	
 	process_goal(text, expected);
@@ -364,9 +365,158 @@ it('Compiler - goal - basic - 2', function(){
                  'call',
                  'maybe_retry',
                  'deallocate'
+                 ,'proceed'
 	]];
 	
 	process_goal(text, expected);
+});
+
+//==================================================== RULE OR FACT
+//
+
+it('Compiler - rule/fact - basic - 0', function(){
+	
+	var text = "f1(A) :- f2(A).";
+	var expected = [
+
+		{ 
+			g0: 
+			   [ 'allocate',
+			     'put_struct   ( f2/1, p(0) )',
+			     'put_var      ( p("A") )',
+			     'call',
+			     'maybe_retry',
+			     'deallocate'
+			     ,'proceed'
+			     ],
+		  head: [ 
+		           'get_struct   ( f1/1, p(0) )'
+		          ,'unif_var     ( p("A") )'
+		          ,'jump         ( p("g0") )'
+		          ] 
+		}	                
+	                
+	];
+	
+	process_rule(text, expected);
+});
+
+
+
+it('Compiler - rule/fact - basic - 1', function(){
+	
+	var text = "likes(jld, chocolat).";
+	var expected = [
+
+		{head: [ 
+		 
+		  'get_struct   ( likes/2, p(0) )',
+		  'get_term     ( p("jld") )',
+		  'get_term     ( p("chocolat") )'
+		  ,'proceed'
+		  ]}             
+	];
+	
+	process(text, expected);
+});
+
+it('Compiler - rule/fact - basic - 2', function(){
+	
+	var text = "f1(A) :- f2(A), f3(A).";
+	var expected = [
+
+		{ 
+			g0: 
+			   [ 'allocate',
+			     'put_struct   ( f2/1, p(0) )',
+			     'put_var      ( p("A") )',
+			     'call',
+			     'maybe_retry',
+			     'deallocate',
+			     'maybe_fail',
+			     'allocate',
+			     'put_struct   ( f3/1, p(0) )',
+			     'put_var      ( p("A") )',
+			     'call',
+			     'maybe_retry',
+			     'deallocate'
+			     ,'proceed'
+			     ],
+		  head: [ 
+		           'get_struct   ( f1/1, p(0) )'
+		          ,'unif_var     ( p("A") )'
+		          ,'jump         ( p("g0") )'
+		          ] 
+		}	                
+	                
+	];
+	
+	process_rule(text, expected);
+});
+
+it('Compiler - rule/fact - complex - 1', function(){
+	
+	var text = "f1(A) :- f2(f3(f4(A))).";
+	var expected = [
+
+		{ 
+			g0: 
+			   [ 	'allocate'    ,
+			       'put_struct   ( f4/1, p(1) )',
+			       'put_var      ( p("A") )',
+			       'put_struct   ( f3/1, p(2) )',
+			       'put_value    ( p(1) )',
+			       'put_struct   ( f2/1, p(0) )',
+			       'put_value    ( p(2) )',
+			       'call'        ,
+			       'maybe_retry',
+			       'deallocate' 
+			       ,'proceed'
+			     ],
+		  head: [ 
+		           'get_struct   ( f1/1, p(0) )'
+		          ,'unif_var     ( p("A") )'
+		          ,'jump         ( p("g0") )'
+		          ] 
+		}	                
+	                
+	];
+	
+	process_rule(text, expected);
+});
+
+
+it('Compiler - rule/fact - complex - 2', function(){
+	
+	var text = "f1(g1(A)) :- f2(f3(f4(A))).";
+	var expected = [
+
+		{ 
+			g0: 
+			   [ 	'allocate'    ,
+			       'put_struct   ( f4/1, p(1) )',
+			       'put_var      ( p("A") )',
+			       'put_struct   ( f3/1, p(2) )',
+			       'put_value    ( p(1) )',
+			       'put_struct   ( f2/1, p(0) )',
+			       'put_value    ( p(2) )',
+			       'call'        ,
+			       'maybe_retry',
+			       'deallocate' 
+			       ,'proceed'
+			     ],
+		  head: [
+					'get_struct   ( f1/1, p(0) )',
+					'unif_var     ( p(1) )',
+					'get_struct   ( g1/1, p(1) )',
+					'unif_var     ( p("A") )'
+					,'jump         ( p("g0") )'
+		          ] 
+		}	                
+	                
+	];
+	
+	process_rule(text, expected);
 });
 
 
@@ -376,15 +526,22 @@ it('Compiler - goal - basic - 2', function(){
 
 it('Compiler - body - basic - 1', function(){
 	
+	/*
+		jctx:  { type: 'root', vc: 0 }
+		lctx:  { n: Functor(h1/1,'Token(term,a)') }
+		rctx:  null 
+	 */
+	
 	var text = "h1(a).";
 	var expected = [
 	      { g0: [ 
-	             'allocate',
+	              'allocate',
 	              'put_struct   ( h1/1, p(0) )', 
 	              'put_term     ( p("a") )',
 	              'call',
 	              'maybe_retry',
 	              'deallocate'
+	              ,'proceed'
 	              ] 
 	      }        
 	];
@@ -413,6 +570,7 @@ it('Compiler - body - basic - 2', function(){
 		      'call',
 		      'maybe_retry',
 		      'deallocate'
+		      ,'proceed'
 		      ] }
 
 	];
@@ -442,6 +600,7 @@ it('Compiler - body - basic - 3', function(){
 		     'call',
 		     'maybe_retry',
 		     'deallocate'
+		     ,'proceed'
 		     ] }
 
 	];
@@ -449,7 +608,7 @@ it('Compiler - body - basic - 3', function(){
 	process_body(text, expected);
 });
 
-
+// ================================================================== COMPLEX
 
 it('Compiler - body - complex - 1', function(){
 	
@@ -465,6 +624,7 @@ it('Compiler - body - complex - 1', function(){
 		        'call',
 		        'maybe_retry',
 		        'deallocate'
+		        ,'proceed'
 		        ],
 		  g0:  [ 
 		        'try_else     ( p("g4") )',
@@ -480,7 +640,8 @@ it('Compiler - body - complex - 1', function(){
 			     'put_term     ( p("b") )',
 			     'call',
 			     'maybe_retry',
-			     'deallocate',
+			     'deallocate'
+			     ,'proceed'
 		         			     
 		     ] 
 		}	                
@@ -514,6 +675,7 @@ it('Compiler - body - complex - 2', function(){
 		        'call',		  
 		        'maybe_retry',
 		        'deallocate'
+		        ,'proceed'
 		        ],
 		  g0:  [ 
 		        'try_else     ( p("g4") )',
@@ -529,7 +691,8 @@ it('Compiler - body - complex - 2', function(){
 			     'put_term     ( p("b") )',
 			     'call',
 			     'maybe_retry',
-			     'deallocate',
+			     'deallocate'
+			     ,'proceed'
 			     
 		     ] 
 		}	                
@@ -565,7 +728,8 @@ it('Compiler - body - complex - 3', function(){
 			     'put_term     ( p("b") )',
 			     'call'        ,
 			     'maybe_retry',
-			     'deallocate',
+			     'deallocate'
+			     ,'proceed'
 			     
 			     ],
             g5: 
@@ -576,8 +740,8 @@ it('Compiler - body - complex - 3', function(){
 			     'put_term     ( p("c") )',
 			     'call'        ,
 			     'maybe_retry',
-			     'deallocate',
-			     
+			     'deallocate'
+			     ,'proceed'
 			     ],
             g6:
 			   [ 
@@ -587,7 +751,9 @@ it('Compiler - body - complex - 3', function(){
 			     'put_term     ( p("d") )',
 			     'call'        ,
 			     'maybe_retry',
-			     'deallocate'   ],
+			     'deallocate'   
+			     ,'proceed'
+			     ],
 			g0: 
 			   [ 
 			     'try_else     ( p("g4") )',
@@ -596,7 +762,8 @@ it('Compiler - body - complex - 3', function(){
 			     'put_term     ( p("a") )',
 			     'call'        ,
 			     'maybe_retry',
-			     'deallocate',
+			     'deallocate'
+			     ,'proceed'
 			     
 			     ] 
 		}	                
@@ -627,7 +794,7 @@ it('Compiler - body - complex - 4', function(){
 
 		{ g3: 
 			   [ 
-			    'try_else     ( p("g4") )',
+			     'try_else     ( p("g4") )',
 			     'allocate'    ,
 			     'put_struct   ( f2/1, p(0) )',
 			     'put_term     ( p("b") )',
@@ -640,28 +807,31 @@ it('Compiler - body - complex - 4', function(){
 			     'put_term     ( p("c") )',
 			     'call'        ,
 			     'maybe_retry' ,
-			     'deallocate'  ,
+			     'deallocate'
+			     ,'proceed'
 			      
 			     ],
 			  g4: 
 			   [ 
-			    'try_finally',
-			    'allocate'    ,
+			     'try_finally',
+			     'allocate'    ,
 			     'put_struct   ( f4/1, p(0) )',
 			     'put_term     ( p("d") )',
 			     'call'        ,
 			     'maybe_retry' ,
 			     'deallocate'
+			     ,'proceed'
 			     ],
 			  g0: 
 			   [ 
-			    'try_else     ( p("g3") )',
+			     'try_else     ( p("g3") )',
 			     'allocate'    ,
 			     'put_struct   ( f1/1, p(0) )',
 			     'put_term     ( p("a") )',
 			     'call'        ,
 			     'maybe_retry' ,
-			     'deallocate'  ,
+			     'deallocate'  
+			     ,'proceed'
 			     
 			     ] 
 		}
@@ -723,6 +893,7 @@ it('Compiler - body - complex - 5', function(){
 			     'call'        ,
 			     'maybe_retry' ,
 			     'deallocate'   
+			     ,'proceed'
 			     ],
 			  g4: 
 			   [ 
@@ -740,6 +911,7 @@ it('Compiler - body - complex - 5', function(){
 			     'call'        ,
 			     'maybe_retry' ,
 			     'deallocate'   
+			     ,'proceed'
 			     ],
 			  g0: 
 			   [ 
@@ -749,7 +921,8 @@ it('Compiler - body - complex - 5', function(){
 			     'put_term     ( p("a") )',
 			     'call'        ,
 			     'maybe_retry' ,
-			     'deallocate'   
+			     'deallocate'  
+			     ,'proceed'
 			     ] 
 		}
 
@@ -759,148 +932,103 @@ it('Compiler - body - complex - 5', function(){
 });
 
 
-//==================================================== RULE
-//
 
-it('Compiler - rule - basic - 1', function(){
+it('Compiler - body - complex - 6', function(){
 	
-	var text = "f1(A) :- f2(A).";
+	//console.log("\n***complex 6***\n");
+	
+	var text = "f1(a), f2(b); f3(b) , f4(c), f5(d) ; f6(d), f7(e).";
+	
+	/*
+		jctx:  { type: 'conj', vc: 2, root: false }
+		lctx:  { vc: 3, n: Functor(f1/1,'Token(term,a)') }
+		rctx:  { vc: 4, n: Functor(f2/1,'Token(term,b)') } 
+		
+		jctx:  { type: 'conj', vc: 6, root: false }
+		lctx:  { vc: 7, n: Functor(f3/1,'Token(term,b)') }
+		rctx:  { vc: 8, n: Functor(f4/1,'Token(term,c)') } 
+		
+		jctx:  { type: 'conj', vc: 5, root: false }
+		lctx:  { vc: 6 }
+		rctx:  { vc: 9, n: Functor(f5/1,'Token(term,d)') } 
+		
+		jctx:  { type: 'disj', vc: 1, root: false }
+		lctx:  { vc: 2 }
+		rctx:  { vc: 5 } 
+		
+		jctx:  { type: 'conj', vc: 6, root: false }
+		lctx:  { vc: 7, n: Functor(f6/1,'Token(term,d)') }
+		rctx:  { vc: 8, n: Functor(f7/1,'Token(term,e)') } 
+		
+		jctx:  { type: 'disj', vc: 0, root: true }
+		lctx:  { vc: 1 }
+		rctx:  { vc: 6 } 
+	 */
+	
 	var expected = [
 
-		{ 
-			g0: 
-			   [ 'allocate',
-			     'put_struct   ( f2/1, p(0) )',
-			     'put_var      ( p("A") )',
-			     'call',
-			     'maybe_retry',
-			     'deallocate'],
-		  head: [ 
-		           'get_struct   ( f1/1, p(0) )'
-		          ,'unif_var     ( p("A") )'
-		          ,'jump         ( p("g0") )'
-		          ] 
-		}	                
-	                
+		{ g5: 
+		    [ 'try_else     ( p("g6") )',
+		      'allocate'    ,
+		      'put_struct   ( f3/1, p(0) )',
+		      'put_term     ( p("b") )',
+		      'call        ',
+		      'maybe_retry ',
+		      'deallocate  ',
+		      'maybe_fail  ',
+		      'allocate    ',
+		      'put_struct   ( f4/1, p(0) )',
+		      'put_term     ( p("c") )',
+		      'call        ',
+		      'maybe_retry ',
+		      'deallocate  ',
+		      'maybe_fail  ',
+		      'allocate    ',
+		      'put_struct   ( f5/1, p(0) )',
+		      'put_term     ( p("d") )',
+		      'call        ',
+		      'maybe_retry' ,
+		      'deallocate'
+		      ,'proceed'
+		      ],
+		   g6: 
+		    [ 'try_finally ',
+		      'allocate    ',
+		      'put_struct   ( f6/1, p(0) )',
+		      'put_term     ( p("d") )',
+		      'call        ',
+		      'maybe_retry ',
+		      'deallocate  ',
+		      'maybe_fail  ',
+		      'allocate    ',
+		      'put_struct   ( f7/1, p(0) )',
+		      'put_term     ( p("e") )',
+		      'call        ',
+		      'maybe_retry' ,
+		      'deallocate'   
+		      ,'proceed'
+		      ],
+		   g0: 
+		    [ 
+		      'try_else     ( p("g5") )',
+		      'allocate    ',
+		      'put_struct   ( f1/1, p(0) )',
+		      'put_term     ( p("a") )',
+		      'call        ',
+		      'maybe_retry ',
+		      'deallocate  ',
+		      'maybe_fail  ',
+		      'allocate    ',
+		      'put_struct   ( f2/1, p(0) )',
+		      'put_term     ( p("b") )',
+		      'call        ',
+		      'maybe_retry' ,
+		      'deallocate'   
+		      ,'proceed'
+		      ] 
+		}
 	];
 	
-	process_rule(text, expected);
+	process_body(text, expected);
 });
 
-
-//==================================================== RULE OR FACT
-//
-
-
-it('Compiler - rule/fact - basic - 0', function(){
-	
-	var text = "likes(jld, chocolat).";
-	var expected = [
-
-		{head: [ 
-		 
-		  'get_struct   ( likes/2, p(0) )',
-		  'get_term     ( p("jld") )',
-		  'get_term     ( p("chocolat") )'
-		  ,'jump         ( p("g0") )'
-		  ]}             
-	];
-	
-	process(text, expected);
-});
-
-it('Compiler - rule/fact - basic - 1', function(){
-	
-	var text = "f1(A) :- f2(A), f3(A).";
-	var expected = [
-
-		{ 
-			g0: 
-			   [ 'allocate',
-			     'put_struct   ( f2/1, p(0) )',
-			     'put_var      ( p("A") )',
-			     'call',
-			     'maybe_retry',
-			     'deallocate',
-			     'maybe_fail',
-			     'allocate',
-			     'put_struct   ( f3/1, p(0) )',
-			     'put_var      ( p("A") )',
-			     'call',
-			     'maybe_retry',
-			     'deallocate'			     
-			     ],
-		  head: [ 
-		           'get_struct   ( f1/1, p(0) )'
-		          ,'unif_var     ( p("A") )'
-		          ,'jump         ( p("g0") )'
-		          ] 
-		}	                
-	                
-	];
-	
-	process_rule(text, expected);
-});
-
-it('Compiler - rule/fact - complex - 1', function(){
-	
-	var text = "f1(A) :- f2(f3(f4(A))).";
-	var expected = [
-
-		{ 
-			g0: 
-			   [ 	'allocate'    ,
-			       'put_struct   ( f4/1, p(1) )',
-			       'put_var      ( p("A") )',
-			       'put_struct   ( f3/1, p(2) )',
-			       'put_value    ( p(1) )',
-			       'put_struct   ( f2/1, p(0) )',
-			       'put_value    ( p(2) )',
-			       'call'        ,
-			       'maybe_retry',
-			       'deallocate' 
-			     ],
-		  head: [ 
-		           'get_struct   ( f1/1, p(0) )'
-		          ,'unif_var     ( p("A") )'
-		          ,'jump         ( p("g0") )'
-		          ] 
-		}	                
-	                
-	];
-	
-	process_rule(text, expected);
-});
-
-
-it('Compiler - rule/fact - complex - 2', function(){
-	
-	var text = "f1(g1(A)) :- f2(f3(f4(A))).";
-	var expected = [
-
-		{ 
-			g0: 
-			   [ 	'allocate'    ,
-			       'put_struct   ( f4/1, p(1) )',
-			       'put_var      ( p("A") )',
-			       'put_struct   ( f3/1, p(2) )',
-			       'put_value    ( p(1) )',
-			       'put_struct   ( f2/1, p(0) )',
-			       'put_value    ( p(2) )',
-			       'call'        ,
-			       'maybe_retry',
-			       'deallocate' 
-			     ],
-		  head: [
-					'get_struct   ( f1/1, p(0) )',
-					'unif_var     ( p(1) )',
-					'get_struct   ( g1/1, p(1) )',
-					'unif_var     ( p("A") )'
-					,'jump         ( p("g0") )'
-		          ] 
-		}	                
-	                
-	];
-	
-	process_rule(text, expected);
-});
