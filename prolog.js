@@ -1531,6 +1531,8 @@ Interpreter.prototype.set_question = function(question_code){
 		
 		/*  Continuation Point
 		 *    Used to return from a 'call' 
+		 *    
+		 *    Uses the same format as 'p'
 		 */
 		,cp: null
 		
@@ -1542,6 +1544,9 @@ Interpreter.prototype.set_question = function(question_code){
 		 *   Which clause is being tried
 		 */
 		,ci: 0
+		
+		// Total number of clauses for the current functor
+		,ct: 0
 
 		// TRY_ELSE continuation
 		,te: null
@@ -1705,15 +1710,18 @@ Interpreter.prototype.inst_call = function(inst) {
 		throw new ErrorFunctorNotFound("Functor: "+fname+"/"+arity, [fname, arity]);
 	
 	
+	// Helper for the 'maybe_retry' instruction
+	//
+	this.ctx.tse.ct = code_clauses.length;
+	
+	
 	var code_for_clause = code_clauses[ci];
 	
 	// Reached end of clause list ?
-	//  No more disjunctive goal ?
-	//          choice point ?
 	if (!code_for_clause) {
 		
-		//console.log("No code for clause...");
-		
+		// 'maybe_retry' instruction will
+		//   do the cleanup and backtracking
 		return;
 	};
 	
@@ -1779,14 +1787,12 @@ Interpreter.prototype.inst_allocate = function() {
 Interpreter.prototype.inst_deallocate = function() {
 	
 	//console.log("Instruction: 'deallocate'");
-	
-	var stack_index = this.ctx.cse.si;
-	var choices = this.ctx.cse.choices || [];
+	var choices = this.ctx.tse.choices || [];
 	
 	if (choices.length == 0) {
-		var si = this.ctx.tse.si;
-		
+		this.stack.pop();
 	};
+	
 };
 
 /**
@@ -1936,12 +1942,33 @@ Interpreter.prototype.inst_try_finally = function( ) {
  *   * Increment clause index
  *   * IF the clause index == # of clauses ==> failure
  *   * ELSE
- *   *   p--
+ *   *   p--, p--
  * 
  */
 Interpreter.prototype.inst_maybe_retry = function() {
 	
 	console.log("Instruction: 'maybe_retry'");
+	
+	// A 'noop' if there isn't a failure reported
+	//
+	if (this.ctx.cu)
+		return;
+	
+	this.ctx.tse.ci ++;
+	
+	if (this.ctx.tse.ci < this.ctx.tse.ct) {
+		
+		// We can try the next clause
+		//  The fetch function will have incremented the
+		//   instruction pointer past this instruction
+		//   so we need to substract 2 to get it pointing
+		//   back to the 'CALL' instruction.
+		//
+		this.ctx.cse.p.i -= 2; 
+	};
+
+	// NOOP when we reach end of clause list
+	// The failure flag will still be set.
 	
 };
 
@@ -1957,6 +1984,8 @@ Interpreter.prototype.inst_jump = function( inst ) {
 	
 	console.log("Instruction: 'jump' @ "+ vname);
 	
+	this.ctx.cse.p.l = vname;
+	this.ctx.cse.p.i = 0;
 };
 
 
@@ -1977,6 +2006,13 @@ Interpreter.prototype.inst_maybe_fail = function() {
 	
 	console.log("Instruction: 'maybe_fail'");
 	
+	// NOOP if we are not faced with a failure
+	if (!this.ctx.cu)
+		return;
+	
+	this.ctx.p.f = this.ctx.cse.cp.f;
+	this.ctx.p.l = this.ctx.cse.cp.l;
+	this.ctx.p.i = this.ctx.cse.cp.i;
 };
 
 
