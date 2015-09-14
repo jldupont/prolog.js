@@ -879,6 +879,8 @@ Compiler.prototype.process_head = function(exp) {
 		
 	});//callback
 	
+	result.push(new Instruction("jump", {p:'g0'}));
+	
 	return result;
 };
 
@@ -1422,13 +1424,18 @@ function Interpreter(db, builtins, optional_stack) {
 	this.builtins = builtins;
 	this.stack = optional_stack || [];
 	
-
+	this.tracer = null;
 	this.reached_end_question = false;
 };
 
 Interpreter.prototype.get_stack = function(){
 	return this.stack;
 };
+
+Interpreter.prototype.set_tracer = function(tracer) {
+	this.tracer = tracer;
+};
+
 
 /**
  * Set the `question` to get an answer to
@@ -1522,7 +1529,7 @@ Interpreter.prototype.set_question = function(question_code){
 
 		/*  Choice Point list
 		 */
-		,choices: null
+		,choices: []
 		
 		/*  Continuation Environment
 		 *    Used to return from a 'call'
@@ -1686,6 +1693,10 @@ Interpreter.prototype.get_current_ctx_var = function(evar) {
  */
 Interpreter.prototype.inst_call = function(inst) {
 	
+	if (this.tracer) {
+		this.tracer('call', inst);
+	};
+	
 	//console.log("Instruction: 'call'");
 	
 	// I know it's pessimistic
@@ -1720,8 +1731,8 @@ Interpreter.prototype.inst_call = function(inst) {
 	// Reached end of clause list ?
 	if (!code_for_clause) {
 		
-		// 'maybe_retry' instruction will
-		//   do the cleanup and backtracking
+		// 'maybe_retry' and 'maybe_fail' instructions will
+		//   handle cleanup and backtracking
 		return;
 	};
 	
@@ -1736,8 +1747,25 @@ Interpreter.prototype.inst_call = function(inst) {
 	this.ctx.tse.cp = {
 		 f: this.ctx.p.f
 		,l: this.ctx.p.l
-		,i: this.ctx.p.i + 1
+		,i: this.ctx.p.i // + 0  the fetch will have had already incremented this
 	};
+	
+	// ... and the environment
+	this.ctx.tse.ce = this.ctx.cse;
+	
+	// Also the Choice Point
+	//
+	//  The assumption is that the structure built
+	//   for the following call will be left intact
+	//   in the current environment so it can be reused
+	//   by a possible subsequent choice point selection
+	//   through a backtrack process.
+	//
+	this.ctx.cse.choices.push({
+		 f: this.ctx.p.f
+		,l: this.ctx.p.l
+		,i: this.ctx.p.i - 1 // Point to the CALL instruction
+	});
 	
 	var l = code_for_clause.head ? 'head': 'g0';
 	
@@ -1769,7 +1797,7 @@ Interpreter.prototype.inst_allocate = function() {
 	
 	//console.log("Instruction: 'allocate'");
 	
-	var env = { vars: {}, cp: {}, si: this.stack.length+1 };
+	var env = { vars: {}, cp: {}, choices: [] };
 	this.ctx.tse = env;
 	this.stack.push(env);
 
@@ -1795,109 +1823,6 @@ Interpreter.prototype.inst_deallocate = function() {
 	
 };
 
-/**
- *   Instruction "put_struct $f $a $x"
- * 
- *   Used to construct a structure $f or arity $a in the 
- *   target choice point environment.  Starts building the structure in the
- *    choice point environment at variable $x.
- * 
- *   The target variable $x is retain the current environment
- *    as to help with the remainder of the construction.
- * 
- */
-Interpreter.prototype.inst_put_struct = function(inst) {
-	
-	var f = new Functor(inst.get('f'));
-	var a = inst.get('a');
-	f.arity = a;
-	
-	var x = "x" + inst.get('p');
-	
-	this.ctx.cv = x;
-	this.ctx.tse.vars[x] = f;
-
-	//console.log("Instruction: 'put_struct': "+inst.get('f')+"/"+a+", "+x);
-	//console.log("Env: ", this.env);
-
-};
-
-/**
- *   Instruction "put_term"
- * 
- *   Inserts a 'term' in the structure being built.
- */
-Interpreter.prototype.inst_put_term = function(inst) {
-	
-	var term = inst.get("p");
-	
-	//console.log("Instruction: 'put_term':", term);
-
-	var cv = this.ctx.cv;
-	var struct = this.ctx.tse.vars[cv];
-	
-	struct.push_arg(term);
-	
-};
-
-/**
- *   Instruction "put_number"
- * 
- *   Inserts a 'number' in the structure being built.
- */
-Interpreter.prototype.inst_put_number = function(inst) {
-	
-	var num = inst.get("p");
-	
-	//console.log("Instruction: 'put_number': ", num);
-	
-	var cv = this.ctx.cv;
-	var struct = this.ctx.tse.vars[cv];
-	
-	struct.push_arg(num);
-};
-
-
-/**
- *   Instruction "put_var"
- * 
- *   Inserts a 'var' in the structure being built.
- */
-Interpreter.prototype.inst_put_var = function(inst) {
-	
-	var vname = inst.get("p");
-	
-	//console.log("Instruction: 'put_var'");
-
-	var cv = this.ctx.cv;
-	var struct = this.ctx.tse.vars[cv];
-	
-	struct.push_arg(new Var(vname));
-	
-};
-
-/**
- *   Instruction "put_value"
- * 
- *   Inserts a 'value' in the structure being built.
- *   
- *   The 'value' is obtained through dereferencing
- *    the variable.
- */
-Interpreter.prototype.inst_put_value = function(inst) {
-	
-	var vname = "x" + inst.get("p");
-	
-	var value = this.ctx.tse.vars[vname];
-	
-	//console.log("Instruction: 'put_value': ", value);
-	
-	// The current structure being worked on
-	var cv = this.ctx.cv;
-	var struct = this.ctx.tse.vars[cv];
-
-	struct.push_arg(value);
-};
 
 /**
  *   Instruction "try_else $target"
@@ -1984,6 +1909,7 @@ Interpreter.prototype.inst_jump = function( inst ) {
 	
 	console.log("Instruction: 'jump' @ "+ vname);
 	
+	// Within same functor (i.e. clause)
 	this.ctx.cse.p.l = vname;
 	this.ctx.cse.p.i = 0;
 };
@@ -2010,10 +1936,160 @@ Interpreter.prototype.inst_maybe_fail = function() {
 	if (!this.ctx.cu)
 		return;
 	
+	/*
+	 *  JUMP to continuation point
+	 */
+	this.ctx.cse = this.ctx.cse.ce;
+	
 	this.ctx.p.f = this.ctx.cse.cp.f;
 	this.ctx.p.l = this.ctx.cse.cp.l;
 	this.ctx.p.i = this.ctx.cse.cp.i;
+	
+	// TODO  what happens to ctx.tse ????
 };
+
+
+//=========================================================================== CALL
+
+
+
+/**
+ *   Instruction "put_struct $f $a $x"
+ * 
+ *   Used to construct a structure $f or arity $a in the 
+ *   target choice point environment.  Starts building the structure in the
+ *    choice point environment at variable $x.
+ * 
+ *   The target variable $x is retain the current environment
+ *    as to help with the remainder of the construction.
+ * 
+ */
+Interpreter.prototype.inst_put_struct = function(inst) {
+	
+	var f = new Functor(inst.get('f'));
+	var a = inst.get('a');
+	f.arity = a;
+	
+	var x = "x" + inst.get('p');
+	
+	this.ctx.cv = x;
+	this.ctx.tse.vars[x] = f;
+
+	// TODO manage trail
+	
+	//console.log("Instruction: 'put_struct': "+inst.get('f')+"/"+a+", "+x);
+	//console.log("Env: ", this.env);
+
+};
+
+/**
+ *   Instruction "put_term"
+ * 
+ *   Inserts a 'term' in the structure being built.
+ */
+Interpreter.prototype.inst_put_term = function(inst) {
+	
+	var term = inst.get("p");
+	
+	//console.log("Instruction: 'put_term':", term);
+
+	var cv = this.ctx.cv;
+	var struct = this.ctx.tse.vars[cv];
+	
+	struct.push_arg(term);
+	
+	// TODO manage trail
+};
+
+/**
+ *   Instruction "put_number"
+ * 
+ *   Inserts a 'number' in the structure being built.
+ */
+Interpreter.prototype.inst_put_number = function(inst) {
+	
+	var num = inst.get("p");
+	
+	//console.log("Instruction: 'put_number': ", num);
+	
+	var cv = this.ctx.cv;
+	var struct = this.ctx.tse.vars[cv];
+	
+	struct.push_arg(num);
+	
+	// TODO manage trail
+};
+
+
+/**
+ *   Instruction "put_var"
+ * 
+ *   Inserts a 'var' in the structure being built.
+ */
+Interpreter.prototype.inst_put_var = function(inst) {
+	
+	var vname = inst.get("p");
+	
+	//console.log("Instruction: 'put_var'");
+
+	var cv = this.ctx.cv;
+	var struct = this.ctx.tse.vars[cv];
+	
+	struct.push_arg(new Var(vname));
+
+	// TODO manage trail
+};
+
+/**
+ *   Instruction "put_value"
+ * 
+ *   Inserts a 'value' in the structure being built.
+ *   
+ *   The 'value' is obtained through dereferencing
+ *    the variable.
+ */
+Interpreter.prototype.inst_put_value = function(inst) {
+	
+	var vname = "x" + inst.get("p");
+	
+	var value = this.ctx.tse.vars[vname];
+	
+	//console.log("Instruction: 'put_value': ", value);
+	
+	// The current structure being worked on
+	var cv = this.ctx.cv;
+	var struct = this.ctx.tse.vars[cv];
+
+	struct.push_arg(value);
+	
+	// TODO manage trail
+};
+
+
+//=========================================================================== HEAD
+
+
+
+
+/**
+ *   Instruction "unif_var" $x
+ *   
+ *   Unify the value at the current variable
+ *    being matched in the environment.
+ *   
+ * 
+ */
+Interpreter.prototype.inst_unif_var = function(inst) {
+	
+	console.log("Instruction: 'unif_var'");
+	
+	var p = inst.get('p');
+	
+	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
+	
+	// TODO 
+};
+
 
 
 /**
@@ -2233,23 +2309,6 @@ Interpreter.prototype._get_x = function(inst, type) {
 };
 
 
-
-
-/**
- *   Instruction "unif_var" $x
- *   
- *   Unify the value at the current variable
- *    being matched in the environment.
- *   
- * 
- */
-Interpreter.prototype.inst_unif_var = function(inst) {
-	
-	console.log("Instruction: 'unif_var'");
-	
-	var p = inst.get('p');
-	
-};
 
 
 if (typeof module != 'undefined') {

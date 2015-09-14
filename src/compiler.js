@@ -151,6 +151,8 @@ Compiler.prototype.process_head = function(exp) {
 		
 	});//callback
 	
+	result.push(new Instruction("jump", {p:'g0'}));
+	
 	return result;
 };
 

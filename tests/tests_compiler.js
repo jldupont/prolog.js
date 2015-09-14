@@ -284,7 +284,8 @@ it('Compiler - basic - 0', function(){
 	var text = "h1(666).";
 	var expected = [[ 
 	'get_struct   ( h1/1, p(0) )', 
-	'get_number   ( p(666) )'	               
+	'get_number   ( p(666) )',
+	'jump         ( p("g0") )'
 	]];
 	
 	process_head(text, expected);
@@ -296,7 +297,8 @@ it('Compiler - basic - 1', function(){
 	var text = "f(A).";
 	var expected = [[ 
 	'get_struct   ( f/1, p(0) )', 
-	'unif_var     ( p("A") )'               
+	'unif_var     ( p("A") )',
+	'jump         ( p("g0") )'
 	]];
 	
 	process_head(text, expected);
@@ -320,7 +322,8 @@ it('Compiler - basic - 2', function(){
   'get_struct   ( h3b/1, p(3) )',
   'get_term     ( p("h3b") )',
   'get_struct   ( h3c/1, p(4) )',
-  'get_term     ( p("h3c") )' 
+  'get_term     ( p("h3c") )',
+  'jump         ( p("g0") )'
   ]];
 	
 	process_head(text, expected);
@@ -775,6 +778,7 @@ it('Compiler - rule - basic - 1', function(){
 		  head: [ 
 		           'get_struct   ( f1/1, p(0) )'
 		          ,'unif_var     ( p("A") )'
+		          ,'jump         ( p("g0") )'
 		          ] 
 		}	                
 	                
@@ -797,7 +801,8 @@ it('Compiler - rule/fact - basic - 0', function(){
 		 
 		  'get_struct   ( likes/2, p(0) )',
 		  'get_term     ( p("jld") )',
-		  'get_term     ( p("chocolat") )' 
+		  'get_term     ( p("chocolat") )'
+		  ,'jump         ( p("g0") )'
 		  ]}             
 	];
 	
@@ -828,6 +833,7 @@ it('Compiler - rule/fact - basic - 1', function(){
 		  head: [ 
 		           'get_struct   ( f1/1, p(0) )'
 		          ,'unif_var     ( p("A") )'
+		          ,'jump         ( p("g0") )'
 		          ] 
 		}	                
 	                
@@ -857,6 +863,7 @@ it('Compiler - rule/fact - complex - 1', function(){
 		  head: [ 
 		           'get_struct   ( f1/1, p(0) )'
 		          ,'unif_var     ( p("A") )'
+		          ,'jump         ( p("g0") )'
 		          ] 
 		}	                
 	                
@@ -888,7 +895,8 @@ it('Compiler - rule/fact - complex - 2', function(){
 					'get_struct   ( f1/1, p(0) )',
 					'unif_var     ( p(1) )',
 					'get_struct   ( g1/1, p(1) )',
-					'unif_var     ( p("A") )'		         
+					'unif_var     ( p("A") )'
+					,'jump         ( p("g0") )'
 		          ] 
 		}	                
 	                
