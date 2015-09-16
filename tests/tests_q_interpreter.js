@@ -118,6 +118,9 @@ var compile_rule_or_fact = function(input_text) {
 	
 };
 
+// ======================================================================== BASIC
+
+
 it('Interpreter - basic - 0', function(){
 	
 	var qtext = "q(A).";
@@ -292,9 +295,20 @@ it('Interpreter - complex - 1', function(){
 		     deallocate   ] }
 	 */
 	
+	function tracer(ctx, inst, before_or_after) {
+		if (before_or_after == 'before') {
+			console.log(inst);
+		} else {
+			console.log("CU: ", ctx.ctx.cu);
+		};
+			
+	};
+	
 	var builtins = {};
 	
 	var it = new Interpreter(db, builtins);
+	
+	it.set_tracer(tracer);
 	
 	it.set_question(qcode);
 	

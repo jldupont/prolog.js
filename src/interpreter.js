@@ -64,9 +64,12 @@ Interpreter.prototype.set_question = function(question_code){
 		// The current instruction pointer
 		//
 		p: { 
-			f: ".q.",  // which functor in the database 
-			l: 'g0',  // which label
-			i: 0      // and finally which index in the label entry
+			f:  ".q.",  // which functor in the database
+			a:  0,      // arity
+			c:  0,      // clause index
+			ct: 1,      // Total number of clause
+			l:  'g0',   // which label
+			i:  0       // and finally which index in the label entry
 			}
 	
 		// The current code inside functor:label pointed to by 'p'
@@ -128,17 +131,13 @@ Interpreter.prototype.set_question = function(question_code){
 		 */
 		,choices: []
 		
-		/*  Continuation Environment
-		 *    Used to return from a 'call'
-		 */
-		,ce: null
-		
 		/*  Continuation Point
 		 *    Used to return from a 'call' 
 		 *    
 		 *    Uses the same format as 'p'
+		 *    but also 'ce' added (continuation environment) 
 		 */
-		,cp: null
+		,cp: {}
 		
 		/*  Trail
 		 */
@@ -159,18 +158,15 @@ Interpreter.prototype.set_question = function(question_code){
 		 */
 		,cv: null  // the name of variable where to find the structure being built
 		
-		/* The index of this environment on the stack
-		 */
-		,si: 0
-		
 	};//
 	
 	// The question's environment
 	//
 	this.stack.push(qenv);
-	
-	this.ctx.tse = qenv;
 	this.ctx.cse = qenv;
+
+	// No `call` construction is in progress of course!
+	this.ctx.tse = null;
 	
 	try {
 		this.ctx.cc = this.db['.q.'][0];	
@@ -198,15 +194,19 @@ Interpreter.prototype.step = function() {
 	
 	var fnc_name = "inst_" + inst.opcode;
 	
-	//console.log("step: inst: ", inst);
-	
 	var fnc = this[fnc_name];
 	if (!fnc)
 		throw new ErrorInvalidInstruction(inst.opcode);
-	
-	// Execute the instruction
-	this[fnc_name].apply(this, [inst]);	
 
+	if (this.tracer) {
+		this.tracer(this, inst, 'before');
+		this[fnc_name].apply(this, [inst]);
+		this.tracer(this, inst, 'after');
+	} else {
+		// Execute the instruction
+		this[fnc_name].apply(this, [inst]);	
+	};
+	
 	//console.log("step: END");
 	
 };// step
@@ -229,21 +229,8 @@ Interpreter.prototype.fetch_next_instruction = function(){
 	if (inst)
 		return inst;
 	
-	// Are we at the end of `head` ?
-	
-	if (this.ctx.p.l == 'head') {
-		
-		// update pointer to 1st goal then
-		this.ctx.p.l = 'g0';
-		this.ctx.p.i = 0;
-		this._fetch_code();
-		return this._fetch();
-	}
-	
-		
-	// If we are inside a goal, try the next one.
-	// In the current implementation, this should not
-	//  happen directly: some branching would have occurred.
+	// A jump should have occurred in the code anyways
+	//
 	throw new ErrorNoMoreInstruction();
 	
 };
@@ -259,16 +246,126 @@ Interpreter.prototype._fetch = function(){
 	return inst || null;
 };
 
-Interpreter.prototype._fetch_code = function(){
+/**
+ *  Get Functor code
+ * 
+ * @param ctx.f  : functor_name
+ * @param ctx.a  : arity
+ * @param ctx.ci : clause_index
+ * 
+ * @raise ErrorFunctorNotFound
+ * @raise ErrorFunctorClauseNotFound
+ * 
+ * @return ctx with additionally { cc: code, ct: clauses_count }
+ */
+Interpreter.prototype._get_code = function(ctx) {
 	
-	var cc = this.db[this.ctx.p.f];
-	this.ctx.p.i = 0;
-	this.ctx.cc = cc;
+	ctx.ci = ctx.ci || 0;
+
+	var clauses;
+	var clauses_count;
+	
+	try {
+		clauses = this.db.get_code(ctx.f, ctx.a);
+		ctx.ct = clauses.length;
+	} catch(e) {
+		throw new ErrorFunctorNotFound(ctx.f+"/"+ctx.a, ctx);
+	};
+	
+	if (ctx.ci >= ctx.ct)
+		throw new ErrorFunctorClauseNotFound(ctx.f+"/"+ctx.a, ctx);
+	
+	ctx.cc = clauses[ctx.ci];
+	
+	if (!clause_code)
+		return ErrorFunctorCodeNotFound(ctx.f+"/"+ctx.a, ctx);
+	
+	// make this composable
+	return ctx;
+	
+};//_get_code
+
+
+/**
+ *  Jump to a specific code instruction in the database
+ * 
+ * @param ctx.f  : functor name
+ * @param ctx.a  : functor arity
+ * @param ctx.ci : clause index
+ * @param ctx.l  : clause label
+ * @param ctx.i  : clause label instruction index
+ * 
+ * @return ctx
+ * 
+ * @raise ErrorFunctorNotFound, ErrorFunctorCodeNotFound, ErrorFunctorClauseNotFound
+ */
+Interpreter.prototype._jump = function( ctx ){
+
+	ctx = this._get_code( ctx );
+	
+	// The clause instruction might not have been set
+	ctx.i = ctx.i || 0;
+	
+	this.ctx.p = ctx;
+
+	// make this composable
+	return ctx;
 };
 
 
 Interpreter.prototype.get_current_ctx_var = function(evar) {
 	return this.ctx[evar];
+};
+
+Interpreter.prototype.save_continuation = function(where) {
+	
+	where.p = {};
+	
+	where.ce   = this.ctx.cse;
+	where.p.f  = this.ctx.p.f;
+	where.p.a  = this.ctx.p.a;
+	where.p.ci = this.ctx.p.ci;
+	where.p.ct = this.ctx.p.ct;
+	where.p.l  = this.ctx.p.l;
+	where.p.i  = this.ctx.p.i;
+};
+
+/**
+ *   Pop a Choice Point from the choices stack
+ *    in the current environment
+ *    
+ *   @return choice_point || null
+ */
+Interpreter.prototype.pop_choice_point = function(){
+	
+	return this.ctx.cse.cp.pop() || null;
+};
+
+/**
+ *   Save the current Choice Point
+ *    on the choices stack in the current environment
+ *   
+ */
+Interpreter.prototype.push_choice_point = function(instruction_index_offset) {
+	
+	instruction_index_offset = instruction_index_offset || 0;
+	
+	// we need to copy the structure in order 
+	//  to decouple it from the current context
+	//
+	// BUT don't copy any code
+	//
+	var choice_point = {
+			
+		 f:  this.ctx.p.f
+		,a:  this.ctx.p.a
+		,ci: this.ctx.p.ci
+		,ct: this.ctx.p.ct
+		,l:  this.ctx.p.l
+		,i:  this.ctx.p.i - instruction_index_offset
+	};
+	
+	this.ctx.cse.cp.push(choice_point);
 };
 
 
@@ -289,10 +386,6 @@ Interpreter.prototype.get_current_ctx_var = function(evar) {
  *   
  */
 Interpreter.prototype.inst_call = function(inst) {
-	
-	if (this.tracer) {
-		this.tracer('call', inst);
-	};
 	
 	//console.log("Instruction: 'call'");
 	
@@ -339,16 +432,7 @@ Interpreter.prototype.inst_call = function(inst) {
 	this.ctx.cs = null;
 	this.ctx.csx = 0;
 	
-	
-	// Save continuation
-	this.ctx.tse.cp = {
-		 f: this.ctx.p.f
-		,l: this.ctx.p.l
-		,i: this.ctx.p.i // + 0  the fetch will have had already incremented this
-	};
-	
-	// ... and the environment
-	this.ctx.tse.ce = this.ctx.cse;
+	this.save_continuation( this.ctx.tse.cp );
 	
 	// Also the Choice Point
 	//
@@ -360,6 +444,8 @@ Interpreter.prototype.inst_call = function(inst) {
 	//
 	this.ctx.cse.choices.push({
 		 f: this.ctx.p.f
+		,a: this.ctx.p.a
+		,c: this.ctx.p.c
 		,l: this.ctx.p.l
 		,i: this.ctx.p.i - 1 // Point to the CALL instruction
 	});
@@ -375,6 +461,9 @@ Interpreter.prototype.inst_call = function(inst) {
 	};
 	
 	this.ctx.cc = code_for_clause;
+	
+	// We got this far... so everything is good
+	this.ctx.cu = true;
 	
 	//console.log(this.ctx);
 	
@@ -543,6 +632,23 @@ Interpreter.prototype.inst_maybe_fail = function() {
 	this.ctx.p.i = this.ctx.cse.cp.i;
 	
 	// TODO  what happens to ctx.tse ????
+};
+
+/**
+ *   Instruction 'proceed'
+ *   
+ *   Look Continuation Point in `p`
+ *   
+ */
+Interpreter.prototype.inst_proceed = function() {
+	
+	//console.log("Instruction: 'proceed'");
+
+	this.ctx.p.f = this.ctx.cse.p.f;
+	this.ctx.p.l = this.ctx.cse.p.l;
+	this.ctx.p.i = this.ctx.cse.p.i;
+	
+	this.ctx.cse = this.ctx.cse.ce;
 };
 
 

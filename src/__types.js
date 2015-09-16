@@ -659,6 +659,19 @@ function ErrorFunctorNotFound(msg, _args) {
 };
 ErrorFunctorNotFound.prototype = Error.prototype;
 
+function ErrorFunctorClauseNotFound(msg, _args) {
+	this.message = msg;
+	this.args = args_;
+};
+ErrorFunctorClauseNotFound.prototype = Error.prototype;
+
+function ErrorFunctorCodeNotFound(msg, _args) {
+	this.message = msg;
+	this.args = args_;
+};
+ErrorFunctorCodeNotFound.prototype = Error.prototype;
+
+
 function ErrorExpectingGoal(msg) {
 	this.message = msg;
 };
@@ -724,6 +737,8 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorNoMoreInstruction = ErrorNoMoreInstruction;
 	module.exports.ErrorInvalidInstruction = ErrorInvalidInstruction;
 	module.exports.ErrorFunctorNotFound = ErrorFunctorNotFound;
+	module.exports.ErrorFunctorClauseNotFound = ErrorFunctorClauseNotFound;
+	module.exports.ErrorFunctorCodeNotFound = ErrorFunctorCodeNotFound;
 	module.exports.ErrorInternal = ErrorInternal;
 	module.exports.ErrorAlreadyBound = ErrorAlreadyBound;
 	module.exports.ErrorNotBound = ErrorNotBound;
