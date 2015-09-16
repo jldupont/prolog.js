@@ -127,10 +127,6 @@ Interpreter.prototype.set_question = function(question_code){
 
 		qenv: true
 
-		/*  Choice Point list
-		 */
-		,choices: []
-		
 		/*  Continuation Point
 		 *    Used to return from a 'call' 
 		 *    
@@ -142,11 +138,9 @@ Interpreter.prototype.set_question = function(question_code){
 		/*  Trail
 		 */
 		,tr: []
-		
-		/* Clause Index
-		 *   Which clause is being tried
-		 */
-		,ci: 0
+
+
+		,ci: 0 // Clause Index
 		
 		// Total number of clauses for the current functor
 		,ct: 0
@@ -224,7 +218,9 @@ Interpreter.prototype.step = function() {
 Interpreter.prototype.fetch_next_instruction = function(){
 	
 	// Just try fetching next instruction from env.cc
-	var inst = this._fetch();
+	var inst = this.ctx.cc[this.ctx.p.l][this.ctx.p.i];
+	
+	this.ctx.p.i++;
 	
 	if (inst)
 		return inst;
@@ -233,17 +229,6 @@ Interpreter.prototype.fetch_next_instruction = function(){
 	//
 	throw new ErrorNoMoreInstruction();
 	
-};
-
-Interpreter.prototype._fetch = function(){
-	
-	// Just try fetching next instruction
-	//
-	var inst = this.ctx.cc[this.ctx.p.l][this.ctx.p.i];
-	
-	this.ctx.p.i++;
-	
-	return inst || null;
 };
 
 /**
@@ -295,27 +280,36 @@ Interpreter.prototype._get_code = function(ctx) {
  * @param ctx.l  : clause label
  * @param ctx.i  : clause label instruction index
  * 
- * @return ctx
- * 
  * @raise ErrorFunctorNotFound, ErrorFunctorCodeNotFound, ErrorFunctorClauseNotFound
  */
-Interpreter.prototype._jump = function( ctx ){
+Interpreter.prototype._execute = function( ctx ){
 
 	ctx = this._get_code( ctx );
+	
+	// ctx.cc  now contains the code for the specified clause
+	//          for the specified functor/arity
+	
 	
 	// The clause instruction might not have been set
 	ctx.i = ctx.i || 0;
 	
 	this.ctx.p = ctx;
+};
 
-	// make this composable
-	return ctx;
+/**
+ *   Relative jump within a clause label
+ *   
+ */
+Interpreter.prototype._jump = function( ctx, offset ){
+
+	// The clause instruction might not have been set
+	ctx.i = ctx.i || 0;
+	ctx.i += offset;
+	
+	this.ctx.p = ctx;
 };
 
 
-Interpreter.prototype.get_current_ctx_var = function(evar) {
-	return this.ctx[evar];
-};
 
 Interpreter.prototype.save_continuation = function(where) {
 	
@@ -330,42 +324,9 @@ Interpreter.prototype.save_continuation = function(where) {
 	where.p.i  = this.ctx.p.i;
 };
 
-/**
- *   Pop a Choice Point from the choices stack
- *    in the current environment
- *    
- *   @return choice_point || null
- */
-Interpreter.prototype.pop_choice_point = function(){
-	
-	return this.ctx.cse.cp.pop() || null;
-};
 
-/**
- *   Save the current Choice Point
- *    on the choices stack in the current environment
- *   
- */
-Interpreter.prototype.push_choice_point = function(instruction_index_offset) {
-	
-	instruction_index_offset = instruction_index_offset || 0;
-	
-	// we need to copy the structure in order 
-	//  to decouple it from the current context
-	//
-	// BUT don't copy any code
-	//
-	var choice_point = {
-			
-		 f:  this.ctx.p.f
-		,a:  this.ctx.p.a
-		,ci: this.ctx.p.ci
-		,ct: this.ctx.p.ct
-		,l:  this.ctx.p.l
-		,i:  this.ctx.p.i - instruction_index_offset
-	};
-	
-	this.ctx.cse.cp.push(choice_point);
+Interpreter.prototype.get_current_ctx_var = function(evar) {
+	return this.ctx[evar];
 };
 
 
@@ -374,6 +335,12 @@ Interpreter.prototype.push_choice_point = function(instruction_index_offset) {
 // ================================================================================= INSTRUCTIONS
 //
 //
+
+
+Interpreter.prototype.inst_setup = function() {
+	
+};
+
 
 /**
  *   Instruction "call"
@@ -433,22 +400,7 @@ Interpreter.prototype.inst_call = function(inst) {
 	this.ctx.csx = 0;
 	
 	this.save_continuation( this.ctx.tse.cp );
-	
-	// Also the Choice Point
-	//
-	//  The assumption is that the structure built
-	//   for the following call will be left intact
-	//   in the current environment so it can be reused
-	//   by a possible subsequent choice point selection
-	//   through a backtrack process.
-	//
-	this.ctx.cse.choices.push({
-		 f: this.ctx.p.f
-		,a: this.ctx.p.a
-		,c: this.ctx.p.c
-		,l: this.ctx.p.l
-		,i: this.ctx.p.i - 1 // Point to the CALL instruction
-	});
+
 	
 	var l = code_for_clause.head ? 'head': 'g0';
 	
@@ -653,6 +605,7 @@ Interpreter.prototype.inst_proceed = function() {
 
 
 //=========================================================================== CALL
+
 
 
 

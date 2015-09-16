@@ -346,6 +346,7 @@ it('Compiler - goal - basic - 1', function(){
 	'put_struct   ( h1/2, p(0) )',
 	'put_term     ( p("a") )',
 	'put_value    ( p(2) )',
+	'setup',
 	'call',
 	'maybe_retry',
 	'deallocate'
@@ -362,6 +363,7 @@ it('Compiler - goal - basic - 2', function(){
 	             'allocate',
                  'put_struct   ( h1/1, p(0) )',
                  'put_var      ( p("A") )',
+                 'setup',
                  'call',
                  'maybe_retry',
                  'deallocate'
@@ -384,6 +386,7 @@ it('Compiler - rule/fact - basic - 0', function(){
 			   [ 'allocate',
 			     'put_struct   ( f2/1, p(0) )',
 			     'put_var      ( p("A") )',
+			     'setup',
 			     'call',
 			     'maybe_retry',
 			     'deallocate'
@@ -430,6 +433,7 @@ it('Compiler - rule/fact - basic - 2', function(){
 			   [ 'allocate',
 			     'put_struct   ( f2/1, p(0) )',
 			     'put_var      ( p("A") )',
+			     'setup',
 			     'call',
 			     'maybe_retry',
 			     'deallocate',
@@ -437,6 +441,7 @@ it('Compiler - rule/fact - basic - 2', function(){
 			     'allocate',
 			     'put_struct   ( f3/1, p(0) )',
 			     'put_var      ( p("A") )',
+			     'setup',
 			     'call',
 			     'maybe_retry',
 			     'deallocate'
@@ -468,6 +473,7 @@ it('Compiler - rule/fact - complex - 1', function(){
 			       'put_value    ( p(1) )',
 			       'put_struct   ( f2/1, p(0) )',
 			       'put_value    ( p(2) )',
+			       'setup',
 			       'call'        ,
 			       'maybe_retry',
 			       'deallocate' 
@@ -500,6 +506,7 @@ it('Compiler - rule/fact - complex - 2', function(){
 			       'put_value    ( p(1) )',
 			       'put_struct   ( f2/1, p(0) )',
 			       'put_value    ( p(2) )',
+			       'setup',
 			       'call'        ,
 			       'maybe_retry',
 			       'deallocate' 
@@ -538,6 +545,7 @@ it('Compiler - body - basic - 1', function(){
 	              'allocate',
 	              'put_struct   ( h1/1, p(0) )', 
 	              'put_term     ( p("a") )',
+	              'setup',
 	              'call',
 	              'maybe_retry',
 	              'deallocate'
@@ -560,6 +568,7 @@ it('Compiler - body - basic - 2', function(){
 		      'allocate',
 		      'put_struct   ( f1/1, p(0) )',
 		      'put_term     ( p("a") )',
+		      'setup',
 		      'call',
 		      'maybe_retry',
 		      'deallocate',
@@ -567,6 +576,7 @@ it('Compiler - body - basic - 2', function(){
 		      'allocate',
 		      'put_struct   ( f2/1, p(0) )',
 		      'put_term     ( p("b") )',
+		      'setup',
 		      'call',
 		      'maybe_retry',
 		      'deallocate'
@@ -588,6 +598,7 @@ it('Compiler - body - basic - 3', function(){
 		     'allocate',
 		     'put_struct   ( f1/1, p(0) )',
 		     'put_term     ( p("a") )',
+		     'setup',
 		     'call',
 		     'maybe_retry',
 		     'deallocate',
@@ -597,6 +608,7 @@ it('Compiler - body - basic - 3', function(){
 		     'put_term     ( p("b") )',
 		     'put_struct   ( f2/1, p(0) )',
 		     'put_value    ( p(1) )',
+		     'setup',
 		     'call',
 		     'maybe_retry',
 		     'deallocate'
@@ -621,6 +633,7 @@ it('Compiler - body - complex - 1', function(){
 		        'allocate',
 		        'put_struct   ( f3/1, p(0) )', 
 		        'put_term     ( p("c") )',
+		        'setup',
 		        'call',
 		        'maybe_retry',
 		        'deallocate'
@@ -631,6 +644,7 @@ it('Compiler - body - complex - 1', function(){
 		         'allocate',
 			     'put_struct   ( f1/1, p(0) )',
 			     'put_term     ( p("a") )',
+			     'setup',
 			     'call',
 			     'maybe_retry',
 			     'deallocate',
@@ -638,6 +652,7 @@ it('Compiler - body - complex - 1', function(){
 			     'allocate',
 			     'put_struct   ( f2/1, p(0) )',
 			     'put_term     ( p("b") )',
+			     'setup',
 			     'call',
 			     'maybe_retry',
 			     'deallocate'
@@ -665,6 +680,7 @@ it('Compiler - body - complex - 2', function(){
 		        'allocate',
 		        'put_struct   ( f3/1, p(0) )', 
 		        'put_term     ( p("c") )',
+		        'setup',
 		        'call',
 		        'maybe_retry',
 		        'deallocate',
@@ -672,6 +688,7 @@ it('Compiler - body - complex - 2', function(){
 		        'allocate',
 		        'put_struct   ( f4/1, p(0) )',
 		        'put_term     ( p("d") )',
+		        'setup',
 		        'call',		  
 		        'maybe_retry',
 		        'deallocate'
@@ -682,6 +699,7 @@ it('Compiler - body - complex - 2', function(){
 		         'allocate',
 			     'put_struct   ( f1/1, p(0) )',
 			     'put_term     ( p("a") )',
+			     'setup',
 			     'call',
 			     'maybe_retry',
 			     'deallocate',
@@ -689,6 +707,7 @@ it('Compiler - body - complex - 2', function(){
 			     'allocate',
 			     'put_struct   ( f2/1, p(0) )',
 			     'put_term     ( p("b") )',
+			     'setup',
 			     'call',
 			     'maybe_retry',
 			     'deallocate'
@@ -726,6 +745,7 @@ it('Compiler - body - complex - 3', function(){
 			     'allocate',
 			     'put_struct   ( f2/1, p(0) )',
 			     'put_term     ( p("b") )',
+			     'setup',
 			     'call'        ,
 			     'maybe_retry',
 			     'deallocate'
@@ -738,6 +758,7 @@ it('Compiler - body - complex - 3', function(){
 			     'allocate'    ,
 			     'put_struct   ( f3/1, p(0) )',
 			     'put_term     ( p("c") )',
+			     'setup',
 			     'call'        ,
 			     'maybe_retry',
 			     'deallocate'
@@ -749,6 +770,7 @@ it('Compiler - body - complex - 3', function(){
 			     'allocate'    ,
 			     'put_struct   ( f4/1, p(0) )',
 			     'put_term     ( p("d") )',
+			     'setup',
 			     'call'        ,
 			     'maybe_retry',
 			     'deallocate'   
@@ -760,6 +782,7 @@ it('Compiler - body - complex - 3', function(){
 			     'allocate'    ,
 			     'put_struct   ( f1/1, p(0) )',
 			     'put_term     ( p("a") )',
+			     'setup',
 			     'call'        ,
 			     'maybe_retry',
 			     'deallocate'
@@ -798,6 +821,7 @@ it('Compiler - body - complex - 4', function(){
 			     'allocate'    ,
 			     'put_struct   ( f2/1, p(0) )',
 			     'put_term     ( p("b") )',
+			     'setup',
 			     'call'        ,
 			     'maybe_retry' ,
 			     'deallocate'  ,
@@ -805,6 +829,7 @@ it('Compiler - body - complex - 4', function(){
 			     'allocate'    ,
 			     'put_struct   ( f3/1, p(0) )',
 			     'put_term     ( p("c") )',
+			     'setup',
 			     'call'        ,
 			     'maybe_retry' ,
 			     'deallocate'
@@ -817,6 +842,7 @@ it('Compiler - body - complex - 4', function(){
 			     'allocate'    ,
 			     'put_struct   ( f4/1, p(0) )',
 			     'put_term     ( p("d") )',
+			     'setup',
 			     'call'        ,
 			     'maybe_retry' ,
 			     'deallocate'
@@ -828,6 +854,7 @@ it('Compiler - body - complex - 4', function(){
 			     'allocate'    ,
 			     'put_struct   ( f1/1, p(0) )',
 			     'put_term     ( p("a") )',
+			     'setup',
 			     'call'        ,
 			     'maybe_retry' ,
 			     'deallocate'  
@@ -883,6 +910,7 @@ it('Compiler - body - complex - 5', function(){
 			     'allocate'    ,
 			     'put_struct   ( f2/1, p(0) )',
 			     'put_term     ( p("b") )',
+			     'setup',
 			     'call'        ,
 			     'maybe_retry' ,
 			     'deallocate'  ,
@@ -890,6 +918,7 @@ it('Compiler - body - complex - 5', function(){
 			     'allocate'    ,
 			     'put_struct   ( f3/1, p(0) )',
 			     'put_term     ( p("c") )',
+			     'setup',
 			     'call'        ,
 			     'maybe_retry' ,
 			     'deallocate'   
@@ -901,6 +930,7 @@ it('Compiler - body - complex - 5', function(){
 			     'allocate'    ,
 			     'put_struct   ( f4/1, p(0) )',
 			     'put_term     ( p("d") )',
+			     'setup',
 			     'call'        ,
 			     'maybe_retry' ,
 			     'deallocate'  ,
@@ -908,6 +938,7 @@ it('Compiler - body - complex - 5', function(){
 			     'allocate'    ,
 			     'put_struct   ( f5/1, p(0) )',
 			     'put_term     ( p("e") )',
+			     'setup',
 			     'call'        ,
 			     'maybe_retry' ,
 			     'deallocate'   
@@ -919,6 +950,7 @@ it('Compiler - body - complex - 5', function(){
 			     'allocate'    ,
 			     'put_struct   ( f1/1, p(0) )',
 			     'put_term     ( p("a") )',
+			     'setup',
 			     'call'        ,
 			     'maybe_retry' ,
 			     'deallocate'  
@@ -972,6 +1004,7 @@ it('Compiler - body - complex - 6', function(){
 		      'allocate'    ,
 		      'put_struct   ( f3/1, p(0) )',
 		      'put_term     ( p("b") )',
+		      'setup',
 		      'call        ',
 		      'maybe_retry ',
 		      'deallocate  ',
@@ -979,6 +1012,7 @@ it('Compiler - body - complex - 6', function(){
 		      'allocate    ',
 		      'put_struct   ( f4/1, p(0) )',
 		      'put_term     ( p("c") )',
+		      'setup',
 		      'call        ',
 		      'maybe_retry ',
 		      'deallocate  ',
@@ -986,6 +1020,7 @@ it('Compiler - body - complex - 6', function(){
 		      'allocate    ',
 		      'put_struct   ( f5/1, p(0) )',
 		      'put_term     ( p("d") )',
+		      'setup',
 		      'call        ',
 		      'maybe_retry' ,
 		      'deallocate'
@@ -996,6 +1031,7 @@ it('Compiler - body - complex - 6', function(){
 		      'allocate    ',
 		      'put_struct   ( f6/1, p(0) )',
 		      'put_term     ( p("d") )',
+		      'setup',
 		      'call        ',
 		      'maybe_retry ',
 		      'deallocate  ',
@@ -1003,6 +1039,7 @@ it('Compiler - body - complex - 6', function(){
 		      'allocate    ',
 		      'put_struct   ( f7/1, p(0) )',
 		      'put_term     ( p("e") )',
+		      'setup',
 		      'call        ',
 		      'maybe_retry' ,
 		      'deallocate'   
@@ -1014,6 +1051,7 @@ it('Compiler - body - complex - 6', function(){
 		      'allocate    ',
 		      'put_struct   ( f1/1, p(0) )',
 		      'put_term     ( p("a") )',
+		      'setup',
 		      'call        ',
 		      'maybe_retry ',
 		      'deallocate  ',
@@ -1021,6 +1059,7 @@ it('Compiler - body - complex - 6', function(){
 		      'allocate    ',
 		      'put_struct   ( f2/1, p(0) )',
 		      'put_term     ( p("b") )',
+		      'setup',
 		      'call        ',
 		      'maybe_retry' ,
 		      'deallocate'   

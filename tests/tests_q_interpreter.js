@@ -178,6 +178,7 @@ it('Interpreter - basic - 1', function(){
 	it.step(); // put_struct
 	it.step(); // put_number
 	it.step(); // put_term
+	it.step(); // setup
 	
 	var tse_vars = it.get_current_ctx_var("tse");
 	

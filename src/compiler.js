@@ -479,6 +479,7 @@ Compiler.prototype.process_goal = function(exp) {
 		// Only root functor gets a CALL
 		//
 		if (ctx.root) {
+			results.push(new Instruction('setup'));
 			results.push(new Instruction('call'));
 			results.push(new Instruction('maybe_retry'));
 			results.push(new Instruction('deallocate'));
