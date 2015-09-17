@@ -322,14 +322,11 @@ it('Interpreter - complex - 1', function(){
 	
 	it.set_question(qcode);
 	
-	//try {
 	it.step(); // allocate
 	it.step(); // put_struct
 	it.step(); // put_var
 	it.step(); // setup
 	it.step(); // call
-	
-	console.log("it ctx: ", it.ctx);
 	
 	// In f1 fact
 	it.step(); //  get_struct
@@ -339,15 +336,15 @@ it('Interpreter - complex - 1', function(){
 	// Return to .q./0
 	it.step();  // maybe_retry
 	it.step();  // DEALLOCATE 
-	it.step();
-	//} catch(e) { console.log("Error: ", e); };
+	var is_end = it.step();  // end
 	
-	//console.log("it ctx: ", it.ctx);
 	
-	var tse_vars = it.get_current_ctx_var("tse");
+	console.log("it ctx: ", it.ctx);
+	
+	//var tse_vars = it.get_current_ctx_var("tse");
 	
 	//console.log( tse_vars );
 	
 	//var result = Utils.compare_objects(expected, ce_vars);
-	//should.equal(result, true, "ce vars: " + util.inspect(ce_vars));
+	should.equal(is_end, true);
 });

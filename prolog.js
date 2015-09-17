@@ -1553,6 +1553,10 @@ Interpreter.prototype.set_question = function(question_code){
 		 */
 		,cse: null
 
+		/*
+		 *  `end` instruction encountered
+		 */
+		,end: false
 	};
 	
 	this.stack = [];
@@ -1611,7 +1615,7 @@ Interpreter.prototype.set_question = function(question_code){
 /**
  * Take 1 processing step
  * 
- * @return true | false | null where `null` signifies `not done yet`
+ * @return true | false where 'true' means 'end'
  * 
  * @raise ErrorNoMoreInstruction
  * @raise ErrorInvalidInstruction
@@ -1638,6 +1642,8 @@ Interpreter.prototype.step = function() {
 	};
 	
 	//console.log("step: END");
+	
+	return this.ctx.end;
 	
 };// step
 
@@ -1683,7 +1689,7 @@ Interpreter.prototype.fetch_next_instruction = function(){
  */
 Interpreter.prototype._get_code = function(functor_name, arity, clause_index) {
 	
-	console.log(">>> GET CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index);
+	//console.log(">>> GET CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index);
 	
 	var result = {};
 	
@@ -1774,7 +1780,7 @@ Interpreter.prototype._jump = function( ctx, offset ){
 
 Interpreter.prototype._restore_continuation = function(from) {
 	
-	console.log("*** RESTORE: ", from);
+	//console.log("*** RESTORE: ", from);
 	
 	this.ctx.cse  = from.ce;
 	this.ctx.p.f  = from.p.f;
@@ -1799,7 +1805,7 @@ Interpreter.prototype._save_continuation = function(where, instruction_offset) {
 	where.p.l  = this.ctx.p.l;
 	where.p.i  = this.ctx.p.i + (instruction_offset || 0);
 	
-	console.log("*** SAVE: ", where);
+	//console.log("*** SAVE: ", where);
 };
 
 
@@ -1823,7 +1829,7 @@ Interpreter.prototype.get_current_ctx_var = function(evar) {
  * 
  */
 Interpreter.prototype.inst_end = function() {
-	
+	this.ctx.end = true;
 };
 
 /**
@@ -1904,7 +1910,7 @@ Interpreter.prototype.inst_allocate = function() {
 	
 	//console.log("Instruction: 'allocate'");
 	
-	var env = { vars: {}, cp: {} };
+	var env = { vars: {}, cp: {}, trail: [] };
 	this.ctx.tse = env;
 	this.stack.push(env);
 
@@ -1982,8 +1988,6 @@ Interpreter.prototype.inst_try_finally = function( ) {
  * 
  */
 Interpreter.prototype.inst_maybe_retry = function() {
-	
-	console.log("Instruction: 'maybe_retry'");
 	
 	// A 'noop' if there isn't a failure reported
 	//
@@ -2167,7 +2171,12 @@ Interpreter.prototype.inst_put_var = function(inst) {
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
 	
-	struct.push_arg(new Var(vname));
+	var v = new Var(vname);
+	
+	// Manage the trail
+	this.ctx.tse.trail.push( v );
+	
+	struct.push_arg(v);
 
 	// TODO manage trail
 };
