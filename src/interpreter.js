@@ -262,7 +262,7 @@ Interpreter.prototype._get_code = function(ctx) {
 	
 	ctx.cc = clauses[ctx.ci];
 	
-	if (!clause_code)
+	if (!ctx.cc)
 		return ErrorFunctorCodeNotFound(ctx.f+"/"+ctx.a, ctx);
 	
 	// make this composable
@@ -285,15 +285,28 @@ Interpreter.prototype._get_code = function(ctx) {
 Interpreter.prototype._execute = function( ctx ){
 
 	ctx = this._get_code( ctx );
+
+	this.ctx.p = ctx;
+	this.ctx.cc = ctx.cc;
+	
+	delete this.ctx.p.cc;
 	
 	// ctx.cc  now contains the code for the specified clause
 	//          for the specified functor/arity
 	
+	/*
+	 *  We either have a `fact` (head, no body)
+	 *  or a `rule`  (head & body).
+	 *  
+	 *  Just having `g0` would mean a `query`.
+	 */
+	this.ctx.p.l = this.ctx.cc.head ? 'head' : 'g0';
+	
 	
 	// The clause instruction might not have been set
-	ctx.i = ctx.i || 0;
+	this.ctx.p.i = ctx.i || 0;
 	
-	this.ctx.p = ctx;
+	this.ctx.cse = this.ctx.tse;
 };
 
 /**
@@ -311,7 +324,7 @@ Interpreter.prototype._jump = function( ctx, offset ){
 
 
 
-Interpreter.prototype.save_continuation = function(where) {
+Interpreter.prototype.save_continuation = function(where, instruction_offset) {
 	
 	where.p = {};
 	
@@ -321,7 +334,7 @@ Interpreter.prototype.save_continuation = function(where) {
 	where.p.ci = this.ctx.p.ci;
 	where.p.ct = this.ctx.p.ct;
 	where.p.l  = this.ctx.p.l;
-	where.p.i  = this.ctx.p.i;
+	where.p.i  = this.ctx.p.i + (instruction_offset || 0);
 };
 
 
@@ -336,8 +349,25 @@ Interpreter.prototype.get_current_ctx_var = function(evar) {
 //
 //
 
-
+/**
+ *  Instruction "setup"
+ * 
+ * 
+ *  Saves Continuation Point to point
+ *   at the "maybe_retry" following the `call` instruction
+ * 
+ */
 Interpreter.prototype.inst_setup = function() {
+	
+	this.save_continuation(this.ctx.tse.cp, 2);
+	
+	// Reset clause index
+	//
+	this.ctx.tse.ci = 0;
+	
+	// Get ready for `head` related instructions
+	this.ctx.cs = null;
+	this.ctx.csx = 0;
 	
 };
 
@@ -365,59 +395,16 @@ Interpreter.prototype.inst_call = function(inst) {
 	
 	var fname = x0.name;
 	var arity = x0.args.length;
-	
-	// Clause Index
-	var ci = this.ctx.tse.ci || 0;
-	
-	// Consult the database
-	var code_clauses = this.db.get_code(fname, arity);
-	
-	//console.log("Code for clauses: ", code_clauses);
-	
-	if (!code_clauses)
-		throw new ErrorFunctorNotFound("Functor: "+fname+"/"+arity, [fname, arity]);
-	
-	
-	// Helper for the 'maybe_retry' instruction
-	//
-	this.ctx.tse.ct = code_clauses.length;
-	
-	
-	var code_for_clause = code_clauses[ci];
-	
-	// Reached end of clause list ?
-	if (!code_for_clause) {
-		
-		// 'maybe_retry' and 'maybe_fail' instructions will
-		//   handle cleanup and backtracking
-		return;
-	};
-	
-	//console.log("Code clause: ", code_for_clause);
-	
-	// Get ready for `head` related instructions
-	this.ctx.cs = null;
-	this.ctx.csx = 0;
-	
-	this.save_continuation( this.ctx.tse.cp );
 
-	
-	var l = code_for_clause.head ? 'head': 'g0';
-	
-	// Make the jump
-	//
-	this.ctx.p = {
-		 f: fname
-		,l: l
-		,i: 0
-	};
-	
-	this.ctx.cc = code_for_clause;
+	this._execute({
+		 f:  fname
+		,a:  arity
+		//,ci: would be initiate by `setup`
+		//     and updated by `maybe_retry`
+	});
 	
 	// We got this far... so everything is good
 	this.ctx.cu = true;
-	
-	//console.log(this.ctx);
 	
 }; // CALL
 
@@ -452,13 +439,17 @@ Interpreter.prototype.inst_allocate = function() {
  */
 Interpreter.prototype.inst_deallocate = function() {
 	
-	//console.log("Instruction: 'deallocate'");
-	var choices = this.ctx.tse.choices || [];
+	/*
+	 * Cannot deallocate if we have had
+	 *  a successful choice point
+	 */
+	if (this.ctx.cu)
+		return;
 	
-	if (choices.length == 0) {
-		this.stack.pop();
-	};
+	this.stack.pop();
 	
+	// tse goes back to top of stack
+	this.ctx.tse = this.stack[ this.stack.length-1 ];
 };
 
 
@@ -479,7 +470,7 @@ Interpreter.prototype.inst_try_else = function( inst ) {
 	var vname = "g" + inst.get("p");
 	this.ctx.cse.te = vname;
 	
-	console.log("Instruction: 'try_else' @ "+vname);
+	//console.log("Instruction: 'try_else' @ "+vname);
 };
 
 /**
@@ -491,7 +482,7 @@ Interpreter.prototype.inst_try_finally = function( ) {
 	
 	this.ctx.cse.te = null;
 	
-	console.log("Instruction: 'try_finally'");
+	//console.log("Instruction: 'try_finally'");
 };
 
 /**
@@ -574,16 +565,21 @@ Interpreter.prototype.inst_maybe_fail = function() {
 	if (!this.ctx.cu)
 		return;
 	
-	/*
-	 *  JUMP to continuation point
-	 */
-	this.ctx.cse = this.ctx.cse.ce;
+	if (this.ctx.cse.te) {
+		
+		// just making sure
+		this.ctx.cse.te = null;
+		
+		this._goto( this.ctx.cse.te );
+		return;
+	};
 	
-	this.ctx.p.f = this.ctx.cse.cp.f;
-	this.ctx.p.l = this.ctx.cse.cp.l;
-	this.ctx.p.i = this.ctx.cse.cp.i;
+	this._restore_continuation( this.ctx.cse );
 	
-	// TODO  what happens to ctx.tse ????
+	// this will assume the current loaded values
+	//  in this.ctx.p
+	//
+	this._execute();
 };
 
 /**
@@ -596,11 +592,7 @@ Interpreter.prototype.inst_proceed = function() {
 	
 	//console.log("Instruction: 'proceed'");
 
-	this.ctx.p.f = this.ctx.cse.p.f;
-	this.ctx.p.l = this.ctx.cse.p.l;
-	this.ctx.p.i = this.ctx.cse.p.i;
-	
-	this.ctx.cse = this.ctx.cse.ce;
+	this._restore_continuation( this.ctx.cse );
 };
 
 
