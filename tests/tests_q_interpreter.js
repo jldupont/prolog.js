@@ -274,12 +274,13 @@ it('Interpreter - complex - 1', function(){
 	 head: { [
 	 	get_struct   ( f1/1, p(0) ), 
 	 	get_number   ( p(666) )
+	 	proceed
 	 	]}
 	 */
 	
 	var fcode = compile_rule_or_fact(fact);
 	
-	//console.log("Fcode:", fcode);
+	//console.log("F1 code:", fcode);
 	
 	db.insert_code("f1", 1, fcode);
 	
@@ -289,15 +290,19 @@ it('Interpreter - complex - 1', function(){
 	
 	var qcode = compile_query(qtext);
 	
-	//console.log(db.db);
+	console.log("qcode: ", qcode);
 	
 	/*
 		{ g0: 
 		   [ allocate    ,
 		     put_struct   ( f1/1, p(0) ),
 		     put_var      ( p("A") ),
+		     setup
 		     call        ,
-		     deallocate   ] }
+		     maybe_retry
+		     deallocate
+		     proceed
+		     ] }
 	 */
 	
 	function tracer(ctx, inst, before_or_after) {
@@ -327,10 +332,11 @@ it('Interpreter - complex - 1', function(){
 	it.step(); //  get_struct
 	it.step(); //  get_number
 	it.step(); //  proceed
-	//it.step(); 
+	it.step();
+	it.step();
+	it.step();
 	
-	
-	console.log("it ctx: ", it.ctx);
+	//console.log("it ctx: ", it.ctx);
 	
 	var tse_vars = it.get_current_ctx_var("tse");
 	

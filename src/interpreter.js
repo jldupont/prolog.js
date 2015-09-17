@@ -213,6 +213,8 @@ Interpreter.prototype.step = function() {
  */
 Interpreter.prototype.fetch_next_instruction = function(){
 	
+	console.log("fetch: ", this.ctx.p.f+"/"+this.ctx.p.a, this.ctx.p.l, this.ctx.p.i);
+	
 	// Just try fetching next instruction from env.cc
 	var inst = this.ctx.cc[this.ctx.p.l][this.ctx.p.i];
 	
@@ -240,6 +242,8 @@ Interpreter.prototype.fetch_next_instruction = function(){
  * @return ctx with additionally { cc: code, ct: clauses_count }
  */
 Interpreter.prototype._get_code = function(ctx) {
+	
+	console.log(">>> GET CODE: ", ctx.f+"/"+ctx.a, ctx.ci);
 	
 	ctx.ci = ctx.ci || 0;
 
@@ -284,19 +288,21 @@ Interpreter.prototype._get_code = function(ctx) {
  */
 Interpreter.prototype._execute = function( ctx ){
 
-	if (!ctx)
-		ctx = {
-			 f: this.ctx.p.f
-			,a: this.ctx.p.a
-		};
-	
-	ctx = this._get_code( ctx );
+	if (ctx) {
+		ctx = this._get_code(ctx);
+		this.ctx.p = ctx;
+		this.ctx.cc = ctx.cc;
+	}
+	else {
+		ctx = this._get_code({
+		 	 f:  this.ctx.p.f
+			,a:  this.ctx.p.a
+			,ci: this.ctx.p.ci
+			});
+		this.ctx.cc = ctx.cc;
+		console.log("EXECUTE: p: ", this.ctx.p);
+	}
 
-	this.ctx.p = ctx;
-	this.ctx.cc = ctx.cc;
-	
-	delete this.ctx.p.cc;
-	
 	// ctx.cc  now contains the code for the specified clause
 	//          for the specified functor/arity
 	
@@ -330,8 +336,9 @@ Interpreter.prototype._jump = function( ctx, offset ){
 
 Interpreter.prototype._restore_continuation = function(from) {
 	
-	this.ctx.cse   = from.ce;
+	console.log("*** RESTORE: ", from);
 	
+	this.ctx.cse  = from.ce;
 	this.ctx.p.f  = from.p.f;
 	this.ctx.p.a  = from.p.a;
 	this.ctx.p.ci = from.p.ci;
@@ -347,13 +354,14 @@ Interpreter.prototype._save_continuation = function(where, instruction_offset) {
 	where.p = {};
 	
 	where.ce   = this.ctx.cse;
-	
 	where.p.f  = this.ctx.p.f;
 	where.p.a  = this.ctx.p.a;
 	where.p.ci = this.ctx.p.ci;
 	where.p.ct = this.ctx.p.ct;
 	where.p.l  = this.ctx.p.l;
 	where.p.i  = this.ctx.p.i + (instruction_offset || 0);
+	
+	console.log("*** SAVE: ", where);
 };
 
 
@@ -382,7 +390,7 @@ Interpreter.prototype.inst_setup = function() {
 	
 	// Reset clause index
 	//
-	this.ctx.tse.ci = 0;
+	this.ctx.tse.cp.p.ci = 0;
 	
 	// Get ready for `head` related instructions
 	this.ctx.cs = null;
@@ -527,9 +535,9 @@ Interpreter.prototype.inst_maybe_retry = function() {
 	if (this.ctx.cu)
 		return;
 	
-	this.ctx.tse.ci ++;
+	this.ctx.p.ci ++;
 	
-	if (this.ctx.tse.ci < this.ctx.tse.ct) {
+	if (this.ctx.p.ci < this.ctx.p.ct) {
 		
 		// We can try the next clause
 		//  The fetch function will have incremented the
@@ -537,7 +545,7 @@ Interpreter.prototype.inst_maybe_retry = function() {
 		//   so we need to substract 2 to get it pointing
 		//   back to the 'CALL' instruction.
 		//
-		this.ctx.cse.p.i -= 2; 
+		this.ctx.p.i -= 2; 
 	};
 
 	// NOOP when we reach end of clause list
@@ -558,8 +566,8 @@ Interpreter.prototype.inst_jump = function( inst ) {
 	console.log("Instruction: 'jump' @ "+ vname);
 	
 	// Within same functor (i.e. clause)
-	this.ctx.cse.p.l = vname;
-	this.ctx.cse.p.i = 0;
+	this.ctx.p.l = vname;
+	this.ctx.p.i = 0;
 };
 
 
@@ -593,7 +601,7 @@ Interpreter.prototype.inst_maybe_fail = function() {
 		return;
 	};
 	
-	this._restore_continuation( this.ctx.cse );
+	this._restore_continuation( this.ctx.cse.cp );
 	
 	// this will assume the current loaded values
 	//  in this.ctx.p
@@ -806,7 +814,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 
 	
 	// Fetch the value from the target input variable
-	var input_node = this.ctx.tse.vars[x];
+	var input_node = this.ctx.cse.vars[x];
 	
 	/*
 	 *   We have the following cases:
