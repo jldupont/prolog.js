@@ -213,7 +213,7 @@ Interpreter.prototype.step = function() {
  */
 Interpreter.prototype.fetch_next_instruction = function(){
 	
-	console.log("fetch: ", this.ctx.p.f+"/"+this.ctx.p.a, this.ctx.p.l, this.ctx.p.i);
+	//console.log("fetch: ", this.ctx.p.f+"/"+this.ctx.p.a, this.ctx.p.l, this.ctx.p.i);
 	
 	// Just try fetching next instruction from env.cc
 	var inst = this.ctx.cc[this.ctx.p.l][this.ctx.p.i];
@@ -225,7 +225,7 @@ Interpreter.prototype.fetch_next_instruction = function(){
 	
 	// A jump should have occurred in the code anyways
 	//
-	throw new ErrorNoMoreInstruction();
+	throw new ErrorNoMoreInstruction("No More Instruction");
 	
 };
 
@@ -241,36 +241,33 @@ Interpreter.prototype.fetch_next_instruction = function(){
  * 
  * @return ctx with additionally { cc: code, ct: clauses_count }
  */
-Interpreter.prototype._get_code = function(ctx) {
+Interpreter.prototype._get_code = function(functor_name, arity, clause_index) {
 	
-	console.log(">>> GET CODE: ", ctx.f+"/"+ctx.a, ctx.ci);
+	console.log(">>> GET CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index);
 	
-	ctx.ci = ctx.ci || 0;
-
+	var result = {};
+	
 	var clauses;
 	var clauses_count;
 	
 	try {
-		clauses = this.db.get_code(ctx.f, ctx.a);
-		ctx.ct = clauses.length;
+		clauses = this.db.get_code(functor_name, arity);
+		result.ct = clauses.length;
 	} catch(e) {
-		throw new ErrorFunctorNotFound("Functor not found: "+ctx.f+"/"+ctx.a, ctx);
+		throw new ErrorFunctorNotFound("Functor not found: "+functor_name+"/"+arity);
 	};
 	
-	if (ctx.ci >= ctx.ct) {
-		console.error(ctx);
-		console.log(this.db);
-		throw new ErrorFunctorClauseNotFound("Functor clause not found: "+ctx.f+"/"+ctx.a, ctx);
+	if (clause_index >= clauses_count) {
+		throw new ErrorFunctorClauseNotFound("Functor clause not found: "+functor_name+"/"+arity);
 	};
 		
 	
-	ctx.cc = clauses[ctx.ci];
+	result.cc = clauses[clause_index];
 	
-	if (!ctx.cc)
-		return ErrorFunctorCodeNotFound("Functor clause code not found: "+ctx.f+"/"+ctx.a, ctx);
+	if (!result.cc)
+		return ErrorFunctorCodeNotFound("Functor clause code not found: "+functor_name+"/"+arity);
 	
-	// make this composable
-	return ctx;
+	return result;
 	
 };//_get_code
 
@@ -288,21 +285,24 @@ Interpreter.prototype._get_code = function(ctx) {
  */
 Interpreter.prototype._execute = function( ctx ){
 
+	//console.log("EXECUTE: p: ", this.ctx);
+	
+	var result = {};
+	
 	if (ctx) {
-		ctx = this._get_code(ctx);
-		this.ctx.p = ctx;
-		this.ctx.cc = ctx.cc;
+		result = this._get_code(ctx.f, ctx.a, ctx.ci);
+		this.ctx.p.f = ctx.f;
+		this.ctx.p.a = ctx.a;
+		this.ctx.p.ci = ctx.ci
+
+		this.ctx.cc = result.cc;
+		this.ctx.p.ct = result.ct;
 	}
 	else {
-		ctx = this._get_code({
-		 	 f:  this.ctx.p.f
-			,a:  this.ctx.p.a
-			,ci: this.ctx.p.ci
-			});
-		this.ctx.cc = ctx.cc;
-		console.log("EXECUTE: p: ", this.ctx.p);
+		result = this._get_code(this.ctx.p.f, this.ctx.p.a, this.ctx.p.ci);
+		this.ctx.cc = result.cc;
 	}
-
+	
 	// ctx.cc  now contains the code for the specified clause
 	//          for the specified functor/arity
 	
@@ -314,11 +314,9 @@ Interpreter.prototype._execute = function( ctx ){
 	 */
 	this.ctx.p.l = this.ctx.cc.head ? 'head' : 'g0';
 	
-	
-	// The clause instruction might not have been set
-	this.ctx.p.i = ctx.i || 0;
-	
 	this.ctx.cse = this.ctx.tse;
+	
+	//console.log("EXECUTE / END: ", this.ctx);
 };
 
 /**
@@ -384,9 +382,25 @@ Interpreter.prototype.get_current_ctx_var = function(evar) {
  *   at the "maybe_retry" following the `call` instruction
  * 
  */
+Interpreter.prototype.inst_end = function() {
+	
+};
+
+/**
+ *  Instruction "setup"
+ * 
+ * 
+ *  Saves Continuation Point to point
+ *   at the "maybe_retry" following the `call` instruction
+ * 
+ */
 Interpreter.prototype.inst_setup = function() {
 	
-	this._save_continuation(this.ctx.tse.cp, 2);
+	// We only need an offset of 1 
+	//  because the `fetch instruction` increments
+	//  already by 1.
+	//
+	this._save_continuation(this.ctx.tse.cp, 1);
 	
 	// Reset clause index
 	//
@@ -426,9 +440,10 @@ Interpreter.prototype.inst_call = function(inst) {
 	this._execute({
 		 f:  fname
 		,a:  arity
-		//,ci: would be initiate by `setup`
-		//     and updated by `maybe_retry`
+		,ci: this.ctx.tse.cp.p.ci
 	});
+	
+	this.ctx.p.i = 0;
 	
 	// We got this far... so everything is good
 	this.ctx.cu = true;

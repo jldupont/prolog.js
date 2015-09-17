@@ -182,7 +182,8 @@ Compiler.prototype.process_query = function(exp) {
 	if (exp.name == 'rule')
 		throw new ErrorRuleInQuestion();
 	
-	return this.process_body(exp);
+	var is_query = true;
+	return this.process_body(exp, is_query);
 };
 
 
@@ -202,7 +203,7 @@ Compiler.prototype.process_query = function(exp) {
  *   
  *   @raise
  */
-Compiler.prototype.process_body = function(exp, show_debug) {
+Compiler.prototype.process_body = function(exp, is_query) {
 	
 	var map = {};
 	var result = {};
@@ -253,7 +254,10 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 		
 		if (last_instruction_on_left.opcode == 'proceed')
 			lcode.pop();
-		
+
+		if (last_instruction_on_left.opcode == 'end')
+			lcode.pop();
+
 		
 		// Step 0: include the boundary instruction
 		//         between the 2 goals forming a conjunction
@@ -337,13 +341,13 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 	
 	v.process(function(jctx, left_or_root, right_maybe){
 
-		
+		/*
 		if (show_debug) {
 			console.log("jctx: ", jctx);
 			console.log("lctx: ", left_or_root);
 			console.log("rctx: ", right_maybe, "\n");
 		};
-		
+		*/
 		
 		
 		var type = jctx.type;
@@ -361,7 +365,7 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 		if (type == 'root') {
 			label = 'g0';
 			
-			result[label] = that.process_goal( ctx.n );
+			result[label] = that.process_goal( ctx.n, is_query );
 			return;
 		}
 		
@@ -373,8 +377,8 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 		 *     type:  conj | disj
 		 */
 		
-		var lcode = that.process_goal(left_or_root.n);
-		var rcode = that.process_goal(right_maybe.n);
+		var lcode = that.process_goal(left_or_root.n, is_query);
+		var rcode = that.process_goal(right_maybe.n, is_query);
 
 		
 		// CAUTION: lcode/rcode *may* be undefined
@@ -403,13 +407,6 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 		if (type == 'disj') {
 
 			disj_link(jctx, left_or_root, right_maybe);
-			
-			//var target_label = merges[llabel] || llabel;
-			
-			//console.log("Merges: ", merges);
-			//console.log("Target Label: ", target_label);
-			
-			//result[target_label].push(new Instruction('try_else', {p: rlabel}));
 		};
 		
 		
@@ -432,7 +429,7 @@ Compiler.prototype.process_body = function(exp, show_debug) {
  *   the rest of the expression is treated as a structure.
  *   
  */
-Compiler.prototype.process_goal = function(exp) {
+Compiler.prototype.process_goal = function(exp, is_query) {
 	
 	if (exp == undefined)
 		return undefined;
@@ -484,8 +481,10 @@ Compiler.prototype.process_goal = function(exp) {
 			results.push(new Instruction('maybe_retry'));
 			results.push(new Instruction('deallocate'));
 			
-			//
-			results.push(new Instruction('proceed'));
+			if (is_query)
+				results.push(new Instruction('end'));
+			else
+				results.push(new Instruction('proceed'));
 		};
 			
 		

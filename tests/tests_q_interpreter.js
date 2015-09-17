@@ -290,7 +290,7 @@ it('Interpreter - complex - 1', function(){
 	
 	var qcode = compile_query(qtext);
 	
-	console.log("qcode: ", qcode);
+	//console.log("qcode: ", qcode);
 	
 	/*
 		{ g0: 
@@ -309,7 +309,7 @@ it('Interpreter - complex - 1', function(){
 		if (before_or_after == 'before') {
 			console.log(inst);
 		} else {
-			console.log("CU: ", ctx.ctx.cu);
+			console.log("  CU: ", ctx.ctx.cu);
 		};
 			
 	};
@@ -322,19 +322,25 @@ it('Interpreter - complex - 1', function(){
 	
 	it.set_question(qcode);
 	
+	//try {
 	it.step(); // allocate
 	it.step(); // put_struct
 	it.step(); // put_var
 	it.step(); // setup
 	it.step(); // call
 	
+	console.log("it ctx: ", it.ctx);
+	
 	// In f1 fact
 	it.step(); //  get_struct
 	it.step(); //  get_number
 	it.step(); //  proceed
+	
+	// Return to .q./0
+	it.step();  // maybe_retry
+	it.step();  // DEALLOCATE 
 	it.step();
-	it.step();
-	it.step();
+	//} catch(e) { console.log("Error: ", e); };
 	
 	//console.log("it ctx: ", it.ctx);
 	

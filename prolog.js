@@ -925,7 +925,8 @@ Compiler.prototype.process_query = function(exp) {
 	if (exp.name == 'rule')
 		throw new ErrorRuleInQuestion();
 	
-	return this.process_body(exp);
+	var is_query = true;
+	return this.process_body(exp, is_query);
 };
 
 
@@ -945,7 +946,7 @@ Compiler.prototype.process_query = function(exp) {
  *   
  *   @raise
  */
-Compiler.prototype.process_body = function(exp, show_debug) {
+Compiler.prototype.process_body = function(exp, is_query) {
 	
 	var map = {};
 	var result = {};
@@ -996,7 +997,10 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 		
 		if (last_instruction_on_left.opcode == 'proceed')
 			lcode.pop();
-		
+
+		if (last_instruction_on_left.opcode == 'end')
+			lcode.pop();
+
 		
 		// Step 0: include the boundary instruction
 		//         between the 2 goals forming a conjunction
@@ -1080,13 +1084,13 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 	
 	v.process(function(jctx, left_or_root, right_maybe){
 
-		
+		/*
 		if (show_debug) {
 			console.log("jctx: ", jctx);
 			console.log("lctx: ", left_or_root);
 			console.log("rctx: ", right_maybe, "\n");
 		};
-		
+		*/
 		
 		
 		var type = jctx.type;
@@ -1104,7 +1108,7 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 		if (type == 'root') {
 			label = 'g0';
 			
-			result[label] = that.process_goal( ctx.n );
+			result[label] = that.process_goal( ctx.n, is_query );
 			return;
 		}
 		
@@ -1116,8 +1120,8 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 		 *     type:  conj | disj
 		 */
 		
-		var lcode = that.process_goal(left_or_root.n);
-		var rcode = that.process_goal(right_maybe.n);
+		var lcode = that.process_goal(left_or_root.n, is_query);
+		var rcode = that.process_goal(right_maybe.n, is_query);
 
 		
 		// CAUTION: lcode/rcode *may* be undefined
@@ -1146,13 +1150,6 @@ Compiler.prototype.process_body = function(exp, show_debug) {
 		if (type == 'disj') {
 
 			disj_link(jctx, left_or_root, right_maybe);
-			
-			//var target_label = merges[llabel] || llabel;
-			
-			//console.log("Merges: ", merges);
-			//console.log("Target Label: ", target_label);
-			
-			//result[target_label].push(new Instruction('try_else', {p: rlabel}));
 		};
 		
 		
@@ -1175,7 +1172,7 @@ Compiler.prototype.process_body = function(exp, show_debug) {
  *   the rest of the expression is treated as a structure.
  *   
  */
-Compiler.prototype.process_goal = function(exp) {
+Compiler.prototype.process_goal = function(exp, is_query) {
 	
 	if (exp == undefined)
 		return undefined;
@@ -1227,8 +1224,10 @@ Compiler.prototype.process_goal = function(exp) {
 			results.push(new Instruction('maybe_retry'));
 			results.push(new Instruction('deallocate'));
 			
-			//
-			results.push(new Instruction('proceed'));
+			if (is_query)
+				results.push(new Instruction('end'));
+			else
+				results.push(new Instruction('proceed'));
 		};
 			
 		
@@ -1654,7 +1653,7 @@ Interpreter.prototype.step = function() {
  */
 Interpreter.prototype.fetch_next_instruction = function(){
 	
-	console.log("fetch: ", this.ctx.p.f+"/"+this.ctx.p.a, this.ctx.p.l, this.ctx.p.i);
+	//console.log("fetch: ", this.ctx.p.f+"/"+this.ctx.p.a, this.ctx.p.l, this.ctx.p.i);
 	
 	// Just try fetching next instruction from env.cc
 	var inst = this.ctx.cc[this.ctx.p.l][this.ctx.p.i];
@@ -1666,7 +1665,7 @@ Interpreter.prototype.fetch_next_instruction = function(){
 	
 	// A jump should have occurred in the code anyways
 	//
-	throw new ErrorNoMoreInstruction();
+	throw new ErrorNoMoreInstruction("No More Instruction");
 	
 };
 
@@ -1682,36 +1681,33 @@ Interpreter.prototype.fetch_next_instruction = function(){
  * 
  * @return ctx with additionally { cc: code, ct: clauses_count }
  */
-Interpreter.prototype._get_code = function(ctx) {
+Interpreter.prototype._get_code = function(functor_name, arity, clause_index) {
 	
-	console.log(">>> GET CODE: ", ctx.f+"/"+ctx.a, ctx.ci);
+	console.log(">>> GET CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index);
 	
-	ctx.ci = ctx.ci || 0;
-
+	var result = {};
+	
 	var clauses;
 	var clauses_count;
 	
 	try {
-		clauses = this.db.get_code(ctx.f, ctx.a);
-		ctx.ct = clauses.length;
+		clauses = this.db.get_code(functor_name, arity);
+		result.ct = clauses.length;
 	} catch(e) {
-		throw new ErrorFunctorNotFound("Functor not found: "+ctx.f+"/"+ctx.a, ctx);
+		throw new ErrorFunctorNotFound("Functor not found: "+functor_name+"/"+arity);
 	};
 	
-	if (ctx.ci >= ctx.ct) {
-		console.error(ctx);
-		console.log(this.db);
-		throw new ErrorFunctorClauseNotFound("Functor clause not found: "+ctx.f+"/"+ctx.a, ctx);
+	if (clause_index >= clauses_count) {
+		throw new ErrorFunctorClauseNotFound("Functor clause not found: "+functor_name+"/"+arity);
 	};
 		
 	
-	ctx.cc = clauses[ctx.ci];
+	result.cc = clauses[clause_index];
 	
-	if (!ctx.cc)
-		return ErrorFunctorCodeNotFound("Functor clause code not found: "+ctx.f+"/"+ctx.a, ctx);
+	if (!result.cc)
+		return ErrorFunctorCodeNotFound("Functor clause code not found: "+functor_name+"/"+arity);
 	
-	// make this composable
-	return ctx;
+	return result;
 	
 };//_get_code
 
@@ -1729,21 +1725,24 @@ Interpreter.prototype._get_code = function(ctx) {
  */
 Interpreter.prototype._execute = function( ctx ){
 
+	//console.log("EXECUTE: p: ", this.ctx);
+	
+	var result = {};
+	
 	if (ctx) {
-		ctx = this._get_code(ctx);
-		this.ctx.p = ctx;
-		this.ctx.cc = ctx.cc;
+		result = this._get_code(ctx.f, ctx.a, ctx.ci);
+		this.ctx.p.f = ctx.f;
+		this.ctx.p.a = ctx.a;
+		this.ctx.p.ci = ctx.ci
+
+		this.ctx.cc = result.cc;
+		this.ctx.p.ct = result.ct;
 	}
 	else {
-		ctx = this._get_code({
-		 	 f:  this.ctx.p.f
-			,a:  this.ctx.p.a
-			,ci: this.ctx.p.ci
-			});
-		this.ctx.cc = ctx.cc;
-		console.log("EXECUTE: p: ", this.ctx.p);
+		result = this._get_code(this.ctx.p.f, this.ctx.p.a, this.ctx.p.ci);
+		this.ctx.cc = result.cc;
 	}
-
+	
 	// ctx.cc  now contains the code for the specified clause
 	//          for the specified functor/arity
 	
@@ -1755,11 +1754,9 @@ Interpreter.prototype._execute = function( ctx ){
 	 */
 	this.ctx.p.l = this.ctx.cc.head ? 'head' : 'g0';
 	
-	
-	// The clause instruction might not have been set
-	this.ctx.p.i = ctx.i || 0;
-	
 	this.ctx.cse = this.ctx.tse;
+	
+	//console.log("EXECUTE / END: ", this.ctx);
 };
 
 /**
@@ -1825,9 +1822,25 @@ Interpreter.prototype.get_current_ctx_var = function(evar) {
  *   at the "maybe_retry" following the `call` instruction
  * 
  */
+Interpreter.prototype.inst_end = function() {
+	
+};
+
+/**
+ *  Instruction "setup"
+ * 
+ * 
+ *  Saves Continuation Point to point
+ *   at the "maybe_retry" following the `call` instruction
+ * 
+ */
 Interpreter.prototype.inst_setup = function() {
 	
-	this._save_continuation(this.ctx.tse.cp, 2);
+	// We only need an offset of 1 
+	//  because the `fetch instruction` increments
+	//  already by 1.
+	//
+	this._save_continuation(this.ctx.tse.cp, 1);
 	
 	// Reset clause index
 	//
@@ -1867,9 +1880,10 @@ Interpreter.prototype.inst_call = function(inst) {
 	this._execute({
 		 f:  fname
 		,a:  arity
-		//,ci: would be initiate by `setup`
-		//     and updated by `maybe_retry`
+		,ci: this.ctx.tse.cp.p.ci
 	});
+	
+	this.ctx.p.i = 0;
 	
 	// We got this far... so everything is good
 	this.ctx.cu = true;

@@ -158,7 +158,7 @@ var process_body = function(input_text, expecteds, show_results) {
 		
 		//console.log("Expression: ", expression);
 
-		var result = c.process_body(expression, show_results);
+		var result = c.process_body(expression);
 		
 		results.push(result);
 	};
