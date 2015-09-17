@@ -661,13 +661,13 @@ ErrorFunctorNotFound.prototype = Error.prototype;
 
 function ErrorFunctorClauseNotFound(msg, _args) {
 	this.message = msg;
-	this.args = args_;
+	this.args = _args;
 };
 ErrorFunctorClauseNotFound.prototype = Error.prototype;
 
 function ErrorFunctorCodeNotFound(msg, _args) {
 	this.message = msg;
-	this.args = args_;
+	this.args = _args;
 };
 ErrorFunctorCodeNotFound.prototype = Error.prototype;
 

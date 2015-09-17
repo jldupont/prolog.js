@@ -52,9 +52,9 @@ Interpreter.prototype.set_question = function(question_code){
 	// Enter the `question` in the database
 	//  as to only have 1 location to work on from
 	if (!(question_code instanceof Array))
-		this.db['.q.'] = [question_code];
+		this.db.insert_code(".q.", 0, question_code);
 	else
-		this.db['.q.'] = question_code;
+		this.db.insert_code(".q.", 0, question_code[0]);
 	
 	/*
 	 *  Interpreter Context
@@ -66,7 +66,7 @@ Interpreter.prototype.set_question = function(question_code){
 		p: { 
 			f:  ".q.",  // which functor in the database
 			a:  0,      // arity
-			c:  0,      // clause index
+			ci: 0,      // clause index
 			ct: 1,      // Total number of clause
 			l:  'g0',   // which label
 			i:  0       // and finally which index in the label entry
@@ -162,12 +162,8 @@ Interpreter.prototype.set_question = function(question_code){
 	// No `call` construction is in progress of course!
 	this.ctx.tse = null;
 	
-	try {
-		this.ctx.cc = this.db['.q.'][0];	
-	} catch (e){
-		throw new ErrorExpectingGoal("Expecting at least 1 goal in question: "+e);
-	};
-
+	// Prime the whole thing
+	this._execute();
 };
 
 
@@ -254,16 +250,20 @@ Interpreter.prototype._get_code = function(ctx) {
 		clauses = this.db.get_code(ctx.f, ctx.a);
 		ctx.ct = clauses.length;
 	} catch(e) {
-		throw new ErrorFunctorNotFound(ctx.f+"/"+ctx.a, ctx);
+		throw new ErrorFunctorNotFound("Functor not found: "+ctx.f+"/"+ctx.a, ctx);
 	};
 	
-	if (ctx.ci >= ctx.ct)
-		throw new ErrorFunctorClauseNotFound(ctx.f+"/"+ctx.a, ctx);
+	if (ctx.ci >= ctx.ct) {
+		console.error(ctx);
+		console.log(this.db);
+		throw new ErrorFunctorClauseNotFound("Functor clause not found: "+ctx.f+"/"+ctx.a, ctx);
+	};
+		
 	
 	ctx.cc = clauses[ctx.ci];
 	
 	if (!ctx.cc)
-		return ErrorFunctorCodeNotFound(ctx.f+"/"+ctx.a, ctx);
+		return ErrorFunctorCodeNotFound("Functor clause code not found: "+ctx.f+"/"+ctx.a, ctx);
 	
 	// make this composable
 	return ctx;
@@ -284,6 +284,12 @@ Interpreter.prototype._get_code = function(ctx) {
  */
 Interpreter.prototype._execute = function( ctx ){
 
+	if (!ctx)
+		ctx = {
+			 f: this.ctx.p.f
+			,a: this.ctx.p.a
+		};
+	
 	ctx = this._get_code( ctx );
 
 	this.ctx.p = ctx;
@@ -322,13 +328,26 @@ Interpreter.prototype._jump = function( ctx, offset ){
 	this.ctx.p = ctx;
 };
 
+Interpreter.prototype._restore_continuation = function(from) {
+	
+	this.ctx.cse   = from.ce;
+	
+	this.ctx.p.f  = from.p.f;
+	this.ctx.p.a  = from.p.a;
+	this.ctx.p.ci = from.p.ci;
+	this.ctx.p.ct = from.p.ct;
+	this.ctx.p.l  = from.p.l;
+	this.ctx.p.i  = from.p.i;
+};
 
 
-Interpreter.prototype.save_continuation = function(where, instruction_offset) {
+
+Interpreter.prototype._save_continuation = function(where, instruction_offset) {
 	
 	where.p = {};
 	
 	where.ce   = this.ctx.cse;
+	
 	where.p.f  = this.ctx.p.f;
 	where.p.a  = this.ctx.p.a;
 	where.p.ci = this.ctx.p.ci;
@@ -359,7 +378,7 @@ Interpreter.prototype.get_current_ctx_var = function(evar) {
  */
 Interpreter.prototype.inst_setup = function() {
 	
-	this.save_continuation(this.ctx.tse.cp, 2);
+	this._save_continuation(this.ctx.tse.cp, 2);
 	
 	// Reset clause index
 	//
@@ -422,7 +441,7 @@ Interpreter.prototype.inst_allocate = function() {
 	
 	//console.log("Instruction: 'allocate'");
 	
-	var env = { vars: {}, cp: {}, choices: [] };
+	var env = { vars: {}, cp: {} };
 	this.ctx.tse = env;
 	this.stack.push(env);
 
@@ -592,7 +611,9 @@ Interpreter.prototype.inst_proceed = function() {
 	
 	//console.log("Instruction: 'proceed'");
 
-	this._restore_continuation( this.ctx.cse );
+	this._restore_continuation( this.ctx.cse.cp );
+	this._execute();
+	
 };
 
 

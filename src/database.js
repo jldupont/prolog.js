@@ -66,7 +66,7 @@ Database.prototype.get_code = function(functor, arity) {
 	var functor_signature = this.al.compute_signature([functor, arity]);
 
 	var maybe_entries = this.db[functor_signature] || [];
-	
+
 	return maybe_entries;
 };
 

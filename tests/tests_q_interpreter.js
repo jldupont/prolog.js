@@ -120,7 +120,7 @@ var compile_rule_or_fact = function(input_text) {
 
 // ======================================================================== BASIC
 
-
+/*
 it('Interpreter - basic - 0', function(){
 	
 	var qtext = "q(A).";
@@ -128,16 +128,16 @@ it('Interpreter - basic - 0', function(){
 	
 	//console.log("Qcode: ", qcode);
 	
-	/*
-	 * { g0: 
-		   [ allocate    ,
-		     put_struct   ( q/1, x(0) ),
-		     put_var      ( x("A") ),
-		     call        ,
-		     deallocate   ] }
-	 */
+	//*
+	// * { g0: 
+	//	   [ allocate    ,
+	//	     put_struct   ( q/1, x(0) ),
+	//	     put_var      ( x("A") ),
+	//	     call        ,
+	//	     deallocate   ] }
+	//
 	
-	var db = {};
+	var db = new Database(DbAccess);
 	var builtins = {};
 	
 	var it = new Interpreter(db, builtins);
@@ -157,8 +157,9 @@ it('Interpreter - basic - 0', function(){
 	
 	//it.step();
 });
+*/
 
-
+/*
 it('Interpreter - basic - 1', function(){
 	
 	var qtext = "q(666, a).";
@@ -187,7 +188,8 @@ it('Interpreter - basic - 1', function(){
 	var result = Utils.compare_objects(expected, tse_vars);
 	should.equal(result, true, "ce vars: " + util.inspect(tse_vars));
 });
-
+*/
+/*
 it('Interpreter - basic - 2', function(){
 	
 	var qtext = "q(A).";
@@ -214,7 +216,9 @@ it('Interpreter - basic - 2', function(){
 	var result = Utils.compare_objects(expected, tse_vars);
 	should.equal(result, true, "ce vars: " + util.inspect(tse_vars));
 });
+*/
 
+/*
 it('Interpreter - basic - 3', function(){
 	
 	var qtext = "q1(q2(666)).";
@@ -225,18 +229,18 @@ it('Interpreter - basic - 3', function(){
 	
 	//console.log(qcode);
 	
-	/*
-		{ g0: 
-		   [ allocate    ,
-		     put_struct   ( q2/1, p(1) ),
-		     put_number   ( p(666) ),
-		     put_struct   ( q1/1, p(0) ),
-		     put_value    ( p(1) ),
-		     call        ,
-		     deallocate   ] }
-	 */
+	//*
+	//	{ g0: 
+	//	   [ allocate    ,
+	//	     put_struct   ( q2/1, p(1) ),
+	//	     put_number   ( p(666) ),
+	//	     put_struct   ( q1/1, p(0) ),
+	//	     put_value    ( p(1) ),
+	//	     call        ,
+	//	     deallocate   ] }
+	 //
 	
-	var db = {};
+	var db = new Database(DbAccess);
 	var builtins = {};
 	
 	var it = new Interpreter(db, builtins);
@@ -257,7 +261,7 @@ it('Interpreter - basic - 3', function(){
 	var result = Utils.compare_objects(expected, tse_vars);
 	should.equal(result, true, "ce vars: " + util.inspect(tse_vars));
 });
-
+*/
 
 it('Interpreter - complex - 1', function(){
 	
@@ -316,16 +320,17 @@ it('Interpreter - complex - 1', function(){
 	it.step(); // allocate
 	it.step(); // put_struct
 	it.step(); // put_var
+	it.step(); // setup
 	it.step(); // call
 	
 	// In f1 fact
 	it.step(); //  get_struct
 	it.step(); //  get_number
+	it.step(); //  proceed
+	//it.step(); 
 	
 	
-	//it.step(); // put_value
-	
-	//console.log("it ctx: ", it.ctx);
+	console.log("it ctx: ", it.ctx);
 	
 	var tse_vars = it.get_current_ctx_var("tse");
 	
