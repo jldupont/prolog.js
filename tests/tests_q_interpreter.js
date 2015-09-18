@@ -26,6 +26,40 @@ var Compiler = pr.Compiler;
 var Interpreter = pr.Interpreter;
 var Instruction = pr.Instruction;
 
+function basic_tracer(ctx, it_ctx, data) {
+	
+	if (ctx == 'before_inst') {
+		//console.log(it_ctx);
+	};
+	if (ctx == 'after_inst'){
+		console.log("inst(",data,")  CU: ", it_ctx.ctx.cu);
+		//console.log(it_ctx);
+	};
+		
+	if (ctx == 'execute')
+		console.log("--> Executing: ",it_ctx.p.f+"/"+it_ctx.p.a, ":"+it_ctx.p.ci, "@ "+it_ctx.p.l);
+};
+
+
+var prepare = function(rules_and_facts, query, tracer) {
+	
+	var crules = compile_rules_and_facts(rules_and_facts);
+	var cquery = compile_query(query);
+
+	var db = new Database(DbAccess);
+	var builtins = {};
+	
+	db.batch_insert_code(crules);
+	
+	var it = new Interpreter(db, builtins);
+	
+	if (tracer)
+		it.set_tracer(tracer);
+	
+	it.set_question(cquery);
+	
+	return it;
+};
 
 var setup = function(text) {
 
@@ -67,6 +101,34 @@ var compile_rule = function(input_text) {
 	
 	return results;
 };
+
+var compile_rules_and_facts = function(input_texts) {
+	
+	var parsed = [];
+	
+	for (var ti in input_texts) {
+		var t = input_texts[ti];
+		parsed.push(setup(t)[0]);
+	}
+	
+	var results = [];
+	
+	//console.log(parsed);
+	
+	for (var index = 0; index<parsed.length; index++) {
+		
+		var expression = parsed[index][0];
+		
+		var c = new Compiler();
+		
+		var result = c.process_rule_or_fact(expression);
+		
+		results.push(result);
+	};
+	
+	return results;
+};
+
 
 var compile_fact = function(input_text) {
 	
@@ -305,15 +367,6 @@ it('Interpreter - complex - 1', function(){
 		     ] }
 	 */
 	
-	function tracer(ctx, inst, before_or_after) {
-		if (before_or_after == 'before') {
-			console.log(inst);
-		} else {
-			console.log("  CU: ", ctx.ctx.cu);
-		};
-			
-	};
-	
 	var builtins = {};
 	
 	var it = new Interpreter(db, builtins);
@@ -402,20 +455,11 @@ it('Interpreter - complex - 2', function(){
 		     ] }
 	 */
 	
-	function tracer(ctx, inst, before_or_after) {
-		if (before_or_after == 'before') {
-			//console.log(inst);
-		} else {
-			console.log("inst(",inst,")  CU: ", ctx.ctx.cu);
-		};
-			
-	};
-	
 	var builtins = {};
 	
 	var it = new Interpreter(db, builtins);
 	
-	it.set_tracer(tracer);
+	//it.set_tracer(tracer);
 	
 	it.set_question(qcode);
 	
@@ -449,7 +493,7 @@ it('Interpreter - complex - 2', function(){
 	var vara = vars['A'];
 	should.equal(vara.get_value(), 777);
 	
-	it.set_tracer(tracer);
+	//it.set_tracer(tracer);
 	
 	it.backtrack();
 		
@@ -469,4 +513,54 @@ it('Interpreter - complex - 2', function(){
 	is_end = it.step();  // end
 
 	should.equal(is_end, true);
+	
+	vara = vars['A'];
+	should.equal(vara.get_value(), 888);
+	
 });
+
+
+it('Interpreter - complex - 3', function(){
+
+	console.log('\r');
+	
+	var rules = [
+	                "r(1,A) :- f(1+A)."
+	               ,"r(2,A) :- f(2+A)"
+	               ,"f(X)."
+	             ];
+
+	var query = "r(1,2).";
+	
+	var it = prepare(rules, query, basic_tracer);
+
+	//console.log(it.db.db);
+	
+	it.step(); // allocate
+	it.step(); // put_struct
+	it.step(); // put_number
+	it.step(); // put_number
+	it.step(); // setup
+	it.step(); // call
+	
+	it.step(); // get_struct
+	it.step(); // get_number
+	it.step(); // unif_var
+	//console.log(it.ctx.cse.vars);
+	it.step(); // jmp g0
+	it.step(); // allocate
+	it.step(); // put_struct (plus/2 ...
+	it.step(); // put_number
+	it.step(); // put_var(A)
+	it.step(); // put_struct f/1
+	it.step(); // put_value 
+	it.step(); // setup
+	it.step(); // call f/1
+	it.step(); // get_struct f/1
+	it.step(); 
+	
+	
+	
+	
+});
+

@@ -29,11 +29,9 @@ function Compiler() {};
  *
  *  -------------------------------------------------------------
  *  
- *  
- *  
- * 
- * 
  * @raise ErrorExpectingFunctor
+ * 
+ * @return Object: compiled code
  */
 Compiler.prototype.process_rule_or_fact = function(exp) {
 	
@@ -47,6 +45,8 @@ Compiler.prototype.process_rule_or_fact = function(exp) {
 	
 	var result = {
 		'head': this.process_head(exp, with_body)
+		,'f': exp.name
+		,'a': exp.args.length
 	};
 	
 	return result;
@@ -67,6 +67,8 @@ Compiler.prototype.process_rule = function(exp) {
 	
 	var with_body = true;
 	result['head'] = this.process_head(head, with_body);
+	result['f'] = head.name;
+	result['a'] = head.args.length;
 	
 	return result;
 };

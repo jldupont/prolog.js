@@ -548,11 +548,6 @@ Var.prototype.get_value = function() {
  */
 Var.prototype.deref = function(){
 
-	//console.log("Var("+this.name+", "+this.value+").deref()");
-	
-	//if (this.value == null)
-	//	throw new ErrorNotBound("Var("+this.name+")");
-
 	if (this.value instanceof Var)
 		return this.value.deref();
 	

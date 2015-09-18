@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-09-17 */
+/*! prolog.js - v0.0.1 - 2015-09-18 */
 
 /**
  *  Token
@@ -542,11 +542,6 @@ Var.prototype.get_value = function() {
  */
 Var.prototype.deref = function(){
 
-	//console.log("Var("+this.name+", "+this.value+").deref()");
-	
-	//if (this.value == null)
-	//	throw new ErrorNotBound("Var("+this.name+")");
-
 	if (this.value instanceof Var)
 		return this.value.deref();
 	
@@ -774,11 +769,9 @@ function Compiler() {};
  *
  *  -------------------------------------------------------------
  *  
- *  
- *  
- * 
- * 
  * @raise ErrorExpectingFunctor
+ * 
+ * @return Object: compiled code
  */
 Compiler.prototype.process_rule_or_fact = function(exp) {
 	
@@ -792,6 +785,8 @@ Compiler.prototype.process_rule_or_fact = function(exp) {
 	
 	var result = {
 		'head': this.process_head(exp, with_body)
+		,'f': exp.name
+		,'a': exp.args.length
 	};
 	
 	return result;
@@ -812,6 +807,8 @@ Compiler.prototype.process_rule = function(exp) {
 	
 	var with_body = true;
 	result['head'] = this.process_head(head, with_body);
+	result['f'] = head.name;
+	result['a'] = head.args.length;
 	
 	return result;
 };
@@ -1275,7 +1272,18 @@ function Database(access_layer) {
  *  @return signature
  *  @raise Error
  */
-Database.prototype.insert = function(root_node){
+Database.prototype.insert = function(root_nodes){
+
+	if (!(root_nodes instanceof Array))
+		root_nodes = [root_nodes];
+	
+	for (var index in root_nodes) {
+		this._insert(root_nodes[index]);
+	}
+
+};
+
+Database.prototype._insert = function(root_node){
 
 	var functor_signature = this.al.compute_signature(root_node);
 	
@@ -1285,6 +1293,22 @@ Database.prototype.insert = function(root_node){
 	this.db[functor_signature] = maybe_entries;
 	
 	return functor_signature;
+};
+
+
+Database.prototype.batch_insert_code = function(codes) {
+
+	if (!(codes instanceof Array))
+		codes = [codes];
+	
+	for (var index in codes) {
+		var code_object = codes[index];
+		var f = code_object.f;
+		var a = code_object.a;
+		
+		this.insert_code(f, a, code_object);
+	};
+
 };
 
 Database.prototype.insert_code = function(functor, arity, code) {
@@ -1621,7 +1645,7 @@ Interpreter.prototype.set_question = function(question_code){
 Interpreter.prototype.backtrack = function() {
 	
 	if (this.tracer)
-		console.log("---Backtracking...");
+		this.tracer("backtracking", this.ctx);
 	
 	this.ctx.cu = false;
 	this.ctx.end = false;
@@ -1659,9 +1683,9 @@ Interpreter.prototype.step = function() {
 		throw new ErrorInvalidInstruction(inst.opcode);
 
 	if (this.tracer) {
-		this.tracer(this, inst, 'before');
+		this.tracer('before_inst', this, inst);
 		this[fnc_name].apply(this, [inst]);
-		this.tracer(this, inst, 'after');
+		this.tracer('after_inst', this, inst);
 	} else {
 		// Execute the instruction
 		this[fnc_name].apply(this, [inst]);	
@@ -1781,6 +1805,9 @@ Interpreter.prototype._execute = function( ctx ){
 	this.ctx.p.l = this.ctx.cc.head ? 'head' : 'g0';
 	
 	this.ctx.cse = this.ctx.tse;
+
+	if (this.tracer)
+		this.tracer("execute", this.ctx);
 	
 	return result;
 };
@@ -1801,7 +1828,7 @@ Interpreter.prototype._jump = function( ctx, offset ){
 Interpreter.prototype._restore_continuation = function(from) {
 	
 	if (this.tracer)
-		console.log("*** RESTORE: ", from);
+		this.tracer("restore", this.ctx);
 	
 	this.ctx.cse  = from.ce;
 	this.ctx.p.f  = from.p.f;
@@ -1827,7 +1854,7 @@ Interpreter.prototype._save_continuation = function(where, instruction_offset) {
 	where.p.i  = this.ctx.p.i + (instruction_offset || 0);
 	
 	if (this.tracer)
-		console.log("*** SAVE: ", where);
+		this.tracer("save", this.ctx);
 };
 
 /**
@@ -2062,11 +2089,12 @@ Interpreter.prototype.inst_maybe_retry = function() {
  */
 Interpreter.prototype.inst_jump = function( inst ) {
 	
-	var vname = "g" + inst.get("p");
+	var vname = inst.get("p");
 	
 	// Within same functor (i.e. clause)
 	this.ctx.p.l = vname;
 	this.ctx.p.i = 0;
+	
 };
 
 
@@ -2177,7 +2205,7 @@ Interpreter.prototype.inst_put_number = function(inst) {
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
 	
-	struct.push_arg(num);
+	struct.push_arg(new Token('number', num));
 };
 
 
@@ -2242,19 +2270,91 @@ Interpreter.prototype.inst_put_value = function(inst) {
  *   Unify the value at the current variable
  *    being matched in the environment.
  *   
+ *   - Token(term)
+ *   - Token(number)
+ *   - Functor, recursively
+ * 
+ *   Algorithm:
+ *     http://www.dai.ed.ac.uk/groups/ssp/bookpages/quickprolog/node12.html
+ * 
+ *   NOTE:  Need to manage the trail.
+ *   =====
  * 
  */
 Interpreter.prototype.inst_unif_var = function(inst) {
 	
-	console.log("Instruction: 'unif_var'");
-	
 	var p = inst.get('p');
+	var pv = this.ctx.cse.vars[p];
+
+	/*
+	 *  Just a symbol, not even a Var assigned yet
+	 */
+	if (!pv) {
+		pv = new Var(p);
+		this.ctx.cse.vars[p] = pv;
+	};
 	
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
-	// TODO 
-};
 
+	var result = this._unify(pv, value_or_var);
+	
+	this.ctx.cu = (result != null);
+	
+};// unif_var
+
+
+Interpreter.prototype._unify = function(t1, t2) {
+
+	console.log("_unify(",t1,",",t2,")");
+	
+	var t1d = t1.deref();
+	
+	if (t1d.is_bound())
+		return null;
+	
+	// The simplest case
+	if (t2 instanceof Token) {
+		t1.bind(t2);
+		return t1;
+	};
+	
+	if (t2 instanceof Var) {
+		// t1 and t2 are thus variables
+		
+		var t2d = t2.deref();
+		
+		if (!t2d.is_bound())
+			return null;
+		
+		var t2v = t2d.get_value();
+		
+		return unify(t1d, t2v);
+	};
+	
+	if (t2 instanceof Functor) {
+		
+		if (!(t1d instanceof Functor))
+			return null;
+		
+		if (t1d.args.length != t2.args.length)
+			return null;
+		
+		for (var index in t1d.args) {
+			var v1 = t1d.args[index];
+			var v2 = t2.args[index];
+			
+			var r = this._unify(v1, v2);
+			if (r == null)
+				return null;
+		};
+		
+		// everything went fine if we get here
+		return t1;
+	};
+	
+	return null;
+}; // unify
 
 
 /**
@@ -2416,6 +2516,8 @@ Interpreter.prototype.inst_get_term = function(inst) {
 
 Interpreter.prototype._get_x = function(inst, type) {
 	
+	//console.log("_get_x: ", inst, type);
+	
 	var p = inst.get('p');
 
 	this.ctx.cu = false;
@@ -2429,11 +2531,10 @@ Interpreter.prototype._get_x = function(inst, type) {
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
 	/*  Cases:
-	 *  a) unbound variable ==> bind to expected number
-	 *  b) bound variable   ==> unification
-	 *  c) token(number) 
+	 *  A) unbound variable ==> bind to expected number
+	 *  B) bound variable   ==> unification
+	 *  C) token(number) 
 	 */
-
 	
 	// CASE (C)
 	//
@@ -2449,7 +2550,6 @@ Interpreter.prototype._get_x = function(inst, type) {
 	}
 
 	var variable = value_or_var;
-		
 	var dvar = variable.deref();
 	
 	// Case (B)

@@ -39,7 +39,18 @@ function Database(access_layer) {
  *  @return signature
  *  @raise Error
  */
-Database.prototype.insert = function(root_node){
+Database.prototype.insert = function(root_nodes){
+
+	if (!(root_nodes instanceof Array))
+		root_nodes = [root_nodes];
+	
+	for (var index in root_nodes) {
+		this._insert(root_nodes[index]);
+	}
+
+};
+
+Database.prototype._insert = function(root_node){
 
 	var functor_signature = this.al.compute_signature(root_node);
 	
@@ -49,6 +60,22 @@ Database.prototype.insert = function(root_node){
 	this.db[functor_signature] = maybe_entries;
 	
 	return functor_signature;
+};
+
+
+Database.prototype.batch_insert_code = function(codes) {
+
+	if (!(codes instanceof Array))
+		codes = [codes];
+	
+	for (var index in codes) {
+		var code_object = codes[index];
+		var f = code_object.f;
+		var a = code_object.a;
+		
+		this.insert_code(f, a, code_object);
+	};
+
 };
 
 Database.prototype.insert_code = function(functor, arity, code) {
