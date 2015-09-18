@@ -170,6 +170,27 @@ Interpreter.prototype.set_question = function(question_code){
 	this._execute();
 };
 
+/**
+ *  Backtrack
+ *  
+ *  @return true  : can backtrack
+ *  @return false : can not backtrack (e.g. end of choice points) 
+ */
+Interpreter.prototype.backtrack = function() {
+	
+	if (this.tracer)
+		console.log("---Backtracking...");
+	
+	this.ctx.cu = false;
+	this.ctx.end = false;
+	
+	// We are at the top of the stack
+	if (this.ctx.tse.qenv)
+		return false;
+	
+	this._restore_continuation( this.ctx.tse.cp );
+	this._execute();
+};
 
 
 /**
@@ -323,6 +344,8 @@ Interpreter.prototype._execute = function( ctx ){
 	this.ctx.cse = this.ctx.tse;
 	
 	//console.log("EXECUTE / END: ", this.ctx);
+	
+	return result;
 };
 
 /**
@@ -340,7 +363,8 @@ Interpreter.prototype._jump = function( ctx, offset ){
 
 Interpreter.prototype._restore_continuation = function(from) {
 	
-	//console.log("*** RESTORE: ", from);
+	if (this.tracer)
+		console.log("*** RESTORE: ", from);
 	
 	this.ctx.cse  = from.ce;
 	this.ctx.p.f  = from.p.f;
@@ -365,12 +389,25 @@ Interpreter.prototype._save_continuation = function(where, instruction_offset) {
 	where.p.l  = this.ctx.p.l;
 	where.p.i  = this.ctx.p.i + (instruction_offset || 0);
 	
-	//console.log("*** SAVE: ", where);
+	if (this.tracer)
+		console.log("*** SAVE: ", where);
+};
+
+Interpreter.prototype._unwind_trail = function(which) {
+	
+	for (var v in which) {
+		var trail_var = which[v];
+		
+		//console.log("Unwinding: ", v);
+		
+		var dvar = trail_var.deref();
+		dvar.unbind();
+	};
 };
 
 
-Interpreter.prototype.get_current_ctx_var = function(evar) {
-	return this.ctx[evar];
+Interpreter.prototype.get_query_vars = function() {
+	return this.ctx.cse.trail;
 };
 
 
@@ -442,12 +479,17 @@ Interpreter.prototype.inst_call = function(inst) {
 	
 	var fname = x0.name;
 	var arity = x0.args.length;
+	
+	var clause_index = this.ctx.tse.p.ci || 0;
+	this.ctx.tse.p.ci = clause_index;
 
-	this._execute({
+	var result = this._execute({
 		 f:  fname
 		,a:  arity
-		,ci: this.ctx.tse.cp.p.ci
+		,ci: clause_index
 	});
+	
+	this.ctx.tse.p.ct = result.ct;
 	
 	this.ctx.p.i = 0;
 	
@@ -470,7 +512,7 @@ Interpreter.prototype.inst_allocate = function() {
 	
 	//console.log("Instruction: 'allocate'");
 	
-	var env = { vars: {}, cp: {}, trail: [] };
+	var env = { vars: {}, cp: {}, trail: {}, p:{} };
 	this.ctx.tse = env;
 	this.stack.push(env);
 
@@ -554,9 +596,11 @@ Interpreter.prototype.inst_maybe_retry = function() {
 	if (this.ctx.cu)
 		return;
 	
-	this.ctx.p.ci ++;
+	//console.log("TSE: ", this.ctx.tse);
 	
-	if (this.ctx.p.ci < this.ctx.p.ct) {
+	this.ctx.tse.p.ci ++;
+
+	if (this.ctx.tse.p.ci < this.ctx.tse.p.ct) {
 		
 		// We can try the next clause
 		//  The fetch function will have incremented the
@@ -565,6 +609,13 @@ Interpreter.prototype.inst_maybe_retry = function() {
 		//   back to the 'CALL' instruction.
 		//
 		this.ctx.p.i -= 2; 
+		
+		// Get ready for `head` related instructions
+		this.ctx.cs = null;
+		this.ctx.csx = 0;
+		
+		// unwind trail
+		this._unwind_trail( this.ctx.tse.trail );
 	};
 
 	// NOOP when we reach end of clause list
@@ -670,12 +721,6 @@ Interpreter.prototype.inst_put_struct = function(inst) {
 	
 	this.ctx.cv = x;
 	this.ctx.tse.vars[x] = f;
-
-	// TODO manage trail
-	
-	//console.log("Instruction: 'put_struct': "+inst.get('f')+"/"+a+", "+x);
-	//console.log("Env: ", this.env);
-
 };
 
 /**
@@ -693,8 +738,6 @@ Interpreter.prototype.inst_put_term = function(inst) {
 	var struct = this.ctx.tse.vars[cv];
 	
 	struct.push_arg(term);
-	
-	// TODO manage trail
 };
 
 /**
@@ -712,8 +755,6 @@ Interpreter.prototype.inst_put_number = function(inst) {
 	var struct = this.ctx.tse.vars[cv];
 	
 	struct.push_arg(num);
-	
-	// TODO manage trail
 };
 
 
@@ -730,11 +771,15 @@ Interpreter.prototype.inst_put_var = function(inst) {
 
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
-	
-	var v = new Var(vname);
-	
+
 	// Manage the trail
-	this.ctx.tse.trail.push( v );
+	
+	var v = this.ctx.tse.trail[ vname ];
+
+	if (!v) {
+		v = new Var(vname);
+		this.ctx.tse.trail[ vname ] = v;
+	}
 	
 	struct.push_arg(v);
 

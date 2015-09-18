@@ -408,10 +408,12 @@ function Functor(name, maybe_arguments_list) {
 		this.args = Array.prototype.splice.call(arguments, 1);
 	else
 		this.args = [];
-	
+
+	// Used in the context of the interpreter
+	// ======================================
 	// Target Arity
-	//  Used in the context of the interpreter
 	this.arity = null;
+	
 };
 
 Functor.prototype.get_arity = function() {

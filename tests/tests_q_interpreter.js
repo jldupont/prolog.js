@@ -318,6 +318,103 @@ it('Interpreter - complex - 1', function(){
 	
 	var it = new Interpreter(db, builtins);
 	
+	//it.set_tracer(tracer);
+	
+	it.set_question(qcode);
+	
+	it.step(); // allocate
+	it.step(); // put_struct
+	it.step(); // put_var
+	it.step(); // setup
+	it.step(); // call
+	
+	// In f1 fact
+	it.step(); //  get_struct
+	it.step(); //  get_number
+	it.step(); //  proceed
+	
+	// Return to .q./0
+	it.step();  // maybe_retry
+	it.step();  // DEALLOCATE 
+	var is_end = it.step();  // end
+	
+	var vars = it.get_query_vars();
+	//console.log("Vars: ", vars);
+	//console.log("it ctx: ", it.ctx);
+	
+	//var tse_vars = it.get_current_ctx_var("tse");
+	
+	//console.log( tse_vars );
+	
+	//var result = Utils.compare_objects(expected, ce_vars);
+	should.equal(is_end, true);
+	
+	var vara = vars['A'];
+	should.equal(vara.get_value(), 666);
+});
+
+
+it('Interpreter - complex - 2', function(){
+	
+	var db = new Database(DbAccess);
+	
+	// SETUP
+	var fact = "f1(777).";
+	
+	/*
+	 head: { [
+	 	get_struct   ( f1/1, p(0) ), 
+	 	get_number   ( p(666) )
+	 	proceed
+	 	]}
+	 */
+	
+	var fcode = compile_rule_or_fact(fact);
+	
+	//console.log("F1 code:", fcode);
+	
+	db.insert_code("f1", 1, fcode);
+	
+	fact = "f1(888)."
+	fcode = compile_rule_or_fact(fact);
+	db.insert_code("f1", 1, fcode);
+	
+	//console.log(db.db);
+	
+	// QUERY
+	
+	var qtext = "f1(A).";
+	
+	var qcode = compile_query(qtext);
+	
+	//console.log("qcode: ", qcode);
+	
+	/*
+		{ g0: 
+		   [ allocate    ,
+		     put_struct   ( f1/1, p(0) ),
+		     put_var      ( p("A") ),
+		     setup
+		     call        ,
+		     maybe_retry
+		     deallocate
+		     proceed
+		     ] }
+	 */
+	
+	function tracer(ctx, inst, before_or_after) {
+		if (before_or_after == 'before') {
+			//console.log(inst);
+		} else {
+			console.log("inst(",inst,")  CU: ", ctx.ctx.cu);
+		};
+			
+	};
+	
+	var builtins = {};
+	
+	var it = new Interpreter(db, builtins);
+	
 	it.set_tracer(tracer);
 	
 	it.set_question(qcode);
@@ -338,8 +435,9 @@ it('Interpreter - complex - 1', function(){
 	it.step();  // DEALLOCATE 
 	var is_end = it.step();  // end
 	
-	
-	console.log("it ctx: ", it.ctx);
+	var vars = it.get_query_vars();
+	//console.log("Vars: ", vars);
+	//console.log("it ctx: ", it.ctx);
 	
 	//var tse_vars = it.get_current_ctx_var("tse");
 	
@@ -347,4 +445,28 @@ it('Interpreter - complex - 1', function(){
 	
 	//var result = Utils.compare_objects(expected, ce_vars);
 	should.equal(is_end, true);
+	
+	var vara = vars['A'];
+	should.equal(vara.get_value(), 777);
+	
+	it.set_tracer(tracer);
+	
+	it.backtrack();
+		
+	it.step(); //  maybe_retry
+	it.step(); //  call
+	
+	// In f1 fact
+	//   clause #2
+	
+	it.step(); //  get_struct
+	it.step(); //  get_number
+	it.step(); //  proceed
+	
+	// Return to .q./0
+	it.step();  // maybe_retry
+	it.step();  // DEALLOCATE 
+	is_end = it.step();  // end
+
+	//should.equal(is_end, true);
 });
