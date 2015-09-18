@@ -2306,12 +2306,14 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 
 Interpreter.prototype._unify = function(t1, t2) {
 
-	console.log("_unify(",t1,",",t2,")");
+	//console.log("_unify(",t1,",",t2,")");
 	
 	var t1d = t1.deref();
 	
-	if (t1d.is_bound())
-		return null;
+	if (!t1d.is_bound()) {
+		t1d.bind(t2);
+		return t1;
+	};
 	
 	// The simplest case
 	if (t2 instanceof Token) {
@@ -2335,7 +2337,7 @@ Interpreter.prototype._unify = function(t1, t2) {
 	if (t2 instanceof Functor) {
 		
 		if (!(t1d instanceof Functor))
-			return null;
+			return this._unify(t1d, t2);
 		
 		if (t1d.args.length != t2.args.length)
 			return null;

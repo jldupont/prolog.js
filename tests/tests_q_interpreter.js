@@ -532,7 +532,8 @@ it('Interpreter - complex - 3', function(){
 
 	var query = "r(1,2).";
 	
-	var it = prepare(rules, query, basic_tracer);
+	//var it = prepare(rules, query, basic_tracer);
+	var it = prepare(rules, query);
 
 	//console.log(it.db.db);
 	
@@ -546,7 +547,7 @@ it('Interpreter - complex - 3', function(){
 	it.step(); // get_struct
 	it.step(); // get_number
 	it.step(); // unif_var
-	//console.log(it.ctx.cse.vars);
+
 	it.step(); // jmp g0
 	it.step(); // allocate
 	it.step(); // put_struct (plus/2 ...
@@ -557,10 +558,9 @@ it('Interpreter - complex - 3', function(){
 	it.step(); // setup
 	it.step(); // call f/1
 	it.step(); // get_struct f/1
-	it.step(); 
+	it.step(); // unif_var
+	it.step(); // proceed
 	
-	
-	
-	
+	should.equal(it.ctx.cu, true);
 });
 
