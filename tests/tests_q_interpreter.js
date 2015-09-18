@@ -468,5 +468,5 @@ it('Interpreter - complex - 2', function(){
 	it.step();  // DEALLOCATE 
 	is_end = it.step();  // end
 
-	//should.equal(is_end, true);
+	should.equal(is_end, true);
 });

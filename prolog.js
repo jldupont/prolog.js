@@ -1632,20 +1632,23 @@ Interpreter.prototype.backtrack = function() {
 	
 	this._restore_continuation( this.ctx.tse.cp );
 	this._execute();
+	
+	return true;
 };
 
 
 /**
  * Take 1 processing step
  * 
- * @return true | false where 'true' means 'end'
+ * @return true | false : where 'true' means 'end'
  * 
  * @raise ErrorNoMoreInstruction
  * @raise ErrorInvalidInstruction
  */
 Interpreter.prototype.step = function() {
 
-	//console.log("step: BEGIN");
+	if (this.ctx.end)
+		return true;
 	
 	var inst = this.fetch_next_instruction();
 	
@@ -1663,8 +1666,6 @@ Interpreter.prototype.step = function() {
 		// Execute the instruction
 		this[fnc_name].apply(this, [inst]);	
 	};
-	
-	//console.log("step: END");
 	
 	return this.ctx.end;
 	
@@ -1695,7 +1696,6 @@ Interpreter.prototype.fetch_next_instruction = function(){
 	// A jump should have occurred in the code anyways
 	//
 	throw new ErrorNoMoreInstruction("No More Instruction");
-	
 };
 
 /**
@@ -1729,7 +1729,6 @@ Interpreter.prototype._get_code = function(functor_name, arity, clause_index) {
 	if (clause_index >= clauses_count) {
 		throw new ErrorFunctorClauseNotFound("Functor clause not found: "+functor_name+"/"+arity);
 	};
-		
 	
 	result.cc = clauses[clause_index];
 	
@@ -1754,8 +1753,6 @@ Interpreter.prototype._get_code = function(functor_name, arity, clause_index) {
  */
 Interpreter.prototype._execute = function( ctx ){
 
-	//console.log("EXECUTE: p: ", this.ctx);
-	
 	var result = {};
 	
 	if (ctx) {
@@ -1784,8 +1781,6 @@ Interpreter.prototype._execute = function( ctx ){
 	this.ctx.p.l = this.ctx.cc.head ? 'head' : 'g0';
 	
 	this.ctx.cse = this.ctx.tse;
-	
-	//console.log("EXECUTE / END: ", this.ctx);
 	
 	return result;
 };
@@ -1835,13 +1830,15 @@ Interpreter.prototype._save_continuation = function(where, instruction_offset) {
 		console.log("*** SAVE: ", where);
 };
 
+/**
+ *  Unwind Trail
+ * 
+ * @param which
+ */
 Interpreter.prototype._unwind_trail = function(which) {
 	
 	for (var v in which) {
 		var trail_var = which[v];
-		
-		//console.log("Unwinding: ", v);
-		
 		var dvar = trail_var.deref();
 		dvar.unbind();
 	};
@@ -1910,8 +1907,6 @@ Interpreter.prototype.inst_setup = function() {
  */
 Interpreter.prototype.inst_call = function(inst) {
 	
-	//console.log("Instruction: 'call'");
-	
 	// I know it's pessimistic
 	this.ctx.cu = false
 	
@@ -1951,8 +1946,6 @@ Interpreter.prototype.inst_call = function(inst) {
  *    and push a link in the current environment.
  */
 Interpreter.prototype.inst_allocate = function() {
-	
-	//console.log("Instruction: 'allocate'");
 	
 	var env = { vars: {}, cp: {}, trail: {}, p:{} };
 	this.ctx.tse = env;
@@ -2001,8 +1994,6 @@ Interpreter.prototype.inst_try_else = function( inst ) {
 	
 	var vname = "g" + inst.get("p");
 	this.ctx.cse.te = vname;
-	
-	//console.log("Instruction: 'try_else' @ "+vname);
 };
 
 /**
@@ -2013,8 +2004,6 @@ Interpreter.prototype.inst_try_else = function( inst ) {
 Interpreter.prototype.inst_try_finally = function( ) {
 	
 	this.ctx.cse.te = null;
-	
-	//console.log("Instruction: 'try_finally'");
 };
 
 /**
@@ -2075,8 +2064,6 @@ Interpreter.prototype.inst_jump = function( inst ) {
 	
 	var vname = "g" + inst.get("p");
 	
-	console.log("Instruction: 'jump' @ "+ vname);
-	
 	// Within same functor (i.e. clause)
 	this.ctx.p.l = vname;
 	this.ctx.p.i = 0;
@@ -2098,12 +2085,12 @@ Interpreter.prototype.inst_jump = function( inst ) {
  */
 Interpreter.prototype.inst_maybe_fail = function() {
 	
-	console.log("Instruction: 'maybe_fail'");
-	
 	// NOOP if we are not faced with a failure
 	if (!this.ctx.cu)
 		return;
-	
+
+	// A disjunction is available?
+	//
 	if (this.ctx.cse.te) {
 		
 		// just making sure
@@ -2129,8 +2116,6 @@ Interpreter.prototype.inst_maybe_fail = function() {
  */
 Interpreter.prototype.inst_proceed = function() {
 	
-	//console.log("Instruction: 'proceed'");
-
 	this._restore_continuation( this.ctx.cse.cp );
 	this._execute();
 	
@@ -2174,8 +2159,6 @@ Interpreter.prototype.inst_put_term = function(inst) {
 	
 	var term = inst.get("p");
 	
-	//console.log("Instruction: 'put_term':", term);
-
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
 	
@@ -2190,8 +2173,6 @@ Interpreter.prototype.inst_put_term = function(inst) {
 Interpreter.prototype.inst_put_number = function(inst) {
 	
 	var num = inst.get("p");
-	
-	//console.log("Instruction: 'put_number': ", num);
 	
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
@@ -2209,8 +2190,6 @@ Interpreter.prototype.inst_put_var = function(inst) {
 	
 	var vname = inst.get("p");
 	
-	//console.log("Instruction: 'put_var'");
-
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
 
@@ -2224,8 +2203,6 @@ Interpreter.prototype.inst_put_var = function(inst) {
 	}
 	
 	struct.push_arg(v);
-
-	// TODO manage trail
 };
 
 /**
@@ -2242,12 +2219,12 @@ Interpreter.prototype.inst_put_value = function(inst) {
 	
 	var value = this.ctx.tse.vars[vname];
 	
-	//console.log("Instruction: 'put_value': ", value);
-	
 	// The current structure being worked on
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
 
+	// TODO manage Var case??
+	
 	struct.push_arg(value);
 	
 	// TODO manage trail
@@ -2290,7 +2267,6 @@ Interpreter.prototype.inst_unif_var = function(inst) {
  */
 Interpreter.prototype.inst_get_struct = function(inst) {
 	
-	//console.log("Instruction: 'get_struct'");
 	var x      = "x" + inst.get('p');
 	
 	// Are we switching argument in the `head` functor?
@@ -2408,8 +2384,6 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	};
 	
 	throw new ErrorInternal("get_struct: got unexpected node: "+JSON.stringify(maybe_struct));
-	
-	//console.log("Instruction: 'get_struct': ", this.ctx);
 };
 
 /**
@@ -2454,8 +2428,6 @@ Interpreter.prototype._get_x = function(inst, type) {
 	
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
-	//console.log(value_or_var);
-
 	/*  Cases:
 	 *  a) unbound variable ==> bind to expected number
 	 *  b) bound variable   ==> unification
@@ -2490,10 +2462,7 @@ Interpreter.prototype._get_x = function(inst, type) {
 	// Case (A)
 	//
 	dvar.bind(p);
-	this.ctx.cu = true;
-	
-	//console.log("Instruction: 'get_number': ",p, dvar);
-	
+	this.ctx.cu = true;	
 };
 
 
