@@ -139,6 +139,8 @@ Interpreter.prototype.set_question = function(question_code){
 		 */
 		,cp: {}
 		
+		,vars: {}
+	
 		/*  Trail
 		 */
 		,trail: []
@@ -285,7 +287,7 @@ Interpreter.prototype._get_code = function(functor_name, arity, clause_index) {
 		throw new ErrorFunctorNotFound("Functor not found: "+functor_name+"/"+arity);
 	};
 	
-	if (clause_index >= clauses_count) {
+	if (clause_index >= result.ct) {
 		throw new ErrorFunctorClauseNotFound("Functor clause not found: "+functor_name+"/"+arity);
 	};
 	
@@ -293,6 +295,8 @@ Interpreter.prototype._get_code = function(functor_name, arity, clause_index) {
 	
 	if (!result.cc)
 		return ErrorFunctorCodeNotFound("Functor clause code not found: "+functor_name+"/"+arity);
+	
+	//console.log(">>> GET CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index, " CODE: ", result);
 	
 	return result;
 	
@@ -433,7 +437,7 @@ Interpreter.prototype.get_query_vars = function() {
  * 
  * 
  *  Saves Continuation Point to point
- *   at the "maybe_retry" following the `call` instruction
+ *   at the "maybe retry" following the `call` instruction
  * 
  */
 Interpreter.prototype.inst_end = function() {
@@ -445,7 +449,7 @@ Interpreter.prototype.inst_end = function() {
  * 
  * 
  *  Saves Continuation Point to point
- *   at the "maybe_retry" following the `call` instruction
+ *   at the "maybe retry" following the `call` instruction
  * 
  */
 Interpreter.prototype.inst_setup = function() {
@@ -634,9 +638,10 @@ Interpreter.prototype.inst_maybe_retry = function() {
 		this.ctx.cs = null;
 		this.ctx.csx = 0;
 		
-		// unwind trail
-		this._unwind_trail( this.ctx.cse.trail );
 	};
+
+	// unwind trail
+	this._unwind_trail( this.ctx.cse.trail );
 
 	// NOOP when we reach end of clause list
 	// The failure flag will still be set.
@@ -782,18 +787,23 @@ Interpreter.prototype.inst_put_var = function(inst) {
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
 
-	// Manage the trail
+	// Are we dealing with a anonymous variable?
+	if (vname[0] == "_") {
+		struct.push_arg(new Var(vname));
+		return;
+	};
 	
-	var v = this.ctx.cse.trail[ vname ];
-
-	if (!v) {
-		v = new Var(vname);
-		
-		if (!v.is_anon())
-			this.ctx.cse.trail[ vname ] = v;
+	// Do we have a local variable already setup?
+	var local_var = this.ctx.cse.vars[vname];
+	if (!local_var) {
+		local_var = new Var(vname);
+		this.ctx.cse.vars[vname] = local_var;
 	}
 	
-	struct.push_arg(v);
+	// Manage the trail
+	this.ctx.cse.trail[vname] = local_var;
+	
+	struct.push_arg(local_var);
 };
 
 /**
@@ -873,9 +883,17 @@ Interpreter.prototype._unify = function(t1, t2) {
 
 	//console.log("_unify(",t1,",",t2,")");
 	
+	if (t1 == t2)
+		return t1;
+	
 	var t1d = t1.deref();
 	
 	if (!t1d.is_bound()) {
+		
+		// Don't forget cycles!
+		if (t1d == t2)
+			return t1d;
+		
 		t1d.bind(t2);
 		return t1;
 	};
@@ -1033,6 +1051,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	// CASE (2b)
 	//
 	if (nvar) {
+		//console.log("Switching to write mode ...");
 		this.ctx.cvm = "w";
 		
 		var struct = new Functor(fname);
@@ -1138,6 +1157,7 @@ Interpreter.prototype._get_x = function(inst, type) {
 	
 	// Case (A)
 	//
+	//console.log("Binding ",dvar," with: ", p);
 	dvar.bind(p);
 	this.ctx.cu = true;	
 };

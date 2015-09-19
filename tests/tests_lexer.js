@@ -40,6 +40,31 @@ it('Lex - simple fact', function(){
 
 });
 
+it('Lex - simple fact - ambiguity with `is`', function(){
+
+	var l = new Lexer("like(isa).");
+	
+	var result = l.step();
+	
+	should.equal(result, 'like', "expecting 'love', got: "+result);
+	
+	result = l.step();
+	should.equal(result, '(', "expecting '('");
+	
+	result = l.step();
+	should.equal(result, 'isa', "expecting 'isa', got: " + result);
+
+	result = l.step();
+	should.equal(result, ')', "expecting ')'");
+
+	result = l.step();
+	should.equal(result, '.', "expecting '.'");
+
+	result = l.step();
+	should.equal(result, null, "expecting 'null'");
+
+});
+
 it('Lex - simple facts - multiline - 1', function(){
 
 	var text = "love(julianne).\n" + "love(charlot).";

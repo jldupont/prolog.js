@@ -26,6 +26,8 @@ var Compiler = pr.Compiler;
 var Interpreter = pr.Interpreter;
 var Instruction = pr.Instruction;
 
+var ErrorNoMoreInstruction = pr.ErrorNoMoreInstruction;
+
 function basic_tracer(ctx, it_ctx, data) {
 
 	if (ctx == 'restore') {
@@ -621,4 +623,81 @@ it('Interpreter - complex - 5', function(){
 	vars = it.get_query_vars();
 	vara = vars["A"];
 	should.equal(vara.get_value(), 777);
+});
+
+
+it('Interpreter - program - 1', function(){
+
+	var rules = [
+	                "father_child(jld, charlot)."
+	               ,"father_child(jld, julianne)."
+	               ,"mother_child(isa, charlot)."
+	               ,"mother_child(isa, julianne)."
+	               ,"parent_child(X, Y) :- father_child(X, Y)."
+	               ,"parent_child(X, Y) :- mother_child(X, Y)."
+	               
+	             ];
+	var query = "parent_child(X, Y).";
+	
+	var it = prepare(rules, query);
+	//var it = prepare(rules, query, basic_tracer);
+
+	//console.log(it.db.db);
+	
+	var vars;
+	var result;
+	
+	do {
+		result = it.step();
+	} while (!result);
+	
+	vars = it.get_query_vars();
+
+	should.equal(vars['X'].get_value(), 'jld');
+	should.equal(vars['Y'].get_value(), 'charlot');
+	
+	it.backtrack();
+	
+	do {
+		result = it.step();
+	} while (!result);
+
+	vars = it.get_query_vars();
+
+	should.equal(vars['X'].get_value(), 'jld');
+	should.equal(vars['Y'].get_value(), 'julianne');
+	
+	it.backtrack();
+	
+	//it.set_tracer(basic_tracer);
+	
+	do {
+		result = it.step();
+	} while (!result);
+	
+	vars = it.get_query_vars();
+
+	should.equal(vars['X'].get_value(), 'isa');
+	should.equal(vars['Y'].get_value(), 'charlot');
+	
+	it.backtrack();
+	
+	do {
+		result = it.step();
+	} while (!result);
+	
+	vars = it.get_query_vars();
+
+	should.equal(vars['X'].get_value(), 'isa');
+	should.equal(vars['Y'].get_value(), 'julianne');
+	
+	it.set_tracer(basic_tracer);
+
+	// should not blow
+	it.backtrack();
+	
+	should.throws(function(){
+		it.step();
+	}, ErrorNoMoreInstruction);
+
 });

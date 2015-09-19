@@ -504,11 +504,16 @@ Var.prototype.is_anon = function(){
 	return this.name[0] == "_";
 };
 
-Var.prototype.inspect = function(){
+Var.prototype.inspect = function(depth){
+	
+	depth = depth || 0;
+	
+	if (depth == 5)
+		return "?CYCLE?";
 	
 	if (this.value) {
 		
-		var value = this.value.inspect? this.value.inspect() : this.value;
+		var value = this.value.inspect? this.value.inspect(depth+1) : this.value;
 		
 		return "Var("+this.name+", "+value+")";
 	};
@@ -518,6 +523,9 @@ Var.prototype.inspect = function(){
 };
 
 Var.prototype.bind = function(value) {
+	
+	if (this == value)
+		throw new Error("Attempt to create cycle ...");
 	
 	if (value == null)
 		throw new ErrorInvalidValue("Var("+this.name+"), attempted to bind 'null'");
