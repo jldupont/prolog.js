@@ -381,7 +381,7 @@ it('Interpreter - complex - 1', function(){
 	
 	var it = new Interpreter(db, builtins);
 	
-	it.set_tracer(basic_tracer);
+	//it.set_tracer(basic_tracer);
 	
 	it.set_question(qcode);
 	
@@ -401,7 +401,12 @@ it('Interpreter - complex - 1', function(){
 	it.step();  // DEALLOCATE 
 	var is_end = it.step();  // end
 	
+	//console.log(it.stack);
+	
 	var vars = it.get_query_vars();
+	
+	//console.log("Vars: ", vars);
+	
 	should.equal(is_end, true);
 	
 	var vara = vars['A'];
@@ -524,11 +529,11 @@ it('Interpreter - complex - 2', function(){
 
 it('Interpreter - complex - 3', function(){
 
-	console.log('\r');
+	//console.log('\r');
 	
 	var rules = [
 	                "r(1,A) :- f(1+A)."
-	               ,"r(2,A) :- f(2+A)"
+	               ,"r(2,A) :- f(2+A)."
 	               ,"f(X)."
 	             ];
 
@@ -591,5 +596,86 @@ it('Interpreter - complex - 3', function(){
 	
 	
 	should.equal(it.ctx.cu, true);
+	should.equal(it.stack.length, 2);
 });
 
+
+it('Interpreter - complex - 4 - anon', function(){
+
+	console.log('\r');
+	
+	var rules = [
+	                "f(666)."
+	               ,"f(777)"
+	             ];
+
+	/*
+		[ { head: 
+		     [ get_struct   ( f/1, p(0) ),
+		       get_number   ( p(666) ),
+		       proceed      ],
+		    f: 'f',
+		    a: 1 },
+		  { head: 
+		     [ get_struct   ( f/1, p(0) ),
+		       get_number   ( p(777) ),
+		       proceed      ],
+		    f: 'f',
+		    a: 1 } ]
+	 */
+	
+	var query = "f(_).";
+	
+	/*
+		{ g0: 
+		     [ allocate    ,
+		       put_struct   ( f/1, p(0) ),
+		       put_var      ( p("_") ),
+		       setup       ,
+		       call        ,
+		       maybe_retry ,
+		       deallocate  ,
+		       end          
+		       ] }
+	 */
+	
+	//var it = prepare(rules, query, basic_tracer);
+	var it = prepare(rules, query);
+	
+	it.step(); // allocate
+	it.step(); // put_struct f/1
+	it.step(); // put_var _
+	it.step(); // setup
+	it.step(); // call
+	
+	it.step(); // get_struct f/1
+	it.step(); // get_number 666
+	it.step(); // proceed
+	
+	it.step(); // maybe_retry
+	it.step(); // deallocate
+	it.step(); // end
+	
+	should.equal(it.ctx.cu, true);
+	
+	// there is still 1 fact that could match...
+	should.equal(it.stack.length, 2);
+	
+	it.backtrack();
+	
+	it.step(); // maybe_retry
+	it.step(); // call f/1:1 @ head
+	
+	it.step(); // get_struct f/1
+	it.step(); // get_number 777
+	it.step(); // proceed
+	
+	it.step(); // maybe_retry
+	it.step(); // deallocate
+	it.step(); // end
+	
+	should.equal(it.ctx.cu, true);
+	
+	// this time around, no more matches possible
+	should.equal(it.stack.length, 1);
+});

@@ -141,7 +141,7 @@ Interpreter.prototype.set_question = function(question_code){
 		
 		/*  Trail
 		 */
-		,tr: []
+		,trail: []
 
 
 		,ci: 0 // Clause Index
@@ -181,6 +181,7 @@ Interpreter.prototype.backtrack = function() {
 	if (this.tracer)
 		this.tracer("backtracking", this.ctx);
 	
+	// Pretend we've got a failure
 	this.ctx.cu = false;
 	this.ctx.end = false;
 	
@@ -417,7 +418,7 @@ Interpreter.prototype._unwind_trail = function(which) {
 
 
 Interpreter.prototype.get_query_vars = function() {
-	return this.ctx.tse.trail;
+	return this.stack[0].trail;
 };
 
 
@@ -523,7 +524,6 @@ Interpreter.prototype.inst_allocate = function() {
 	var env = { vars: {}, cp: {}, trail: {}, p:{} , spos: this.stack.length };
 	this.ctx.tse = env;
 	this.stack.push(env);
-
 };
 
 /**
@@ -532,10 +532,21 @@ Interpreter.prototype.inst_allocate = function() {
  *   Deallocates, if possible, a "choice point" environment.
  * 
  *   Cases:
+ *   - No Choice Point left (or just this one): deallocate
  *   - Choice Point succeeds : do not deallocate environment
  *   - Choice Point fails & no other clause : deallocate environment
  */
 Interpreter.prototype.inst_deallocate = function() {
+	
+	//console.log("maybe deallocate: ", this.ctx.tse);
+	
+	if (this.ctx.tse.qenv)
+		return;
+	
+	if (this.ctx.tse.p.ci+1 >= this.ctx.tse.p.ct) {
+		this._deallocate();	
+		return;
+	};
 	
 	/*
 	 * Cannot deallocate if we have had
@@ -543,6 +554,11 @@ Interpreter.prototype.inst_deallocate = function() {
 	 */
 	if (this.ctx.cu)
 		return;
+
+	this._deallocate();
+};
+
+Interpreter.prototype._deallocate = function(){
 	
 	this.stack.pop();
 	
@@ -619,7 +635,7 @@ Interpreter.prototype.inst_maybe_retry = function() {
 		this.ctx.csx = 0;
 		
 		// unwind trail
-		this._unwind_trail( this.ctx.tse.trail );
+		this._unwind_trail( this.ctx.cse.trail );
 	};
 
 	// NOOP when we reach end of clause list
@@ -729,6 +745,7 @@ Interpreter.prototype.inst_put_term = function(inst) {
 	
 	var term = inst.get("p");
 	
+	// Structure being built on the top of stack
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
 	
@@ -744,6 +761,7 @@ Interpreter.prototype.inst_put_number = function(inst) {
 	
 	var num = inst.get("p");
 	
+	// Structure being built on the top of stack
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
 	
@@ -760,16 +778,19 @@ Interpreter.prototype.inst_put_var = function(inst) {
 	
 	var vname = inst.get("p");
 	
+	// Structure being built on the top of stack
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
 
 	// Manage the trail
 	
-	var v = this.ctx.tse.trail[ vname ];
+	var v = this.ctx.cse.trail[ vname ];
 
 	if (!v) {
 		v = new Var(vname);
-		this.ctx.tse.trail[ vname ] = v;
+		
+		if (!v.is_anon())
+			this.ctx.cse.trail[ vname ] = v;
 	}
 	
 	struct.push_arg(v);
@@ -836,6 +857,8 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 		this.ctx.cse.vars[p] = pv;
 	};
 	
+	// Get from the structure being worked on
+	//
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
 
@@ -1092,8 +1115,18 @@ Interpreter.prototype._get_x = function(inst, type) {
 	if ((!value_or_var instanceof Var)) {
 		return; // fail
 	}
-
+	
 	var variable = value_or_var;
+	
+	
+	// ANON VARIABLE
+	if (variable.is_anon()) {
+		//console.log("... anon var");
+		this.ctx.cu = true;
+		return;
+	};
+	
+	
 	var dvar = variable.deref();
 	
 	// Case (B)

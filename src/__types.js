@@ -500,6 +500,10 @@ function Var(name) {
 	this.value = null;
 };
 
+Var.prototype.is_anon = function(){
+	return this.name[0] == "_";
+};
+
 Var.prototype.inspect = function(){
 	
 	if (this.value) {
