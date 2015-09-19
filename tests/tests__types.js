@@ -454,12 +454,19 @@ it('_Types - Var - Deref - 4', function(){
 	var v2 = new Var('Y');
 	var v3 = new Var('Z');
 	
+	// X = Y
 	v1.bind( v2 );
+	
+	// Y = Z
 	v2.bind( v3 );
 	
+	//  X = Y = Z  where Z is unbound
+	//
 	// Var(X, Var(Y, Var(Z) ) )
 
 	var should_be_a_var = v1.deref();
+	
+	//console.log(should_be_a_var);
 	
 	should.equal(should_be_a_var.name, "Z");
 

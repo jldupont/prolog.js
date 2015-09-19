@@ -488,7 +488,7 @@ Interpreter.prototype.inst_call = function(inst) {
 	
 	// Get functor name & arity from the 
 	//  environment variable x0
-	var x0 = this.ctx.tse.vars['x0'];
+	var x0 = this.ctx.tse.vars['$x0'];
 	
 	var fname = x0.name;
 	var arity = x0.args.length;
@@ -735,7 +735,7 @@ Interpreter.prototype.inst_put_struct = function(inst) {
 	var a = inst.get('a');
 	f.arity = a;
 	
-	var x = "x" + inst.get('p');
+	var x = "$x" + inst.get('x');
 	
 	this.ctx.cv = x;
 	this.ctx.tse.vars[x] = f;
@@ -816,7 +816,7 @@ Interpreter.prototype.inst_put_var = function(inst) {
  */
 Interpreter.prototype.inst_put_value = function(inst) {
 	
-	var vname = "x" + inst.get("p");
+	var vname = "$x" + inst.get("p");
 	
 	var value = this.ctx.tse.vars[vname];
 	
@@ -856,15 +856,20 @@ Interpreter.prototype.inst_put_value = function(inst) {
  */
 Interpreter.prototype.inst_unif_var = function(inst) {
 	
-	var p = inst.get('p');
-	var pv = this.ctx.cse.vars[p];
+	var v = inst.get('p');
+
+	if (!v) {
+		v = "$x" + inst.get('x');
+	};
+	
+	var pv = this.ctx.cse.vars[v];
 
 	/*
 	 *  Just a symbol, not even a Var assigned yet
 	 */
 	if (!pv) {
-		pv = new Var(p);
-		this.ctx.cse.vars[p] = pv;
+		pv = new Var(v);
+		this.ctx.cse.vars[v] = pv;
 	};
 	
 	if (this.ctx.csm == 'w') {
@@ -879,8 +884,6 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
 	var result = Utils.unify(pv, value_or_var);
-	
-	console.log("Unif Var: Result: ", result);
 	
 	this.ctx.cu = (result != null);
 	
@@ -963,7 +966,7 @@ Interpreter.prototype._unify = function(t1, t2) {
  */
 Interpreter.prototype.inst_get_struct = function(inst) {
 	
-	var x      = "x" + inst.get('p');
+	var x = "$x" + inst.get('x');
 	
 	// Are we switching argument in the `head` functor?
 	//

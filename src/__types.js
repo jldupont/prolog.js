@@ -570,8 +570,13 @@ Var.prototype.get_value = function() {
  */
 Var.prototype.deref = function(){
 
-	if (this.value instanceof Var)
-		return this.value.deref();
+	if (this.value instanceof Var) {
+
+		if (this.value.is_bound())
+			return this.value.deref();	
+		else
+			return this.value;
+	}
 	
 	return this;
 };

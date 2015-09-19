@@ -169,7 +169,7 @@ var run = function(it) {
 		try {
 			result = it.step();	
 		} catch(e) {
-			console.log("... CTX: ", it);
+			console.log("\n\n !!!!! CTX: ", it);
 			throw e;
 		};
 		
@@ -214,6 +214,8 @@ it('Interpreter - batch2 - complex - 1', function(){
 
 
 it('Interpreter - batch2 - program - 1', function(){
+	
+	console.log("~~~ Interpreter - batch2 - program 1");
 	
 	var rules = [
 					 "exists(A, list(A, _, _, _, _))."

@@ -283,7 +283,7 @@ it('Compiler - basic - 0', function(){
 	
 	var text = "h1(666).";
 	var expected = [[ 
-	'get_struct   ( h1/1, p(0) )', 
+	'get_struct   ( h1/1, x(0) )', 
 	'get_number   ( p(666) )',
 	'proceed'
 	]];
@@ -296,7 +296,7 @@ it('Compiler - basic - 1', function(){
 	
 	var text = "f(A).";
 	var expected = [[ 
-	'get_struct   ( f/1, p(0) )', 
+	'get_struct   ( f/1, x(0) )', 
 	'unif_var     ( p("A") )',
 	'proceed'
 	]];
@@ -309,19 +309,19 @@ it('Compiler - basic - 2', function(){
 	
 	var text = "h1(a, h2( h3a(h3a), h3b(h3b), h3c(h3c)) ,666).";
 	var expected = [[ 
-  'get_struct   ( h1/3, p(0) )',
+  'get_struct   ( h1/3, x(0) )',
   'get_term     ( p("a") )',
-  'unif_var     ( p(1) )',
+  'unif_var     ( x(1) )',
   'get_number   ( p(666) )',
-  'get_struct   ( h2/3, p(1) )',
-  'unif_var     ( p(2) )',
-  'unif_var     ( p(3) )',
-  'unif_var     ( p(4) )',
-  'get_struct   ( h3a/1, p(2) )',
+  'get_struct   ( h2/3, x(1) )',
+  'unif_var     ( x(2) )',
+  'unif_var     ( x(3) )',
+  'unif_var     ( x(4) )',
+  'get_struct   ( h3a/1, x(2) )',
   'get_term     ( p("h3a") )',
-  'get_struct   ( h3b/1, p(3) )',
+  'get_struct   ( h3b/1, x(3) )',
   'get_term     ( p("h3b") )',
-  'get_struct   ( h3c/1, p(4) )',
+  'get_struct   ( h3c/1, x(4) )',
   'get_term     ( p("h3c") )',
   'proceed'
   ]];
@@ -338,12 +338,12 @@ it('Compiler - goal - basic - 1', function(){
 	var text = "h1(a, h2(b, h3(c))).";
 	var expected = [[
 	'allocate',
-	'put_struct   ( h3/1, p(1) )',
+	'put_struct   ( h3/1, x(1) )',
 	'put_term     ( p("c") )',
-	'put_struct   ( h2/2, p(2) )',
+	'put_struct   ( h2/2, x(2) )',
 	'put_term     ( p("b") )',
 	'put_value    ( p(1) )',
-	'put_struct   ( h1/2, p(0) )',
+	'put_struct   ( h1/2, x(0) )',
 	'put_term     ( p("a") )',
 	'put_value    ( p(2) )',
 	'setup',
@@ -361,7 +361,7 @@ it('Compiler - goal - basic - 2', function(){
 	var text = "h1(A).";
 	var expected = [[
 	             'allocate',
-                 'put_struct   ( h1/1, p(0) )',
+                 'put_struct   ( h1/1, x(0) )',
                  'put_var      ( p("A") )',
                  'setup',
                  'call',
@@ -384,7 +384,7 @@ it('Compiler - rule/fact - basic - 0', function(){
 		{ 
 			g0: 
 			   [ 'allocate',
-			     'put_struct   ( f2/1, p(0) )',
+			     'put_struct   ( f2/1, x(0) )',
 			     'put_var      ( p("A") )',
 			     'setup',
 			     'call',
@@ -393,7 +393,7 @@ it('Compiler - rule/fact - basic - 0', function(){
 			     ,'proceed'
 			     ],
 		  head: [ 
-		           'get_struct   ( f1/1, p(0) )'
+		           'get_struct   ( f1/1, x(0) )'
 		          ,'unif_var     ( p("A") )'
 		          ,'jump         ( p("g0") )'
 		          ] 
@@ -413,7 +413,7 @@ it('Compiler - rule/fact - basic - 1', function(){
 
 		{head: [ 
 		 
-		  'get_struct   ( likes/2, p(0) )',
+		  'get_struct   ( likes/2, x(0) )',
 		  'get_term     ( p("jld") )',
 		  'get_term     ( p("chocolat") )'
 		  ,'proceed'
@@ -431,7 +431,7 @@ it('Compiler - rule/fact - basic - 2', function(){
 		{ 
 			g0: 
 			   [ 'allocate',
-			     'put_struct   ( f2/1, p(0) )',
+			     'put_struct   ( f2/1, x(0) )',
 			     'put_var      ( p("A") )',
 			     'setup',
 			     'call',
@@ -439,7 +439,7 @@ it('Compiler - rule/fact - basic - 2', function(){
 			     'deallocate',
 			     'maybe_fail',
 			     'allocate',
-			     'put_struct   ( f3/1, p(0) )',
+			     'put_struct   ( f3/1, x(0) )',
 			     'put_var      ( p("A") )',
 			     'setup',
 			     'call',
@@ -448,7 +448,7 @@ it('Compiler - rule/fact - basic - 2', function(){
 			     ,'proceed'
 			     ],
 		  head: [ 
-		           'get_struct   ( f1/1, p(0) )'
+		           'get_struct   ( f1/1, x(0) )'
 		          ,'unif_var     ( p("A") )'
 		          ,'jump         ( p("g0") )'
 		          ] 
@@ -467,11 +467,11 @@ it('Compiler - rule/fact - complex - 1', function(){
 		{ 
 			g0: 
 			   [ 	'allocate'    ,
-			       'put_struct   ( f4/1, p(1) )',
+			       'put_struct   ( f4/1, x(1) )',
 			       'put_var      ( p("A") )',
-			       'put_struct   ( f3/1, p(2) )',
+			       'put_struct   ( f3/1, x(2) )',
 			       'put_value    ( p(1) )',
-			       'put_struct   ( f2/1, p(0) )',
+			       'put_struct   ( f2/1, x(0) )',
 			       'put_value    ( p(2) )',
 			       'setup',
 			       'call'        ,
@@ -480,7 +480,7 @@ it('Compiler - rule/fact - complex - 1', function(){
 			       ,'proceed'
 			     ],
 		  head: [ 
-		           'get_struct   ( f1/1, p(0) )'
+		           'get_struct   ( f1/1, x(0) )'
 		          ,'unif_var     ( p("A") )'
 		          ,'jump         ( p("g0") )'
 		          ] 
@@ -500,11 +500,11 @@ it('Compiler - rule/fact - complex - 2', function(){
 		{ 
 			g0: 
 			   [ 	'allocate'    ,
-			       'put_struct   ( f4/1, p(1) )',
+			       'put_struct   ( f4/1, x(1) )',
 			       'put_var      ( p("A") )',
-			       'put_struct   ( f3/1, p(2) )',
+			       'put_struct   ( f3/1, x(2) )',
 			       'put_value    ( p(1) )',
-			       'put_struct   ( f2/1, p(0) )',
+			       'put_struct   ( f2/1, x(0) )',
 			       'put_value    ( p(2) )',
 			       'setup',
 			       'call'        ,
@@ -513,9 +513,9 @@ it('Compiler - rule/fact - complex - 2', function(){
 			       ,'proceed'
 			     ],
 		  head: [
-					'get_struct   ( f1/1, p(0) )',
-					'unif_var     ( p(1) )',
-					'get_struct   ( g1/1, p(1) )',
+					'get_struct   ( f1/1, x(0) )',
+					'unif_var     ( x(1) )',
+					'get_struct   ( g1/1, x(1) )',
 					'unif_var     ( p("A") )'
 					,'jump         ( p("g0") )'
 		          ] 
@@ -543,7 +543,7 @@ it('Compiler - body - basic - 1', function(){
 	var expected = [
 	      { g0: [ 
 	              'allocate',
-	              'put_struct   ( h1/1, p(0) )', 
+	              'put_struct   ( h1/1, x(0) )', 
 	              'put_term     ( p("a") )',
 	              'setup',
 	              'call',
@@ -566,7 +566,7 @@ it('Compiler - body - basic - 2', function(){
 		{ g0: 
 		    [ 
 		      'allocate',
-		      'put_struct   ( f1/1, p(0) )',
+		      'put_struct   ( f1/1, x(0) )',
 		      'put_term     ( p("a") )',
 		      'setup',
 		      'call',
@@ -574,7 +574,7 @@ it('Compiler - body - basic - 2', function(){
 		      'deallocate',
 		      'maybe_fail',
 		      'allocate',
-		      'put_struct   ( f2/1, p(0) )',
+		      'put_struct   ( f2/1, x(0) )',
 		      'put_term     ( p("b") )',
 		      'setup',
 		      'call',
@@ -596,7 +596,7 @@ it('Compiler - body - basic - 3', function(){
 		{ g0: 
 		   [ 
 		     'allocate',
-		     'put_struct   ( f1/1, p(0) )',
+		     'put_struct   ( f1/1, x(0) )',
 		     'put_term     ( p("a") )',
 		     'setup',
 		     'call',
@@ -604,9 +604,9 @@ it('Compiler - body - basic - 3', function(){
 		     'deallocate',
 		     'maybe_fail',
 		     'allocate',
-		     'put_struct   ( f3/1, p(1) )',
+		     'put_struct   ( f3/1, x(1) )',
 		     'put_term     ( p("b") )',
-		     'put_struct   ( f2/1, p(0) )',
+		     'put_struct   ( f2/1, x(0) )',
 		     'put_value    ( p(1) )',
 		     'setup',
 		     'call',
@@ -631,7 +631,7 @@ it('Compiler - body - complex - 1', function(){
 		 g4:   [ 
 		        'try_finally',
 		        'allocate',
-		        'put_struct   ( f3/1, p(0) )', 
+		        'put_struct   ( f3/1, x(0) )', 
 		        'put_term     ( p("c") )',
 		        'setup',
 		        'call',
@@ -642,7 +642,7 @@ it('Compiler - body - complex - 1', function(){
 		  g0:  [ 
 		        'try_else     ( p("g4") )',
 		         'allocate',
-			     'put_struct   ( f1/1, p(0) )',
+			     'put_struct   ( f1/1, x(0) )',
 			     'put_term     ( p("a") )',
 			     'setup',
 			     'call',
@@ -650,7 +650,7 @@ it('Compiler - body - complex - 1', function(){
 			     'deallocate',
 			     'maybe_fail',
 			     'allocate',
-			     'put_struct   ( f2/1, p(0) )',
+			     'put_struct   ( f2/1, x(0) )',
 			     'put_term     ( p("b") )',
 			     'setup',
 			     'call',
@@ -678,7 +678,7 @@ it('Compiler - body - complex - 2', function(){
 		 g4:   [ 
 		        'try_finally',
 		        'allocate',
-		        'put_struct   ( f3/1, p(0) )', 
+		        'put_struct   ( f3/1, x(0) )', 
 		        'put_term     ( p("c") )',
 		        'setup',
 		        'call',
@@ -686,7 +686,7 @@ it('Compiler - body - complex - 2', function(){
 		        'deallocate',
 		        'maybe_fail',
 		        'allocate',
-		        'put_struct   ( f4/1, p(0) )',
+		        'put_struct   ( f4/1, x(0) )',
 		        'put_term     ( p("d") )',
 		        'setup',
 		        'call',		  
@@ -697,7 +697,7 @@ it('Compiler - body - complex - 2', function(){
 		  g0:  [ 
 		        'try_else     ( p("g4") )',
 		         'allocate',
-			     'put_struct   ( f1/1, p(0) )',
+			     'put_struct   ( f1/1, x(0) )',
 			     'put_term     ( p("a") )',
 			     'setup',
 			     'call',
@@ -705,7 +705,7 @@ it('Compiler - body - complex - 2', function(){
 			     'deallocate',
 			     'maybe_fail',
 			     'allocate',
-			     'put_struct   ( f2/1, p(0) )',
+			     'put_struct   ( f2/1, x(0) )',
 			     'put_term     ( p("b") )',
 			     'setup',
 			     'call',
@@ -743,7 +743,7 @@ it('Compiler - body - complex - 3', function(){
 			   [ 
 			     'try_else     ( p("g5") )',
 			     'allocate',
-			     'put_struct   ( f2/1, p(0) )',
+			     'put_struct   ( f2/1, x(0) )',
 			     'put_term     ( p("b") )',
 			     'setup',
 			     'call'        ,
@@ -756,7 +756,7 @@ it('Compiler - body - complex - 3', function(){
 			   [ 
 			     'try_else     ( p("g6") )',
 			     'allocate'    ,
-			     'put_struct   ( f3/1, p(0) )',
+			     'put_struct   ( f3/1, x(0) )',
 			     'put_term     ( p("c") )',
 			     'setup',
 			     'call'        ,
@@ -768,7 +768,7 @@ it('Compiler - body - complex - 3', function(){
 			   [ 
 			    'try_finally',
 			     'allocate'    ,
-			     'put_struct   ( f4/1, p(0) )',
+			     'put_struct   ( f4/1, x(0) )',
 			     'put_term     ( p("d") )',
 			     'setup',
 			     'call'        ,
@@ -780,7 +780,7 @@ it('Compiler - body - complex - 3', function(){
 			   [ 
 			     'try_else     ( p("g4") )',
 			     'allocate'    ,
-			     'put_struct   ( f1/1, p(0) )',
+			     'put_struct   ( f1/1, x(0) )',
 			     'put_term     ( p("a") )',
 			     'setup',
 			     'call'        ,
@@ -819,7 +819,7 @@ it('Compiler - body - complex - 4', function(){
 			   [ 
 			     'try_else     ( p("g4") )',
 			     'allocate'    ,
-			     'put_struct   ( f2/1, p(0) )',
+			     'put_struct   ( f2/1, x(0) )',
 			     'put_term     ( p("b") )',
 			     'setup',
 			     'call'        ,
@@ -827,7 +827,7 @@ it('Compiler - body - complex - 4', function(){
 			     'deallocate'  ,
 			     'maybe_fail',
 			     'allocate'    ,
-			     'put_struct   ( f3/1, p(0) )',
+			     'put_struct   ( f3/1, x(0) )',
 			     'put_term     ( p("c") )',
 			     'setup',
 			     'call'        ,
@@ -840,7 +840,7 @@ it('Compiler - body - complex - 4', function(){
 			   [ 
 			     'try_finally',
 			     'allocate'    ,
-			     'put_struct   ( f4/1, p(0) )',
+			     'put_struct   ( f4/1, x(0) )',
 			     'put_term     ( p("d") )',
 			     'setup',
 			     'call'        ,
@@ -852,7 +852,7 @@ it('Compiler - body - complex - 4', function(){
 			   [ 
 			     'try_else     ( p("g3") )',
 			     'allocate'    ,
-			     'put_struct   ( f1/1, p(0) )',
+			     'put_struct   ( f1/1, x(0) )',
 			     'put_term     ( p("a") )',
 			     'setup',
 			     'call'        ,
@@ -908,7 +908,7 @@ it('Compiler - body - complex - 5', function(){
 			   [ 
 			     'try_else     ( p("g4") )',
 			     'allocate'    ,
-			     'put_struct   ( f2/1, p(0) )',
+			     'put_struct   ( f2/1, x(0) )',
 			     'put_term     ( p("b") )',
 			     'setup',
 			     'call'        ,
@@ -916,7 +916,7 @@ it('Compiler - body - complex - 5', function(){
 			     'deallocate'  ,
 			     'maybe_fail'  ,
 			     'allocate'    ,
-			     'put_struct   ( f3/1, p(0) )',
+			     'put_struct   ( f3/1, x(0) )',
 			     'put_term     ( p("c") )',
 			     'setup',
 			     'call'        ,
@@ -928,7 +928,7 @@ it('Compiler - body - complex - 5', function(){
 			   [ 
 			     'try_finally',
 			     'allocate'    ,
-			     'put_struct   ( f4/1, p(0) )',
+			     'put_struct   ( f4/1, x(0) )',
 			     'put_term     ( p("d") )',
 			     'setup',
 			     'call'        ,
@@ -936,7 +936,7 @@ it('Compiler - body - complex - 5', function(){
 			     'deallocate'  ,
 			     'maybe_fail'  ,
 			     'allocate'    ,
-			     'put_struct   ( f5/1, p(0) )',
+			     'put_struct   ( f5/1, x(0) )',
 			     'put_term     ( p("e") )',
 			     'setup',
 			     'call'        ,
@@ -948,7 +948,7 @@ it('Compiler - body - complex - 5', function(){
 			   [ 
 			     'try_else     ( p("g3") )',
 			     'allocate'    ,
-			     'put_struct   ( f1/1, p(0) )',
+			     'put_struct   ( f1/1, x(0) )',
 			     'put_term     ( p("a") )',
 			     'setup',
 			     'call'        ,
@@ -1002,7 +1002,7 @@ it('Compiler - body - complex - 6', function(){
 		{ g5: 
 		    [ 'try_else     ( p("g6") )',
 		      'allocate'    ,
-		      'put_struct   ( f3/1, p(0) )',
+		      'put_struct   ( f3/1, x(0) )',
 		      'put_term     ( p("b") )',
 		      'setup',
 		      'call        ',
@@ -1010,7 +1010,7 @@ it('Compiler - body - complex - 6', function(){
 		      'deallocate  ',
 		      'maybe_fail  ',
 		      'allocate    ',
-		      'put_struct   ( f4/1, p(0) )',
+		      'put_struct   ( f4/1, x(0) )',
 		      'put_term     ( p("c") )',
 		      'setup',
 		      'call        ',
@@ -1018,7 +1018,7 @@ it('Compiler - body - complex - 6', function(){
 		      'deallocate  ',
 		      'maybe_fail  ',
 		      'allocate    ',
-		      'put_struct   ( f5/1, p(0) )',
+		      'put_struct   ( f5/1, x(0) )',
 		      'put_term     ( p("d") )',
 		      'setup',
 		      'call        ',
@@ -1029,7 +1029,7 @@ it('Compiler - body - complex - 6', function(){
 		   g6: 
 		    [ 'try_finally ',
 		      'allocate    ',
-		      'put_struct   ( f6/1, p(0) )',
+		      'put_struct   ( f6/1, x(0) )',
 		      'put_term     ( p("d") )',
 		      'setup',
 		      'call        ',
@@ -1037,7 +1037,7 @@ it('Compiler - body - complex - 6', function(){
 		      'deallocate  ',
 		      'maybe_fail  ',
 		      'allocate    ',
-		      'put_struct   ( f7/1, p(0) )',
+		      'put_struct   ( f7/1, x(0) )',
 		      'put_term     ( p("e") )',
 		      'setup',
 		      'call        ',
@@ -1049,7 +1049,7 @@ it('Compiler - body - complex - 6', function(){
 		    [ 
 		      'try_else     ( p("g5") )',
 		      'allocate    ',
-		      'put_struct   ( f1/1, p(0) )',
+		      'put_struct   ( f1/1, x(0) )',
 		      'put_term     ( p("a") )',
 		      'setup',
 		      'call        ',
@@ -1057,7 +1057,7 @@ it('Compiler - body - complex - 6', function(){
 		      'deallocate  ',
 		      'maybe_fail  ',
 		      'allocate    ',
-		      'put_struct   ( f2/1, p(0) )',
+		      'put_struct   ( f2/1, x(0) )',
 		      'put_term     ( p("b") )',
 		      'setup',
 		      'call        ',

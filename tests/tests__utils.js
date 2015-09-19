@@ -123,15 +123,16 @@ it('Utils - Unify - var 2', function(){
 
 it('Utils - Unify - var 3', function(){
 
-	console.log("Utils - Unify - var 3");
+	//console.log("~~~~ Utils - Unify - var 3");
 	
-	var v1 = new Var('x');
-	var v2 = new Var('y');
+	var x = new Var('x');
+	var y = new Var('y');
 	
-	v1.bind(v2);
+	// x = y
+	x.bind(y);
 	
-	var result = Utils.unify(v1, v2);
+	var result = Utils.unify(x, y);
 	
-	should.equal(v1.name, 'x');
+	should.equal(x.name, 'x');
 
 });

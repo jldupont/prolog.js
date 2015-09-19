@@ -643,8 +643,8 @@ it('Interpreter - program - 1', function(){
 	             ];
 	var query = "parent_child(X, Y).";
 	
-	//var it = prepare(rules, query);
-	var it = prepare(rules, query, basic_tracer);
+	var it = prepare(rules, query);
+	//var it = prepare(rules, query, basic_tracer);
 
 	//console.log(it.db.db);
 	

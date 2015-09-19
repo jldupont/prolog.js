@@ -125,10 +125,10 @@ Compiler.prototype.process_head = function(exp, with_body) {
 			//
 			
 			if (ctx.as_param) {
-				result.push(new Instruction("unif_var", {p:ctx.v}));
+				result.push(new Instruction("unif_var", {x:ctx.v}));
 				return;
 			} else {
-				result.push(new Instruction("get_struct", {f: ctx.n.name, a:ctx.n.args.length, p:ctx.v}));
+				result.push(new Instruction("get_struct", {f: ctx.n.name, a:ctx.n.args.length, x:ctx.v}));
 				return;
 				
 			};
@@ -444,10 +444,10 @@ Compiler.prototype.process_goal = function(exp, is_query) {
 	
 	v.process(function(ctx){
 		
-		var struct_ctx = { f: ctx.n.name, a:ctx.n.args.length , p: ctx.vc };
+		var struct_ctx = { f: ctx.n.name, a:ctx.n.args.length , x: ctx.vc };
 		
 		if (ctx.root) {
-			struct_ctx.p = 0;
+			struct_ctx.x = 0;
 		};
 		
 		results.push(new Instruction("put_struct", struct_ctx));

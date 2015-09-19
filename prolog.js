@@ -564,8 +564,13 @@ Var.prototype.get_value = function() {
  */
 Var.prototype.deref = function(){
 
-	if (this.value instanceof Var)
-		return this.value.deref();
+	if (this.value instanceof Var) {
+
+		if (this.value.is_bound())
+			return this.value.deref();	
+		else
+			return this.value;
+	}
 	
 	return this;
 };
@@ -887,10 +892,10 @@ Compiler.prototype.process_head = function(exp, with_body) {
 			//
 			
 			if (ctx.as_param) {
-				result.push(new Instruction("unif_var", {p:ctx.v}));
+				result.push(new Instruction("unif_var", {x:ctx.v}));
 				return;
 			} else {
-				result.push(new Instruction("get_struct", {f: ctx.n.name, a:ctx.n.args.length, p:ctx.v}));
+				result.push(new Instruction("get_struct", {f: ctx.n.name, a:ctx.n.args.length, x:ctx.v}));
 				return;
 				
 			};
@@ -1206,10 +1211,10 @@ Compiler.prototype.process_goal = function(exp, is_query) {
 	
 	v.process(function(ctx){
 		
-		var struct_ctx = { f: ctx.n.name, a:ctx.n.args.length , p: ctx.vc };
+		var struct_ctx = { f: ctx.n.name, a:ctx.n.args.length , x: ctx.vc };
 		
 		if (ctx.root) {
-			struct_ctx.p = 0;
+			struct_ctx.x = 0;
 		};
 		
 		results.push(new Instruction("put_struct", struct_ctx));
@@ -1976,7 +1981,7 @@ Interpreter.prototype.inst_call = function(inst) {
 	
 	// Get functor name & arity from the 
 	//  environment variable x0
-	var x0 = this.ctx.tse.vars['x0'];
+	var x0 = this.ctx.tse.vars['$x0'];
 	
 	var fname = x0.name;
 	var arity = x0.args.length;
@@ -2223,7 +2228,7 @@ Interpreter.prototype.inst_put_struct = function(inst) {
 	var a = inst.get('a');
 	f.arity = a;
 	
-	var x = "x" + inst.get('p');
+	var x = "$x" + inst.get('x');
 	
 	this.ctx.cv = x;
 	this.ctx.tse.vars[x] = f;
@@ -2304,7 +2309,7 @@ Interpreter.prototype.inst_put_var = function(inst) {
  */
 Interpreter.prototype.inst_put_value = function(inst) {
 	
-	var vname = "x" + inst.get("p");
+	var vname = "$x" + inst.get("p");
 	
 	var value = this.ctx.tse.vars[vname];
 	
@@ -2344,15 +2349,20 @@ Interpreter.prototype.inst_put_value = function(inst) {
  */
 Interpreter.prototype.inst_unif_var = function(inst) {
 	
-	var p = inst.get('p');
-	var pv = this.ctx.cse.vars[p];
+	var v = inst.get('p');
+
+	if (!v) {
+		v = "$x" + inst.get('x');
+	};
+	
+	var pv = this.ctx.cse.vars[v];
 
 	/*
 	 *  Just a symbol, not even a Var assigned yet
 	 */
 	if (!pv) {
-		pv = new Var(p);
-		this.ctx.cse.vars[p] = pv;
+		pv = new Var(v);
+		this.ctx.cse.vars[v] = pv;
 	};
 	
 	if (this.ctx.csm == 'w') {
@@ -2367,8 +2377,6 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
 	var result = Utils.unify(pv, value_or_var);
-	
-	console.log("Unif Var: Result: ", result);
 	
 	this.ctx.cu = (result != null);
 	
@@ -2451,7 +2459,7 @@ Interpreter.prototype._unify = function(t1, t2) {
  */
 Interpreter.prototype.inst_get_struct = function(inst) {
 	
-	var x      = "x" + inst.get('p');
+	var x = "$x" + inst.get('x');
 	
 	// Are we switching argument in the `head` functor?
 	//
@@ -3680,7 +3688,7 @@ Utils.compare_objects = function(expected, input, use_throw){
 
 Utils.unify = function(t1, t2) {
 
-	console.log("Utils.Unify: ",t1, t2);
+	//console.log("Utils.Unify: ",t1, t2);
 	
 	if (t1 == t2)
 		return t1;
@@ -3691,32 +3699,24 @@ Utils.unify = function(t1, t2) {
 	//
 	if (t1 instanceof Var) {
 		
-		if (!t1.is_bound()) {
-			t1.bind(t2);
+		v1 = t1.deref();
+		
+		if (!v1.is_bound()) {
+			
+			if (v1 != t2)
+				v1.bind(t2);
 			return t1;
 		};
-
-		v1 = t1.deref().get_value();
+		
+		v1 = v1.get_value();
 	} else
 		v1 = t1;
-	
-	//console.log("Utils.Unify: here");
-	
 	
 	if (t2 instanceof Var) {
 		v2 = t2.deref().get_value();
 	} else
 		v2 = t2;
 
-	/*
-	if (!t2.is_bound()) {
-		t2.bind(t1);
-		return t1;
-	};
-	*/
-	
-	console.log("Unify Values: ",v1, v2);
-	
 	if (v1 == v2)
 		return t1;
 	
