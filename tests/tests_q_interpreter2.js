@@ -15,6 +15,7 @@ var Token = pr.Token;
 var OpNode = pr.OpNode;
 var Functor = pr.Functor;
 var Op = pr.Op;
+var Var = pr.Var;
 var Utils = pr.Utils;
 var Database = pr.Database;
 var DbAccess = pr.DbAccess;
@@ -152,26 +153,29 @@ var test = function(rules, query, expected, tracer_enable) {
 		
 		for (var vindex in expect) {
 			
-			var v = expect[vindex];
-			var e = vars[vindex];
+			var e = expect[vindex];
+			var a = vars[vindex];
 			
-			if (!e) {
+			if (!a) {
 				console.log("*** VARS: ", vars);
 				console.log("DB: ", it.db.db)
 				throw new Error("Missing expect value @ index:"+vindex);
 			};
 			
-			var ev;
+			var av, ev;
 			
 			try {
-				ev = e.get_value();
+				av = a.get_value();
 			} catch(err) {
 				console.log("*** VARS: ", vars);
 				//console.log("DB: ", it.db.db["puzzle/1"])
 				throw err;
 			};
+
+			if (!(typeof av == 'string'))
+				av = util.inspect(av);
 			
-			should.equal(v, ev, "ctx: "+util.inspect(it));
+			should.equal(av, e, "got: "+av+" expecting: "+e);
 		};
 		
 		it.backtrack();
@@ -223,8 +227,8 @@ it('Interpreter - batch2 - complex - 1', function(){
 	var query = "f(A).";
 	
 	var expected = [
-	                 {"A": 666  }
-	                ,{"A": 'abc'}
+	                 {"A": 666   }
+	                ,{"A": "abc" }
 	                ];
 	
 	test(rules, query, expected);
@@ -233,6 +237,8 @@ it('Interpreter - batch2 - complex - 1', function(){
 it('Interpreter - batch2 - complex - 2', function(){
 	
 	console.log("\n COMPLEX 2");
+	
+	Var.inspect_extended = false;
 	
 	var rules = [
 	             "exists(A, list(A, _, _, _, _))."
@@ -283,10 +289,12 @@ it('Interpreter - batch2 - complex - 2', function(){
 	var query = "puzzle(Houses).";
 	
 	var expected = [
-	                 {"Houses": 666  }
+	                 {"Houses": 'Functor(list/5,Var(A, Functor(house/5,"red","english",Var(_),Var(_),Var(_))),Var(_),Var(_),Var(_),Var(_))'  }
 	                ];
 	
-	//test(rules, query, expected, true);
+	
+	
+	test(rules, query, expected, true);
 });
 
 /*

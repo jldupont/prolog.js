@@ -149,7 +149,7 @@ Utils.compare_objects = function(expected, input, use_throw){
 
 Utils.unify = function(t1, t2) {
 
-	console.log("Utils.Unify: ",t1, t2);
+	//console.log("Utils.Unify: ",t1, t2);
 	
 	if (t1 == t2)
 		return t1;
@@ -161,6 +161,10 @@ Utils.unify = function(t1, t2) {
 	if (t1 instanceof Var) {
 	
 		v1 = t1.deref();
+
+		if (v1.is_anon()) {
+			return t1;
+		};
 		
 		if (!v1.is_bound()) {
 			
@@ -176,6 +180,10 @@ Utils.unify = function(t1, t2) {
 	if (t2 instanceof Var) {
 		
 		v2 = t2.deref();
+
+		if (v2.is_anon()) {
+			return t2;
+		};
 		
 		if (!v2.is_bound()) {
 			if (v1 != v2) {

@@ -534,8 +534,12 @@ Var.prototype.inspect = function(depth){
 
 Var.prototype.bind = function(value) {
 	
-	if (this.is_anon())
+	if (this.is_anon()) {
+		// useful for "blackholing" functor construction
+		//
+		this.value = value;
 		return;
+	}
 	
 	if (this == value)
 		throw new Error("Attempt to create cycle ...");
@@ -561,6 +565,9 @@ Var.prototype.unbind = function(){
 
 Var.prototype.get_value = function() {
 
+	if (this.is_anon())
+		throw new ErrorNotBound("Anon - not Bound: Var("+this.name+")");
+	
 	if (this.value == null)
 		throw new ErrorNotBound("Not Bound: Var("+this.name+")");
 

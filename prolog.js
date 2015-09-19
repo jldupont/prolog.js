@@ -528,8 +528,12 @@ Var.prototype.inspect = function(depth){
 
 Var.prototype.bind = function(value) {
 	
-	if (this.is_anon())
+	if (this.is_anon()) {
+		// useful for "blackholing" functor construction
+		//
+		this.value = value;
 		return;
+	}
 	
 	if (this == value)
 		throw new Error("Attempt to create cycle ...");
@@ -555,6 +559,9 @@ Var.prototype.unbind = function(){
 
 Var.prototype.get_value = function() {
 
+	if (this.is_anon())
+		throw new ErrorNotBound("Anon - not Bound: Var("+this.name+")");
+	
 	if (this.value == null)
 		throw new ErrorNotBound("Not Bound: Var("+this.name+")");
 
@@ -3636,7 +3643,7 @@ Utils.compare_objects = function(expected, input, use_throw){
 
 Utils.unify = function(t1, t2) {
 
-	console.log("Utils.Unify: ",t1, t2);
+	//console.log("Utils.Unify: ",t1, t2);
 	
 	if (t1 == t2)
 		return t1;
@@ -3648,6 +3655,10 @@ Utils.unify = function(t1, t2) {
 	if (t1 instanceof Var) {
 	
 		v1 = t1.deref();
+
+		if (v1.is_anon()) {
+			return t1;
+		};
 		
 		if (!v1.is_bound()) {
 			
@@ -3663,6 +3674,10 @@ Utils.unify = function(t1, t2) {
 	if (t2 instanceof Var) {
 		
 		v2 = t2.deref();
+
+		if (v2.is_anon()) {
+			return t2;
+		};
 		
 		if (!v2.is_bound()) {
 			if (v1 != v2) {

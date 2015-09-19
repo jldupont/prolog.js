@@ -16,6 +16,8 @@ var Var = pr.Var;
 var OpNode = pr.OpNode;
 var Utils = pr.Utils;
 
+var ErrorNotBound = pr.ErrorNotBound;
+
 
 Functor.inspect_short_version = false;
 
@@ -134,5 +136,50 @@ it('Utils - Unify - var 3', function(){
 	var result = Utils.unify(x, y);
 	
 	should.equal(x.name, 'x');
+
+});
+
+it('Utils - Unify - anon - 1', function(){
+
+	//console.log("~~~~ Utils - Unify - var 3");
+	
+	var x = new Var('_');
+	var y = new Var('y');
+	
+	// x = y
+	x.bind(y);
+	x.bind(y);
+	
+	var result = Utils.unify(x, y);
+	
+	should.equal(result, x);
+
+});
+
+it('Utils - Unify - anon - 2', function(){
+
+	//console.log("~~~~ Utils - Unify - var 3");
+	
+	var x = new Var('_');
+	
+	should.throws(function(){
+		x.get_value();
+		
+	}, ErrorNotBound);
+
+});
+
+it('Utils - Unify - anon - 3', function(){
+
+	//console.log("~~~~ Utils - Unify - var 3");
+	
+	var x = new Var('_');
+	
+	x.deref();
+	
+	should.throws(function(){
+		x.get_value();
+		
+	}, ErrorNotBound);
 
 });
