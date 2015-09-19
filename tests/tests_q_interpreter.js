@@ -27,12 +27,20 @@ var Interpreter = pr.Interpreter;
 var Instruction = pr.Instruction;
 
 function basic_tracer(ctx, it_ctx, data) {
+
+	if (ctx == 'restore') {
+		console.log("--- RESTORING: ", it_ctx);
+	};
+
+	if (ctx == 'save') {
+		console.log("--- SAVING: ", it_ctx);
+	};
 	
 	if (ctx == 'before_inst') {
-		//console.log(it_ctx);
+		console.log("inst(",data,")  CU: ", it_ctx.ctx.cu);
 	};
 	if (ctx == 'after_inst'){
-		console.log("inst(",data,")  CU: ", it_ctx.ctx.cu);
+		//console.log("inst(",data,")  CU: ", it_ctx.ctx.cu);
 		//console.log(it_ctx);
 	};
 		
@@ -45,6 +53,8 @@ var prepare = function(rules_and_facts, query, tracer) {
 	
 	var crules = compile_rules_and_facts(rules_and_facts);
 	var cquery = compile_query(query);
+	
+	//console.log(cquery);
 
 	var db = new Database(DbAccess);
 	var builtins = {};
@@ -371,7 +381,7 @@ it('Interpreter - complex - 1', function(){
 	
 	var it = new Interpreter(db, builtins);
 	
-	//it.set_tracer(tracer);
+	it.set_tracer(basic_tracer);
 	
 	it.set_question(qcode);
 	
@@ -392,14 +402,6 @@ it('Interpreter - complex - 1', function(){
 	var is_end = it.step();  // end
 	
 	var vars = it.get_query_vars();
-	//console.log("Vars: ", vars);
-	//console.log("it ctx: ", it.ctx);
-	
-	//var tse_vars = it.get_current_ctx_var("tse");
-	
-	//console.log( tse_vars );
-	
-	//var result = Utils.compare_objects(expected, ce_vars);
 	should.equal(is_end, true);
 	
 	var vara = vars['A'];
@@ -532,6 +534,21 @@ it('Interpreter - complex - 3', function(){
 
 	var query = "r(1,2).";
 	
+	/*
+		{ g0: 
+		   [ allocate    ,
+		     put_struct   ( r/2, p(0) ),
+		     put_number   ( p(1) ),
+		     put_number   ( p(2) ),
+		     setup       ,
+		     call        ,
+		     maybe_retry ,
+		     deallocate  ,
+		     end          
+		     ] 
+		  }
+	 */
+	
 	//var it = prepare(rules, query, basic_tracer);
 	var it = prepare(rules, query);
 
@@ -539,16 +556,17 @@ it('Interpreter - complex - 3', function(){
 	
 	it.step(); // allocate
 	it.step(); // put_struct
-	it.step(); // put_number
-	it.step(); // put_number
+	it.step(); // put_number 1
+	it.step(); // put_number 2
 	it.step(); // setup
-	it.step(); // call
+	it.step(); // call r/2
 	
-	it.step(); // get_struct
+	it.step(); // get_struct  - head  r/2
 	it.step(); // get_number
 	it.step(); // unif_var
 
-	it.step(); // jmp g0
+	it.step(); // jmp g0      - body  r/2
+	
 	it.step(); // allocate
 	it.step(); // put_struct (plus/2 ...
 	it.step(); // put_number
@@ -557,9 +575,20 @@ it('Interpreter - complex - 3', function(){
 	it.step(); // put_value 
 	it.step(); // setup
 	it.step(); // call f/1
-	it.step(); // get_struct f/1
+	
+	it.step(); // get_struct f/1 - head
 	it.step(); // unif_var
 	it.step(); // proceed
+	
+	it.step(); // return to r/2 -- maybe_retry
+	it.step(); // deallocate
+	it.step(); // proceed
+	
+	// returning to .q./0
+	it.step(); // maybe_retry
+	it.step(); // deallocate
+	it.step(); // end
+	
 	
 	should.equal(it.ctx.cu, true);
 });

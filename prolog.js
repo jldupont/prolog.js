@@ -1777,6 +1777,8 @@ Interpreter.prototype._get_code = function(functor_name, arity, clause_index) {
  */
 Interpreter.prototype._execute = function( ctx ){
 
+	//console.log("_execute ctx: ", this.ctx);
+	
 	var result = {};
 	
 	if (ctx) {
@@ -1787,12 +1789,13 @@ Interpreter.prototype._execute = function( ctx ){
 
 		this.ctx.cc = result.cc;
 		this.ctx.p.ct = result.ct;
+		
 	}
 	else {
 		result = this._get_code(this.ctx.p.f, this.ctx.p.a, this.ctx.p.ci);
 		this.ctx.cc = result.cc;
 	}
-	
+
 	// ctx.cc  now contains the code for the specified clause
 	//          for the specified functor/arity
 	
@@ -1802,9 +1805,16 @@ Interpreter.prototype._execute = function( ctx ){
 	 *  
 	 *  Just having `g0` would mean a `query`.
 	 */
-	this.ctx.p.l = this.ctx.cc.head ? 'head' : 'g0';
+
+	if (ctx) {
+		this.ctx.p.l = ctx.l ? ctx.l : 'head';	
+	} else {
+		if (!this.ctx.p.l)
+			this.ctx.p.l = this.ctx.cc.head ? 'head' : 'g0';
+	};
+
 	
-	this.ctx.cse = this.ctx.tse;
+	//this.ctx.cse = this.ctx.tse;
 
 	if (this.tracer)
 		this.tracer("execute", this.ctx);
@@ -1828,7 +1838,7 @@ Interpreter.prototype._jump = function( ctx, offset ){
 Interpreter.prototype._restore_continuation = function(from) {
 	
 	if (this.tracer)
-		this.tracer("restore", this.ctx);
+		this.tracer("restore", from);
 	
 	this.ctx.cse  = from.ce;
 	this.ctx.p.f  = from.p.f;
@@ -1854,7 +1864,7 @@ Interpreter.prototype._save_continuation = function(where, instruction_offset) {
 	where.p.i  = this.ctx.p.i + (instruction_offset || 0);
 	
 	if (this.tracer)
-		this.tracer("save", this.ctx);
+		this.tracer("save", where);
 };
 
 /**
@@ -1873,7 +1883,7 @@ Interpreter.prototype._unwind_trail = function(which) {
 
 
 Interpreter.prototype.get_query_vars = function() {
-	return this.ctx.cse.trail;
+	return this.ctx.tse.trail;
 };
 
 
@@ -1884,7 +1894,7 @@ Interpreter.prototype.get_query_vars = function() {
 //
 
 /**
- *  Instruction "setup"
+ *  Instruction "end"
  * 
  * 
  *  Saves Continuation Point to point
@@ -1953,6 +1963,8 @@ Interpreter.prototype.inst_call = function(inst) {
 		,ci: clause_index
 	});
 	
+	this.ctx.cse = this.ctx.tse;
+	
 	this.ctx.tse.p.ct = result.ct;
 	
 	this.ctx.p.i = 0;
@@ -1974,7 +1986,7 @@ Interpreter.prototype.inst_call = function(inst) {
  */
 Interpreter.prototype.inst_allocate = function() {
 	
-	var env = { vars: {}, cp: {}, trail: {}, p:{} };
+	var env = { vars: {}, cp: {}, trail: {}, p:{} , spos: this.stack.length };
 	this.ctx.tse = env;
 	this.stack.push(env);
 
@@ -2129,10 +2141,6 @@ Interpreter.prototype.inst_maybe_fail = function() {
 	};
 	
 	this._restore_continuation( this.ctx.cse.cp );
-	
-	// this will assume the current loaded values
-	//  in this.ctx.p
-	//
 	this._execute();
 };
 
