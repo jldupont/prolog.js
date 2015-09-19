@@ -681,7 +681,7 @@ Interpreter.prototype.inst_jump = function( inst ) {
 Interpreter.prototype.inst_maybe_fail = function() {
 	
 	// NOOP if we are not faced with a failure
-	if (!this.ctx.cu)
+	if (this.ctx.cu)
 		return;
 
 	// A disjunction is available?
@@ -695,8 +695,7 @@ Interpreter.prototype.inst_maybe_fail = function() {
 		return;
 	};
 	
-	this._restore_continuation( this.ctx.cse.cp );
-	this._execute();
+	this.backtrack();
 };
 
 /**
@@ -892,69 +891,6 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	
 };// unif_var
 
-/*
-Interpreter.prototype._unify = function(t1, t2) {
-
-	//console.log("_unify(",t1,",",t2,")");
-	
-	if (t1 == t2)
-		return t1;
-	
-	var t1d = t1.deref();
-	
-	if (!t1d.is_bound()) {
-		
-		// Don't forget cycles!
-		if (t1d == t2)
-			return t1d;
-		
-		t1d.bind(t2);
-		return t1;
-	};
-	
-	// The simplest case
-	if (t2 instanceof Token) {
-		t1.bind(t2);
-		return t1;
-	};
-	
-	if (t2 instanceof Var) {
-		// t1 and t2 are thus variables
-		
-		var t2d = t2.deref();
-		
-		if (!t2d.is_bound())
-			return null;
-		
-		var t2v = t2d.get_value();
-		
-		return unify(t1d, t2v);
-	};
-	
-	if (t2 instanceof Functor) {
-		
-		if (!(t1d instanceof Functor))
-			return this._unify(t1d, t2);
-		
-		if (t1d.args.length != t2.args.length)
-			return null;
-		
-		for (var index in t1d.args) {
-			var v1 = t1d.args[index];
-			var v2 = t2.args[index];
-			
-			var r = this._unify(v1, v2);
-			if (r == null)
-				return null;
-		};
-		
-		// everything went fine if we get here
-		return t1;
-	};
-	
-	return null;
-}; // unify
-*/
 
 /**
  *   Instruction "get_struct" $f, $a, $x
@@ -1065,7 +1001,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	if (value instanceof Var) {
 		
 		if (!value.is_bound()) {
-			console.log("Switching to write mode ...");
+
 			this.ctx.cvm = "w";
 			
 			var struct = new Functor(fname);
@@ -1101,6 +1037,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 Interpreter.prototype.inst_get_number = function(inst) {
 
 	this._get_x(inst, 'number');
+	
 	if (!this.ctx.cu)
 		this.backtrack();
 };

@@ -39,10 +39,10 @@ function basic_tracer(ctx, it_ctx, data) {
 	};
 	
 	if (ctx == 'before_inst') {
-		console.log("inst(",data,")  CU: ", it_ctx.ctx.cu);
+		console.log("BEFORE: inst(",data,")  CU: ", it_ctx.ctx.cu);
 	};
 	if (ctx == 'after_inst'){
-		//console.log("inst(",data,")  CU: ", it_ctx.ctx.cu);
+		console.log("AFTER: inst(",data,")  CU: ", it_ctx.ctx.cu);
 		//console.log(it_ctx);
 	};
 		
@@ -147,14 +147,21 @@ var test = function(rules, query, expected, tracer_enable) {
 		run(it);
 		
 		var vars = it.get_query_vars();
-		
+				
 		var expect = expected[index];
 		
 		for (var vindex in expect) {
 			
 			var v = expect[vindex];
+			var e = vars[vindex];
 			
-			should.equal(v, vars[vindex].get_value(), "ctx: "+util.inspect(it));
+			if (!e) {
+				console.log("*** VARS: ", vars);
+				throw new Error("Missing expect value @ index:"+vindex);
+			};
+				
+			
+			should.equal(v, e.get_value(), "ctx: "+util.inspect(it));
 		};
 		
 		it.backtrack();
@@ -212,7 +219,7 @@ it('Interpreter - batch2 - complex - 1', function(){
 	test(rules, query, expected);
 });
 
-
+/*
 it('Interpreter - batch2 - program - 1', function(){
 	
 	console.log("~~~ Interpreter - batch2 - program 1");
@@ -241,7 +248,7 @@ it('Interpreter - batch2 - program - 1', function(){
 					,"nextTo(A, B, list(_, _, _, A, B))."
 					
 					,"puzzle(Houses) :-  exists(house(red, english, _, _, _), Houses), "
-					                   +"exists(house(_, spaniard, _, _, dog), Houses)"
+					                   +"exists(house(_, spaniard, _, _, dog), Houses),"
 					                   +"exists(house(green, _, coffee, _, _), Houses),"
 					                   +"exists(house(_, ukrainian, tea, _, _), Houses),"
 					                   +"rightOf(house(green, _, _, _, _), house(ivory, _, _, _, _), Houses),"
@@ -254,18 +261,19 @@ it('Interpreter - batch2 - program - 1', function(){
 					                   +"exists(house(_, _, orangejuice, luckystike, _), Houses),"
 					                   +"exists(house(_, japanese, _, parliament, _), Houses),"
 					                   +"nextTo(house(_, norwegian, _, _, _), house(blue, _, _, _, _), Houses)."
-					                   
+	                  
 					 ,"solution(WaterDrinker, ZebraOwner) :- puzzle(Houses),"
 					 										+"exists(house(_, _, water, _, _), Houses),"
 					                                        +"exists(house(_, _, _, _, zebra), Houses)."
+	
 	             ];
 	
-	var query = "solution(X, Y).";
+	var query = "puzzle(Houses).";
 	
 	var expected = [
-	                 {"A": 666  }
-	                ,{"A": 'abc'}
+	                 {"Houses": 666}
 	                ];
 	
-	//test(rules, query, expected, true);
+	test(rules, query, expected, true);
 });
+*/
