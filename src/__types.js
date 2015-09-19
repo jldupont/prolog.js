@@ -534,6 +534,9 @@ Var.prototype.inspect = function(depth){
 
 Var.prototype.bind = function(value) {
 	
+	if (this.is_anon())
+		return;
+	
 	if (this == value)
 		throw new Error("Attempt to create cycle ...");
 	

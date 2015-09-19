@@ -157,11 +157,21 @@ var test = function(rules, query, expected, tracer_enable) {
 			
 			if (!e) {
 				console.log("*** VARS: ", vars);
+				console.log("DB: ", it.db.db)
 				throw new Error("Missing expect value @ index:"+vindex);
 			};
-				
 			
-			should.equal(v, e.get_value(), "ctx: "+util.inspect(it));
+			var ev;
+			
+			try {
+				ev = e.get_value();
+			} catch(err) {
+				console.log("*** VARS: ", vars);
+				//console.log("DB: ", it.db.db["puzzle/1"])
+				throw err;
+			};
+			
+			should.equal(v, ev, "ctx: "+util.inspect(it));
 		};
 		
 		it.backtrack();
@@ -177,6 +187,7 @@ var run = function(it) {
 			result = it.step();	
 		} catch(e) {
 			console.log("\n\n !!!!! CTX: ", it);
+			console.log("\n\n !!!!! DB: ", it.db.db)
 			throw e;
 		};
 		
@@ -217,6 +228,65 @@ it('Interpreter - batch2 - complex - 1', function(){
 	                ];
 	
 	test(rules, query, expected);
+});
+
+it('Interpreter - batch2 - complex - 2', function(){
+	
+	console.log("\n COMPLEX 2");
+	
+	var rules = [
+	             "exists(A, list(A, _, _, _, _))."
+	             ,"puzzle(Houses) :-  exists(house(red, english, _, _, _), Houses)."
+	             ];
+	
+	/*
+	  [ { head: 
+     		[ get_struct   ( exists/2, x(0) ),
+		       unif_var     ( p("A") ),
+		       unif_var     ( x(1) ),
+		       get_struct   ( list/5, x(1) ),
+		       unif_var     ( p("A") ),
+		       unif_var     ( p("_") ),
+		       unif_var     ( p("_") ),
+		       unif_var     ( p("_") ),
+		       unif_var     ( p("_") ),
+		       proceed      ],
+	    f: 'exists',
+	    a: 2 } ]
+	 */
+	
+	/*
+		 [ { g0: 
+		     [ allocate    ,
+		       put_struct   ( house/5, x(1) ),
+		       put_term     ( p("red") ),
+		       put_term     ( p("english") ),
+		       put_var      ( p("_") ),
+		       put_var      ( p("_") ),
+		       put_var      ( p("_") ),
+		       put_struct   ( exists/2, x(0) ),
+		       put_value    ( x(1) ),
+		       put_var      ( p("Houses") ),
+		       setup       ,
+		       call        ,
+		       maybe_retry ,
+		       deallocate  ,
+		       proceed      ],
+		    head: 
+		     [ get_struct   ( puzzle/1, x(0) ),
+		       unif_var     ( p("Houses") ),
+		       jump         ( p("g0") ) ],
+		    f: 'puzzle',
+		    a: 1 } ]
+	 */
+	
+	var query = "puzzle(Houses).";
+	
+	var expected = [
+	                 {"Houses": 666  }
+	                ];
+	
+	//test(rules, query, expected, true);
 });
 
 /*

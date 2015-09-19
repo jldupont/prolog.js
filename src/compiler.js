@@ -461,7 +461,7 @@ Compiler.prototype.process_goal = function(exp, is_query) {
 			};
 
 			if (n instanceof Value) {
-				results.push(new Instruction("put_value", {p: n.name}));
+				results.push(new Instruction("put_value", {x: n.name}));
 			};
 			
 			if (n instanceof Token) {

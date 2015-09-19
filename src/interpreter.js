@@ -454,6 +454,9 @@ Interpreter.prototype.inst_end = function() {
  */
 Interpreter.prototype.inst_setup = function() {
 	
+	delete this.ctx.tse.vars["$x1"];
+	delete this.ctx.tse.vars["$x2"];
+	
 	// We only need an offset of 1 
 	//  because the `fetch instruction` increments
 	//  already by 1.
@@ -815,7 +818,7 @@ Interpreter.prototype.inst_put_var = function(inst) {
  */
 Interpreter.prototype.inst_put_value = function(inst) {
 	
-	var vname = "$x" + inst.get("p");
+	var vname = "$x" + inst.get("x");
 	
 	var value = this.ctx.tse.vars[vname];
 	
@@ -867,6 +870,7 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	 *  Just a symbol, not even a Var assigned yet
 	 */
 	if (!pv) {
+		console.log("%%%% unif_var: creating: ", v);
 		pv = new Var(v);
 		this.ctx.cse.vars[v] = pv;
 	};
@@ -978,15 +982,44 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 		value = input_node;
 	};
 	
-	//console.log("~~~~~ VALUE: ", value);
-	
+	if (value instanceof Var) {
+		
+		var dvar = value.deref();
+		
+		if (!dvar.is_bound()) {
+			
+			//console.log("WRITE MODE: ", value);
+			this.ctx.csm = "w";
+			
+			var struct = new Functor(fname);
+			this.ctx.cs = struct;
+			
+			// Also update the current environment
+			this.ctx.cse.vars[x] = struct;
+
+			// And don't forget to actually perform
+			//  the 'write'!
+			dvar.bind( struct );
+			
+			// We are successful
+			this.ctx.cu = true;
+			return;
+			
+		};
+		
+	};
+
 	if (value instanceof Functor) {
 		
+		//console.log("~~~~~ GET_STRUCT, expecting: ", fname, value.get_name());
+		//console.log("~~~~~ VARS: ", this.ctx.cse.vars);
 		
 		if (value.get_name() != fname) {
 			return this.backtrack();	
 		};
 
+		//console.log("~~~~~ GET_STRUCT, expecting: ", +farity);
+		
 		if (value.get_arity() != +farity ) {
 			return this.backtrack();
 		};
@@ -998,32 +1031,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 		return;
 	};
 	
-	if (value instanceof Var) {
-		
-		if (!value.is_bound()) {
-
-			this.ctx.cvm = "w";
-			
-			var struct = new Functor(fname);
-			this.ctx.cs = struct;
-			
-			// Also update the current environment
-			this.ctx.tse.vars[x] = struct;
-
-			// And don't forget to actually perform
-			//  the 'write'!
-			nvar.bind( struct );
-			
-			// We are successful
-			this.ctx.cu = true;
-			return;
-			
-		};
-		
-		// FAIL
-		
-	};
-
+	
 	this.backtrack();
 };
 
