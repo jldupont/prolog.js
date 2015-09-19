@@ -867,18 +867,29 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 		this.ctx.cse.vars[p] = pv;
 	};
 	
+	if (this.ctx.csm == 'w') {
+		this.ctx.cs.push_arg( pv );
+		this.ctx.cu = true;
+		return;
+	};
+	
+	
 	// Get from the structure being worked on
 	//
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
-
-	var result = this._unify(pv, value_or_var);
+	var result = Utils.unify(pv, value_or_var);
+	
+	console.log("Unif Var: Result: ", result);
 	
 	this.ctx.cu = (result != null);
 	
+	if (!this.ctx.cu)
+		this.backtrack();
+	
 };// unif_var
 
-
+/*
 Interpreter.prototype._unify = function(t1, t2) {
 
 	//console.log("_unify(",t1,",",t2,")");
@@ -940,7 +951,7 @@ Interpreter.prototype._unify = function(t1, t2) {
 	
 	return null;
 }; // unify
-
+*/
 
 /**
  *   Instruction "get_struct" $f, $a, $x
@@ -988,51 +999,57 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	// Fetch the value from the target input variable
 	var input_node = this.ctx.cse.vars[x];
 	
+	if (!input_node) {
+		// need to create a variable in the current environment
+		var pv = new Var(x);
+		this.ctx.cse.vars[x] = pv;
+		input_node = pv;
+	}; 
+		
 	/*
 	 *   We have the following cases:
 	 *   ----------------------------
 	 *   
-	 *   1) There is actually a structure present
+	 *   1) There is actually a structure present in the input node
 	 *   2) There is a variable
 	 *      a) The variable is bound   ==> "read" mode
-	 *         1) The variable dereferences to a struct
-	 *         2) The variable dereferences to something else than a struct
+	 *         1) The variable dereferences to a compatible struct ==> SUCCESS
+	 *         2) The variable dereferences to an incompatible struct ==> FAIL
+	 *         3) The variable dereferences to something else than a struct ==> FAIL
 	 *         
 	 *      b) The variable is unbound ==> "write" mode 
 	 * 
+	 *   3) There is nothing yet ==> "write" mode
 	 */
 
-	var nvar = null; 
-		
-	var value;
+	var value = null;
 
 	// First, we need to check if are dealing with a Var
 	//
 	if (input_node instanceof Var) {
 		
-		nvar = input_node.deref();
-		
-		try {
+		var nvar = input_node.deref();
+		if (nvar.is_bound())
 			value = nvar.get_value();
-		} catch( e ) {
-			value = null;
-		};
+		
+		value = input_node;
 		
 	} else {
+		
 		value = input_node;
 	};
 	
-	// Cases (1) and (2a1)
+	//console.log("~~~~~ VALUE: ", value);
 	
 	if (value instanceof Functor) {
 		
 		
 		if (value.get_name() != fname) {
-			return; // fail	
+			return this.backtrack();	
 		};
 
 		if (value.get_arity() != +farity ) {
-			return; // fail
+			return this.backtrack();
 		};
 		
 		this.ctx.cs = value;
@@ -1042,34 +1059,33 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 		return;
 	};
 	
-	// Case  (2a2)
-	//
-	if (value != null) {
-		return; //fail
-	};
-	
-	// CASE (2b)
-	//
-	if (nvar) {
-		//console.log("Switching to write mode ...");
-		this.ctx.cvm = "w";
+	if (value instanceof Var) {
 		
-		var struct = new Functor(fname);
-		this.ctx.cs = struct;
-		
-		// Also update the current environment
-		this.ctx.tse.vars[x] = struct;
+		if (!value.is_bound()) {
+			console.log("Switching to write mode ...");
+			this.ctx.cvm = "w";
+			
+			var struct = new Functor(fname);
+			this.ctx.cs = struct;
+			
+			// Also update the current environment
+			this.ctx.tse.vars[x] = struct;
 
-		// And don't forget to actually perform
-		//  the 'write'!
-		nvar.bind( struct );
+			// And don't forget to actually perform
+			//  the 'write'!
+			nvar.bind( struct );
+			
+			// We are successful
+			this.ctx.cu = true;
+			return;
+			
+		};
 		
-		// We are successful
-		this.ctx.cu = true;
-		return;
+		// FAIL
+		
 	};
-	
-	throw new ErrorInternal("get_struct: got unexpected node: "+JSON.stringify(maybe_struct));
+
+	this.backtrack();
 };
 
 /**
@@ -1081,7 +1097,9 @@ Interpreter.prototype.inst_get_struct = function(inst) {
  */
 Interpreter.prototype.inst_get_number = function(inst) {
 
-	return this._get_x(inst, 'number');
+	this._get_x(inst, 'number');
+	if (!this.ctx.cu)
+		this.backtrack();
 };
 
 
@@ -1095,7 +1113,10 @@ Interpreter.prototype.inst_get_number = function(inst) {
  */
 Interpreter.prototype.inst_get_term = function(inst) {
 
-	return this._get_x(inst, 'term');
+	this._get_x(inst, 'term');
+	
+	if (!this.ctx.cu)
+		this.backtrack();
 };
 
 

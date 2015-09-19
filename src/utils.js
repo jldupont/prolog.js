@@ -147,6 +147,68 @@ Utils.compare_objects = function(expected, input, use_throw){
 };//compare_objects
 
 
+Utils.unify = function(t1, t2) {
+
+	console.log("Utils.Unify: ",t1, t2);
+	
+	if (t1 == t2)
+		return t1;
+	
+	var v1, v2;
+	
+	//  Bind to t2 when t1 is unbound
+	//
+	if (t1 instanceof Var) {
+		
+		if (!t1.is_bound()) {
+			t1.bind(t2);
+			return t1;
+		};
+
+		v1 = t1.deref().get_value();
+	} else
+		v1 = t1;
+	
+	//console.log("Utils.Unify: here");
+	
+	
+	if (t2 instanceof Var) {
+		v2 = t2.deref().get_value();
+	} else
+		v2 = t2;
+
+	/*
+	if (!t2.is_bound()) {
+		t2.bind(t1);
+		return t1;
+	};
+	*/
+	
+	console.log("Unify Values: ",v1, v2);
+	
+	if (v1 == v2)
+		return t1;
+	
+
+	if (v1 instanceof Functor && v2 instanceof Functor) {
+
+		if (v1.args.length != v2.args.length)
+			return null;
+		
+		for (var index in v1.args) {
+			var r = this._unify(v1.args[index], v2.args[index]);
+			if (r == null)
+				return null;
+		};
+		
+		return t1;
+	};
+	
+	
+	return null;
+}; // unify
+
+
 if (typeof module!= 'undefined') {
 	module.exports.Utils = Utils;
 };

@@ -498,7 +498,12 @@ function Var(name) {
 	this.line = null;
 	
 	this.value = null;
+	
+	this.id = Var.counter++;
 };
+
+Var.counter = 0;
+Var.inspect_extended = false;
 
 Var.prototype.is_anon = function(){
 	return this.name[0] == "_";
@@ -515,11 +520,16 @@ Var.prototype.inspect = function(depth){
 		
 		var value = this.value.inspect? this.value.inspect(depth+1) : this.value;
 		
-		return "Var("+this.name+", "+value+")";
+		if (Var.inspect_extended)
+			return "Var("+this.name+", "+value+"){"+this.id+"}";
+		else
+			return "Var("+this.name+", "+value+")";
 	};
 		
-	
-	return "Var("+this.name+")";
+	if (Var.inspect_extended)
+		return "Var("+this.name+"){"+this.id+"}";
+	else
+		return "Var("+this.name+")";
 };
 
 Var.prototype.bind = function(value) {
@@ -531,7 +541,7 @@ Var.prototype.bind = function(value) {
 		throw new ErrorInvalidValue("Var("+this.name+"), attempted to bind 'null'");
 	
 	if (this.value != null)
-		throw new ErrorAlreadyBound("Var("+this.name+")");
+		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
 	
 	this.value = value;
 	
@@ -549,7 +559,7 @@ Var.prototype.unbind = function(){
 Var.prototype.get_value = function() {
 
 	if (this.value == null)
-		throw new ErrorNotBound("Var("+this.name+")");
+		throw new ErrorNotBound("Not Bound: Var("+this.name+")");
 
 	return this.value;
 };

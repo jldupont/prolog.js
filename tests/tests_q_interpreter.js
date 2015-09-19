@@ -15,6 +15,8 @@ var Token = pr.Token;
 var OpNode = pr.OpNode;
 var Functor = pr.Functor;
 var Op = pr.Op;
+var Var = pr.Var;
+
 var Utils = pr.Utils;
 var Database = pr.Database;
 var DbAccess = pr.DbAccess;
@@ -628,6 +630,8 @@ it('Interpreter - complex - 5', function(){
 
 it('Interpreter - program - 1', function(){
 
+	Var.inspect_extended = true;
+	
 	var rules = [
 	                "father_child(jld, charlot)."
 	               ,"father_child(jld, julianne)."
@@ -639,8 +643,8 @@ it('Interpreter - program - 1', function(){
 	             ];
 	var query = "parent_child(X, Y).";
 	
-	var it = prepare(rules, query);
-	//var it = prepare(rules, query, basic_tracer);
+	//var it = prepare(rules, query);
+	var it = prepare(rules, query, basic_tracer);
 
 	//console.log(it.db.db);
 	
