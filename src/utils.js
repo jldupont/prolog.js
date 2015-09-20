@@ -182,6 +182,8 @@ Utils.unify = function(t1, t2) {
 	console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
 	*/
 	
+	console.log("++++ Utils.Unify: ",t1, t2);
+	
 	if (t1 == t2)
 		return true;
 	
@@ -193,12 +195,6 @@ Utils.unify = function(t1, t2) {
 	
 		v1 = t1.deref();
 
-		// Anything binds with Anon Var
-		//
-		if (v1.is_anon()) {
-			return true;
-		};
-		
 		if (!v1.is_bound()) {
 			
 			if (v1 != t2) {
@@ -221,10 +217,6 @@ Utils.unify = function(t1, t2) {
 		
 		v2 = t2.deref();
 
-		if (v2.is_anon()) {
-			return true;
-		};
-		
 		if (!v2.is_bound()) {
 			
 			if (v1 != v2) {

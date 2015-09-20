@@ -358,7 +358,7 @@ it('Interpreter - batch2 - complex - 2', function(){
 
 it('Interpreter - batch2 - program - 1', function(){
 	
-	console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Interpreter - batch2 - program 1");
+	//console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Interpreter - batch2 - program 1");
 	
 	var rules = [
 					 "exists(A, list(A, _, _, _, _))."
@@ -430,7 +430,8 @@ it('Interpreter - batch2 - program - 1', function(){
 	 		)
 	 */
 	var expected = [
-	                 {"Houses": 666}
+	{"Houses": ''
+	}
 	                ];
 	
 	Var.inspect_extended = false;

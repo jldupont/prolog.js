@@ -41,10 +41,14 @@ function basic_tracer(ctx, it_ctx, data) {
 	};
 	
 	if (ctx == 'before_inst') {
-		console.log("inst(",data,")  CU: ", it_ctx.ctx.cu);
+		console.log("BEFORE: inst(",data,")  CU: ", it_ctx.ctx.cu);
 	};
 	if (ctx == 'after_inst'){
-		//console.log("inst(",data,")  CU: ", it_ctx.ctx.cu);
+		console.log("AFTER:  inst(",data,")  CU: ", it_ctx.ctx.cu);
+		
+		//if (data.opcode == "end")
+			console.log("++ VARS: ", it_ctx.ctx.cse.vars);
+		
 		//console.log(it_ctx);
 	};
 		
@@ -464,6 +468,8 @@ it('Interpreter - complex - 3', function(){
 
 it('Interpreter - complex - 4 - anon', function(){
 
+	//console.log("\n Interpreter - complex - 4 - anon -------------------------");
+	
 	var rules = [
 	                "f(666)."
 	               ,"f(777)"
@@ -525,7 +531,6 @@ it('Interpreter - complex - 4 - anon', function(){
 	
 	it.step(); // maybe_retry
 	it.step(); // call f/1:1 @ head
-	
 	it.step(); // get_struct f/1
 	it.step(); // get_number 777
 	it.step(); // proceed
@@ -533,6 +538,7 @@ it('Interpreter - complex - 4 - anon', function(){
 	it.step(); // maybe_retry
 	it.step(); // deallocate
 	it.step(); // end
+	
 	
 	should.equal(it.ctx.cu, true);
 	

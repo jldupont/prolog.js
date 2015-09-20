@@ -153,18 +153,17 @@ it('Utils - Unify - var 3', function(){
 
 it('Utils - Unify - anon - 1', function(){
 
-	var x = new Var('_');
+	var _ = new Var('_');
 	var y = new Var('y');
 	
-	// x = y
-	x.bind(y);
-	x.bind(y);
+	// _ = y
+	_.bind(y);
 	
-	var result = Utils.unify(x, y);
+	var result = Utils.unify(_, y);
 	
 	should.ok(result);
 	
-	should.notEqual(result, null);
+	should.equal(result, true);
 
 });
 
@@ -191,6 +190,18 @@ it('Utils - Unify - anon - 3', function(){
 	}, ErrorNotBound);
 
 });
+
+it('Utils - Unify - anon - 4', function(){
+
+	var a1 = new Var('_');
+	var a2 = new Var('_');
+
+	var result = Utils.unify(a1, a2);
+
+	should.ok(result);
+});
+
+
 /*
 it('Utils - Unify - deref - 1', function(){
 

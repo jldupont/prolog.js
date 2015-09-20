@@ -490,7 +490,19 @@ Functor.prototype.get_arg = function(index) {
 
 
 
-
+/**
+ *  Var constructor
+ *  
+ *  For anonymous variables (start with `_`),
+ *   the name is built with the `globally` unique
+ *   id.  This is to support variable trailing
+ *   correctly.  Furthermore, the name is 
+ *   constructed in such a way that it is invalid
+ *   from an prolog syntax point of view: this
+ *   prevents introspection from the prolog code
+ *   and thus limits potential namespace collision
+ *   and security issues.
+ */
 function Var(name) {
 	this.prec = 0;
 	this.name = name;
@@ -500,6 +512,9 @@ function Var(name) {
 	this.value = null;
 	
 	this.id = Var.counter++;
+	
+	if (this.name[0] == "_")
+		this.name = this.id+"$"+this.name;
 	
 	//console.log("^^^^ Var("+name+") "+this.id);
 };
@@ -513,6 +528,13 @@ Var.prototype.is_anon = function(){
 
 Var.prototype.inspect = function(depth){
 	
+	// Keep the anon name as it was
+	//  requested during Var creation:
+	//  this enable much simpler test case
+	//  crafting and evaluation.
+	//
+	var name = this.name.split("$").pop();
+	
 	depth = depth || 0;
 	
 	if (depth == 5)
@@ -523,25 +545,27 @@ Var.prototype.inspect = function(depth){
 		var value = this.value.inspect? this.value.inspect(depth+1) : this.value;
 		
 		if (Var.inspect_extended)
-			return "Var("+this.name+", "+value+"){"+this.id+"}";
+			return "Var("+name+", "+value+"){"+this.id+"}";
 		else
-			return "Var("+this.name+", "+value+")";
+			return "Var("+name+", "+value+")";
 	};
 		
 	if (Var.inspect_extended)
-		return "Var("+this.name+"){"+this.id+"}";
+		return "Var("+name+"){"+this.id+"}";
 	else
-		return "Var("+this.name+")";
+		return "Var("+name+")";
 };
 
 Var.prototype.bind = function(value) {
 	
+	/*
 	if (this.is_anon()) {
 		// useful for "blackholing" functor construction
 		//
 		this.value = value;
 		return;
 	}
+	*/
 	
 	if (this == value)
 		throw new Error("Attempt to create cycle ...");
@@ -553,8 +577,6 @@ Var.prototype.bind = function(value) {
 		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
 	
 	this.value = value;
-	
-	//console.log("Var("+this.name+", "+JSON.stringify(this.value)+")");
 };
 
 Var.prototype.is_bound = function(){
@@ -567,9 +589,6 @@ Var.prototype.unbind = function(){
 
 Var.prototype.get_value = function() {
 
-	if (this.is_anon())
-		throw new ErrorNotBound("Anon - not Bound: Var("+this.name+")");
-	
 	if (this.value == null)
 		throw new ErrorNotBound("Not Bound: Var("+this.name+")");
 
@@ -582,20 +601,14 @@ Var.prototype.get_value = function() {
  */
 Var.prototype.deref = function(){
 
-	//console.log("&&& deref: ", this, this.id);
-	
 	if (this.value instanceof Var) {
 		
 		if (this.value.is_bound())
 			return this.value.deref();	
 		else {
-			//console.log("@@@@@ UNBOUND DEREFFED: ", this.value, this.value.id);
 			return this.value;
 		}
-			
 	}
-	
-	//console.log("@@@@@ DEREFFED: ", this.name, this.value, this.id);
 	return this;
 };
 

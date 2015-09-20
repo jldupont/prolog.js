@@ -406,6 +406,13 @@ Interpreter.prototype._save_continuation = function(where, instruction_offset) {
 		this.tracer("save", where);
 };
 
+Interpreter.prototype.add_to_trail = function(which_trail, what_var) {
+	
+	var var_name = what_var.name;
+	which_trail[var_name] = what_var;
+};
+
+
 /**
  *  Unwind Trail
  * 
@@ -417,7 +424,6 @@ Interpreter.prototype._unwind_trail = function(which) {
 		var trail_var = which[v];
 		var dvar = trail_var.deref();
 		dvar.unbind();
-		console.log("\n!!!! Unbound: ", dvar);
 	};
 };
 
@@ -798,21 +804,15 @@ Interpreter.prototype.inst_put_var = function(inst) {
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
 
-	// Are we dealing with a anonymous variable?
-	if (vname[0] == "_") {
-		struct.push_arg(new Var(vname));
-		return;
-	};
-	
 	// Do we have a local variable already setup?
 	var local_var = this.ctx.cse.vars[vname];
 	if (!local_var) {
 		local_var = new Var(vname);
-		this.ctx.cse.vars[vname] = local_var;
+		this.ctx.cse.vars[local_var.name] = local_var;
 	}
 	
 	// Manage the trail
-	this.ctx.cse.trail[vname] = local_var;
+	this.add_to_trail(this.ctx.cse.trail, local_var);
 	
 	struct.push_arg(local_var);
 };
@@ -830,6 +830,8 @@ Interpreter.prototype.inst_put_value = function(inst) {
 	var vname = "$x" + inst.get("x");
 	
 	var value = this.ctx.tse.vars[vname];
+	
+	console.log(")))) PUT VALUE: ", vname, value);
 	
 	// The current structure being worked on
 	var cv = this.ctx.cv;
@@ -882,13 +884,6 @@ Interpreter.prototype.inst_unif_value = function(inst) {
 		return;
 	};
 
-	if (pv.is_anon()) {
-		// skip
-		this.ctx.csi++;
-		return;
-	};
-
-	
 	var from_current_structure = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
 	var result = Utils.unify(value, from_current_structure);
@@ -933,9 +928,8 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	 *  Just a symbol, not even a Var assigned yet
 	 */
 	if (!pv) {
-		//console.log("%%%% unif_var: creating: ", v);
 		pv = new Var(v);
-		this.ctx.cse.vars[v] = pv;
+		this.ctx.cse.vars[pv.name] = pv;
 	};
 	
 	if (this.ctx.csm == 'w') {
@@ -990,7 +984,7 @@ Interpreter.prototype.inst_get_var = function(inst) {
 	if (!pv) {
 		
 		pv = new Var(p);
-		this.ctx.cse.vars[p] = pv;
+		this.ctx.cse.vars[pv.name] = pv;
 		
 		//console.log("-- get_var: CREATED: ", pv);
 	};
@@ -1091,7 +1085,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	if (!input_node) {
 		// need to create a variable in the current environment
 		var pv = new Var(x);
-		this.ctx.cse.vars[x] = pv;
+		this.ctx.cse.vars[pv.name] = pv;
 		input_node = pv;
 	}; 
 		
@@ -1250,15 +1244,6 @@ Interpreter.prototype._get_x = function(inst, type) {
 	}
 	
 	var variable = value_or_var;
-	
-	
-	// ANON VARIABLE
-	if (variable.is_anon()) {
-		//console.log("... anon var");
-		this.ctx.cu = true;
-		return;
-	};
-	
 	
 	var dvar = variable.deref();
 	
