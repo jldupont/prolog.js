@@ -856,9 +856,6 @@ Interpreter.prototype.inst_unif_value = function(inst) {
 	
 	var pv = this.ctx.cse.vars[v];
 	
-	if (pv.is_anon())
-		return;
-	
 	var value = pv.deref();
 	if (!value.is_bound())
 		value = pv;
@@ -875,6 +872,13 @@ Interpreter.prototype.inst_unif_value = function(inst) {
 		this.ctx.cu = true;
 		return;
 	};
+
+	if (pv.is_anon()) {
+		// skip
+		this.ctx.csi++;
+		return;
+	};
+
 	
 	var from_current_structure = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
