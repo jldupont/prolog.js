@@ -836,7 +836,57 @@ Interpreter.prototype.inst_put_value = function(inst) {
 
 //=========================================================================== HEAD
 
+/**
+ *   Instruction `unif_value`
+ *   
+ *   Used in the `head`, inside a structure, subsequent appearances of variable
+ *    (i.e. not on first appearance of variable).
+ *    
+ *   In `read` mode   ==> unify
+ *   In `write` mode  ==> just put value 
+ *   
+ */
+Interpreter.prototype.inst_unif_value = function(inst) {
+	
+	var v = inst.get('p');
 
+	if (!v) {
+		v = "$x" + inst.get('x');
+	};
+	
+	var pv = this.ctx.cse.vars[v];
+	
+	if (pv.is_anon())
+		return;
+	
+	var value = pv.deref();
+	if (!value.is_bound())
+		value = pv;
+
+	// IMPORTANT: the variable should already
+	//            have been created in the local environment
+	// =====================================================
+	
+	
+	// `write` mode ?
+	//
+	if (this.ctx.csm == 'w') {
+		this.ctx.cs.push_arg( value );
+		this.ctx.cu = true;
+		return;
+	};
+	
+	var from_current_structure = this.ctx.cs.get_arg( this.ctx.csi++ );
+	
+	var result = Utils.unify(value, from_current_structure);
+	
+	this.ctx.cu = (result != null);
+	
+	if (!this.ctx.cu)
+		this.backtrack();
+	
+	
+};
 
 
 /**
@@ -870,7 +920,7 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	 *  Just a symbol, not even a Var assigned yet
 	 */
 	if (!pv) {
-		console.log("%%%% unif_var: creating: ", v);
+		//console.log("%%%% unif_var: creating: ", v);
 		pv = new Var(v);
 		this.ctx.cse.vars[v] = pv;
 	};
@@ -894,6 +944,79 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 		this.backtrack();
 	
 };// unif_var
+
+/**
+ *  Instruction `get_var`
+ *  
+ *  Used in the `head` when a variable is first encountered.
+ *  The variable is at the `root` of the `head` (and thus
+ *   not inside a structure in the `head`).
+ *  
+ *  - Get the variable and place it in the local vars
+ * 
+ * @param inst
+ */
+Interpreter.prototype.inst_get_var = function(inst) {
+	
+	var p = inst.get('p');
+	var pv = this.ctx.cse.vars[p];
+	
+	if (!pv) {
+		pv = new Var(p);
+		this.ctx.cse.vars[p] = pv;
+	};
+	
+	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
+	
+	if (value_or_var instanceof Var) {
+		this.ctx.cse.vars[p] = value_or_var;
+		return;
+	};
+
+	var result = Utils.unify(pv, value_or_var);
+	
+	this.ctx.cu = (result != null);
+	
+	if (!this.ctx.cu)
+		this.backtrack();
+};
+
+/**
+ *  Instruction `get_value`
+ *  
+ *  Used in the `head` when a variable already appeared
+ *   earlier at the `root`.
+ *    
+ *  
+ * @param inst
+ */
+Interpreter.prototype.inst_get_value = function(inst) {
+	
+	var value;
+	
+	var p = inst.get('p');
+	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
+	
+	if (value_or_var instanceof Var) {
+		/*
+		 *  Cases:
+		 *  - bounded:   get value
+		 *  - unbounded: get var
+		 */
+		var dvar = value_or_var.deref();
+		
+		if (dvar.is_bound())
+			value = dvar.get_value();
+		else
+			value = value_or_var;
+		
+	} else
+		value = value_or_var;
+	
+	this.ctx.cse.vars[p] = value;
+};
+
+
 
 
 /**

@@ -422,15 +422,15 @@ it('Interpreter - complex - 3', function(){
 	//console.log(it.db.db);
 	
 	it.step(); // allocate
-	it.step(); // put_struct
+	it.step(); // put_struct  r/2, x(0)
 	it.step(); // put_number 1
 	it.step(); // put_number 2
 	it.step(); // setup
 	it.step(); // call r/2
 	
 	it.step(); // get_struct  - head  r/2
-	it.step(); // get_number
-	it.step(); // unif_var
+	it.step(); // get_number  p(1)
+	it.step(); // get_var p(A)
 
 	it.step(); // jmp g0      - body  r/2
 	
@@ -643,10 +643,47 @@ it('Interpreter - program - 1', function(){
 	             ];
 	var query = "parent_child(X, Y).";
 	
+	/*
+[ { g0: 
+     [ allocate    ,
+       put_struct   ( father_child/2, x(0) ),
+       put_var      ( p("X") ),
+       put_var      ( p("Y") ),
+       setup       ,
+       call        ,
+       maybe_retry ,
+       deallocate  ,
+       proceed      ],
+    head: 
+     [ get_struct   ( parent_child/2, x(0) ),
+       get_var      ( p("X") ),
+       get_var      ( p("Y") ),
+       jump         ( p("g0") ) ],
+    f: 'parent_child',
+    a: 2 },
+  { g0: 
+     [ allocate    ,
+       put_struct   ( mother_child/2, x(0) ),
+       put_var      ( p("X") ),
+       put_var      ( p("Y") ),
+       setup       ,
+       call        ,
+       maybe_retry ,
+       deallocate  ,
+       proceed      ],
+    head: 
+     [ get_struct   ( parent_child/2, x(0) ),
+       get_var      ( p("X") ),
+       get_var      ( p("Y") ),
+       jump         ( p("g0") ) ],
+    f: 'parent_child',
+    a: 2 } ]
+	 */
+	
 	var it = prepare(rules, query);
 	//var it = prepare(rules, query, basic_tracer);
 
-	//console.log(it.db.db);
+	//console.log(it.db.db['parent_child/2']);
 	
 	var vars;
 	var result;

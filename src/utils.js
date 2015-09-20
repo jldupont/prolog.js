@@ -149,7 +149,17 @@ Utils.compare_objects = function(expected, input, use_throw){
 
 Utils.unify = function(t1, t2) {
 
-	//console.log("Utils.Unify: ",t1, t2);
+	/*
+	var t1id, t2id;
+	
+	if (t1)
+		t1id = t1.id ? t1.id : "?";
+	
+	if (t2)
+		t2id = t2.id ? t2.id : "?";
+	
+	console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
+	*/
 	
 	if (t1 == t2)
 		return t1;

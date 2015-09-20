@@ -40,11 +40,12 @@ function basic_tracer(ctx, it_ctx, data) {
 	};
 	
 	if (ctx == 'before_inst') {
-		console.log("BEFORE: inst(",data,")  CU: ", it_ctx.ctx.cu);
+		//console.log("BEFORE: inst(",data,")  CU: ", it_ctx.ctx.cu);
 	};
 	if (ctx == 'after_inst'){
-		console.log("AFTER: inst(",data,")  CU: ", it_ctx.ctx.cu);
-		//console.log(it_ctx);
+		console.log("AFTER:  inst(",data,")  CU: ", it_ctx.ctx.cu);
+		if (data.opcode == 'unif_var')
+			console.log(it_ctx.ctx.cse.vars);
 	};
 		
 	if (ctx == 'execute')
@@ -204,9 +205,15 @@ var run = function(it) {
 
 it('Interpreter - batch2 - simple - 1', function(){
 	
+	//console.log("\n ~~~~~~~~~~ 'Interpreter - batch2 - simple - 1'");
+	
 	var rules = [
 	             "f(666)."
 	             ];
+	
+	/*
+	 
+	 */
 	
 	var query = "f(A).";
 	
@@ -216,6 +223,26 @@ it('Interpreter - batch2 - simple - 1', function(){
 	
 	test(rules, query, expected);
 });
+
+
+
+it('Interpreter - batch2 - simple - 2', function(){
+	
+	//console.log("\n ~~~~~~~~~~ 'Interpreter - batch2 - simple - 2' ");
+	
+	var rules = [
+	             "f(A, A)."
+	             ];
+	
+	var query = "f(666, 666).";
+	
+	var expected = [
+	                
+	                ];
+	
+	test(rules, query, expected);
+});
+
 
 it('Interpreter - batch2 - complex - 1', function(){
 	
@@ -236,7 +263,7 @@ it('Interpreter - batch2 - complex - 1', function(){
 
 it('Interpreter - batch2 - complex - 2', function(){
 	
-	console.log("\n COMPLEX 2");
+	//console.log("\n\n\n ~~~~~~~~~~~~~~~ Interpreter - batch2 - complex - 2");
 	
 	Var.inspect_extended = false;
 	
@@ -289,18 +316,18 @@ it('Interpreter - batch2 - complex - 2', function(){
 	var query = "puzzle(Houses).";
 	
 	var expected = [
-	                 {"Houses": 'Functor(list/5,Var(A, Functor(house/5,"red","english",Var(_),Var(_),Var(_))),Var(_),Var(_),Var(_),Var(_))'  }
+{"Houses": 'Functor(list/2,Var(A, Functor(house/5,"red","english",Var(_),Var(_),Var(_))),Var(_))'  }
 	                ];
 	
 	
 	
-	test(rules, query, expected, true);
+	test(rules, query, expected);
 });
 
-/*
+
 it('Interpreter - batch2 - program - 1', function(){
 	
-	console.log("~~~ Interpreter - batch2 - program 1");
+	console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Interpreter - batch2 - program 1");
 	
 	var rules = [
 					 "exists(A, list(A, _, _, _, _))."
@@ -354,4 +381,3 @@ it('Interpreter - batch2 - program - 1', function(){
 	
 	test(rules, query, expected, true);
 });
-*/

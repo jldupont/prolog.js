@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-09-19 */
+/*! prolog.js - v0.0.1 - 2015-09-20 */
 
 /**
  *  Token
@@ -494,6 +494,8 @@ function Var(name) {
 	this.value = null;
 	
 	this.id = Var.counter++;
+	
+	//console.log("^^^^ Var("+name+") "+this.id);
 };
 
 Var.counter = 0;
@@ -574,14 +576,20 @@ Var.prototype.get_value = function() {
  */
 Var.prototype.deref = function(){
 
+	//console.log("&&& deref: ", this, this.id);
+	
 	if (this.value instanceof Var) {
-
+		
 		if (this.value.is_bound())
 			return this.value.deref();	
-		else
+		else {
+			//console.log("@@@@@ UNBOUND DEREFFED: ", this.value, this.value.id);
 			return this.value;
+		}
+			
 	}
 	
+	//console.log("@@@@@ DEREFFED: ", this.name, this.value, this.id);
 	return this;
 };
 
@@ -884,6 +892,7 @@ Compiler.prototype.process_head = function(exp, with_body) {
 	
 	var result = []; 
 		
+	var vars = {};
 	
 	/**
 	 *   Functor
@@ -895,16 +904,22 @@ Compiler.prototype.process_head = function(exp, with_body) {
 	
 	v.process(function(ctx){
 		
+		/*
+		 *   Root Node gets ctx.n.is_root = true
+		 */
+		
 		if (ctx.is_struct) {
 			
-			// We are seeing this functor node for the first time
-			//  and so it is a root
-			//
-			
 			if (ctx.as_param) {
+				
 				result.push(new Instruction("unif_var", {x:ctx.v}));
 				return;
+				
 			} else {
+				
+				// We are seeing this functor node for the first time
+				//  and so it is a root
+				//
 				result.push(new Instruction("get_struct", {f: ctx.n.name, a:ctx.n.args.length, x:ctx.v}));
 				return;
 				
@@ -912,20 +927,58 @@ Compiler.prototype.process_head = function(exp, with_body) {
 			
 		};
 		
+		/*
+		 *   Cases:
+		 *   1- First time @ root            --> get_var
+		 *   2- First time but inside struct --> unif_var
+		 *   
+		 *   3- Subsequent time @ root            --> get_value
+		 *   4- Subsequent time but inside struct --> unify_value 
+		 * 
+		 */
 		if (ctx.n instanceof Var) {
 			
-			result.push(new Instruction("unif_var", {p:ctx.n.name}));
-			return;
+			var first_time = (vars[ctx.n.name] == undefined);
+			var at_root = ctx.root_param;
+			
+			if (first_time && at_root) {
+				result.push(new Instruction("get_var", {p:ctx.n.name}));
+			};
+			
+			if (first_time && !at_root) {
+				result.push(new Instruction("unif_var", {p:ctx.n.name}));
+			};
+			
+			if (!first_time && at_root) {
+				result.push(new Instruction("get_value", {p:ctx.n.name}));
+			};
+			
+			if (!first_time && !at_root) {
+				result.push(new Instruction("unif_value", {p:ctx.n.name}));
+			};
+
+			// not the first time anymore...
+			vars[ctx.n.name] = true;
+						
+			return;			
 		};
 		
 		if (ctx.n instanceof Token) {
+			
 			if (ctx.n.name == 'term') {
-				result.push(new Instruction('get_term', { p: ctx.n.value }));
+				
+				if (ctx.root_param)
+					result.push(new Instruction('get_term', { p: ctx.n.value }));
+				else
+					result.push(new Instruction('unify_term', { p: ctx.n.value }));
 				return;
 			};
 				
 			if (ctx.n.name == 'number') {
-				result.push(new Instruction('get_number', { p: ctx.n.value }));
+				if (ctx.root_param)
+					result.push(new Instruction('get_number', { p: ctx.n.value }));
+				else
+					result.push(new Instruction('unify_number', { p: ctx.n.value }));
 				return;
 			};
 			
@@ -2339,7 +2392,57 @@ Interpreter.prototype.inst_put_value = function(inst) {
 
 //=========================================================================== HEAD
 
+/**
+ *   Instruction `unif_value`
+ *   
+ *   Used in the `head`, inside a structure, subsequent appearances of variable
+ *    (i.e. not on first appearance of variable).
+ *    
+ *   In `read` mode   ==> unify
+ *   In `write` mode  ==> just put value 
+ *   
+ */
+Interpreter.prototype.inst_unif_value = function(inst) {
+	
+	var v = inst.get('p');
 
+	if (!v) {
+		v = "$x" + inst.get('x');
+	};
+	
+	var pv = this.ctx.cse.vars[v];
+	
+	if (pv.is_anon())
+		return;
+	
+	var value = pv.deref();
+	if (!value.is_bound())
+		value = pv;
+
+	// IMPORTANT: the variable should already
+	//            have been created in the local environment
+	// =====================================================
+	
+	
+	// `write` mode ?
+	//
+	if (this.ctx.csm == 'w') {
+		this.ctx.cs.push_arg( value );
+		this.ctx.cu = true;
+		return;
+	};
+	
+	var from_current_structure = this.ctx.cs.get_arg( this.ctx.csi++ );
+	
+	var result = Utils.unify(value, from_current_structure);
+	
+	this.ctx.cu = (result != null);
+	
+	if (!this.ctx.cu)
+		this.backtrack();
+	
+	
+};
 
 
 /**
@@ -2373,7 +2476,7 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	 *  Just a symbol, not even a Var assigned yet
 	 */
 	if (!pv) {
-		console.log("%%%% unif_var: creating: ", v);
+		//console.log("%%%% unif_var: creating: ", v);
 		pv = new Var(v);
 		this.ctx.cse.vars[v] = pv;
 	};
@@ -2397,6 +2500,79 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 		this.backtrack();
 	
 };// unif_var
+
+/**
+ *  Instruction `get_var`
+ *  
+ *  Used in the `head` when a variable is first encountered.
+ *  The variable is at the `root` of the `head` (and thus
+ *   not inside a structure in the `head`).
+ *  
+ *  - Get the variable and place it in the local vars
+ * 
+ * @param inst
+ */
+Interpreter.prototype.inst_get_var = function(inst) {
+	
+	var p = inst.get('p');
+	var pv = this.ctx.cse.vars[p];
+	
+	if (!pv) {
+		pv = new Var(p);
+		this.ctx.cse.vars[p] = pv;
+	};
+	
+	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
+	
+	if (value_or_var instanceof Var) {
+		this.ctx.cse.vars[p] = value_or_var;
+		return;
+	};
+
+	var result = Utils.unify(pv, value_or_var);
+	
+	this.ctx.cu = (result != null);
+	
+	if (!this.ctx.cu)
+		this.backtrack();
+};
+
+/**
+ *  Instruction `get_value`
+ *  
+ *  Used in the `head` when a variable already appeared
+ *   earlier at the `root`.
+ *    
+ *  
+ * @param inst
+ */
+Interpreter.prototype.inst_get_value = function(inst) {
+	
+	var value;
+	
+	var p = inst.get('p');
+	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
+	
+	if (value_or_var instanceof Var) {
+		/*
+		 *  Cases:
+		 *  - bounded:   get value
+		 *  - unbounded: get var
+		 */
+		var dvar = value_or_var.deref();
+		
+		if (dvar.is_bound())
+			value = dvar.get_value();
+		else
+			value = value_or_var;
+		
+	} else
+		value = value_or_var;
+	
+	this.ctx.cse.vars[p] = value;
+};
+
+
 
 
 /**
@@ -3643,7 +3819,17 @@ Utils.compare_objects = function(expected, input, use_throw){
 
 Utils.unify = function(t1, t2) {
 
-	//console.log("Utils.Unify: ",t1, t2);
+	/*
+	var t1id, t2id;
+	
+	if (t1)
+		t1id = t1.id ? t1.id : "?";
+	
+	if (t2)
+		t2id = t2.id ? t2.id : "?";
+	
+	console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
+	*/
 	
 	if (t1 == t2)
 		return t1;
@@ -3779,12 +3965,14 @@ Visitor.prototype._process_depth = function(node) {
  */
 Visitor.prototype.__process_depth = function(node){
 
+	node.is_root = true;
+	var stack = [ node ];
+
+	
 	var variable_counter = 0;
 	var result = [];
-	var stack = [ node ];
 	var ctx = {};
 	
-	node.is_root = true;
 	
 	for (;;) {
 
@@ -3823,7 +4011,7 @@ Visitor.prototype.__process_depth = function(node){
 				
 				// This covers all other node types
 				//  e.g. terms such as Numbers and Atoms
-				this.cb({ n: n, i: index});
+				this.cb({ n: n, i: index, root_param: bnode.is_root });
 			}
 			
 		}; // for args

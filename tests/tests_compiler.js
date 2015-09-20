@@ -297,7 +297,7 @@ it('Compiler - basic - 1', function(){
 	var text = "f(A).";
 	var expected = [[ 
 	'get_struct   ( f/1, x(0) )', 
-	'unif_var     ( p("A") )',
+	'get_var      ( p("A") )',
 	'proceed'
 	]];
 	
@@ -318,11 +318,11 @@ it('Compiler - basic - 2', function(){
   'unif_var     ( x(3) )',
   'unif_var     ( x(4) )',
   'get_struct   ( h3a/1, x(2) )',
-  'get_term     ( p("h3a") )',
+  'unify_term   ( p("h3a") )',
   'get_struct   ( h3b/1, x(3) )',
-  'get_term     ( p("h3b") )',
+  'unify_term   ( p("h3b") )',
   'get_struct   ( h3c/1, x(4) )',
-  'get_term     ( p("h3c") )',
+  'unify_term   ( p("h3c") )',
   'proceed'
   ]];
 	
@@ -394,7 +394,7 @@ it('Compiler - rule/fact - basic - 0', function(){
 			     ],
 		  head: [ 
 		           'get_struct   ( f1/1, x(0) )'
-		          ,'unif_var     ( p("A") )'
+		          ,'get_var      ( p("A") )'
 		          ,'jump         ( p("g0") )'
 		          ] 
 		}	                
@@ -449,7 +449,7 @@ it('Compiler - rule/fact - basic - 2', function(){
 			     ],
 		  head: [ 
 		           'get_struct   ( f1/1, x(0) )'
-		          ,'unif_var     ( p("A") )'
+		          ,'get_var      ( p("A") )'
 		          ,'jump         ( p("g0") )'
 		          ] 
 		}	                
@@ -481,7 +481,7 @@ it('Compiler - rule/fact - complex - 1', function(){
 			     ],
 		  head: [ 
 		           'get_struct   ( f1/1, x(0) )'
-		          ,'unif_var     ( p("A") )'
+		          ,'get_var      ( p("A") )'
 		          ,'jump         ( p("g0") )'
 		          ] 
 		}	                
@@ -499,7 +499,7 @@ it('Compiler - rule/fact - complex - 2', function(){
 
 		{ 
 			g0: 
-			   [ 	'allocate'    ,
+			   [   'allocate'    ,
 			       'put_struct   ( f4/1, x(1) )',
 			       'put_var      ( p("A") )',
 			       'put_struct   ( f3/1, x(2) )',
@@ -516,8 +516,8 @@ it('Compiler - rule/fact - complex - 2', function(){
 					'get_struct   ( f1/1, x(0) )',
 					'unif_var     ( x(1) )',
 					'get_struct   ( g1/1, x(1) )',
-					'unif_var     ( p("A") )'
-					,'jump         ( p("g0") )'
+					'unif_var     ( p("A") )',
+					'jump         ( p("g0") )'
 		          ] 
 		}	                
 	                
@@ -526,6 +526,35 @@ it('Compiler - rule/fact - complex - 2', function(){
 	process_rule(text, expected);
 });
 
+
+it('Compiler - rule/fact - most complex - 1', function(){
+	
+	var text = "f1(A,A) :- f2(A).";
+	var expected = [
+		{ g0: 
+			   [ 'allocate'    ,
+			     'put_struct   ( f2/1, x(0) )',
+			     'put_var      ( p("A") )',
+			     'setup'       ,
+			     'call'        ,
+			     'maybe_retry' ,
+			     'deallocate'  ,
+			     'proceed'
+			     ],
+			  head: 
+			   [ 
+			     'get_struct   ( f1/2, x(0) )',
+			     'get_var      ( p("A") )',
+			     'get_value    ( p("A") )',
+			     'jump         ( p("g0") )' 
+			     ],
+			  f: 'f1',
+			  a: 2 }
+
+	];
+	
+	process_rule(text, expected);
+});
 
 //==================================================== BODY
 //

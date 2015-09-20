@@ -107,6 +107,7 @@ Compiler.prototype.process_head = function(exp, with_body) {
 	
 	var result = []; 
 		
+	var vars = {};
 	
 	/**
 	 *   Functor
@@ -118,16 +119,22 @@ Compiler.prototype.process_head = function(exp, with_body) {
 	
 	v.process(function(ctx){
 		
+		/*
+		 *   Root Node gets ctx.n.is_root = true
+		 */
+		
 		if (ctx.is_struct) {
 			
-			// We are seeing this functor node for the first time
-			//  and so it is a root
-			//
-			
 			if (ctx.as_param) {
+				
 				result.push(new Instruction("unif_var", {x:ctx.v}));
 				return;
+				
 			} else {
+				
+				// We are seeing this functor node for the first time
+				//  and so it is a root
+				//
 				result.push(new Instruction("get_struct", {f: ctx.n.name, a:ctx.n.args.length, x:ctx.v}));
 				return;
 				
@@ -135,20 +142,58 @@ Compiler.prototype.process_head = function(exp, with_body) {
 			
 		};
 		
+		/*
+		 *   Cases:
+		 *   1- First time @ root            --> get_var
+		 *   2- First time but inside struct --> unif_var
+		 *   
+		 *   3- Subsequent time @ root            --> get_value
+		 *   4- Subsequent time but inside struct --> unify_value 
+		 * 
+		 */
 		if (ctx.n instanceof Var) {
 			
-			result.push(new Instruction("unif_var", {p:ctx.n.name}));
-			return;
+			var first_time = (vars[ctx.n.name] == undefined);
+			var at_root = ctx.root_param;
+			
+			if (first_time && at_root) {
+				result.push(new Instruction("get_var", {p:ctx.n.name}));
+			};
+			
+			if (first_time && !at_root) {
+				result.push(new Instruction("unif_var", {p:ctx.n.name}));
+			};
+			
+			if (!first_time && at_root) {
+				result.push(new Instruction("get_value", {p:ctx.n.name}));
+			};
+			
+			if (!first_time && !at_root) {
+				result.push(new Instruction("unif_value", {p:ctx.n.name}));
+			};
+
+			// not the first time anymore...
+			vars[ctx.n.name] = true;
+						
+			return;			
 		};
 		
 		if (ctx.n instanceof Token) {
+			
 			if (ctx.n.name == 'term') {
-				result.push(new Instruction('get_term', { p: ctx.n.value }));
+				
+				if (ctx.root_param)
+					result.push(new Instruction('get_term', { p: ctx.n.value }));
+				else
+					result.push(new Instruction('unify_term', { p: ctx.n.value }));
 				return;
 			};
 				
 			if (ctx.n.name == 'number') {
-				result.push(new Instruction('get_number', { p: ctx.n.value }));
+				if (ctx.root_param)
+					result.push(new Instruction('get_number', { p: ctx.n.value }));
+				else
+					result.push(new Instruction('unify_number', { p: ctx.n.value }));
 				return;
 			};
 			

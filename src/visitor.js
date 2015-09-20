@@ -66,12 +66,14 @@ Visitor.prototype._process_depth = function(node) {
  */
 Visitor.prototype.__process_depth = function(node){
 
+	node.is_root = true;
+	var stack = [ node ];
+
+	
 	var variable_counter = 0;
 	var result = [];
-	var stack = [ node ];
 	var ctx = {};
 	
-	node.is_root = true;
 	
 	for (;;) {
 
@@ -110,7 +112,7 @@ Visitor.prototype.__process_depth = function(node){
 				
 				// This covers all other node types
 				//  e.g. terms such as Numbers and Atoms
-				this.cb({ n: n, i: index});
+				this.cb({ n: n, i: index, root_param: bnode.is_root });
 			}
 			
 		}; // for args

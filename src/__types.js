@@ -500,6 +500,8 @@ function Var(name) {
 	this.value = null;
 	
 	this.id = Var.counter++;
+	
+	//console.log("^^^^ Var("+name+") "+this.id);
 };
 
 Var.counter = 0;
@@ -580,14 +582,20 @@ Var.prototype.get_value = function() {
  */
 Var.prototype.deref = function(){
 
+	//console.log("&&& deref: ", this, this.id);
+	
 	if (this.value instanceof Var) {
-
+		
 		if (this.value.is_bound())
 			return this.value.deref();	
-		else
+		else {
+			//console.log("@@@@@ UNBOUND DEREFFED: ", this.value, this.value.id);
 			return this.value;
+		}
+			
 	}
 	
+	//console.log("@@@@@ DEREFFED: ", this.name, this.value, this.id);
 	return this;
 };
 
