@@ -106,12 +106,12 @@ Interpreter.prototype.set_question = function(question_code){
 		/*  Top of stack environment
 		 *   i.e. the latest 'allocated'
 		 */
-		,tse: null
+		,tse: {}
 		
 		/*  Current Environment
 		 * 
 		 */
-		,cse: null
+		,cse: {}
 
 		/*
 		 *  `end` instruction encountered
@@ -417,12 +417,13 @@ Interpreter.prototype._unwind_trail = function(which) {
 		var trail_var = which[v];
 		var dvar = trail_var.deref();
 		dvar.unbind();
+		console.log("\n!!!! Unbound: ", dvar);
 	};
 };
 
 
 Interpreter.prototype.get_query_vars = function() {
-	return this.stack[0].trail;
+	return this.ctx.cse.vars;
 };
 
 
@@ -454,8 +455,18 @@ Interpreter.prototype.inst_end = function() {
  */
 Interpreter.prototype.inst_setup = function() {
 	
-	delete this.ctx.tse.vars["$x1"];
-	delete this.ctx.tse.vars["$x2"];
+	/*
+	 * Clean-up target variables
+	 *  We used some variables to construct
+	 *  the main structure at $x0 but we need
+	 *  to get rid of these or else the target
+	 *  functor might unify will values it shouldn't.
+	 */
+	for (var index=1;;index++)
+		if (this.ctx.tse.vars["$x" + index])
+			delete this.ctx.tse.vars["$x" + index];
+		else 
+			break;
 	
 	// We only need an offset of 1 
 	//  because the `fetch instruction` increments
@@ -544,8 +555,6 @@ Interpreter.prototype.inst_allocate = function() {
  *   - Choice Point fails & no other clause : deallocate environment
  */
 Interpreter.prototype.inst_deallocate = function() {
-	
-	//console.log("maybe deallocate: ", this.ctx.tse);
 	
 	if (this.ctx.tse.qenv)
 		return;
@@ -963,20 +972,30 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 Interpreter.prototype.inst_get_var = function(inst) {
 	
 	var p = inst.get('p');
-	var pv = this.ctx.cse.vars[p];
-	
-	if (!pv) {
-		pv = new Var(p);
-		this.ctx.cse.vars[p] = pv;
-	};
 	
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
+	/*
+	 *  Step 1: if we find a variable in the structure
+	 *          being deconstructed, put it locally.
+	 */
 	if (value_or_var instanceof Var) {
+		//console.log("-- get_var: putting local: ", value_or_var);
 		this.ctx.cse.vars[p] = value_or_var;
 		return;
 	};
 
+	var pv = this.ctx.cse.vars[p];
+	
+	if (!pv) {
+		
+		pv = new Var(p);
+		this.ctx.cse.vars[p] = pv;
+		
+		//console.log("-- get_var: CREATED: ", pv);
+	};
+		
+	
 	var result = Utils.unify(pv, value_or_var);
 	
 	this.ctx.cu = (result != null);
@@ -1099,11 +1118,11 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	if (input_node instanceof Var) {
 		
 		var nvar = input_node.deref();
+		
 		if (nvar.is_bound())
 			value = nvar.get_value();
-		
-		value = input_node;
-		
+		else
+			value = nvar;
 	} else {
 		
 		value = input_node;
@@ -1111,9 +1130,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	
 	if (value instanceof Var) {
 		
-		var dvar = value.deref();
-		
-		if (!dvar.is_bound()) {
+		if (!value.is_bound()) {
 			
 			//console.log("WRITE MODE: ", value);
 			this.ctx.csm = "w";
@@ -1122,11 +1139,11 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 			this.ctx.cs = struct;
 			
 			// Also update the current environment
-			this.ctx.cse.vars[x] = struct;
+			//this.ctx.cse.vars[x] = struct;
 
 			// And don't forget to actually perform
 			//  the 'write'!
-			dvar.bind( struct );
+			value.bind( struct );
 			
 			// We are successful
 			this.ctx.cu = true;
@@ -1207,6 +1224,7 @@ Interpreter.prototype._get_x = function(inst, type) {
 	if (this.ctx.csm == 'w') {
 		this.ctx.cs.push_arg( p );
 		this.ctx.cu = true;
+		this.ctx.csi++;
 		return;
 	};
 	

@@ -25,7 +25,7 @@ it('Utils - Unify - simple 1', function(){
 
 	var result = Utils.unify(null, null);
 
-	should.equal(result, null);
+	should.equal(result, true);
 });
 
 
@@ -33,33 +33,35 @@ it('Utils - Unify - simple 2', function(){
 
 	var result = Utils.unify(666, 666);
 
-	should.equal(result, 666);
+	should.equal(result, true);
 });
 
 it('Utils - Unify - simple 3', function(){
 
 	//console.log("--- Utils - Unify - simple 3");
 	
-	var v = new Var('x');
-	v.bind(666);
+	var x = new Var('x');
+	x.bind(666);
 	
-	var result = Utils.unify(v, 666);
+	var result = Utils.unify(x, 666);
 
+	should.ok(result);
 	
-	
-	var value = result.get_value();
+	var value = x.get_value();
 	
 	should.equal(value, 666);
 });
 
 it('Utils - Unify - complex 1', function(){
 
-	var v = new Var('x');
+	var x = new Var('x');
 	var f = new Functor("f");
 	
-	var result = Utils.unify(v, f);
+	var result = Utils.unify(x, f);
+	
+	should.ok(result);
 
-	var value = result.get_value();
+	var value = x.get_value();
 	
 	should.equal(value, f);
 });
@@ -74,11 +76,13 @@ it('Utils - Unify - complex 2', function(){
 	
 	var result = Utils.unify(x, y);
 
+	should.ok(result);
+	
 	//console.log(result);
 	
 	// Var('x', Var('y', f));
 	//
-	var value = result.get_value().get_value();
+	var value = x.get_value().get_value();
 	
 	should.equal(value, f);
 
@@ -91,11 +95,13 @@ it('Utils - Unify - complex 3', function(){
 	
 	var result = Utils.unify(f1, f2);
 
+	should.ok(result);
+	
 	//console.log(result);
 	
 	// Var('x', Var('y', f));
 	//
-	should.equal(result.name, 'f');
+	should.equal(f1.name, 'f');
 
 });
 
@@ -105,6 +111,8 @@ it('Utils - Unify - var 1', function(){
 	var v2 = new Var('y');
 	
 	var result = Utils.unify(v1, v2);
+	
+	should.ok(result);
 	
 	should.equal(v1.name, 'x');
 
@@ -118,6 +126,8 @@ it('Utils - Unify - var 2', function(){
 	v2.bind(v1);
 	
 	var result = Utils.unify(v1, v2);
+	
+	should.ok(result);
 	
 	should.equal(v1.name, 'x');
 
@@ -135,14 +145,14 @@ it('Utils - Unify - var 3', function(){
 	
 	var result = Utils.unify(x, y);
 	
+	should.ok(result);
+	
 	should.equal(x.name, 'x');
 
 });
 
 it('Utils - Unify - anon - 1', function(){
 
-	//console.log("~~~~ Utils - Unify - var 3");
-	
 	var x = new Var('_');
 	var y = new Var('y');
 	
@@ -152,14 +162,14 @@ it('Utils - Unify - anon - 1', function(){
 	
 	var result = Utils.unify(x, y);
 	
-	should.equal(result, x);
+	should.ok(result);
+	
+	should.notEqual(result, null);
 
 });
 
 it('Utils - Unify - anon - 2', function(){
 
-	//console.log("~~~~ Utils - Unify - var 3");
-	
 	var x = new Var('_');
 	
 	should.throws(function(){
@@ -171,8 +181,6 @@ it('Utils - Unify - anon - 2', function(){
 
 it('Utils - Unify - anon - 3', function(){
 
-	//console.log("~~~~ Utils - Unify - var 3");
-	
 	var x = new Var('_');
 	
 	x.deref();

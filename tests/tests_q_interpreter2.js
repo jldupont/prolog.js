@@ -31,12 +31,16 @@ var ErrorNoMoreInstruction = pr.ErrorNoMoreInstruction;
 
 function basic_tracer(ctx, it_ctx, data) {
 
+	if (ctx == 'backtracking') {
+		console.log("<<<< BACKTRACKING: ", it_ctx);
+	};
+	
 	if (ctx == 'restore') {
-		console.log("--- RESTORING: ", it_ctx);
+		//console.log("--- RESTORING: ", it_ctx);
 	};
 
 	if (ctx == 'save') {
-		console.log("--- SAVING: ", it_ctx);
+		//console.log("--- SAVING: ", it_ctx);
 	};
 	
 	if (ctx == 'before_inst') {
@@ -44,12 +48,16 @@ function basic_tracer(ctx, it_ctx, data) {
 	};
 	if (ctx == 'after_inst'){
 		console.log("AFTER:  inst(",data,")  CU: ", it_ctx.ctx.cu);
-		if (data.opcode == 'unif_var')
-			console.log(it_ctx.ctx.cse.vars);
+		//if (data.opcode == 'unif_var')
+		//	console.log(it_ctx.ctx.cse.vars);
 	};
 		
-	if (ctx == 'execute')
+	if (ctx == 'execute') {
 		console.log("\n--> Executing: ",it_ctx.p.f+"/"+it_ctx.p.a, ":"+it_ctx.p.ci, "@ "+it_ctx.p.l);
+		if (it_ctx.tse)
+			console.log("VARS: ", it_ctx.tse.vars);
+	};
+		
 };
 
 var parser = function(text) {
@@ -168,20 +176,43 @@ var test = function(rules, query, expected, tracer_enable) {
 			try {
 				av = a.get_value();
 			} catch(err) {
-				console.log("*** VARS: ", vars);
-				//console.log("DB: ", it.db.db["puzzle/1"])
+				console.log("\n*** VARS: ", vars);
+				//dump_var(it.ctx.cse.vars);
+				//dump_var(it.ctx.tse.vars);
+				dump_db(it.db.db);
 				throw err;
 			};
 
 			if (!(typeof av == 'string'))
 				av = util.inspect(av);
 			
-			should.equal(av, e, "got: "+av+" expecting: "+e);
+			try {
+				should.equal(av, e, "got: "+av+" expecting: "+e);	
+			}catch(e) {
+				console.log("*** VARS: ", vars);
+				dump_db(it.db.db);
+				throw e;
+			};
+			
 		};
 		
 		it.backtrack();
 	};
 	
+};
+
+var dump_db = function(db){
+	
+	for (key in db) {
+		console.log("\n\n", key, " code ==> ", db[key]);
+	};
+	
+};
+
+var dump_var = function(vars) {
+	
+	for (key in vars)
+		console.log("\n\n", key, " = ", vars[key]);
 };
 
 var run = function(it) {
@@ -335,6 +366,7 @@ it('Interpreter - batch2 - program - 1', function(){
 					,"exists(A, list(_, _, A, _, _))."
 					,"exists(A, list(_, _, _, A, _))."
 					,"exists(A, list(_, _, _, _, A))."
+					
 					,"rightOf(R, L, list(L, R, _, _, _))."
 					,"rightOf(R, L, list(_, L, R, _, _))."
 					,"rightOf(R, L, list(_, _, L, R, _))."
@@ -366,18 +398,42 @@ it('Interpreter - batch2 - program - 1', function(){
 					                   +"exists(house(_, _, orangejuice, luckystike, _), Houses),"
 					                   +"exists(house(_, japanese, _, parliament, _), Houses),"
 					                   +"nextTo(house(_, norwegian, _, _, _), house(blue, _, _, _, _), Houses)."
-	                  
+	                /*  
 					 ,"solution(WaterDrinker, ZebraOwner) :- puzzle(Houses),"
 					 										+"exists(house(_, _, water, _, _), Houses),"
 					                                        +"exists(house(_, _, _, _, zebra), Houses)."
-	
+	                 */
 	             ];
 	
 	var query = "puzzle(Houses).";
 	
+	/*
+		[ { g0: 
+		     [ allocate    ,
+		       put_struct   ( puzzle/1, x(0) ),
+		       put_var      ( p("Houses") ),
+		       setup       ,
+		       call        ,
+		       maybe_retry ,
+		       deallocate  ,
+		       end          
+		       ] } 
+		 ]
+	 */
+	
+	/*
+	 list(	house(yellow,norwegian,_,kools,fox),
+	 		house(blue,ukrainian,tea,chesterfield,horse),
+	 		house(red,english,milk,oldgold,snails),
+	 		house(ivory,spaniard,orangejuice,luckystike,dog),
+	 		house(green,japanese,coffee,parliament,_)
+	 		)
+	 */
 	var expected = [
 	                 {"Houses": 666}
 	                ];
 	
-	//test(rules, query, expected, true);
+	Var.inspect_extended = false;
+	
+	test(rules, query, expected, true);
 });

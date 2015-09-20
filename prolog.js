@@ -1662,12 +1662,12 @@ Interpreter.prototype.set_question = function(question_code){
 		/*  Top of stack environment
 		 *   i.e. the latest 'allocated'
 		 */
-		,tse: null
+		,tse: {}
 		
 		/*  Current Environment
 		 * 
 		 */
-		,cse: null
+		,cse: {}
 
 		/*
 		 *  `end` instruction encountered
@@ -1973,12 +1973,13 @@ Interpreter.prototype._unwind_trail = function(which) {
 		var trail_var = which[v];
 		var dvar = trail_var.deref();
 		dvar.unbind();
+		console.log("\n!!!! Unbound: ", dvar);
 	};
 };
 
 
 Interpreter.prototype.get_query_vars = function() {
-	return this.stack[0].trail;
+	return this.ctx.cse.vars;
 };
 
 
@@ -2010,8 +2011,18 @@ Interpreter.prototype.inst_end = function() {
  */
 Interpreter.prototype.inst_setup = function() {
 	
-	delete this.ctx.tse.vars["$x1"];
-	delete this.ctx.tse.vars["$x2"];
+	/*
+	 * Clean-up target variables
+	 *  We used some variables to construct
+	 *  the main structure at $x0 but we need
+	 *  to get rid of these or else the target
+	 *  functor might unify will values it shouldn't.
+	 */
+	for (var index=1;;index++)
+		if (this.ctx.tse.vars["$x" + index])
+			delete this.ctx.tse.vars["$x" + index];
+		else 
+			break;
 	
 	// We only need an offset of 1 
 	//  because the `fetch instruction` increments
@@ -2100,8 +2111,6 @@ Interpreter.prototype.inst_allocate = function() {
  *   - Choice Point fails & no other clause : deallocate environment
  */
 Interpreter.prototype.inst_deallocate = function() {
-	
-	//console.log("maybe deallocate: ", this.ctx.tse);
 	
 	if (this.ctx.tse.qenv)
 		return;
@@ -2519,20 +2528,30 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 Interpreter.prototype.inst_get_var = function(inst) {
 	
 	var p = inst.get('p');
-	var pv = this.ctx.cse.vars[p];
-	
-	if (!pv) {
-		pv = new Var(p);
-		this.ctx.cse.vars[p] = pv;
-	};
 	
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
+	/*
+	 *  Step 1: if we find a variable in the structure
+	 *          being deconstructed, put it locally.
+	 */
 	if (value_or_var instanceof Var) {
+		//console.log("-- get_var: putting local: ", value_or_var);
 		this.ctx.cse.vars[p] = value_or_var;
 		return;
 	};
 
+	var pv = this.ctx.cse.vars[p];
+	
+	if (!pv) {
+		
+		pv = new Var(p);
+		this.ctx.cse.vars[p] = pv;
+		
+		//console.log("-- get_var: CREATED: ", pv);
+	};
+		
+	
 	var result = Utils.unify(pv, value_or_var);
 	
 	this.ctx.cu = (result != null);
@@ -2655,11 +2674,11 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	if (input_node instanceof Var) {
 		
 		var nvar = input_node.deref();
+		
 		if (nvar.is_bound())
 			value = nvar.get_value();
-		
-		value = input_node;
-		
+		else
+			value = nvar;
 	} else {
 		
 		value = input_node;
@@ -2667,9 +2686,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	
 	if (value instanceof Var) {
 		
-		var dvar = value.deref();
-		
-		if (!dvar.is_bound()) {
+		if (!value.is_bound()) {
 			
 			//console.log("WRITE MODE: ", value);
 			this.ctx.csm = "w";
@@ -2678,11 +2695,11 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 			this.ctx.cs = struct;
 			
 			// Also update the current environment
-			this.ctx.cse.vars[x] = struct;
+			//this.ctx.cse.vars[x] = struct;
 
 			// And don't forget to actually perform
 			//  the 'write'!
-			dvar.bind( struct );
+			value.bind( struct );
 			
 			// We are successful
 			this.ctx.cu = true;
@@ -2763,6 +2780,7 @@ Interpreter.prototype._get_x = function(inst, type) {
 	if (this.ctx.csm == 'w') {
 		this.ctx.cs.push_arg( p );
 		this.ctx.cu = true;
+		this.ctx.csi++;
 		return;
 	};
 	
@@ -3820,7 +3838,28 @@ Utils.compare_objects = function(expected, input, use_throw){
 	return false;
 };//compare_objects
 
-
+/*
+ * Two terms unify if they can be matched. Two terms can be matched if:
+ * 
+ * - they are the same term (obviously), or
+ * - they contain variables that can be unified so that the two terms without variables are the same.
+ * 
+ * 
+ * term1 and term2 unify whenever:
+ * 
+ * + If term1 and term2 are constants, then term1 and term2 unify if and only if they are the same atom, or the same number.
+ * 
+ * + If term1 is a variable and term2 is any type of term, then term1 and term2 unify, and term1 is instantiated to term2. 
+ *   (And vice versa.) (If they are both variables, they're both instantiated to each other, and we say that they share values.)
+ * 
+ * + If term1 and term2 are complex terms, they unify if and only if:
+ *   a. They have the same functor and arity. The functor is the "function" name (this functor is foo: foo(X, bar)). The arity is the number of arguments for the functor (the arity for foo(X, bar) is 2).
+ *   b. All of their corresponding arguments unify. Recursion!
+ *   c. The variable instantiations are compatible (i.e., the same variable is not given two different unifications/values).
+ *   
+ * + Two terms unify if and only if they unify for one of the above three reasons (there are no reasons left unstated).
+ * 
+ */
 Utils.unify = function(t1, t2) {
 
 	/*
@@ -3836,7 +3875,7 @@ Utils.unify = function(t1, t2) {
 	*/
 	
 	if (t1 == t2)
-		return t1;
+		return true;
 	
 	var v1, v2;
 	
@@ -3846,60 +3885,72 @@ Utils.unify = function(t1, t2) {
 	
 		v1 = t1.deref();
 
+		// Anything binds with Anon Var
+		//
 		if (v1.is_anon()) {
-			return t1;
+			return true;
 		};
 		
 		if (!v1.is_bound()) {
 			
-			if (v1 != t2)
+			if (v1 != t2) {
 				v1.bind(t2);
-			return t1;
+				//console.log(">> unify bound (v1, t2): ",v1, "==>", t2);
+			}
+
+			// both are equal ? don't create a cycle !
+			//console.log(">> unify: cycle cut, t1: ", t1);
+			return true;
 		};
 		
 		v1 = v1.get_value();
 	} else
 		v1 = t1;
 	
+	
+	
 	if (t2 instanceof Var) {
 		
 		v2 = t2.deref();
 
 		if (v2.is_anon()) {
-			return t2;
+			return true;
 		};
 		
 		if (!v2.is_bound()) {
+			
 			if (v1 != v2) {
-				v2.bind(t1);
-				return t2;
+				v2.bind(v1);
+				//console.log(">> unify bound (v2,t1): ",v2, "==>", t1);
 			};
+
+			// both are equal ? don't create a cycle !
+			return true;
 		};
 		
 		v2 = t2.get_value();
 	} else
 		v2 = t2;
 
+	
 	if (v1 == v2)
-		return t1;
+		return true;
 	
 
 	if (v1 instanceof Functor && v2 instanceof Functor) {
 
 		if (v1.args.length != v2.args.length)
-			return null;
+			return false;
 		
-		for (var index in v1.args) {
-			var r = this._unify(v1.args[index], v2.args[index]);
-			if (r == null)
-				return null;
-		};
+		for (var index in v1.args)
+			if (!this.unify(v1.args[index], v2.args[index]))
+				return false;
 		
-		return t1;
+		return true;
 	};
 	
 	
-	return null;
+	return false;
 }; // unify
 
 
