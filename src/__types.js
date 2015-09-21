@@ -504,6 +504,8 @@ Functor.prototype.get_arg = function(index) {
  *   and security issues.
  */
 function Var(name) {
+	
+	this.is_anon = (name[0] == '_');
 	this.prec = 0;
 	this.name = name;
 	this.col = null;
@@ -514,17 +516,13 @@ function Var(name) {
 	this.id = Var.counter++;
 	
 	if (this.name[0] == "_")
-		this.name = this.id+"$"+this.name;
+		this.name = this.name+"$"+this.id;
 	
-	//console.log("^^^^ Var("+name+") "+this.id);
+	//console.log(".............. CREATED: ", name, this.name, this.is_anon);
 };
 
 Var.counter = 0;
 Var.inspect_extended = false;
-
-Var.prototype.is_anon = function(){
-	return this.name[0] == "_";
-};
 
 Var.prototype.inspect = function(depth){
 	
@@ -533,7 +531,7 @@ Var.prototype.inspect = function(depth){
 	//  this enable much simpler test case
 	//  crafting and evaluation.
 	//
-	var name = this.name.split("$").pop();
+	var name = this.is_anon ? "_" : this.name;
 	
 	depth = depth || 0;
 	
@@ -558,15 +556,6 @@ Var.prototype.inspect = function(depth){
 
 Var.prototype.bind = function(value) {
 	
-	/*
-	if (this.is_anon()) {
-		// useful for "blackholing" functor construction
-		//
-		this.value = value;
-		return;
-	}
-	*/
-	
 	if (this == value)
 		throw new Error("Attempt to create cycle ...");
 	
@@ -576,7 +565,21 @@ Var.prototype.bind = function(value) {
 	if (this.value != null)
 		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
 	
+	if (value instanceof Var) {
+		if (value.is_anon)
+			if (!value.is_bound())
+				return;
+			else {
+				this.value = value.get_value();
+				console.log("::::: Binded: ", this);
+				return;
+			};
+		
+	}
+	
 	this.value = value;
+	
+	console.log("::::: Binded: ", this);	
 };
 
 Var.prototype.is_bound = function(){
@@ -584,6 +587,7 @@ Var.prototype.is_bound = function(){
 };
 
 Var.prototype.unbind = function(){
+	//console.log(":::::: ABOUT TO UNBIND: ", this, this.id);
 	return this.value = null;
 };
 
@@ -599,19 +603,75 @@ Var.prototype.get_value = function() {
  *   Var(X, Var(Y, Var(Z, 666) ) ) ==> Var(X, 666)
  * 
  */
-Var.prototype.deref = function(){
+Var.prototype.deref = function(check){
 
+	//if (check)
+	//	console.log("???? DEREF: ", this, this.id, check, check.id);
+	
+	if (check && check == this)
+		return null;
+		
 	if (this.value instanceof Var) {
 		
 		if (this.value.is_bound())
-			return this.value.deref();	
+			return this.value.deref(check);	
 		else {
+			
+			if (check && check == this.value)
+				return null;
+			
 			return this.value;
 		}
 	}
 	return this;
 };
 
+/**
+ * A safe version of bind
+ * 
+ * Check for cycles
+ * 
+ * @param to
+ */
+Var.prototype.safe_bind = function(to) {
+	
+	var dvar, tvar;
+	var to_is_var = to instanceof Var;
+	
+	if (this.is_anon && to_is_var && to.is_anon)
+		return;
+	
+	var dvar = this.deref(to);
+	if (dvar == null) {
+		console.log("!!!!!!!!!! CYCLE AVERTED! ", this);
+		return;
+	};
+	
+	if (to instanceof Var) {
+		tvar = to.deref(this);
+		if (tvar == null) {
+			console.log("!!!!!!!!!!! CYCLE AVERTED!", to);
+			return;
+		};
+	} else
+		tvar = to;
+	
+	if (dvar == tvar) {
+		console.log("!!!!!!!!!!! CYCLE AVERTED!", to);
+		return;
+	};
+
+	if (dvar.is_anon && to_is_var && tvar.is_anon)
+		return;
+	
+	/*
+	if (to.id)
+		console.log("^^^^^^^^ SAFE BINDING: ", this, this.id, to, to.id);
+	else
+		console.log("^^^^^^^^ SAFE BINDING: ", this, to);
+	*/
+	dvar.bind(tvar);
+};
 
 
 function Value(name) {

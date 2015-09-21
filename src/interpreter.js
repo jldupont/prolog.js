@@ -183,6 +183,10 @@ Interpreter.prototype.backtrack = function() {
 	if (this.tracer)
 		this.tracer("backtracking", this.ctx);
 	
+	
+	this._unwind_trail( this.ctx.tse.trail );
+	
+	
 	// Pretend we've got a failure
 	this.ctx.cu = false;
 	this.ctx.end = false;
@@ -406,10 +410,17 @@ Interpreter.prototype._save_continuation = function(where, instruction_offset) {
 		this.tracer("save", where);
 };
 
-Interpreter.prototype.add_to_trail = function(which_trail, what_var) {
+Interpreter.prototype.maybe_add_to_trail = function(which_trail, what_var) {
+	
+	// We only add unbound variables of course
+	var dvar = what_var.deref();
+	if (dvar.is_bound())
+		return;
 	
 	var var_name = what_var.name;
-	which_trail[var_name] = what_var;
+	which_trail[var_name] = dvar;
+	
+	console.log("**** TRAILED: ", dvar, dvar.id);
 };
 
 
@@ -422,8 +433,16 @@ Interpreter.prototype._unwind_trail = function(which) {
 	
 	for (var v in which) {
 		var trail_var = which[v];
+		
 		var dvar = trail_var.deref();
-		dvar.unbind();
+		if (!dvar.is_bound())
+			continue;
+		
+		console.log("------- ABOUT TO UNBIND: ", trail_var);
+		trail_var.unbind();
+		
+		//var dvar = trail_var.deref();
+		//dvar.unbind();
 	};
 };
 
@@ -461,19 +480,6 @@ Interpreter.prototype.inst_end = function() {
  */
 Interpreter.prototype.inst_setup = function() {
 	
-	/*
-	 * Clean-up target variables
-	 *  We used some variables to construct
-	 *  the main structure at $x0 but we need
-	 *  to get rid of these or else the target
-	 *  functor might unify will values it shouldn't.
-	 */
-	for (var index=1;;index++)
-		if (this.ctx.tse.vars["$x" + index])
-			delete this.ctx.tse.vars["$x" + index];
-		else 
-			break;
-	
 	// We only need an offset of 1 
 	//  because the `fetch instruction` increments
 	//  already by 1.
@@ -502,6 +508,21 @@ Interpreter.prototype.inst_setup = function() {
  *   
  */
 Interpreter.prototype.inst_call = function(inst) {
+	
+	/*
+	 * Clean-up target variables
+	 *  We used some variables to construct
+	 *  the main structure at $x0 but we need
+	 *  to get rid of these or else the target
+	 *  functor might unify will values it shouldn't.
+	 */
+	for (var index=1;;index++)
+		if (this.ctx.tse.vars["$x" + index])
+			delete this.ctx.tse.vars["$x" + index];
+		else 
+			break;
+		
+	console.log("=== CALL, vars: ", this.ctx.tse.vars);
 	
 	// I know it's pessimistic
 	this.ctx.cu = false
@@ -647,7 +668,7 @@ Interpreter.prototype.inst_maybe_retry = function() {
 		// We can try the next clause
 		//  The fetch function will have incremented the
 		//   instruction pointer past this instruction
-		//   so we need to substract 2 to get it pointing
+		//   so we need to subtract 2 to get it pointing
 		//   back to the 'CALL' instruction.
 		//
 		this.ctx.p.i -= 2; 
@@ -659,7 +680,8 @@ Interpreter.prototype.inst_maybe_retry = function() {
 	};
 
 	// unwind trail
-	this._unwind_trail( this.ctx.cse.trail );
+	//  EXCEPT if we are at the query level!
+	this._unwind_trail( this.ctx.tse.trail );
 
 	// NOOP when we reach end of clause list
 	// The failure flag will still be set.
@@ -812,7 +834,7 @@ Interpreter.prototype.inst_put_var = function(inst) {
 	}
 	
 	// Manage the trail
-	this.add_to_trail(this.ctx.cse.trail, local_var);
+	this.maybe_add_to_trail(this.ctx.tse.trail, local_var);
 	
 	struct.push_arg(local_var);
 };
@@ -830,8 +852,6 @@ Interpreter.prototype.inst_put_value = function(inst) {
 	var vname = "$x" + inst.get("x");
 	
 	var value = this.ctx.tse.vars[vname];
-	
-	console.log(")))) PUT VALUE: ", vname, value);
 	
 	// The current structure being worked on
 	var cv = this.ctx.cv;
@@ -860,17 +880,11 @@ Interpreter.prototype.inst_put_value = function(inst) {
 Interpreter.prototype.inst_unif_value = function(inst) {
 	
 	var v = inst.get('p');
-
-	if (!v) {
-		v = "$x" + inst.get('x');
-	};
-	
 	var pv = this.ctx.cse.vars[v];
 	
-	var value = pv.deref();
-	if (!value.is_bound())
-		value = pv;
+	var value = pv.deref().get_value();
 
+	
 	// IMPORTANT: the variable should already
 	//            have been created in the local environment
 	// =====================================================
@@ -886,14 +900,10 @@ Interpreter.prototype.inst_unif_value = function(inst) {
 
 	var from_current_structure = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
-	var result = Utils.unify(value, from_current_structure);
-	
-	this.ctx.cu = (result != null);
+	this.ctx.cu = Utils.unify(from_current_structure, value);
 	
 	if (!this.ctx.cu)
 		this.backtrack();
-	
-	
 };
 
 
@@ -943,9 +953,7 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	//
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
-	var result = Utils.unify(pv, value_or_var);
-	
-	this.ctx.cu = (result != null);
+	this.ctx.cu = Utils.unify(pv, value_or_var);
 	
 	if (!this.ctx.cu)
 		this.backtrack();
@@ -990,9 +998,7 @@ Interpreter.prototype.inst_get_var = function(inst) {
 	};
 		
 	
-	var result = Utils.unify(pv, value_or_var);
-	
-	this.ctx.cu = (result != null);
+	this.ctx.cu = Utils.unify(pv, value_or_var);
 	
 	if (!this.ctx.cu)
 		this.backtrack();
@@ -1137,7 +1143,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 
 			// And don't forget to actually perform
 			//  the 'write'!
-			value.bind( struct );
+			value.safe_bind( struct );
 			
 			// We are successful
 			this.ctx.cu = true;
@@ -1257,7 +1263,7 @@ Interpreter.prototype._get_x = function(inst, type) {
 	// Case (A)
 	//
 	//console.log("Binding ",dvar," with: ", p);
-	dvar.bind(p);
+	dvar.safe_bind(p);
 	this.ctx.cu = true;	
 };
 

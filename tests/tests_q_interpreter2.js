@@ -32,7 +32,7 @@ var ErrorNoMoreInstruction = pr.ErrorNoMoreInstruction;
 function basic_tracer(ctx, it_ctx, data) {
 
 	if (ctx == 'backtracking') {
-		console.log("<<<< BACKTRACKING: ", it_ctx);
+		console.log("<<<< BACKTRACKING: ", it_ctx.cse.cp.p);
 	};
 	
 	if (ctx == 'restore') {
@@ -44,18 +44,18 @@ function basic_tracer(ctx, it_ctx, data) {
 	};
 	
 	if (ctx == 'before_inst') {
-		//console.log("BEFORE: inst(",data,")  CU: ", it_ctx.ctx.cu);
+		console.log("BEFORE: inst(",data,")  CU: ", it_ctx.ctx.cu);
 	};
 	if (ctx == 'after_inst'){
 		console.log("AFTER:  inst(",data,")  CU: ", it_ctx.ctx.cu);
 		//if (data.opcode == 'unif_var')
 		//	console.log(it_ctx.ctx.cse.vars);
+		//if (it_ctx.tse) console.log("VARS: ", it_ctx.tse.vars);		
 	};
 		
 	if (ctx == 'execute') {
 		console.log("\n--> Executing: ",it_ctx.p.f+"/"+it_ctx.p.a, ":"+it_ctx.p.ci, "@ "+it_ctx.p.l);
-		if (it_ctx.tse)
-			console.log("VARS: ", it_ctx.tse.vars);
+		//if (it_ctx.tse) console.log("VARS: ", it_ctx.tse.vars);
 	};
 		
 };
@@ -146,9 +146,14 @@ var compile_query = function(input_text) {
 	
 };
 
-var test = function(rules, query, expected, tracer_enable) {
+var test = function(rules, query, expected, options) {
 	
-	var tracer = tracer_enable ? basic_tracer : undefined;
+	options = options || {};
+	var tracer = options.tracer ? basic_tracer:undefined;
+	
+	//console.log("Tracing: ", tracer);
+	
+	var dumpdb_enable = options.dump_db == true;
 	
 	var it = prepare(rules, query, tracer);
 
@@ -167,7 +172,8 @@ var test = function(rules, query, expected, tracer_enable) {
 			
 			if (!a) {
 				console.log("*** VARS: ", vars);
-				console.log("DB: ", it.db.db)
+				if (dumpdb_enable)
+					console.log("DB: ", it.db.db)
 				throw new Error("Missing expect value @ index:"+vindex);
 			};
 			
@@ -179,7 +185,8 @@ var test = function(rules, query, expected, tracer_enable) {
 				console.log("\n*** VARS: ", vars);
 				//dump_var(it.ctx.cse.vars);
 				//dump_var(it.ctx.tse.vars);
-				dump_db(it.db.db);
+				if (dumpdb_enable)
+					dump_db(it.db.db);
 				throw err;
 			};
 
@@ -190,7 +197,8 @@ var test = function(rules, query, expected, tracer_enable) {
 				should.equal(av, e, "got: "+av+" expecting: "+e);	
 			}catch(e) {
 				console.log("*** VARS: ", vars);
-				dump_db(it.db.db);
+				if (dumpdb_enable)
+					dump_db(it.db.db);
 				throw e;
 			};
 			
@@ -223,7 +231,6 @@ var run = function(it) {
 			result = it.step();	
 		} catch(e) {
 			console.log("\n\n !!!!! CTX: ", it);
-			console.log("\n\n !!!!! DB: ", it.db.db)
 			throw e;
 		};
 		
@@ -294,7 +301,7 @@ it('Interpreter - batch2 - complex - 1', function(){
 
 it('Interpreter - batch2 - complex - 2', function(){
 	
-	//console.log("\n\n\n ~~~~~~~~~~~~~~~ Interpreter - batch2 - complex - 2");
+	console.log("\n\n\n ~~~~~~~~~~~~~~~ Interpreter - batch2 - complex - 2");
 	
 	Var.inspect_extended = false;
 	
@@ -347,18 +354,18 @@ it('Interpreter - batch2 - complex - 2', function(){
 	var query = "puzzle(Houses).";
 	
 	var expected = [
-{"Houses": 'Functor(list/5,Var(A, Functor(house/5,"red","english",Var(_),Var(_),Var(_))),Var(_),Var(_),Var(_),Var(_))'  }
+{"Houses": 'Functor(list/5,Functor(house/5,"red","english",Var(_),Var(_),Var(_)),Var(_),Var(_),Var(_),Var(_))'  }
 	                ];
 	
 	
 	
-	test(rules, query, expected);
+	//test(rules, query, expected, {tracer: true});
 });
 
 
 it('Interpreter - batch2 - program - 1', function(){
 	
-	//console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Interpreter - batch2 - program 1");
+	console.log("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Interpreter - batch2 - program 1");
 	
 	var rules = [
 					 "exists(A, list(A, _, _, _, _))."
@@ -429,6 +436,12 @@ it('Interpreter - batch2 - program - 1', function(){
 	 		house(green,japanese,coffee,parliament,_)
 	 		)
 	 */
+	
+	/*
+
+
+	 */
+	
 	var expected = [
 	{"Houses": ''
 	}
@@ -436,5 +449,5 @@ it('Interpreter - batch2 - program - 1', function(){
 	
 	Var.inspect_extended = false;
 	
-	test(rules, query, expected, true);
+	test(rules, query, expected, { tracer: true });
 });

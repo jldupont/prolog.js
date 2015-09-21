@@ -498,6 +498,8 @@ Functor.prototype.get_arg = function(index) {
  *   and security issues.
  */
 function Var(name) {
+	
+	this.is_anon = (name[0] == '_');
 	this.prec = 0;
 	this.name = name;
 	this.col = null;
@@ -508,17 +510,13 @@ function Var(name) {
 	this.id = Var.counter++;
 	
 	if (this.name[0] == "_")
-		this.name = this.id+"$"+this.name;
+		this.name = this.name+"$"+this.id;
 	
-	//console.log("^^^^ Var("+name+") "+this.id);
+	//console.log(".............. CREATED: ", name, this.name, this.is_anon);
 };
 
 Var.counter = 0;
 Var.inspect_extended = false;
-
-Var.prototype.is_anon = function(){
-	return this.name[0] == "_";
-};
 
 Var.prototype.inspect = function(depth){
 	
@@ -527,7 +525,7 @@ Var.prototype.inspect = function(depth){
 	//  this enable much simpler test case
 	//  crafting and evaluation.
 	//
-	var name = this.name.split("$").pop();
+	var name = this.is_anon ? "_" : this.name;
 	
 	depth = depth || 0;
 	
@@ -552,15 +550,6 @@ Var.prototype.inspect = function(depth){
 
 Var.prototype.bind = function(value) {
 	
-	/*
-	if (this.is_anon()) {
-		// useful for "blackholing" functor construction
-		//
-		this.value = value;
-		return;
-	}
-	*/
-	
 	if (this == value)
 		throw new Error("Attempt to create cycle ...");
 	
@@ -570,7 +559,21 @@ Var.prototype.bind = function(value) {
 	if (this.value != null)
 		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
 	
+	if (value instanceof Var) {
+		if (value.is_anon)
+			if (!value.is_bound())
+				return;
+			else {
+				this.value = value.get_value();
+				console.log("::::: Binded: ", this);
+				return;
+			};
+		
+	}
+	
 	this.value = value;
+	
+	console.log("::::: Binded: ", this);	
 };
 
 Var.prototype.is_bound = function(){
@@ -578,6 +581,7 @@ Var.prototype.is_bound = function(){
 };
 
 Var.prototype.unbind = function(){
+	//console.log(":::::: ABOUT TO UNBIND: ", this, this.id);
 	return this.value = null;
 };
 
@@ -593,19 +597,75 @@ Var.prototype.get_value = function() {
  *   Var(X, Var(Y, Var(Z, 666) ) ) ==> Var(X, 666)
  * 
  */
-Var.prototype.deref = function(){
+Var.prototype.deref = function(check){
 
+	//if (check)
+	//	console.log("???? DEREF: ", this, this.id, check, check.id);
+	
+	if (check && check == this)
+		return null;
+		
 	if (this.value instanceof Var) {
 		
 		if (this.value.is_bound())
-			return this.value.deref();	
+			return this.value.deref(check);	
 		else {
+			
+			if (check && check == this.value)
+				return null;
+			
 			return this.value;
 		}
 	}
 	return this;
 };
 
+/**
+ * A safe version of bind
+ * 
+ * Check for cycles
+ * 
+ * @param to
+ */
+Var.prototype.safe_bind = function(to) {
+	
+	var dvar, tvar;
+	var to_is_var = to instanceof Var;
+	
+	if (this.is_anon && to_is_var && to.is_anon)
+		return;
+	
+	var dvar = this.deref(to);
+	if (dvar == null) {
+		console.log("!!!!!!!!!! CYCLE AVERTED! ", this);
+		return;
+	};
+	
+	if (to instanceof Var) {
+		tvar = to.deref(this);
+		if (tvar == null) {
+			console.log("!!!!!!!!!!! CYCLE AVERTED!", to);
+			return;
+		};
+	} else
+		tvar = to;
+	
+	if (dvar == tvar) {
+		console.log("!!!!!!!!!!! CYCLE AVERTED!", to);
+		return;
+	};
+
+	if (dvar.is_anon && to_is_var && tvar.is_anon)
+		return;
+	
+	/*
+	if (to.id)
+		console.log("^^^^^^^^ SAFE BINDING: ", this, this.id, to, to.id);
+	else
+		console.log("^^^^^^^^ SAFE BINDING: ", this, to);
+	*/
+	dvar.bind(tvar);
+};
 
 
 function Value(name) {
@@ -1752,6 +1812,10 @@ Interpreter.prototype.backtrack = function() {
 	if (this.tracer)
 		this.tracer("backtracking", this.ctx);
 	
+	
+	this._unwind_trail( this.ctx.tse.trail );
+	
+	
 	// Pretend we've got a failure
 	this.ctx.cu = false;
 	this.ctx.end = false;
@@ -1975,10 +2039,17 @@ Interpreter.prototype._save_continuation = function(where, instruction_offset) {
 		this.tracer("save", where);
 };
 
-Interpreter.prototype.add_to_trail = function(which_trail, what_var) {
+Interpreter.prototype.maybe_add_to_trail = function(which_trail, what_var) {
+	
+	// We only add unbound variables of course
+	var dvar = what_var.deref();
+	if (dvar.is_bound())
+		return;
 	
 	var var_name = what_var.name;
-	which_trail[var_name] = what_var;
+	which_trail[var_name] = dvar;
+	
+	console.log("**** TRAILED: ", dvar, dvar.id);
 };
 
 
@@ -1991,8 +2062,16 @@ Interpreter.prototype._unwind_trail = function(which) {
 	
 	for (var v in which) {
 		var trail_var = which[v];
+		
 		var dvar = trail_var.deref();
-		dvar.unbind();
+		if (!dvar.is_bound())
+			continue;
+		
+		console.log("------- ABOUT TO UNBIND: ", trail_var);
+		trail_var.unbind();
+		
+		//var dvar = trail_var.deref();
+		//dvar.unbind();
 	};
 };
 
@@ -2030,19 +2109,6 @@ Interpreter.prototype.inst_end = function() {
  */
 Interpreter.prototype.inst_setup = function() {
 	
-	/*
-	 * Clean-up target variables
-	 *  We used some variables to construct
-	 *  the main structure at $x0 but we need
-	 *  to get rid of these or else the target
-	 *  functor might unify will values it shouldn't.
-	 */
-	for (var index=1;;index++)
-		if (this.ctx.tse.vars["$x" + index])
-			delete this.ctx.tse.vars["$x" + index];
-		else 
-			break;
-	
 	// We only need an offset of 1 
 	//  because the `fetch instruction` increments
 	//  already by 1.
@@ -2071,6 +2137,21 @@ Interpreter.prototype.inst_setup = function() {
  *   
  */
 Interpreter.prototype.inst_call = function(inst) {
+	
+	/*
+	 * Clean-up target variables
+	 *  We used some variables to construct
+	 *  the main structure at $x0 but we need
+	 *  to get rid of these or else the target
+	 *  functor might unify will values it shouldn't.
+	 */
+	for (var index=1;;index++)
+		if (this.ctx.tse.vars["$x" + index])
+			delete this.ctx.tse.vars["$x" + index];
+		else 
+			break;
+		
+	console.log("=== CALL, vars: ", this.ctx.tse.vars);
 	
 	// I know it's pessimistic
 	this.ctx.cu = false
@@ -2216,7 +2297,7 @@ Interpreter.prototype.inst_maybe_retry = function() {
 		// We can try the next clause
 		//  The fetch function will have incremented the
 		//   instruction pointer past this instruction
-		//   so we need to substract 2 to get it pointing
+		//   so we need to subtract 2 to get it pointing
 		//   back to the 'CALL' instruction.
 		//
 		this.ctx.p.i -= 2; 
@@ -2228,7 +2309,8 @@ Interpreter.prototype.inst_maybe_retry = function() {
 	};
 
 	// unwind trail
-	this._unwind_trail( this.ctx.cse.trail );
+	//  EXCEPT if we are at the query level!
+	this._unwind_trail( this.ctx.tse.trail );
 
 	// NOOP when we reach end of clause list
 	// The failure flag will still be set.
@@ -2381,7 +2463,7 @@ Interpreter.prototype.inst_put_var = function(inst) {
 	}
 	
 	// Manage the trail
-	this.add_to_trail(this.ctx.cse.trail, local_var);
+	this.maybe_add_to_trail(this.ctx.tse.trail, local_var);
 	
 	struct.push_arg(local_var);
 };
@@ -2399,8 +2481,6 @@ Interpreter.prototype.inst_put_value = function(inst) {
 	var vname = "$x" + inst.get("x");
 	
 	var value = this.ctx.tse.vars[vname];
-	
-	console.log(")))) PUT VALUE: ", vname, value);
 	
 	// The current structure being worked on
 	var cv = this.ctx.cv;
@@ -2429,17 +2509,11 @@ Interpreter.prototype.inst_put_value = function(inst) {
 Interpreter.prototype.inst_unif_value = function(inst) {
 	
 	var v = inst.get('p');
-
-	if (!v) {
-		v = "$x" + inst.get('x');
-	};
-	
 	var pv = this.ctx.cse.vars[v];
 	
-	var value = pv.deref();
-	if (!value.is_bound())
-		value = pv;
+	var value = pv.deref().get_value();
 
+	
 	// IMPORTANT: the variable should already
 	//            have been created in the local environment
 	// =====================================================
@@ -2455,14 +2529,10 @@ Interpreter.prototype.inst_unif_value = function(inst) {
 
 	var from_current_structure = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
-	var result = Utils.unify(value, from_current_structure);
-	
-	this.ctx.cu = (result != null);
+	this.ctx.cu = Utils.unify(from_current_structure, value);
 	
 	if (!this.ctx.cu)
 		this.backtrack();
-	
-	
 };
 
 
@@ -2512,9 +2582,7 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	//
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
-	var result = Utils.unify(pv, value_or_var);
-	
-	this.ctx.cu = (result != null);
+	this.ctx.cu = Utils.unify(pv, value_or_var);
 	
 	if (!this.ctx.cu)
 		this.backtrack();
@@ -2559,9 +2627,7 @@ Interpreter.prototype.inst_get_var = function(inst) {
 	};
 		
 	
-	var result = Utils.unify(pv, value_or_var);
-	
-	this.ctx.cu = (result != null);
+	this.ctx.cu = Utils.unify(pv, value_or_var);
 	
 	if (!this.ctx.cu)
 		this.backtrack();
@@ -2706,7 +2772,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 
 			// And don't forget to actually perform
 			//  the 'write'!
-			value.bind( struct );
+			value.safe_bind( struct );
 			
 			// We are successful
 			this.ctx.cu = true;
@@ -2826,7 +2892,7 @@ Interpreter.prototype._get_x = function(inst, type) {
 	// Case (A)
 	//
 	//console.log("Binding ",dvar," with: ", p);
-	dvar.bind(p);
+	dvar.safe_bind(p);
 	this.ctx.cu = true;	
 };
 
@@ -3860,7 +3926,13 @@ Utils.compare_objects = function(expected, input, use_throw){
  */
 Utils.unify = function(t1, t2) {
 
+	
 	/*
+++++ Utils.Unify:  Var(_) 937 Var(_, Functor(house/5,Var(_),"spaniard",Var(_),Var(_, Var(_)),"dog")) 849
+::::: Binded:  Var(_, Var(_, Functor(house/5,Var(_),"spaniard",Var(_),Var(_, Var(_)),"dog")))
+
+	 */
+	
 	var t1id, t2id;
 	
 	if (t1)
@@ -3870,70 +3942,86 @@ Utils.unify = function(t1, t2) {
 		t2id = t2.id ? t2.id : "?";
 	
 	console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
-	*/
 	
-	console.log("++++ Utils.Unify: ",t1, t2);
 	
+	//console.log("++++ Utils.Unify: ",t1, t2);
+	
+	/*
+	 *  Covers:
+	 *    null == null
+	 */
 	if (t1 == t2)
 		return true;
 	
-	var v1, v2;
+	var t1_is_var = t1 instanceof Var;
+	var t2_is_var = t2 instanceof Var;
+		
+	var t1d, t2d;
 	
-	//  Bind to t2 when t1 is unbound
-	//
-	if (t1 instanceof Var) {
-	
-		v1 = t1.deref();
+	if (t1_is_var && t2_is_var) {
 
-		if (!v1.is_bound()) {
-			
-			if (v1 != t2) {
-				v1.bind(t2);
-				//console.log(">> unify bound (v1, t2): ",v1, "==>", t2);
-			}
-
-			// both are equal ? don't create a cycle !
-			//console.log(">> unify: cycle cut, t1: ", t1);
+		var t1d = t1.deref(t2);
+		var t2d = t2.deref(t1);
+		
+		// Check for cycle...
+		if (t1d == null || t2d == null)
+			return true;
+		
+		if (t1d.is_bound() && t2d.is_bound()) {
+			return Utils.unify( t1d.get_value(), t2d.get_value() ); 
+		};
+		
+		if (t1d.is_bound()) {
+			t2.safe_bind(t1);
 			return true;
 		};
 		
-		v1 = v1.get_value();
-	} else
-		v1 = t1;
-	
-	
-	
-	if (t2 instanceof Var) {
-		
-		v2 = t2.deref();
-
-		if (!v2.is_bound()) {
-			
-			if (v1 != v2) {
-				v2.bind(v1);
-				//console.log(">> unify bound (v2,t1): ",v2, "==>", t1);
-			};
-
-			// both are equal ? don't create a cycle !
+		if (t2d.is_bound()) {
+			t1.safe_bind(t2);
 			return true;
 		};
 		
-		v2 = t2.get_value();
-	} else
-		v2 = t2;
+		// Both unbound
+		// ============
+		
+		if (t1d.is_anon && t2d.is_anon)
+			return false;
 
-	
-	if (v1 == v2)
+		t1d.bind(t2);
 		return true;
+	};
+	
+	if (t1_is_var) {
+		t1d = t1d || t1.deref();
+		
+		if (t1d.is_bound()) {
+			return Utils.unify(t1d.get_value(), t2);
+		};
+		
+		t1d.bind(t2);
+		return true;
+	};
+	
+	if (t2_is_var) {
+		t2d = t2d || t2.deref();
+		
+		if (t2d.is_bound()) {
+			return Utils.unify(t2d.get_value(), t1);
+		};
+		
+		t2d.bind(t1);
+		return true;
+	};
 	
 
-	if (v1 instanceof Functor && v2 instanceof Functor) {
+	
+	if (t1 instanceof Functor && t2 instanceof Functor) {
 
-		if (v1.args.length != v2.args.length)
+		if (t1.args.length != t2.args.length)
 			return false;
 		
-		for (var index in v1.args)
-			if (!this.unify(v1.args[index], v2.args[index]))
+		for (var index in t1.args)
+			if (!Utils.unify(t1.args[index], t2.args[index]))
 				return false;
 		
 		return true;

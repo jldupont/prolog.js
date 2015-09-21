@@ -170,7 +170,13 @@ Utils.compare_objects = function(expected, input, use_throw){
  */
 Utils.unify = function(t1, t2) {
 
+	
 	/*
+++++ Utils.Unify:  Var(_) 937 Var(_, Functor(house/5,Var(_),"spaniard",Var(_),Var(_, Var(_)),"dog")) 849
+::::: Binded:  Var(_, Var(_, Functor(house/5,Var(_),"spaniard",Var(_),Var(_, Var(_)),"dog")))
+
+	 */
+	
 	var t1id, t2id;
 	
 	if (t1)
@@ -180,70 +186,86 @@ Utils.unify = function(t1, t2) {
 		t2id = t2.id ? t2.id : "?";
 	
 	console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
-	*/
 	
-	console.log("++++ Utils.Unify: ",t1, t2);
 	
+	//console.log("++++ Utils.Unify: ",t1, t2);
+	
+	/*
+	 *  Covers:
+	 *    null == null
+	 */
 	if (t1 == t2)
 		return true;
 	
-	var v1, v2;
+	var t1_is_var = t1 instanceof Var;
+	var t2_is_var = t2 instanceof Var;
+		
+	var t1d, t2d;
 	
-	//  Bind to t2 when t1 is unbound
-	//
-	if (t1 instanceof Var) {
-	
-		v1 = t1.deref();
+	if (t1_is_var && t2_is_var) {
 
-		if (!v1.is_bound()) {
-			
-			if (v1 != t2) {
-				v1.bind(t2);
-				//console.log(">> unify bound (v1, t2): ",v1, "==>", t2);
-			}
-
-			// both are equal ? don't create a cycle !
-			//console.log(">> unify: cycle cut, t1: ", t1);
+		var t1d = t1.deref(t2);
+		var t2d = t2.deref(t1);
+		
+		// Check for cycle...
+		if (t1d == null || t2d == null)
+			return true;
+		
+		if (t1d.is_bound() && t2d.is_bound()) {
+			return Utils.unify( t1d.get_value(), t2d.get_value() ); 
+		};
+		
+		if (t1d.is_bound()) {
+			t2.safe_bind(t1);
 			return true;
 		};
 		
-		v1 = v1.get_value();
-	} else
-		v1 = t1;
-	
-	
-	
-	if (t2 instanceof Var) {
-		
-		v2 = t2.deref();
-
-		if (!v2.is_bound()) {
-			
-			if (v1 != v2) {
-				v2.bind(v1);
-				//console.log(">> unify bound (v2,t1): ",v2, "==>", t1);
-			};
-
-			// both are equal ? don't create a cycle !
+		if (t2d.is_bound()) {
+			t1.safe_bind(t2);
 			return true;
 		};
 		
-		v2 = t2.get_value();
-	} else
-		v2 = t2;
+		// Both unbound
+		// ============
+		
+		if (t1d.is_anon && t2d.is_anon)
+			return false;
 
-	
-	if (v1 == v2)
+		t1d.bind(t2);
 		return true;
+	};
+	
+	if (t1_is_var) {
+		t1d = t1d || t1.deref();
+		
+		if (t1d.is_bound()) {
+			return Utils.unify(t1d.get_value(), t2);
+		};
+		
+		t1d.bind(t2);
+		return true;
+	};
+	
+	if (t2_is_var) {
+		t2d = t2d || t2.deref();
+		
+		if (t2d.is_bound()) {
+			return Utils.unify(t2d.get_value(), t1);
+		};
+		
+		t2d.bind(t1);
+		return true;
+	};
 	
 
-	if (v1 instanceof Functor && v2 instanceof Functor) {
+	
+	if (t1 instanceof Functor && t2 instanceof Functor) {
 
-		if (v1.args.length != v2.args.length)
+		if (t1.args.length != t2.args.length)
 			return false;
 		
-		for (var index in v1.args)
-			if (!this.unify(v1.args[index], v2.args[index]))
+		for (var index in t1.args)
+			if (!Utils.unify(t1.args[index], t2.args[index]))
 				return false;
 		
 		return true;

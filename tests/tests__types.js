@@ -439,8 +439,13 @@ it('_Types - Var - Deref - 3', function(){
 	var v2 = new Var('Y');
 	var v3 = new Var('Z');
 	
+	// X = Y
 	v1.bind( v2 );
+	
+	// Y = Z
 	v2.bind( v3 );
+	
+	// Z = 666
 	v3.bind( 666 );
 	
 	var var1 = v1.deref();

@@ -198,22 +198,35 @@ it('Utils - Unify - anon - 4', function(){
 
 	var result = Utils.unify(a1, a2);
 
-	should.ok(result);
+	should.equal(result, false);
 });
 
 
-/*
+
 it('Utils - Unify - deref - 1', function(){
 
-	//console.log("~~~~ Utils - Unify - var 3");
-	
 	var x = new Var('x');
 	var y = new Var('y');
 	
+	// y = x
 	y.bind(x);
-	x.bind(y);
 	
-	x.deref();
+	var result = x.deref(x);
+	
+	should.equal(result, null);
 	
 });
-*/
+
+it('Utils - Unify - deref - 2', function(){
+
+	var x = new Var('x');
+	var y = new Var('y');
+	
+	// y = x
+	y.bind(x);
+	
+	var result = y.deref(x);
+	
+	should.equal(result, null);
+	
+});
