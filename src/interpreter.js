@@ -836,6 +836,8 @@ Interpreter.prototype.inst_put_var = function(inst) {
 	// Manage the trail
 	this.maybe_add_to_trail(this.ctx.tse.trail, local_var);
 	
+	// TODO Shouldn't we deref ??
+	
 	struct.push_arg(local_var);
 };
 
