@@ -72,8 +72,8 @@ function advanced_tracer(where, it_ctx, data) {
 	
 	if (where == 'execute') {
 		//console.log("\n--> Executing: ",it_ctx.p.f+"/"+it_ctx.p.a, ":"+it_ctx.p.ci, "@ "+it_ctx.p.l);
-		if (it_ctx.tse) console.log("\n---- TSE VARS: ", it_ctx.tse.vars);
-		if (it_ctx.cse) console.log("\n++++ CSE VARS: ", it_ctx.cse.vars);
+		//if (it_ctx.tse) console.log("\n---- TSE VARS: ", it_ctx.tse.vars);
+		//if (it_ctx.cse) console.log("\n++++ CSE VARS: ", it_ctx.cse.vars);
 	};
 	
 	
@@ -494,7 +494,7 @@ it('Interpreter - batch2 - program - 1', function(){
 	                 */
 	             ];
 	
-	var query = "puzzle(Houses).";
+	var query = "puzzle3(Houses).";
 	
 	/*
 	 * puzzle1 solution:  GOOD!
@@ -567,7 +567,9 @@ it('Interpreter - batch2 - program - 1', function(){
 	}
 	                ];
 	
+	Functor.inspect_compact_version = true;
 	Var.inspect_extended = false;
+	Var.inspect_compact = true;
 	
 	test(rules, query, expected, { tracer: advanced_tracer });
 	//test(rules, query, expected);

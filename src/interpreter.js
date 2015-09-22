@@ -94,7 +94,6 @@ Interpreter.prototype.set_question = function(question_code){
 		 *         
 		 *   csm:  The current mode, either "r" or "w".
 		 *   
-		 *   csv:  The current variable being used in "w" mode.
 		 */
 		,cs:  null
 		,csx: null   
@@ -631,10 +630,11 @@ Interpreter.prototype.inst_allocate = function() {
  *   - Choice Point fails & no other clause : deallocate environment
  */
 Interpreter.prototype.inst_deallocate = function() {
+
 	
 	if (this.ctx.tse.qenv)
 		return;
-	
+
 	if (this.ctx.tse.p.ci+1 >= this.ctx.tse.p.ct) {
 		this._deallocate();	
 		return;
@@ -832,7 +832,8 @@ Interpreter.prototype.inst_put_var = function(inst) {
 	if (!local_var) {
 		local_var = new Var(vname);
 		this.ctx.cse.vars[local_var.name] = local_var;
-	} else
+	} 
+	else
 		local_var = local_var.deref();
 	
 	// Manage the trail
@@ -859,11 +860,7 @@ Interpreter.prototype.inst_put_value = function(inst) {
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
 
-	// TODO manage Var case??
-	
 	struct.push_arg(value);
-	
-	// TODO manage trail
 };
 
 
@@ -980,23 +977,24 @@ Interpreter.prototype.inst_get_var = function(inst) {
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
 	/*
-	 *  Step 1: if we find a variable in the structure
-	 *          being deconstructed, put it locally.
+	 *  If we find a variable in the structure
+	 *     being deconstructed, put it locally.
 	 */
 	if (value_or_var instanceof Var) {
-		//console.log("-- get_var: putting local: ", value_or_var);
 		this.ctx.cse.vars[p] = value_or_var;
+		this.ctx.cu = true;
 		return;
 	};
 
+	/*
+	 *  Anything kept locally must go
+	 *   in a proper variable
+	 */
 	var pv = this.ctx.cse.vars[p];
 	
 	if (!pv) {
-		
 		pv = new Var(p);
 		this.ctx.cse.vars[pv.name] = pv;
-		
-		//console.log("-- get_var: CREATED: ", pv);
 	};
 		
 	
@@ -1063,8 +1061,8 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	//   structure in `write` mode.
 	//
 	if (x != this.ctx.csx) {
+		
 		this.ctx.csm = 'r';
-		this.ctx.csv = null;
 		this.ctx.csx = x;
 		
 	} else {
@@ -1083,8 +1081,12 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	
 	// Assume this will fail to be on the safe side
 	//
-	this.ctx.cs = null;
 	this.ctx.cu = false;
+	
+	// Prepare
+	this.ctx.cs = null;
+	this.ctx.csi = 0;
+	
 
 	
 	// Fetch the value from the target input variable
@@ -1140,6 +1142,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 			var struct = new Functor(fname);
 			this.ctx.cs = struct;
 			
+			
 			// Also update the current environment
 			//this.ctx.cse.vars[x] = struct;
 
@@ -1157,21 +1160,15 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 
 	if (value instanceof Functor) {
 		
-		//console.log("~~~~~ GET_STRUCT, expecting: ", fname, value.get_name());
-		//console.log("~~~~~ VARS: ", this.ctx.cse.vars);
-		
 		if (value.get_name() != fname) {
 			return this.backtrack();	
 		};
 
-		//console.log("~~~~~ GET_STRUCT, expecting: ", +farity);
-		
 		if (value.get_arity() != +farity ) {
 			return this.backtrack();
 		};
 		
 		this.ctx.cs = value;
-		this.ctx.csi = 0;
 		this.ctx.cu = true;
 		this.ctx.csm = 'r';
 		return;
@@ -1242,7 +1239,7 @@ Interpreter.prototype._get_x = function(inst, type) {
 	//
 	if (value_or_var instanceof Token) {
 		if (value_or_var.name == type) {
-			this.ctx.cu = ( value_or_var.value == p);
+			this.ctx.cu = ( value_or_var.value == p );
 			return;
 		};
 	};

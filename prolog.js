@@ -418,6 +418,7 @@ Functor.prototype.get_name = function(){
 	return this.name;
 };
 
+Functor.inspect_compact_version = false;
 Functor.inspect_short_version = false;
 Functor.inspect_quoted = false;
 
@@ -427,12 +428,21 @@ Functor.prototype.inspect = function(){
 	
 	var arity = this.arity || this.args.length;
 	
-	if (Functor.inspect_short_version)
-		result = "Functor("+this.name+"/"+arity+")";
-	else {
+	if (Functor.inspect_compact_version) {
 		var fargs = this.format_args(this.args);
-		result = "Functor("+this.name+"/"+arity+","+fargs+")";
-	}
+		result = this.name+"("+fargs+")";
+		
+	} else {
+		
+		if (Functor.inspect_short_version)
+			result = "Functor("+this.name+"/"+arity+")";
+		else {
+			var fargs = this.format_args(this.args);
+			result = "Functor("+this.name+"/"+arity+","+fargs+")";
+		}
+		
+	}; 
+	
 	
 	if (Functor.inspect_quoted)
 		result = "'"+result+"'";
@@ -517,6 +527,7 @@ function Var(name) {
 
 Var.counter = 0;
 Var.inspect_extended = false;
+Var.inspect_compact = false;
 
 Var.prototype.inspect = function(depth){
 	
@@ -536,16 +547,24 @@ Var.prototype.inspect = function(depth){
 		
 		var value = this.value.inspect? this.value.inspect(depth+1) : this.value;
 		
-		if (Var.inspect_extended)
-			return "Var("+name+", "+value+"){"+this.id+"}";
-		else
-			return "Var("+name+", "+value+")";
+		if (Var.inspect_compact) {
+			return value;
+		} else {
+			if (Var.inspect_extended)
+				return "Var("+name+", "+value+"){"+this.id+"}";
+			else
+				return "Var("+name+", "+value+")";
+		};
+		
 	};
 		
-	if (Var.inspect_extended)
-		return "Var("+name+"){"+this.id+"}";
-	else
-		return "Var("+name+")";
+	if (Var.inspect_compact) {
+		return "_"; 
+	} else
+		if (Var.inspect_extended)
+			return "Var("+name+"){"+this.id+"}";
+		else
+			return "Var("+name+")";
 };
 
 Var.prototype.bind = function(value) {
@@ -583,6 +602,8 @@ Var.prototype.get_value = function() {
 /**
  *   Var(X, Var(Y, Var(Z, 666) ) ) ==> Var(X, 666)
  * 
+ *   Check for cycles
+ *   
  */
 Var.prototype.deref = function(check){
 
@@ -1702,7 +1723,6 @@ Interpreter.prototype.set_question = function(question_code){
 		 *         
 		 *   csm:  The current mode, either "r" or "w".
 		 *   
-		 *   csv:  The current variable being used in "w" mode.
 		 */
 		,cs:  null
 		,csx: null   
@@ -1998,11 +2018,13 @@ Interpreter.prototype._restore_continuation = function(from) {
 		this.tracer("restore", from);
 	
 	this.ctx.cse  = from.ce;
+	this.ctx.te   = from.te;
 	this.ctx.p.f  = from.p.f;
 	this.ctx.p.a  = from.p.a;
 	this.ctx.p.ci = from.p.ci;
 	this.ctx.p.ct = from.p.ct;
 	this.ctx.p.l  = from.p.l;
+	this.ctx.p.i  = from.p.i;
 	this.ctx.p.i  = from.p.i;
 };
 
@@ -2013,6 +2035,7 @@ Interpreter.prototype._save_continuation = function(where, instruction_offset) {
 	where.p = {};
 	
 	where.ce   = this.ctx.cse;
+	where.te   = this.ctx.te;
 	where.p.f  = this.ctx.p.f;
 	where.p.a  = this.ctx.p.a;
 	where.p.ci = this.ctx.p.ci;
@@ -2102,11 +2125,8 @@ Interpreter.prototype.inst_setup = function() {
 	
 	// Reset clause index
 	//
-	this.ctx.tse.cp.p.ci = 0;
-	
-	// Get ready for `head` related instructions
-	this.ctx.cs = null;
-	this.ctx.csx = 0;
+	// TODO is this really necessary ??
+	//this.ctx.tse.cp.p.ci = 0;
 	
 };
 
@@ -2138,6 +2158,11 @@ Interpreter.prototype.inst_call = function(inst) {
 		
 	// I know it's pessimistic
 	this.ctx.cu = false
+	
+	// Get ready for `head` related instructions
+	this.ctx.cs = null;
+	this.ctx.csx = 0;
+	
 	
 	// Get functor name & arity from the 
 	//  environment variable x0
@@ -2201,11 +2226,6 @@ Interpreter.prototype.inst_maybe_retry = function() {
 		//   back to the 'CALL' instruction.
 		//
 		this.ctx.p.i -= 2; 
-		
-		// Get ready for `head` related instructions
-		this.ctx.cs = null;
-		this.ctx.csx = 0;
-		
 	};
 
 	this._unwind_trail( this.ctx.tse.trail );
@@ -2239,10 +2259,11 @@ Interpreter.prototype.inst_allocate = function() {
  *   - Choice Point fails & no other clause : deallocate environment
  */
 Interpreter.prototype.inst_deallocate = function() {
+
 	
 	if (this.ctx.tse.qenv)
 		return;
-	
+
 	if (this.ctx.tse.p.ci+1 >= this.ctx.tse.p.ct) {
 		this._deallocate();	
 		return;
@@ -2336,10 +2357,11 @@ Interpreter.prototype.inst_maybe_fail = function() {
 	//
 	if (this.ctx.cse.te) {
 		
+		this._goto( this.ctx.cse.te );
+		
 		// just making sure
 		this.ctx.cse.te = null;
 		
-		this._goto( this.ctx.cse.te );
 		return;
 	};
 	
@@ -2439,7 +2461,8 @@ Interpreter.prototype.inst_put_var = function(inst) {
 	if (!local_var) {
 		local_var = new Var(vname);
 		this.ctx.cse.vars[local_var.name] = local_var;
-	} else
+	} 
+	else
 		local_var = local_var.deref();
 	
 	// Manage the trail
@@ -2466,11 +2489,7 @@ Interpreter.prototype.inst_put_value = function(inst) {
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
 
-	// TODO manage Var case??
-	
 	struct.push_arg(value);
-	
-	// TODO manage trail
 };
 
 
@@ -2587,23 +2606,24 @@ Interpreter.prototype.inst_get_var = function(inst) {
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
 	/*
-	 *  Step 1: if we find a variable in the structure
-	 *          being deconstructed, put it locally.
+	 *  If we find a variable in the structure
+	 *     being deconstructed, put it locally.
 	 */
 	if (value_or_var instanceof Var) {
-		//console.log("-- get_var: putting local: ", value_or_var);
 		this.ctx.cse.vars[p] = value_or_var;
+		this.ctx.cu = true;
 		return;
 	};
 
+	/*
+	 *  Anything kept locally must go
+	 *   in a proper variable
+	 */
 	var pv = this.ctx.cse.vars[p];
 	
 	if (!pv) {
-		
 		pv = new Var(p);
 		this.ctx.cse.vars[pv.name] = pv;
-		
-		//console.log("-- get_var: CREATED: ", pv);
 	};
 		
 	
@@ -2670,8 +2690,8 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	//   structure in `write` mode.
 	//
 	if (x != this.ctx.csx) {
+		
 		this.ctx.csm = 'r';
-		this.ctx.csv = null;
 		this.ctx.csx = x;
 		
 	} else {
@@ -2690,8 +2710,12 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	
 	// Assume this will fail to be on the safe side
 	//
-	this.ctx.cs = null;
 	this.ctx.cu = false;
+	
+	// Prepare
+	this.ctx.cs = null;
+	this.ctx.csi = 0;
+	
 
 	
 	// Fetch the value from the target input variable
@@ -2747,6 +2771,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 			var struct = new Functor(fname);
 			this.ctx.cs = struct;
 			
+			
 			// Also update the current environment
 			//this.ctx.cse.vars[x] = struct;
 
@@ -2764,21 +2789,15 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 
 	if (value instanceof Functor) {
 		
-		//console.log("~~~~~ GET_STRUCT, expecting: ", fname, value.get_name());
-		//console.log("~~~~~ VARS: ", this.ctx.cse.vars);
-		
 		if (value.get_name() != fname) {
 			return this.backtrack();	
 		};
 
-		//console.log("~~~~~ GET_STRUCT, expecting: ", +farity);
-		
 		if (value.get_arity() != +farity ) {
 			return this.backtrack();
 		};
 		
 		this.ctx.cs = value;
-		this.ctx.csi = 0;
 		this.ctx.cu = true;
 		this.ctx.csm = 'r';
 		return;
@@ -2849,7 +2868,7 @@ Interpreter.prototype._get_x = function(inst, type) {
 	//
 	if (value_or_var instanceof Token) {
 		if (value_or_var.name == type) {
-			this.ctx.cu = ( value_or_var.value == p);
+			this.ctx.cu = ( value_or_var.value == p );
 			return;
 		};
 	};

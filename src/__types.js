@@ -424,6 +424,7 @@ Functor.prototype.get_name = function(){
 	return this.name;
 };
 
+Functor.inspect_compact_version = false;
 Functor.inspect_short_version = false;
 Functor.inspect_quoted = false;
 
@@ -433,12 +434,21 @@ Functor.prototype.inspect = function(){
 	
 	var arity = this.arity || this.args.length;
 	
-	if (Functor.inspect_short_version)
-		result = "Functor("+this.name+"/"+arity+")";
-	else {
+	if (Functor.inspect_compact_version) {
 		var fargs = this.format_args(this.args);
-		result = "Functor("+this.name+"/"+arity+","+fargs+")";
-	}
+		result = this.name+"("+fargs+")";
+		
+	} else {
+		
+		if (Functor.inspect_short_version)
+			result = "Functor("+this.name+"/"+arity+")";
+		else {
+			var fargs = this.format_args(this.args);
+			result = "Functor("+this.name+"/"+arity+","+fargs+")";
+		}
+		
+	}; 
+	
 	
 	if (Functor.inspect_quoted)
 		result = "'"+result+"'";
@@ -523,6 +533,7 @@ function Var(name) {
 
 Var.counter = 0;
 Var.inspect_extended = false;
+Var.inspect_compact = false;
 
 Var.prototype.inspect = function(depth){
 	
@@ -542,16 +553,24 @@ Var.prototype.inspect = function(depth){
 		
 		var value = this.value.inspect? this.value.inspect(depth+1) : this.value;
 		
-		if (Var.inspect_extended)
-			return "Var("+name+", "+value+"){"+this.id+"}";
-		else
-			return "Var("+name+", "+value+")";
+		if (Var.inspect_compact) {
+			return value;
+		} else {
+			if (Var.inspect_extended)
+				return "Var("+name+", "+value+"){"+this.id+"}";
+			else
+				return "Var("+name+", "+value+")";
+		};
+		
 	};
 		
-	if (Var.inspect_extended)
-		return "Var("+name+"){"+this.id+"}";
-	else
-		return "Var("+name+")";
+	if (Var.inspect_compact) {
+		return "_"; 
+	} else
+		if (Var.inspect_extended)
+			return "Var("+name+"){"+this.id+"}";
+		else
+			return "Var("+name+")";
 };
 
 Var.prototype.bind = function(value) {
@@ -589,6 +608,8 @@ Var.prototype.get_value = function() {
 /**
  *   Var(X, Var(Y, Var(Z, 666) ) ) ==> Var(X, 666)
  * 
+ *   Check for cycles
+ *   
  */
 Var.prototype.deref = function(check){
 
