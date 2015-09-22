@@ -494,7 +494,8 @@ Interpreter.prototype.inst_setup = function() {
 	
 	// Reset clause index
 	//
-	this.ctx.tse.cp.p.ci = 0;
+	// TODO is this really necessary ??
+	//this.ctx.tse.cp.p.ci = 0;
 	
 };
 
