@@ -728,10 +728,11 @@ Interpreter.prototype.inst_maybe_fail = function() {
 	//
 	if (this.ctx.cse.te) {
 		
+		this._goto( this.ctx.cse.te );
+		
 		// just making sure
 		this.ctx.cse.te = null;
 		
-		this._goto( this.ctx.cse.te );
 		return;
 	};
 	
