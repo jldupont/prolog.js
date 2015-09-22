@@ -306,7 +306,7 @@ Interpreter.prototype._get_code = function(functor_name, arity, clause_index) {
 		return ErrorFunctorCodeNotFound("Functor clause code not found: "+functor_name+"/"+arity);
 	
 	//console.log(">>> GOT CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index, " CODE: ", result);
-	console.log(">>> GOT CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index);
+	//console.log(">>> GOT CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index);
 	
 	return result;
 	

@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-09-21 */
+/*! prolog.js - v0.0.1 - 2015-09-22 */
 
 /**
  *  Token
@@ -558,19 +558,7 @@ Var.prototype.bind = function(value) {
 	
 	if (this.value != null)
 		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
-	/*
-	if (value instanceof Var) {
-		if (value.is_anon)
-			if (!value.is_bound())
-				return;
-			else {
-				this.value = value.get_value();
-				console.log("::::: Binded: ", this);
-				return;
-			};
-		
-	}
-	*/
+	
 	this.value = value;
 	
 	//console.log("::::: Binded: ", this);	
@@ -581,7 +569,6 @@ Var.prototype.is_bound = function(){
 };
 
 Var.prototype.unbind = function(){
-	//console.log(":::::: ABOUT TO UNBIND: ", this, this.id);
 	return this.value = null;
 };
 
@@ -599,9 +586,6 @@ Var.prototype.get_value = function() {
  */
 Var.prototype.deref = function(check){
 
-	//if (check)
-	//	console.log("???? DEREF: ", this, this.id, check, check.id);
-	
 	if (check && check == this)
 		return null;
 		
@@ -632,9 +616,6 @@ Var.prototype.safe_bind = function(to) {
 	var dvar, tvar;
 	var to_is_var = to instanceof Var;
 	
-	//if (this.is_anon && to_is_var && to.is_anon)
-	//	return;
-	
 	var dvar = this.deref(to);
 	if (dvar == null) {
 		console.log("!!!!!!!!!! CYCLE AVERTED! ", this);
@@ -655,15 +636,6 @@ Var.prototype.safe_bind = function(to) {
 		return;
 	};
 
-	//if (dvar.is_anon && to_is_var && tvar.is_anon)
-	//	return;
-	
-	/*
-	if (to.id)
-		console.log("^^^^^ BINDING: ", this, this.id, to, to.id);
-	else
-		console.log("^^^^^ BINDING: ", this, to);
-	*/
 	dvar.bind(tvar);
 };
 
@@ -1942,7 +1914,7 @@ Interpreter.prototype._get_code = function(functor_name, arity, clause_index) {
 		return ErrorFunctorCodeNotFound("Functor clause code not found: "+functor_name+"/"+arity);
 	
 	//console.log(">>> GOT CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index, " CODE: ", result);
-	console.log(">>> GOT CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index);
+	//console.log(">>> GOT CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index);
 	
 	return result;
 	
@@ -3935,12 +3907,6 @@ Utils.compare_objects = function(expected, input, use_throw){
 Utils.unify = function(t1, t2) {
 
 	
-	/*
-++++ Utils.Unify:  Var(_) 937 Var(_, Functor(house/5,Var(_),"spaniard",Var(_),Var(_, Var(_)),"dog")) 849
-::::: Binded:  Var(_, Var(_, Functor(house/5,Var(_),"spaniard",Var(_),Var(_, Var(_)),"dog")))
-
-	 */
-	
 	var t1id, t2id;
 	
 	if (t1)
@@ -3952,9 +3918,9 @@ Utils.unify = function(t1, t2) {
 	//console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
 	
 	
-	console.log("\n");
-	console.log("++++ Utils.Unify: t1 = ",t1);
-	console.log("++++ Utils.Unify: t2 = ",t2);
+	//console.log("\n");
+	//console.log("++++ Utils.Unify: t1 = ",t1);
+	//console.log("++++ Utils.Unify: t2 = ",t2);
 	
 	/*
 	 *  Covers:
@@ -3974,8 +3940,10 @@ Utils.unify = function(t1, t2) {
 		var t2d = t2.deref(t1);
 		
 		// Check for cycle...
-		if (t1d == null || t2d == null)
+		if (t1d == null || t2d == null){
+			//console.log("CYCLE AVERTED!");
 			return true;
+		}
 		
 		if (t1d.is_bound() && t2d.is_bound()) {
 			return Utils.unify( t1d.get_value(), t2d.get_value() ); 

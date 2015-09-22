@@ -68,8 +68,16 @@ function advanced_tracer(where, it_ctx, data) {
 	
 	var line = ""; 
 	var maybe_value, maybe_var;
+
 	
-	if (where == 'after_inst') {
+	if (where == 'execute') {
+		//console.log("\n--> Executing: ",it_ctx.p.f+"/"+it_ctx.p.a, ":"+it_ctx.p.ci, "@ "+it_ctx.p.l);
+		if (it_ctx.tse) console.log("\n---- TSE VARS: ", it_ctx.tse.vars);
+		if (it_ctx.cse) console.log("\n++++ CSE VARS: ", it_ctx.cse.vars);
+	};
+	
+	
+	if (where == 'before_inst') {
 		
 		line = Utils.pad(""+it_ctx.ctx.step_counter, 5) + " -- ";
 		
@@ -92,6 +100,9 @@ function advanced_tracer(where, it_ctx, data) {
 			line += util.inspect(maybe_value);
 		
 		console.log(line);
+		//console.log(">> STACK DEPTH: ", it_ctx.stack.length);
+		//console.log("!!!!! NUMBER OF VARS: ", Var.counter);
+		
 	};
 	
 };//advanced_tracer
@@ -483,7 +494,7 @@ it('Interpreter - batch2 - program - 1', function(){
 	                 */
 	             ];
 	
-	var query = "puzzle4(Houses).";
+	var query = "puzzle(Houses).";
 	
 	/*
 	 * puzzle1 solution:  GOOD!
@@ -559,4 +570,5 @@ it('Interpreter - batch2 - program - 1', function(){
 	Var.inspect_extended = false;
 	
 	test(rules, query, expected, { tracer: advanced_tracer });
+	//test(rules, query, expected);
 });

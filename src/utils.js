@@ -171,12 +171,6 @@ Utils.compare_objects = function(expected, input, use_throw){
 Utils.unify = function(t1, t2) {
 
 	
-	/*
-++++ Utils.Unify:  Var(_) 937 Var(_, Functor(house/5,Var(_),"spaniard",Var(_),Var(_, Var(_)),"dog")) 849
-::::: Binded:  Var(_, Var(_, Functor(house/5,Var(_),"spaniard",Var(_),Var(_, Var(_)),"dog")))
-
-	 */
-	
 	var t1id, t2id;
 	
 	if (t1)
@@ -188,9 +182,9 @@ Utils.unify = function(t1, t2) {
 	//console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
 	
 	
-	console.log("\n");
-	console.log("++++ Utils.Unify: t1 = ",t1);
-	console.log("++++ Utils.Unify: t2 = ",t2);
+	//console.log("\n");
+	//console.log("++++ Utils.Unify: t1 = ",t1);
+	//console.log("++++ Utils.Unify: t2 = ",t2);
 	
 	/*
 	 *  Covers:
@@ -210,8 +204,10 @@ Utils.unify = function(t1, t2) {
 		var t2d = t2.deref(t1);
 		
 		// Check for cycle...
-		if (t1d == null || t2d == null)
+		if (t1d == null || t2d == null){
+			//console.log("CYCLE AVERTED!");
 			return true;
+		}
 		
 		if (t1d.is_bound() && t2d.is_bound()) {
 			return Utils.unify( t1d.get_value(), t2d.get_value() ); 

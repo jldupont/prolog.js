@@ -564,19 +564,7 @@ Var.prototype.bind = function(value) {
 	
 	if (this.value != null)
 		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
-	/*
-	if (value instanceof Var) {
-		if (value.is_anon)
-			if (!value.is_bound())
-				return;
-			else {
-				this.value = value.get_value();
-				console.log("::::: Binded: ", this);
-				return;
-			};
-		
-	}
-	*/
+	
 	this.value = value;
 	
 	//console.log("::::: Binded: ", this);	
@@ -587,7 +575,6 @@ Var.prototype.is_bound = function(){
 };
 
 Var.prototype.unbind = function(){
-	//console.log(":::::: ABOUT TO UNBIND: ", this, this.id);
 	return this.value = null;
 };
 
@@ -605,9 +592,6 @@ Var.prototype.get_value = function() {
  */
 Var.prototype.deref = function(check){
 
-	//if (check)
-	//	console.log("???? DEREF: ", this, this.id, check, check.id);
-	
 	if (check && check == this)
 		return null;
 		
@@ -638,9 +622,6 @@ Var.prototype.safe_bind = function(to) {
 	var dvar, tvar;
 	var to_is_var = to instanceof Var;
 	
-	//if (this.is_anon && to_is_var && to.is_anon)
-	//	return;
-	
 	var dvar = this.deref(to);
 	if (dvar == null) {
 		console.log("!!!!!!!!!! CYCLE AVERTED! ", this);
@@ -661,15 +642,6 @@ Var.prototype.safe_bind = function(to) {
 		return;
 	};
 
-	//if (dvar.is_anon && to_is_var && tvar.is_anon)
-	//	return;
-	
-	/*
-	if (to.id)
-		console.log("^^^^^ BINDING: ", this, this.id, to, to.id);
-	else
-		console.log("^^^^^ BINDING: ", this, to);
-	*/
 	dvar.bind(tvar);
 };
 
