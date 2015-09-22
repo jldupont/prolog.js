@@ -331,11 +331,11 @@ Interpreter.prototype._execute = function( ctx ){
 	
 	if (ctx) {
 		result = this._get_code(ctx.f, ctx.a, ctx.ci);
-		this.ctx.p.f = ctx.f;
-		this.ctx.p.a = ctx.a;
+		this.ctx.p.f  = ctx.f;
+		this.ctx.p.a  = ctx.a;
 		this.ctx.p.ci = ctx.ci
 
-		this.ctx.cc = result.cc;
+		this.ctx.cc   = result.cc;
 		this.ctx.p.ct = result.ct;
 		
 	}
@@ -396,7 +396,7 @@ Interpreter.prototype._restore_continuation = function(from) {
 	this.ctx.p.ct = from.p.ct;
 	this.ctx.p.l  = from.p.l;
 	this.ctx.p.i  = from.p.i;
-	this.ctx.p.i  = from.p.i;
+
 };
 
 
@@ -425,7 +425,7 @@ Interpreter.prototype.maybe_add_to_trail = function(which_trail, what_var) {
 	if (dvar.is_bound())
 		return;
 	
-	var var_name = what_var.name;
+	var var_name = dvar.name;
 	which_trail[var_name] = dvar;
 	
 	//console.log("**** TRAILED: ", dvar, dvar.id);
@@ -435,6 +435,16 @@ Interpreter.prototype.maybe_add_to_trail = function(which_trail, what_var) {
 /**
  *  Unwind Trail
  * 
+ *  Note that we can't remove elements from the
+ *   trail because this one is created during the
+ *   `setup` phase yielding to the `call` and won't
+ *   be revisited during the possible 
+ *   subsequent `retry` phase(s).
+ *   
+ *   Thus, the trail must exist for as long as the
+ *    choice point is valid.
+ *    
+ * 
  * @param which
  */
 Interpreter.prototype._unwind_trail = function(which) {
@@ -442,15 +452,10 @@ Interpreter.prototype._unwind_trail = function(which) {
 	for (var v in which) {
 		var trail_var = which[v];
 		
-		var dvar = trail_var.deref();
-		if (!dvar.is_bound())
+		if (!trail_var.is_bound())
 			continue;
 		
-		//console.log("------- ABOUT TO UNBIND: ", trail_var);
 		trail_var.unbind();
-		
-		//var dvar = trail_var.deref();
-		//dvar.unbind();
 	};
 };
 
@@ -493,11 +498,6 @@ Interpreter.prototype.inst_setup = function() {
 	//  already by 1.
 	//
 	this._save_continuation(this.ctx.tse.cp, 1);
-	
-	// Reset clause index
-	//
-	// TODO is this really necessary ??
-	//this.ctx.tse.cp.p.ci = 0;
 	
 };
 
