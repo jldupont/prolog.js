@@ -390,11 +390,13 @@ Interpreter.prototype._restore_continuation = function(from) {
 		this.tracer("restore", from);
 	
 	this.ctx.cse  = from.ce;
+	this.ctx.te   = from.te;
 	this.ctx.p.f  = from.p.f;
 	this.ctx.p.a  = from.p.a;
 	this.ctx.p.ci = from.p.ci;
 	this.ctx.p.ct = from.p.ct;
 	this.ctx.p.l  = from.p.l;
+	this.ctx.p.i  = from.p.i;
 	this.ctx.p.i  = from.p.i;
 };
 
@@ -405,6 +407,7 @@ Interpreter.prototype._save_continuation = function(where, instruction_offset) {
 	where.p = {};
 	
 	where.ce   = this.ctx.cse;
+	where.te   = this.ctx.te;
 	where.p.f  = this.ctx.p.f;
 	where.p.a  = this.ctx.p.a;
 	where.p.ci = this.ctx.p.ci;
