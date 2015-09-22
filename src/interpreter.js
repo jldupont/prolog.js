@@ -496,10 +496,6 @@ Interpreter.prototype.inst_setup = function() {
 	//
 	this.ctx.tse.cp.p.ci = 0;
 	
-	// Get ready for `head` related instructions
-	this.ctx.cs = null;
-	this.ctx.csx = 0;
-	
 };
 
 
@@ -530,6 +526,11 @@ Interpreter.prototype.inst_call = function(inst) {
 		
 	// I know it's pessimistic
 	this.ctx.cu = false
+	
+	// Get ready for `head` related instructions
+	this.ctx.cs = null;
+	this.ctx.csx = 0;
+	
 	
 	// Get functor name & arity from the 
 	//  environment variable x0
@@ -593,11 +594,6 @@ Interpreter.prototype.inst_maybe_retry = function() {
 		//   back to the 'CALL' instruction.
 		//
 		this.ctx.p.i -= 2; 
-		
-		// Get ready for `head` related instructions
-		this.ctx.cs = null;
-		this.ctx.csx = 0;
-		
 	};
 
 	this._unwind_trail( this.ctx.tse.trail );
