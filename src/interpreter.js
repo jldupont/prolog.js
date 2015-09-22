@@ -532,7 +532,9 @@ Interpreter.prototype.inst_call = function(inst) {
 	
 	// Get ready for `head` related instructions
 	this.ctx.cs = null;
-	this.ctx.csx = 0;
+	this.ctx.csx = null;
+	this.ctx.csm = 'r';
+	this.ctx.csi = 0;
 	
 	
 	// Get functor name & arity from the 
