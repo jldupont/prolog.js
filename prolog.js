@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-09-20 */
+/*! prolog.js - v0.0.1 - 2015-09-21 */
 
 /**
  *  Token
@@ -558,7 +558,7 @@ Var.prototype.bind = function(value) {
 	
 	if (this.value != null)
 		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
-	
+	/*
 	if (value instanceof Var) {
 		if (value.is_anon)
 			if (!value.is_bound())
@@ -570,10 +570,10 @@ Var.prototype.bind = function(value) {
 			};
 		
 	}
-	
+	*/
 	this.value = value;
 	
-	console.log("::::: Binded: ", this);	
+	//console.log("::::: Binded: ", this);	
 };
 
 Var.prototype.is_bound = function(){
@@ -632,8 +632,8 @@ Var.prototype.safe_bind = function(to) {
 	var dvar, tvar;
 	var to_is_var = to instanceof Var;
 	
-	if (this.is_anon && to_is_var && to.is_anon)
-		return;
+	//if (this.is_anon && to_is_var && to.is_anon)
+	//	return;
 	
 	var dvar = this.deref(to);
 	if (dvar == null) {
@@ -655,14 +655,14 @@ Var.prototype.safe_bind = function(to) {
 		return;
 	};
 
-	if (dvar.is_anon && to_is_var && tvar.is_anon)
-		return;
+	//if (dvar.is_anon && to_is_var && tvar.is_anon)
+	//	return;
 	
 	/*
 	if (to.id)
-		console.log("^^^^^^^^ SAFE BINDING: ", this, this.id, to, to.id);
+		console.log("^^^^^ BINDING: ", this, this.id, to, to.id);
 	else
-		console.log("^^^^^^^^ SAFE BINDING: ", this, to);
+		console.log("^^^^^ BINDING: ", this, to);
 	*/
 	dvar.bind(tvar);
 };
@@ -716,9 +716,16 @@ Instruction.prototype.get = function(param) {
 	return this.ctx[param];
 };
 
+Instruction.prototype.get_parameter_name = function(){
+	if (!this.ctx)
+		return null;
+	
+	return this.ctx.p ? this.ctx.p : (this.ctx.x ? "$x" + this.ctx.x : null);
+};
+
 Instruction.prototype.inspect = function(){
 	
-	const params = [ 'p', 'x', 'y', 'i' ];
+	const params = [ 'p', 'x' ];
 	var result = ""; 
 	
 	if (this.ctx && this.ctx.l)
@@ -1652,6 +1659,7 @@ function Interpreter(db, builtins, optional_stack) {
 	
 	this.tracer = null;
 	this.reached_end_question = false;
+	
 };
 
 Interpreter.prototype.get_stack = function(){
@@ -1690,9 +1698,11 @@ Interpreter.prototype.set_question = function(question_code){
 	 */
 	this.ctx = {
 
+		step_counter: 0
+			
 		// The current instruction pointer
 		//
-		p: { 
+		,p: { 
 			f:  ".q.",  // which functor in the database
 			a:  0,      // arity
 			ci: 0,      // clause index
@@ -1730,7 +1740,7 @@ Interpreter.prototype.set_question = function(question_code){
 		/*
 		 *  Current unification status
 		 */
-		,cu: null
+		,cu: true
 		
 		/*  Top of stack environment
 		 *   i.e. the latest 'allocated'
@@ -1844,6 +1854,8 @@ Interpreter.prototype.step = function() {
 	if (this.ctx.end)
 		return true;
 	
+	this.ctx.step_counter++;
+	
 	var inst = this.fetch_next_instruction();
 	
 	var fnc_name = "inst_" + inst.opcode;
@@ -1929,7 +1941,8 @@ Interpreter.prototype._get_code = function(functor_name, arity, clause_index) {
 	if (!result.cc)
 		return ErrorFunctorCodeNotFound("Functor clause code not found: "+functor_name+"/"+arity);
 	
-	//console.log(">>> GET CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index, " CODE: ", result);
+	//console.log(">>> GOT CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index, " CODE: ", result);
+	console.log(">>> GOT CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index);
 	
 	return result;
 	
@@ -2049,7 +2062,7 @@ Interpreter.prototype.maybe_add_to_trail = function(which_trail, what_var) {
 	var var_name = what_var.name;
 	which_trail[var_name] = dvar;
 	
-	console.log("**** TRAILED: ", dvar, dvar.id);
+	//console.log("**** TRAILED: ", dvar, dvar.id);
 };
 
 
@@ -2067,7 +2080,7 @@ Interpreter.prototype._unwind_trail = function(which) {
 		if (!dvar.is_bound())
 			continue;
 		
-		console.log("------- ABOUT TO UNBIND: ", trail_var);
+		//console.log("------- ABOUT TO UNBIND: ", trail_var);
 		trail_var.unbind();
 		
 		//var dvar = trail_var.deref();
@@ -2151,8 +2164,6 @@ Interpreter.prototype.inst_call = function(inst) {
 		else 
 			break;
 		
-	console.log("=== CALL, vars: ", this.ctx.tse.vars);
-	
 	// I know it's pessimistic
 	this.ctx.cu = false
 	
@@ -2183,6 +2194,51 @@ Interpreter.prototype.inst_call = function(inst) {
 	
 }; // CALL
 
+
+/**
+ *   Instruction "maybe_retry"
+ * 
+ *   When used, this instruction **must** 
+ *     always follow a 'CALL' instruction.
+ * 
+ *   Used to retry the preceding 'CALL' if a failure occurred.
+ *   
+ *   * Increment clause index
+ *   * IF the clause index == # of clauses ==> failure
+ *   * ELSE
+ *   *   p--, p--
+ * 
+ */
+Interpreter.prototype.inst_maybe_retry = function() {
+	
+	// A 'noop' if there isn't a failure reported
+	//
+	if (this.ctx.cu)
+		return;
+	
+	//console.log("TSE: ", this.ctx.tse);
+	
+	this.ctx.tse.p.ci ++;
+
+	if (this.ctx.tse.p.ci < this.ctx.tse.p.ct) {
+		
+		// We can try the next clause
+		//  The fetch function will have incremented the
+		//   instruction pointer past this instruction
+		//   so we need to subtract 2 to get it pointing
+		//   back to the 'CALL' instruction.
+		//
+		this.ctx.p.i -= 2; 
+		
+		// Get ready for `head` related instructions
+		this.ctx.cs = null;
+		this.ctx.csx = 0;
+		
+	};
+
+	this._unwind_trail( this.ctx.tse.trail );
+	
+};
 
 
 /**
@@ -2267,55 +2323,6 @@ Interpreter.prototype.inst_try_finally = function( ) {
 	this.ctx.cse.te = null;
 };
 
-/**
- *   Instruction "maybe_retry"
- * 
- *   When used, this instruction **must** 
- *     always follow a 'CALL' instruction.
- * 
- *   Used to retry the preceding 'CALL' if a failure occurred.
- *   
- *   * Increment clause index
- *   * IF the clause index == # of clauses ==> failure
- *   * ELSE
- *   *   p--, p--
- * 
- */
-Interpreter.prototype.inst_maybe_retry = function() {
-	
-	// A 'noop' if there isn't a failure reported
-	//
-	if (this.ctx.cu)
-		return;
-	
-	//console.log("TSE: ", this.ctx.tse);
-	
-	this.ctx.tse.p.ci ++;
-
-	if (this.ctx.tse.p.ci < this.ctx.tse.p.ct) {
-		
-		// We can try the next clause
-		//  The fetch function will have incremented the
-		//   instruction pointer past this instruction
-		//   so we need to subtract 2 to get it pointing
-		//   back to the 'CALL' instruction.
-		//
-		this.ctx.p.i -= 2; 
-		
-		// Get ready for `head` related instructions
-		this.ctx.cs = null;
-		this.ctx.csx = 0;
-		
-	};
-
-	// unwind trail
-	//  EXCEPT if we are at the query level!
-	this._unwind_trail( this.ctx.tse.trail );
-
-	// NOOP when we reach end of clause list
-	// The failure flag will still be set.
-	
-};
 
 /**
  *   Instruction  "jump"
@@ -2460,7 +2467,8 @@ Interpreter.prototype.inst_put_var = function(inst) {
 	if (!local_var) {
 		local_var = new Var(vname);
 		this.ctx.cse.vars[local_var.name] = local_var;
-	}
+	} else
+		local_var = local_var.deref();
 	
 	// Manage the trail
 	this.maybe_add_to_trail(this.ctx.tse.trail, local_var);
@@ -3941,10 +3949,12 @@ Utils.unify = function(t1, t2) {
 	if (t2)
 		t2id = t2.id ? t2.id : "?";
 	
-	console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
+	//console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
 	
 	
-	//console.log("++++ Utils.Unify: ",t1, t2);
+	console.log("\n");
+	console.log("++++ Utils.Unify: t1 = ",t1);
+	console.log("++++ Utils.Unify: t2 = ",t2);
 	
 	/*
 	 *  Covers:
@@ -3984,8 +3994,8 @@ Utils.unify = function(t1, t2) {
 		// Both unbound
 		// ============
 		
-		if (t1d.is_anon && t2d.is_anon)
-			return false;
+		//if (t1d.is_anon && t2d.is_anon)
+		//	return false;
 
 		t1d.bind(t2);
 		return true;
@@ -4027,10 +4037,17 @@ Utils.unify = function(t1, t2) {
 		return true;
 	};
 	
+	if (t1 instanceof Token && t2 instanceof Token) {
+		return t1.value == t2.value;
+	};
 	
 	return false;
 }; // unify
 
+Utils.pad = function(string, width, what_char) {
+	
+	return string + Array(width - string.length).join(what_char || " ");	
+};
 
 if (typeof module!= 'undefined') {
 	module.exports.Utils = Utils;

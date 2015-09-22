@@ -60,6 +60,43 @@ function basic_tracer(ctx, it_ctx, data) {
 		
 };
 
+function format_instruction_pointer( p ) {
+	return p.f+"/"+p.a+":"+p.ci+" @ "+p.l+":"+p.i;
+};
+
+function advanced_tracer(where, it_ctx, data) {
+	
+	var line = ""; 
+	var maybe_value, maybe_var;
+	
+	if (where == 'after_inst') {
+		
+		line = Utils.pad(""+it_ctx.ctx.step_counter, 5) + " -- ";
+		
+		maybe_var = data.get_parameter_name();
+		if (maybe_var)
+			maybe_value = it_ctx.ctx.cse.vars[maybe_var];
+
+		if (!maybe_value)
+			if (it_ctx.ctx.tse)
+				maybe_value = it_ctx.ctx.tse.vars[maybe_var];
+		
+		
+		line += Utils.pad(format_instruction_pointer(it_ctx.ctx.p), 30)
+		+ " -- " + util.inspect(data)
+		+ " -- " + Utils.pad(""+it_ctx.ctx.cu, 10)
+		+ " -- " + Utils.pad("", 5)
+		;
+		
+		if (maybe_var)
+			line += util.inspect(maybe_value);
+		
+		console.log(line);
+	};
+	
+};//advanced_tracer
+
+
 var parser = function(text) {
 
 	var l = new Lexer(text);
@@ -149,7 +186,7 @@ var compile_query = function(input_text) {
 var test = function(rules, query, expected, options) {
 	
 	options = options || {};
-	var tracer = options.tracer ? basic_tracer:undefined;
+	var tracer = options.tracer;
 	
 	//console.log("Tracing: ", tracer);
 	
@@ -379,8 +416,8 @@ it('Interpreter - batch2 - program - 1', function(){
 					,"rightOf(R, L, list(_, _, L, R, _))."
 					,"rightOf(R, L, list(_, _, _, L, R))."
 					
-					,"middle(A, list(_, _, A, _, _))."
-					,"first(A, list(A, _, _, _, _))."
+					,"middle(X, list(_, _, X, _, _))."
+					,"first(Y, list(Y, _, _, _, _))."
 					
 					,"nextTo(A, B, list(B, A, _, _, _))."
 					,"nextTo(A, B, list(_, B, A, _, _))."
@@ -405,14 +442,89 @@ it('Interpreter - batch2 - program - 1', function(){
 					                   +"exists(house(_, _, orangejuice, luckystike, _), Houses),"
 					                   +"exists(house(_, japanese, _, parliament, _), Houses),"
 					                   +"nextTo(house(_, norwegian, _, _, _), house(blue, _, _, _, _), Houses)."
-	                /*  
+
+						,"puzzle1(Houses) :-  exists(house(red, english, _, _, _), Houses), "
+						                   +"exists(house(_, spaniard, _, _, dog), Houses),"
+						                   +"exists(house(green, _, coffee, _, _), Houses),"
+						                   +"exists(house(_, ukrainian, tea, _, _), Houses)."
+						                   
+						,"puzzle2(Houses) :-  exists(house(red, english, _, _, _), Houses), "
+		                   +"exists(house(_, spaniard, _, _, dog), Houses),"
+		                   +"exists(house(green, _, coffee, _, _), Houses),"
+		                   +"exists(house(_, ukrainian, tea, _, _), Houses),"					                   
+		                   +"rightOf(house(green, _, _, _, _), house(ivory, _, _, _, _), Houses),"
+		                   +"exists(house(_, _, _, oldgold, snails), Houses),"
+		                   +"exists(house(yellow, _, _, kools, _), Houses)."
+						                   
+						,"puzzle3(Houses) :-  exists(house(red, english, _, _, _), Houses), "
+			                   +"exists(house(_, spaniard, _, _, dog), Houses),"
+			                   +"exists(house(green, _, coffee, _, _), Houses),"
+			                   +"exists(house(_, ukrainian, tea, _, _), Houses),"
+			                   +"rightOf(house(green, _, _, _, _), house(ivory, _, _, _, _), Houses),"
+			                   +"exists(house(_, _, _, oldgold, snails), Houses),"
+			                   +"exists(house(yellow, _, _, kools, _), Houses),"
+			                   +"middle(house(_, _, milk, _, _), Houses),"
+			                   +"first(house(_, norwegian, _, _, _), Houses)."
+			                   
+								,"puzzle4(Houses) :-  exists(house(red, english, _, _, _), Houses), "
+				                   +"exists(house(_, spaniard, _, _, dog), Houses),"
+				                   +"exists(house(green, _, coffee, _, _), Houses),"
+				                   +"exists(house(_, ukrainian, tea, _, _), Houses),"
+				                   +"rightOf(house(green, _, _, _, _), house(ivory, _, _, _, _), Houses),"
+				                   +"exists(house(_, _, _, oldgold, snails), Houses),"
+				                   +"exists(house(yellow, _, _, kools, _), Houses),"
+				                   +"middle(house(_, _, milk, _, _), Houses)."			                   
+						                   
+	                /*
+	                 *   
 					 ,"solution(WaterDrinker, ZebraOwner) :- puzzle(Houses),"
 					 										+"exists(house(_, _, water, _, _), Houses),"
 					                                        +"exists(house(_, _, _, _, zebra), Houses)."
 	                 */
 	             ];
 	
-	var query = "puzzle(Houses).";
+	var query = "puzzle4(Houses).";
+	
+	/*
+	 * puzzle1 solution:  GOOD!
+	 * =================
+	 * 
+	 	Functor(list/5,
+	 		Functor(house/5,"red","english",Var(_),Var(_),Var(_)),
+	 		Var(_, Functor(house/5,Var(_, green),"spaniard",Var(_, coffee),Var(_, Var(_)),"dog")),
+	 		Var(_, Functor(house/5,Var(_),"ukrainian","tea",Var(_),Var(_))),
+	 		Var(_),
+	 		Var(_))
+	 */
+	
+	/*
+	 * puzzle2 solution, 1st:  GOOD!
+		Functor(list/5,
+		Functor(house/5,"red","english",Var(_, Var(_)),Var(_, oldgold),Var(_, snails)),
+		Var(_, Functor(house/5,Var(_, green),"spaniard",Var(_, coffee),Var(_, Var(_)),"dog")),
+		Var(_, Functor(house/5,Var(_, ivory),"ukrainian","tea",Var(_, Var(_)),Var(_, Var(_)))),
+		Var(_, Functor(house/5,"green",Var(_),Var(_),Var(_),Var(_))),
+		Var(_, Functor(house/5,"yellow",Var(_),Var(_),"kools",Var(_))))
+	 */
+	
+	/*  puzzle3   BAD :(
+	 *  =======
+ 		Functor(list/5,
+ 			Functor(house/5,"red","english",Var(_, Var(_)),Var(_, oldgold),Var(_, snails)),
+ 			Var(_, Functor(house/5,Var(_, green),"spaniard",Var(_, coffee),Var(_, Var(_)),"dog")),
+ 			Var(_, Functor(house/5,Var(_, ivory),"ukrainian","tea",Var(_, Var(_)),Var(_, Var(_)))),
+ 			Var(_, Functor(house/5,"green",Var(_),Var(_),Var(_),Var(_))),
+ 			Var(_, Functor(house/5,"yellow",Var(_),Var(_),"kools",Var(_))))
+	 */
+	
+	/* Puzzl4 :  :(
+	 	Functor(list/5,
+	 		Var(_, Functor(house/5,Var(_, green),"spaniard",Var(_, coffee),Var(_, Var(_, oldgold)),"dog")),
+	 		Var(_, Functor(house/5,Var(_, ivory),"ukrainian","tea",Var(_, Var(_, oldgold)),Var(_, Var(_, snails)))),
+	 		Var(_, Functor(house/5,"green",Var(_, Var(_)),Var(_, milk),Var(_, Var(_)),Var(_, Var(_)))),
+	 		Functor(house/5,"red","english",Var(_),Var(_),Var(_)),
+	 		Var(_, Functor(house/5,"yellow",Var(_),Var(_),"kools",Var(_))))
+	 */
 	
 	/*
 		[ { g0: 
@@ -428,7 +540,8 @@ it('Interpreter - batch2 - program - 1', function(){
 		 ]
 	 */
 	
-	/*
+	/* complete puzzle:
+	 
 	 list(	house(yellow,norwegian,_,kools,fox),
 	 		house(blue,ukrainian,tea,chesterfield,horse),
 	 		house(red,english,milk,oldgold,snails),
@@ -437,10 +550,6 @@ it('Interpreter - batch2 - program - 1', function(){
 	 		)
 	 */
 	
-	/*
-
-
-	 */
 	
 	var expected = [
 	{"Houses": ''
@@ -449,5 +558,5 @@ it('Interpreter - batch2 - program - 1', function(){
 	
 	Var.inspect_extended = false;
 	
-	test(rules, query, expected, { tracer: true });
+	test(rules, query, expected, { tracer: advanced_tracer });
 });

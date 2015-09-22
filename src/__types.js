@@ -564,7 +564,7 @@ Var.prototype.bind = function(value) {
 	
 	if (this.value != null)
 		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
-	
+	/*
 	if (value instanceof Var) {
 		if (value.is_anon)
 			if (!value.is_bound())
@@ -576,10 +576,10 @@ Var.prototype.bind = function(value) {
 			};
 		
 	}
-	
+	*/
 	this.value = value;
 	
-	console.log("::::: Binded: ", this);	
+	//console.log("::::: Binded: ", this);	
 };
 
 Var.prototype.is_bound = function(){
@@ -638,8 +638,8 @@ Var.prototype.safe_bind = function(to) {
 	var dvar, tvar;
 	var to_is_var = to instanceof Var;
 	
-	if (this.is_anon && to_is_var && to.is_anon)
-		return;
+	//if (this.is_anon && to_is_var && to.is_anon)
+	//	return;
 	
 	var dvar = this.deref(to);
 	if (dvar == null) {
@@ -661,14 +661,14 @@ Var.prototype.safe_bind = function(to) {
 		return;
 	};
 
-	if (dvar.is_anon && to_is_var && tvar.is_anon)
-		return;
+	//if (dvar.is_anon && to_is_var && tvar.is_anon)
+	//	return;
 	
 	/*
 	if (to.id)
-		console.log("^^^^^^^^ SAFE BINDING: ", this, this.id, to, to.id);
+		console.log("^^^^^ BINDING: ", this, this.id, to, to.id);
 	else
-		console.log("^^^^^^^^ SAFE BINDING: ", this, to);
+		console.log("^^^^^ BINDING: ", this, to);
 	*/
 	dvar.bind(tvar);
 };
@@ -722,9 +722,16 @@ Instruction.prototype.get = function(param) {
 	return this.ctx[param];
 };
 
+Instruction.prototype.get_parameter_name = function(){
+	if (!this.ctx)
+		return null;
+	
+	return this.ctx.p ? this.ctx.p : (this.ctx.x ? "$x" + this.ctx.x : null);
+};
+
 Instruction.prototype.inspect = function(){
 	
-	const params = [ 'p', 'x', 'y', 'i' ];
+	const params = [ 'p', 'x' ];
 	var result = ""; 
 	
 	if (this.ctx && this.ctx.l)

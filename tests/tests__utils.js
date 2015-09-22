@@ -190,7 +190,7 @@ it('Utils - Unify - anon - 3', function(){
 	}, ErrorNotBound);
 
 });
-
+/*
 it('Utils - Unify - anon - 4', function(){
 
 	var a1 = new Var('_');
@@ -200,7 +200,7 @@ it('Utils - Unify - anon - 4', function(){
 
 	should.equal(result, false);
 });
-
+*/
 
 
 it('Utils - Unify - deref - 1', function(){

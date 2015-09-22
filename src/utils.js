@@ -185,10 +185,12 @@ Utils.unify = function(t1, t2) {
 	if (t2)
 		t2id = t2.id ? t2.id : "?";
 	
-	console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
+	//console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
 	
 	
-	//console.log("++++ Utils.Unify: ",t1, t2);
+	console.log("\n");
+	console.log("++++ Utils.Unify: t1 = ",t1);
+	console.log("++++ Utils.Unify: t2 = ",t2);
 	
 	/*
 	 *  Covers:
@@ -228,8 +230,8 @@ Utils.unify = function(t1, t2) {
 		// Both unbound
 		// ============
 		
-		if (t1d.is_anon && t2d.is_anon)
-			return false;
+		//if (t1d.is_anon && t2d.is_anon)
+		//	return false;
 
 		t1d.bind(t2);
 		return true;
@@ -271,10 +273,17 @@ Utils.unify = function(t1, t2) {
 		return true;
 	};
 	
+	if (t1 instanceof Token && t2 instanceof Token) {
+		return t1.value == t2.value;
+	};
 	
 	return false;
 }; // unify
 
+Utils.pad = function(string, width, what_char) {
+	
+	return string + Array(width - string.length).join(what_char || " ");	
+};
 
 if (typeof module!= 'undefined') {
 	module.exports.Utils = Utils;
