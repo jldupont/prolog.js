@@ -1126,27 +1126,11 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	 *   3) There is nothing yet ==> "write" mode
 	 */
 
-	var value = null;
-
-	// First, we need to check if are dealing with a Var
-	//
 	if (input_node instanceof Var) {
 		
-		var nvar = input_node.deref();
-		
-		if (nvar.is_bound())
-			value = nvar.get_value();
-		else
-			value = nvar;
-	} else {
-		
-		value = input_node;
-	};
-	
-	if (value instanceof Var) {
-		
-		if (!value.is_bound()) {
-			
+		var dvar = input_node.deref();
+
+		if (!dvar.is_bound()) {
 			//console.log("WRITE MODE: ", value);
 			this.ctx.csm = "w";
 			
@@ -1155,28 +1139,30 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 			
 			// And don't forget to actually perform
 			//  the 'write'!
-			value.bind( struct );
+			dvar.bind( struct );
 			
 			// We are successful
 			this.ctx.cu = true;
 			return;
-			
 		};
-		
-		throw new ErrorInternal("get_struct: invalid path ...");
-	};
 
-	if (value instanceof Functor) {
+		// Let's pass-through to the next checks
+		//  (we are definitely in `read` mode at this point
+		//
+		input_node = dvar.get_value();
+	};
 		
-		if (value.get_name() != fname) {
+	if (input_node instanceof Functor) {
+		
+		if (input_node.get_name() != fname) {
 			return this.backtrack();	
 		};
 
-		if (value.get_arity() != +farity ) {
+		if (input_node.get_arity() != +farity ) {
 			return this.backtrack();
 		};
 		
-		this.ctx.cs = value;
+		this.ctx.cs = input_node;
 		this.ctx.cu = true;
 		this.ctx.csm = 'r';
 		return;
@@ -1223,11 +1209,9 @@ Interpreter.prototype.inst_get_term = function(inst) {
 Interpreter.prototype._get_x = function(inst, type) {
 	
 	var p = inst.get('p');
-
-	this.ctx.cu = false;
 	
 	if (this.ctx.csm == 'w') {
-		this.ctx.cs.push_arg( p );
+		this.ctx.cs.push_arg( new Token(type, p) );
 		this.ctx.cu = true;
 		return;
 	};
@@ -1239,6 +1223,10 @@ Interpreter.prototype._get_x = function(inst, type) {
 	 *  B) bound variable   ==> unification
 	 *  C) token(number) 
 	 */
+
+	
+	this.ctx.cu = false;
+	
 	
 	// CASE (C)
 	//
@@ -1247,8 +1235,13 @@ Interpreter.prototype._get_x = function(inst, type) {
 			this.ctx.cu = ( value_or_var.value == p );
 			return;
 		};
+		
+		// FAIL
+		return;
 	};
 	
+	//  We can't have something like a Functor here!
+	//
 	if ((!value_or_var instanceof Var)) {
 		return; // fail
 	}
@@ -1260,14 +1253,16 @@ Interpreter.prototype._get_x = function(inst, type) {
 	// Case (B)
 	//
 	if (dvar.is_bound()) {
+		
+		// Unify
+		//
 		this.ctx.cu = (dvar.get_value() == p);
 		return;
 	};
 	
 	// Case (A)
 	//
-	//console.log("Binding ",dvar," with: ", p);
-	dvar.safe_bind(p);
+	dvar.bind(p);
 	this.ctx.cu = true;	
 };
 
