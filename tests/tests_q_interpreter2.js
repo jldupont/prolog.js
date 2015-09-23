@@ -61,7 +61,7 @@ function basic_tracer(ctx, it_ctx, data) {
 };
 
 function format_instruction_pointer( p ) {
-	return p.f+"/"+p.a+":"+p.ci+" @ "+p.l+":"+p.i;
+	return p.f+"/"+p.a+":"+p.ci+" @ "+p.l+":"+(p.i-1);
 };
 
 function advanced_tracer(where, it_ctx, data) {
@@ -230,6 +230,7 @@ var test = function(rules, query, expected, options) {
 			try {
 				av = a.get_value();
 			} catch(err) {
+				console.log("STACK : ", it.stack);
 				console.log("\n*** VARS: ", vars);
 				//dump_var(it.ctx.cse.vars);
 				//dump_var(it.ctx.tse.vars);
@@ -572,5 +573,6 @@ it('Interpreter - batch2 - program - 1', function(){
 	Var.inspect_compact = true;
 	
 	test(rules, query, expected, { tracer: advanced_tracer });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
 	//test(rules, query, expected);
 });

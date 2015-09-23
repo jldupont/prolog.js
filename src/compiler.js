@@ -161,7 +161,10 @@ Compiler.prototype.process_head = function(exp, with_body) {
 			};
 			
 			if (first_time && !at_root) {
-				result.push(new Instruction("unif_var", {p:ctx.n.name}));
+				if (ctx.n.name[0] == "_")
+					result.push(new Instruction("unif_void"));
+				else
+					result.push(new Instruction("unif_var", {p:ctx.n.name}));
 			};
 			
 			if (!first_time && at_root) {

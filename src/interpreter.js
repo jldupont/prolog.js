@@ -916,6 +916,19 @@ Interpreter.prototype.inst_unif_value = function(inst) {
 		this.backtrack();
 };
 
+/**
+ *   Skip a structure's argument
+ */
+Interpreter.prototype.inst_unif_void = function() {
+	
+	this.ctx.csi++;
+	this.ctx.cu = true;
+	
+	if (this.ctx.csm == 'w') {
+		this.ctx.cs.push_arg( new Var("_") );
+	};
+	
+};
 
 /**
  *   Instruction "unif_var" $x
