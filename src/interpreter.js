@@ -195,10 +195,8 @@ Interpreter.prototype.backtrack = function() {
 		this.tracer("backtracking", this.ctx);
 	
 	
-	this._unwind_trail( this.ctx.tse.trail );
-	
-	
 	// Pretend we've got a failure
+	//  but in most cases this will anyhow be the case...
 	this.ctx.cu = false;
 	this.ctx.end = false;
 	
@@ -616,8 +614,12 @@ Interpreter.prototype.inst_maybe_retry = function() {
 	//
 	if (this.ctx.cu)
 		return;
-	
-	//console.log("TSE: ", this.ctx.tse);
+
+	/*  Whatever happens after, we anyways need
+	 *   to unwind the trail before attempting anything else.
+	 * 
+	 */
+	this._unwind_trail( this.ctx.tse.trail );
 	
 	this.ctx.tse.p.ci ++;
 
@@ -638,11 +640,11 @@ Interpreter.prototype.inst_maybe_retry = function() {
 			`jump` by manipulating `i` directly.
 		*/
 		this.ctx.p.i -= 2;
-		
-		this._unwind_trail( this.ctx.tse.trail );
-		
 	};
 
+	// ELSE:  the following `deallocate` will get rid of the
+	//        environment from the stack
+	
 };
 
 
@@ -679,11 +681,16 @@ Interpreter.prototype.inst_deallocate = function() {
 	if (this.ctx.cu)
 		return;
 
-	if (this.ctx.tse.p.ci+1 >= this.ctx.tse.p.ct) {
-		this._deallocate();	
-		return;
-	};
+	/*
+	 *  We've got valuable information here!
+	 * 
+	 */
+	this._unwind_trail( this.ctx.tse.trail );
 	
+	/*
+	 *  The previous choice point list is exhausted.
+	 *  There is no use keeping the context.
+	 */
 	this._deallocate();
 };
 
@@ -693,6 +700,40 @@ Interpreter.prototype._deallocate = function(){
 	
 	// tse goes back to top of stack
 	this.ctx.tse = this.stack[ this.stack.length-1 ];
+};
+
+/**
+ *   Instruction "maybe_fail"
+ *   
+ *   Used to 'fail' the goal if the result
+ *    of the preceding 'CALL' failed.
+ *  
+ *  
+ *   IF a goal was loaded by a 'try_else' instruction,
+ *     JUMP to this goal.
+ *     
+ *   ELSE jump to continuation point.
+ *   
+ */
+Interpreter.prototype.inst_maybe_fail = function() {
+	
+	// NOOP if we are not faced with a failure
+	if (this.ctx.cu)
+		return;
+
+	// A disjunction is available?
+	//
+	if (this.ctx.cse.te) {
+		
+		this._goto( this.ctx.cse.te );
+		
+		// just making sure
+		this.ctx.cse.te = null;
+		
+		return;
+	};
+	
+	this.backtrack();
 };
 
 
@@ -742,39 +783,6 @@ Interpreter.prototype.inst_jump = function( inst ) {
 };
 
 
-/**
- *   Instruction "maybe_fail"
- *   
- *   Used to 'fail' the goal if the result
- *    of the preceding 'CALL' failed.
- *  
- *  
- *   IF a goal was loaded by a 'try_else' instruction,
- *     JUMP to this goal.
- *     
- *   ELSE jump to continuation point.
- *   
- */
-Interpreter.prototype.inst_maybe_fail = function() {
-	
-	// NOOP if we are not faced with a failure
-	if (this.ctx.cu)
-		return;
-
-	// A disjunction is available?
-	//
-	if (this.ctx.cse.te) {
-		
-		this._goto( this.ctx.cse.te );
-		
-		// just making sure
-		this.ctx.cse.te = null;
-		
-		return;
-	};
-	
-	this.backtrack();
-};
 
 /**
  *   Instruction 'proceed'
@@ -784,9 +792,13 @@ Interpreter.prototype.inst_maybe_fail = function() {
  */
 Interpreter.prototype.inst_proceed = function() {
 	
-	this._restore_continuation( this.ctx.cse.cp );
-	this._execute();
+	if (this.ctx.cu) {
+		this._restore_continuation( this.ctx.cse.cp );
+		this._execute();
+		return;
+	};
 	
+	this.backtrack();
 };
 
 

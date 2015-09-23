@@ -105,6 +105,26 @@ function advanced_tracer(where, it_ctx, data) {
 		
 	};
 	
+	if (where == 'after_inst') {
+
+		line = "**** ";
+		
+		maybe_var = data.get_parameter_name();
+		if (maybe_var)
+			maybe_value = it_ctx.ctx.cse.vars[maybe_var];
+
+		if (!maybe_value)
+			if (it_ctx.ctx.tse)
+				maybe_value = it_ctx.ctx.tse.vars[maybe_var];
+
+		if (maybe_var) {
+			line += util.inspect(maybe_value);
+			console.log(line);
+		}
+			
+		
+	};
+	
 };//advanced_tracer
 
 
@@ -478,14 +498,15 @@ it('Interpreter - batch2 - program - 1', function(){
 			                   +"middle(house(_, _, milk, _, _), Houses),"
 			                   +"first(house(_, norwegian, _, _, _), Houses)."
 			                   
-								,"puzzle4(Houses) :-  exists(house(red, english, _, _, _), Houses), "
-				                   +"exists(house(_, spaniard, _, _, dog), Houses),"
-				                   +"exists(house(green, _, coffee, _, _), Houses),"
-				                   +"exists(house(_, ukrainian, tea, _, _), Houses),"
-				                   +"rightOf(house(green, _, _, _, _), house(ivory, _, _, _, _), Houses),"
-				                   +"exists(house(_, _, _, oldgold, snails), Houses),"
-				                   +"exists(house(yellow, _, _, kools, _), Houses),"
-				                   +"middle(house(_, _, milk, _, _), Houses)."			                   
+			                   
+						,"puzzle4(Houses) :-  exists(house(red, english, _, _, _), Houses), "
+		                   +"exists(house(_, spaniard, _, _, dog), Houses),"
+		                   +"exists(house(green, _, coffee, _, _), Houses),"
+		                   +"exists(house(_, ukrainian, tea, _, _), Houses),"
+		                   +"rightOf(house(green, _, _, _, _), house(ivory, _, _, _, _), Houses),"
+		                   +"exists(house(_, _, _, oldgold, snails), Houses),"
+		                   +"exists(house(yellow, _, _, kools, _), Houses),"
+		                   +"middle(house(_, _, milk, _, _), Houses)."			                   
 						                   
 	                /*
 	                 *   
@@ -519,7 +540,7 @@ it('Interpreter - batch2 - program - 1', function(){
 		Var(_, Functor(house/5,"yellow",Var(_),Var(_),"kools",Var(_))))
 	 */
 	
-	/*  puzzle3   BAD :(
+	/*  puzzle3  ???
 	 *  =======
 	 *  list(	house(green,"spaniard",coffee,oldgold,"dog"),
 	 *  		house(ivory,"ukrainian","tea",oldgold,snails),
