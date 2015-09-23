@@ -567,7 +567,7 @@ Var.prototype.inspect = function(depth){
 			return "Var("+name+")";
 };
 
-Var.prototype.bind = function(value) {
+Var.prototype.bind = function(value, on_bind) {
 	
 	if (this == value)
 		throw new Error("Attempt to create cycle ...");
@@ -579,6 +579,8 @@ Var.prototype.bind = function(value) {
 		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
 	
 	this.value = value;
+	
+	if (on_bind) on_bind(this);
 	
 	//console.log("::::: Binded: ", this);	
 };
@@ -632,7 +634,7 @@ Var.prototype.deref = function(check){
  * 
  * @param to
  */
-Var.prototype.safe_bind = function(to) {
+Var.prototype.safe_bind = function(to, on_bind) {
 	
 	var dvar, tvar;
 	var to_is_var = to instanceof Var;
@@ -657,7 +659,7 @@ Var.prototype.safe_bind = function(to) {
 		return;
 	};
 
-	dvar.bind(tvar);
+	dvar.bind(tvar, on_bind);
 };
 
 
@@ -2059,8 +2061,6 @@ Interpreter.prototype._add_to_trail = function(which_trail, what_var) {
 	
 	var var_name = what_var.name;
 	which_trail[var_name] = what_var;
-	
-	//console.log("| TRAILED: ", what_var.name);
 };
 
 
@@ -2443,7 +2443,7 @@ Interpreter.prototype.inst_proceed = function() {
  *   target choice point environment.  Starts building the structure in the
  *    choice point environment at variable $x.
  * 
- *   The target variable $x is retain the current environment
+ *   The target variable $x is retained in the current environment
  *    as to help with the remainder of the construction.
  * 
  */
@@ -2523,8 +2523,8 @@ Interpreter.prototype.inst_put_var = function(inst) {
 		local_var = new Var(vname);
 		this.ctx.cse.vars[local_var.name] = local_var;
 	} 
-	else
-		local_var = local_var.deref();
+	//else
+	//	local_var = local_var.deref();
 	
 	this.maybe_add_to_trail(this.ctx.tse.trail, local_var);
 	
@@ -2535,9 +2535,11 @@ Interpreter.prototype.inst_put_var = function(inst) {
  *   Instruction "put_value"
  * 
  *   Inserts a 'value' in the structure being built.
- *   
- *   The 'value' is obtained through dereferencing
- *    the variable.
+ *
+ *   We don't have to `trail` anything here: the `value`
+ *    in question is really just a substructure of the
+ *    target one being built in $x0.
+ *    
  */
 Interpreter.prototype.inst_put_value = function(inst) {
 	
@@ -2589,9 +2591,9 @@ Interpreter.prototype.inst_unif_value = function(inst) {
 	var from_current_structure = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
 	var that = this;
-	this.ctx.cu = Utils.unify(from_current_structure, value, function(t1,_) {
+	this.ctx.cu = Utils.unify(from_current_structure, value, function(t1) {
 		
-		that._add_to_trail(that.ctx.cse.trail, t1);
+		that.maybe_add_to_trail(that.ctx.cse.trail, t1);
 	});
 	
 	if (!this.ctx.cu)
@@ -2607,7 +2609,9 @@ Interpreter.prototype.inst_unif_void = function() {
 	this.ctx.cu = true;
 	
 	if (this.ctx.csm == 'w') {
-		this.ctx.cs.push_arg( new Var("_") );
+		var vvar = new Var("_");
+		this._add_to_trail( this.ctx.cse.trail, vvar);
+		this.ctx.cs.push_arg( vvar );
 	};
 	
 };
@@ -2648,6 +2652,7 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	};
 	
 	if (this.ctx.csm == 'w') {
+		this._add_to_trail(this.ctx.cse.trail, pv);
 		this.ctx.cs.push_arg( pv );
 		this.ctx.cu = true;
 		return;
@@ -2659,7 +2664,7 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
 	var that = this;
-	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1, _) {
+	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1) {
 		that._add_to_trail(that.ctx.cse.trail, t1);
 	});
 	
@@ -2690,6 +2695,11 @@ Interpreter.prototype.inst_get_var = function(inst) {
 	 *     being deconstructed, put it locally.
 	 */
 	if (value_or_var instanceof Var) {
+		/*
+		 *  No need to trail here: it is a local
+		 *   variable and thus will be disposed of
+		 *   if a `retry` is attempted.
+		 */
 		this.ctx.cse.vars[p] = value_or_var;
 		this.ctx.cu = true;
 		return;
@@ -2707,7 +2717,7 @@ Interpreter.prototype.inst_get_var = function(inst) {
 	};
 		
 	var that = this;
-	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1, _){
+	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1){
 		that._add_to_trail(that.ctx.cse.trail, t1);
 	});
 	
@@ -2731,23 +2741,13 @@ Interpreter.prototype.inst_get_value = function(inst) {
 	var p = inst.get('p');
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
-	if (value_or_var instanceof Var) {
-		/*
-		 *  Cases:
-		 *  - bounded:   get value
-		 *  - unbounded: get var
-		 */
-		var dvar = value_or_var.deref();
-		
-		if (dvar.is_bound())
-			value = dvar.get_value();
-		else
-			value = value_or_var;
-		
-	} else
-		value = value_or_var;
+	var dvar = p.deref();
+
+	var that = this;
+	this.ctx.cu = Utils.unify(dvar, value_or_var, function(t1) {
+		that.maybe_add_to_trail(that.ctx.cse.trail, t1);
+	});
 	
-	this.ctx.cse.vars[p] = value;
 };
 
 
@@ -2802,6 +2802,8 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	
 	// Fetch the value from the target input variable
 	var input_node = this.ctx.cse.vars[x];
+
+	
 	
 	if (!input_node) {
 		// need to create a variable in the current environment
@@ -2809,7 +2811,8 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 		this.ctx.cse.vars[pv.name] = pv;
 		input_node = pv;
 	}; 
-		
+
+	
 	/*
 	 *   We have the following cases:
 	 *   ----------------------------
@@ -2840,6 +2843,8 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 			// And don't forget to actually perform
 			//  the 'write'!
 			dvar.bind( struct );
+			
+			// TODO do we really need this??
 			this._add_to_trail(this.ctx.cse.trail, dvar);
 			
 			// We are successful
@@ -2853,6 +2858,9 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 		input_node = dvar.get_value();
 	};
 		
+	//
+	// DON'T CHANGE THE ORDER HERE!
+	//
 	if (input_node instanceof Functor) {
 		
 		if (input_node.get_name() != fname) {
@@ -2868,6 +2876,8 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 		this.ctx.csm = 'r';
 		return;
 	};
+	
+	
 	
 	
 	this.backtrack();
@@ -2971,6 +2981,7 @@ Interpreter.prototype._get_x = function(inst, type) {
 	// Case (A)
 	//
 	dvar.bind(p);
+	this._add_to_trail( this.ctx.cse.trail, dvar );
 	
 	this.ctx.cu = true;	
 };
@@ -4005,7 +4016,7 @@ Utils.compare_objects = function(expected, input, use_throw){
  */
 Utils.unify = function(t1, t2, on_bind) {
 
-	
+	/*
 	var t1id, t2id;
 	
 	if (t1)
@@ -4013,7 +4024,7 @@ Utils.unify = function(t1, t2, on_bind) {
 	
 	if (t2)
 		t2id = t2.id ? t2.id : "?";
-	
+	*/
 	//console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
 	
 	
@@ -4045,18 +4056,16 @@ Utils.unify = function(t1, t2, on_bind) {
 		}
 		
 		if (t1d.is_bound() && t2d.is_bound()) {
-			return Utils.unify( t1d.get_value(), t2d.get_value() ); 
+			return Utils.unify( t1d.get_value(), t2d.get_value(), on_bind ); 
 		};
 		
 		if (t1d.is_bound()) {
-			t2.safe_bind(t1);
-			if (on_bind) on_bind(t2, t1);
+			t2.safe_bind(t1, on_bind);
 			return true;
 		};
 		
 		if (t2d.is_bound()) {
-			t1.safe_bind(t2);
-			if (on_bind) on_bind(t1, t2);
+			t1.safe_bind(t2, on_bind);
 			return true;
 		};
 		
@@ -4066,8 +4075,7 @@ Utils.unify = function(t1, t2, on_bind) {
 		//if (t1d.is_anon && t2d.is_anon)
 		//	return false;
 
-		t1d.bind(t2);
-		if (on_bind) on_bind(t1d, t2);
+		t1d.bind(t2, on_bind);
 		return true;
 	};
 	
@@ -4075,11 +4083,10 @@ Utils.unify = function(t1, t2, on_bind) {
 		t1d = t1d || t1.deref();
 		
 		if (t1d.is_bound()) {
-			return Utils.unify(t1d.get_value(), t2);
+			return Utils.unify(t1d.get_value(), t2, on_bind);
 		};
 		
-		t1d.bind(t2);
-		if (on_bind) on_bind(t1d, t2);
+		t1d.bind(t2, on_bind);
 		return true;
 	};
 	
@@ -4087,11 +4094,10 @@ Utils.unify = function(t1, t2, on_bind) {
 		t2d = t2d || t2.deref();
 		
 		if (t2d.is_bound()) {
-			return Utils.unify(t2d.get_value(), t1);
+			return Utils.unify(t2d.get_value(), t1, on_bind);
 		};
 		
-		t2d.bind(t1);
-		if (on_bind) on_bind(t2d, t1);
+		t2d.bind(t1, on_bind);
 		return true;
 	};
 	
@@ -4103,7 +4109,7 @@ Utils.unify = function(t1, t2, on_bind) {
 			return false;
 		
 		for (var index in t1.args)
-			if (!Utils.unify(t1.args[index], t2.args[index]))
+			if (!Utils.unify(t1.args[index], t2.args[index]), on_bind)
 				return false;
 		
 		return true;

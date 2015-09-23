@@ -542,7 +542,7 @@ it('Interpreter - batch2 - program - 1', function(){
 	Var.inspect_compact = true;
 	
 	//test(rules, query, expected, { tracer: advanced_tracer });
-	test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
-	//test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	test(rules, query, expected);
 	
 });

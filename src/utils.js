@@ -170,7 +170,7 @@ Utils.compare_objects = function(expected, input, use_throw){
  */
 Utils.unify = function(t1, t2, on_bind) {
 
-	
+	/*
 	var t1id, t2id;
 	
 	if (t1)
@@ -178,7 +178,7 @@ Utils.unify = function(t1, t2, on_bind) {
 	
 	if (t2)
 		t2id = t2.id ? t2.id : "?";
-	
+	*/
 	//console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
 	
 	
@@ -210,18 +210,16 @@ Utils.unify = function(t1, t2, on_bind) {
 		}
 		
 		if (t1d.is_bound() && t2d.is_bound()) {
-			return Utils.unify( t1d.get_value(), t2d.get_value() ); 
+			return Utils.unify( t1d.get_value(), t2d.get_value(), on_bind ); 
 		};
 		
 		if (t1d.is_bound()) {
-			t2.safe_bind(t1);
-			if (on_bind) on_bind(t2, t1);
+			t2.safe_bind(t1, on_bind);
 			return true;
 		};
 		
 		if (t2d.is_bound()) {
-			t1.safe_bind(t2);
-			if (on_bind) on_bind(t1, t2);
+			t1.safe_bind(t2, on_bind);
 			return true;
 		};
 		
@@ -231,8 +229,7 @@ Utils.unify = function(t1, t2, on_bind) {
 		//if (t1d.is_anon && t2d.is_anon)
 		//	return false;
 
-		t1d.bind(t2);
-		if (on_bind) on_bind(t1d, t2);
+		t1d.bind(t2, on_bind);
 		return true;
 	};
 	
@@ -240,11 +237,10 @@ Utils.unify = function(t1, t2, on_bind) {
 		t1d = t1d || t1.deref();
 		
 		if (t1d.is_bound()) {
-			return Utils.unify(t1d.get_value(), t2);
+			return Utils.unify(t1d.get_value(), t2, on_bind);
 		};
 		
-		t1d.bind(t2);
-		if (on_bind) on_bind(t1d, t2);
+		t1d.bind(t2, on_bind);
 		return true;
 	};
 	
@@ -252,11 +248,10 @@ Utils.unify = function(t1, t2, on_bind) {
 		t2d = t2d || t2.deref();
 		
 		if (t2d.is_bound()) {
-			return Utils.unify(t2d.get_value(), t1);
+			return Utils.unify(t2d.get_value(), t1, on_bind);
 		};
 		
-		t2d.bind(t1);
-		if (on_bind) on_bind(t2d, t1);
+		t2d.bind(t1, on_bind);
 		return true;
 	};
 	
@@ -268,7 +263,7 @@ Utils.unify = function(t1, t2, on_bind) {
 			return false;
 		
 		for (var index in t1.args)
-			if (!Utils.unify(t1.args[index], t2.args[index]))
+			if (!Utils.unify(t1.args[index], t2.args[index]), on_bind)
 				return false;
 		
 		return true;

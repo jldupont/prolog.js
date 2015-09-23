@@ -573,7 +573,7 @@ Var.prototype.inspect = function(depth){
 			return "Var("+name+")";
 };
 
-Var.prototype.bind = function(value) {
+Var.prototype.bind = function(value, on_bind) {
 	
 	if (this == value)
 		throw new Error("Attempt to create cycle ...");
@@ -585,6 +585,8 @@ Var.prototype.bind = function(value) {
 		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
 	
 	this.value = value;
+	
+	if (on_bind) on_bind(this);
 	
 	//console.log("::::: Binded: ", this);	
 };
@@ -638,7 +640,7 @@ Var.prototype.deref = function(check){
  * 
  * @param to
  */
-Var.prototype.safe_bind = function(to) {
+Var.prototype.safe_bind = function(to, on_bind) {
 	
 	var dvar, tvar;
 	var to_is_var = to instanceof Var;
@@ -663,7 +665,7 @@ Var.prototype.safe_bind = function(to) {
 		return;
 	};
 
-	dvar.bind(tvar);
+	dvar.bind(tvar, on_bind);
 };
 
 
