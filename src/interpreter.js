@@ -420,6 +420,13 @@ Interpreter.prototype._save_continuation = function(where, instruction_offset) {
 		this.tracer("save", where);
 };
 
+Interpreter.prototype.add_to_trail = function(which_trail, what_var) {
+	
+	var var_name = what_var.name;
+	which_trail[var_name] = what_var;
+};
+
+
 Interpreter.prototype.maybe_add_to_trail = function(which_trail, what_var) {
 	
 	// We only add unbound variables of course
@@ -853,7 +860,7 @@ Interpreter.prototype.inst_put_void = function() {
 	var struct = this.ctx.tse.vars[cv];
 
 	var vvar = new Var("_");
-	this.maybe_add_to_trail(this.ctx.tse.trail, vvar);
+	this.add_to_trail(this.ctx.tse.trail, vvar);
 	
 	struct.push_arg(vvar);
 };
