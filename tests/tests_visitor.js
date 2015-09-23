@@ -16,6 +16,7 @@ var OpNode = pr.OpNode;
 var Functor = pr.Functor;
 var Op = pr.Op;
 var Utils = pr.Utils;
+var Var = pr.Var;
 
 var ParserL1 = pr.ParserL1;
 var ParserL2 = pr.ParserL2;
@@ -50,6 +51,11 @@ var setup = function(text) {
 };
 
 var process = function(input_text, expecteds, left_to_right) {
+	
+	Functor.inspect_compact_version = false;
+	Var.inspect_extended = false;
+	Var.inspect_compact = false;
+	
 	
 	var expressions = setup(input_text);
 	

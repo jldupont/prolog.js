@@ -344,7 +344,7 @@ it('Interpreter - batch2 - simple - 2', function(){
 	var query = "f(666, 666).";
 	
 	var expected = [
-	                
+	                // expecting no return variables
 	                ];
 	
 	test(rules, query, expected);
@@ -370,7 +370,7 @@ it('Interpreter - batch2 - complex - 1', function(){
 
 it('Interpreter - batch2 - complex - 2', function(){
 	
-	console.log("\n\n\n ~~~~~~~~~~~~~~~ Interpreter - batch2 - complex - 2");
+	//console.log("\n\n\n ~~~~~~~~~~~~~~~ Interpreter - batch2 - complex - 2");
 	
 	Var.inspect_extended = false;
 	
@@ -379,46 +379,6 @@ it('Interpreter - batch2 - complex - 2', function(){
 	             ,"puzzle(Houses) :-  exists(house(red, english, _, _, _), Houses)."
 	             ];
 	
-	/*
-	  [ { head: 
-     		[ get_struct   ( exists/2, x(0) ),
-		       unif_var     ( p("A") ),
-		       unif_var     ( x(1) ),
-		       get_struct   ( list/5, x(1) ),
-		       unif_var     ( p("A") ),
-		       unif_var     ( p("_") ),
-		       unif_var     ( p("_") ),
-		       unif_var     ( p("_") ),
-		       unif_var     ( p("_") ),
-		       proceed      ],
-	    f: 'exists',
-	    a: 2 } ]
-	 */
-	
-	/*
-		 [ { g0: 
-		     [ allocate    ,
-		       put_struct   ( house/5, x(1) ),
-		       put_term     ( p("red") ),
-		       put_term     ( p("english") ),
-		       put_var      ( p("_") ),
-		       put_var      ( p("_") ),
-		       put_var      ( p("_") ),
-		       put_struct   ( exists/2, x(0) ),
-		       put_value    ( x(1) ),
-		       put_var      ( p("Houses") ),
-		       setup       ,
-		       call        ,
-		       maybe_retry ,
-		       deallocate  ,
-		       proceed      ],
-		    head: 
-		     [ get_struct   ( puzzle/1, x(0) ),
-		       unif_var     ( p("Houses") ),
-		       jump         ( p("g0") ) ],
-		    f: 'puzzle',
-		    a: 1 } ]
-	 */
 	
 	var query = "puzzle(Houses).";
 	
@@ -426,9 +386,7 @@ it('Interpreter - batch2 - complex - 2', function(){
 {"Houses": 'Functor(list/5,Functor(house/5,"red","english",Var(_),Var(_),Var(_)),Var(_),Var(_),Var(_),Var(_))'  }
 	                ];
 	
-	
-	
-	//test(rules, query, expected, {tracer: true});
+	test(rules, query, expected);
 });
 
 
@@ -516,7 +474,7 @@ it('Interpreter - batch2 - program - 1', function(){
 	                 */
 	             ];
 	
-	var query = "puzzle3(Houses).";
+	var query = "puzzle(Houses).";
 	
 	/*
 	 * puzzle1 solution:  GOOD!
@@ -540,36 +498,25 @@ it('Interpreter - batch2 - program - 1', function(){
 		Var(_, Functor(house/5,"yellow",Var(_),Var(_),"kools",Var(_))))
 	 */
 	
-	/*  puzzle3  ???
+	/*  puzzle3  :)
 	 *  =======
-	 *  list(	house(green,"spaniard",coffee,oldgold,"dog"),
-	 *  		house(ivory,"ukrainian","tea",oldgold,snails),
-	 *  		house("green",_,milk,_,_),
-	 *  		house("red","english",_,_,_),
-	 *  		house("yellow",_,_,"kools",_))
-	 */
+		list(
+			house("yellow",norwegian,_,"kools",_),
+			house("red","english",?CYCLE?,oldgold,snails),
+			house("ivory",_,milk,_,_),
+			house(green,"spaniard",coffee,?CYCLE?,"dog"),
+			house(yellow,"ukrainian","tea",kools,_))	 
+	*/
 	
-	/* Puzzl4 :  :(
-	 	Functor(list/5,
-	 		Var(_, Functor(house/5,Var(_, green),"spaniard",Var(_, coffee),Var(_, Var(_, oldgold)),"dog")),
-	 		Var(_, Functor(house/5,Var(_, ivory),"ukrainian","tea",Var(_, Var(_, oldgold)),Var(_, Var(_, snails)))),
-	 		Var(_, Functor(house/5,"green",Var(_, Var(_)),Var(_, milk),Var(_, Var(_)),Var(_, Var(_)))),
-	 		Functor(house/5,"red","english",Var(_),Var(_),Var(_)),
-	 		Var(_, Functor(house/5,"yellow",Var(_),Var(_),"kools",Var(_))))
-	 */
-	
-	/*
-		[ { g0: 
-		     [ allocate    ,
-		       put_struct   ( puzzle/1, x(0) ),
-		       put_var      ( p("Houses") ),
-		       setup       ,
-		       call        ,
-		       maybe_retry ,
-		       deallocate  ,
-		       end          
-		       ] } 
-		 ]
+	/* Puzzle4  :)
+	 * 
+	 * list(
+	 * house("red","english",_,oldgold,snails),
+	 * house(green,"spaniard",coffee,oldgold,"dog"),
+	 * house("ivory",_,milk,_,_),
+	 * house(green,"ukrainian","tea",_,_),
+	 * house("yellow",_,_,"kools",_))
+	 * 
 	 */
 	
 	/* complete puzzle:
@@ -584,7 +531,9 @@ it('Interpreter - batch2 - program - 1', function(){
 	
 	
 	var expected = [
-	{"Houses": ''
+	{
+		Houses: ''
+	//"Houses": 'list(house("yellow",norwegian,_,"kools",_),house("red","english",?CYCLE?,oldgold,snails),house("ivory",_,milk,_,_),house(green,"spaniard",coffee,?CYCLE?,"dog"),house(yellow,"ukrainian","tea",kools,_))'
 	}
 	                ];
 	
@@ -592,7 +541,8 @@ it('Interpreter - batch2 - program - 1', function(){
 	Var.inspect_extended = false;
 	Var.inspect_compact = true;
 	
-	test(rules, query, expected, { tracer: advanced_tracer });
-	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer });
+	test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
 	//test(rules, query, expected);
+	
 });

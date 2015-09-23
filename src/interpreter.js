@@ -420,10 +420,12 @@ Interpreter.prototype._save_continuation = function(where, instruction_offset) {
 		this.tracer("save", where);
 };
 
-Interpreter.prototype.add_to_trail = function(which_trail, what_var) {
+Interpreter.prototype._add_to_trail = function(which_trail, what_var) {
 	
 	var var_name = what_var.name;
 	which_trail[var_name] = what_var;
+	
+	//console.log("| TRAILED: ", what_var.name);
 };
 
 
@@ -437,7 +439,7 @@ Interpreter.prototype.maybe_add_to_trail = function(which_trail, what_var) {
 	var var_name = dvar.name;
 	which_trail[var_name] = dvar;
 	
-	//console.log("**** TRAILED: ", dvar, dvar.id);
+	//console.log("| TRAILED: ", dvar.name, dvar.id);
 };
 
 
@@ -471,6 +473,7 @@ Interpreter.prototype._unwind_trail = function(which) {
 			continue;
 		
 		trail_var.unbind();
+		//console.log("> TRAIL UNBOUND: ", trail_var.name);
 	};
 };
 
@@ -860,7 +863,8 @@ Interpreter.prototype.inst_put_void = function() {
 	var struct = this.ctx.tse.vars[cv];
 
 	var vvar = new Var("_");
-	this.add_to_trail(this.ctx.tse.trail, vvar);
+	
+	this._add_to_trail(this.ctx.tse.trail, vvar);
 	
 	struct.push_arg(vvar);
 };
@@ -887,7 +891,6 @@ Interpreter.prototype.inst_put_var = function(inst) {
 	else
 		local_var = local_var.deref();
 	
-	// Manage the trail
 	this.maybe_add_to_trail(this.ctx.tse.trail, local_var);
 	
 	struct.push_arg(local_var);
@@ -950,7 +953,11 @@ Interpreter.prototype.inst_unif_value = function(inst) {
 
 	var from_current_structure = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
-	this.ctx.cu = Utils.unify(from_current_structure, value);
+	var that = this;
+	this.ctx.cu = Utils.unify(from_current_structure, value, function(t1,_) {
+		
+		that._add_to_trail(that.ctx.cse.trail, t1);
+	});
 	
 	if (!this.ctx.cu)
 		this.backtrack();
@@ -1016,7 +1023,10 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	//
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
-	this.ctx.cu = Utils.unify(pv, value_or_var);
+	var that = this;
+	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1, _) {
+		that._add_to_trail(that.ctx.cse.trail, t1);
+	});
 	
 	if (!this.ctx.cu)
 		this.backtrack();
@@ -1061,8 +1071,10 @@ Interpreter.prototype.inst_get_var = function(inst) {
 		this.ctx.cse.vars[pv.name] = pv;
 	};
 		
-	
-	this.ctx.cu = Utils.unify(pv, value_or_var);
+	var that = this;
+	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1, _){
+		that._add_to_trail(that.ctx.cse.trail, t1);
+	});
 	
 	if (!this.ctx.cu)
 		this.backtrack();
@@ -1193,6 +1205,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 			// And don't forget to actually perform
 			//  the 'write'!
 			dvar.bind( struct );
+			this._add_to_trail(this.ctx.cse.trail, dvar);
 			
 			// We are successful
 			this.ctx.cu = true;

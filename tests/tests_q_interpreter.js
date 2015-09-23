@@ -530,7 +530,7 @@ it('Interpreter - complex - 4 - anon', function(){
 	it.step(); // deallocate
 	it.step(); // end
 	
-	should.equal(it.ctx.cu, true);
+	should.equal(it.ctx.cu, true, "Should find f(666).");
 	
 	// there is still 1 fact that could match...
 	should.equal(it.stack.length, 2, "Still 1 more choice point should be available");
@@ -550,13 +550,11 @@ it('Interpreter - complex - 4 - anon', function(){
 	//
 	it.step(); // maybe_retry
 	
-	//console.log(it);
-	
 	it.step(); // deallocate
 	it.step(); // end
 	
 	
-	should.equal(it.ctx.cu, true);
+	should.equal(it.ctx.cu, true, "f(777).");
 	
 	// this time around, no more match possible
 	//
@@ -754,7 +752,7 @@ it('Interpreter - program - 1', function(){
 	should.equal(vars['X'].get_value(), 'isa');
 	should.equal(vars['Y'].get_value(), 'julianne');
 	
-	it.set_tracer(basic_tracer);
+	//it.set_tracer(basic_tracer);
 
 	// should not blow
 	it.backtrack();

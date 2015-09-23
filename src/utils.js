@@ -168,7 +168,7 @@ Utils.compare_objects = function(expected, input, use_throw){
  * + Two terms unify if and only if they unify for one of the above three reasons (there are no reasons left unstated).
  * 
  */
-Utils.unify = function(t1, t2) {
+Utils.unify = function(t1, t2, on_bind) {
 
 	
 	var t1id, t2id;
@@ -215,11 +215,13 @@ Utils.unify = function(t1, t2) {
 		
 		if (t1d.is_bound()) {
 			t2.safe_bind(t1);
+			if (on_bind) on_bind(t2, t1);
 			return true;
 		};
 		
 		if (t2d.is_bound()) {
 			t1.safe_bind(t2);
+			if (on_bind) on_bind(t1, t2);
 			return true;
 		};
 		
@@ -230,6 +232,7 @@ Utils.unify = function(t1, t2) {
 		//	return false;
 
 		t1d.bind(t2);
+		if (on_bind) on_bind(t1d, t2);
 		return true;
 	};
 	
@@ -241,6 +244,7 @@ Utils.unify = function(t1, t2) {
 		};
 		
 		t1d.bind(t2);
+		if (on_bind) on_bind(t1d, t2);
 		return true;
 	};
 	
@@ -252,6 +256,7 @@ Utils.unify = function(t1, t2) {
 		};
 		
 		t2d.bind(t1);
+		if (on_bind) on_bind(t2d, t1);
 		return true;
 	};
 	
