@@ -505,7 +505,10 @@ Compiler.prototype.process_goal = function(exp, is_query) {
 			var n = ctx.args[index];
 			
 			if (n instanceof Var) {
-				results.push(new Instruction("put_var", {p: n.name}));
+				if (n.name[0] == "_")
+					results.push(new Instruction("put_void"));
+				else
+					results.push(new Instruction("put_var", {p: n.name}));
 			};
 
 			if (n instanceof Value) {

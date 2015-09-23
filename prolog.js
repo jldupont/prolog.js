@@ -1363,7 +1363,10 @@ Compiler.prototype.process_goal = function(exp, is_query) {
 			var n = ctx.args[index];
 			
 			if (n instanceof Var) {
-				results.push(new Instruction("put_var", {p: n.name}));
+				if (n.name[0] == "_")
+					results.push(new Instruction("put_void"));
+				else
+					results.push(new Instruction("put_var", {p: n.name}));
 			};
 
 			if (n instanceof Value) {
@@ -1964,8 +1967,6 @@ Interpreter.prototype._get_code = function(functor_name, arity, clause_index) {
  */
 Interpreter.prototype._execute = function( ctx ){
 
-	//console.log("_execute ctx: ", this.ctx);
-	
 	var result = {};
 	
 	if (ctx) {
@@ -2011,32 +2012,12 @@ Interpreter.prototype._execute = function( ctx ){
 
 	if (ctx) {
 		this.ctx.p.l = ctx.l || 'head';	
-	} else {
-		if (!this.ctx.p.l)
-			this.ctx.p.l = this.ctx.cc.head ? 'head' : 'g0';
-	};
-
+	}
 	
-	
-	//this.ctx.cse = this.ctx.tse;
-
 	if (this.tracer)
 		this.tracer("execute", this.ctx);
 	
 	return result;
-};
-
-/**
- *   Relative jump within a clause label
- *   
- */
-Interpreter.prototype._jump = function( ctx, offset ){
-
-	// The clause instruction might not have been set
-	ctx.i = ctx.i || 0;
-	ctx.i += offset;
-	
-	this.ctx.p = ctx;
 };
 
 Interpreter.prototype._restore_continuation = function(from) {
@@ -2098,7 +2079,7 @@ Interpreter.prototype.maybe_add_to_trail = function(which_trail, what_var) {
  *   subsequent `retry` phase(s).
  *   
  *   Thus, the trail must exist for as long as the
- *    choice point is valid.
+ *    choice point is kept.
  *    
  * 
  * @param which
@@ -2107,6 +2088,12 @@ Interpreter.prototype._unwind_trail = function(which) {
 	
 	for (var v in which) {
 		var trail_var = which[v];
+		
+		/*
+		 *  We don't deref because the variable
+		 *   could have been bound to another one
+		 *   which is not bound itself (a chain).
+		 */
 		
 		if (!trail_var.is_bound())
 			continue;
@@ -2494,6 +2481,17 @@ Interpreter.prototype.inst_put_number = function(inst) {
 	struct.push_arg(new Token('number', num));
 };
 
+Interpreter.prototype.inst_put_void = function() {
+
+	// Structure being built on the top of stack
+	var cv = this.ctx.cv;
+	var struct = this.ctx.tse.vars[cv];
+
+	var vvar = new Var("_");
+	this.maybe_add_to_trail(this.ctx.tse.trail, vvar);
+	
+	struct.push_arg(vvar);
+};
 
 /**
  *   Instruction "put_var"
