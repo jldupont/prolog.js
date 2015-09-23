@@ -1219,7 +1219,7 @@ Interpreter.prototype._get_x = function(inst, type) {
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
 	/*  Cases:
-	 *  A) unbound variable ==> bind to expected number
+	 *  A) unbound variable ==> bind to expected number / term
 	 *  B) bound variable   ==> unification
 	 *  C) token(number) 
 	 */
@@ -1237,6 +1237,13 @@ Interpreter.prototype._get_x = function(inst, type) {
 		};
 		
 		// FAIL
+		return;
+	};
+	
+	//  Could this really be happening ???
+	//
+	if (value_or_var == p) {
+		this.ctx.cu = true;
 		return;
 	};
 	
@@ -1263,6 +1270,7 @@ Interpreter.prototype._get_x = function(inst, type) {
 	// Case (A)
 	//
 	dvar.bind(p);
+	
 	this.ctx.cu = true;	
 };
 
