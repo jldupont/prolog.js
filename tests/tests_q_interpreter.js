@@ -425,20 +425,22 @@ it('Interpreter - complex - 3', function(){
 
 	//console.log(it.db.db);
 	
-	it.step(); // allocate
+	it.step(); // allocate                      STACK DEPTH 2
 	it.step(); // put_struct  r/2, x(0)
 	it.step(); // put_number 1
 	it.step(); // put_number 2
 	it.step(); // setup
 	it.step(); // call r/2
 	
+	// At r/2:0 `head`
+	//
 	it.step(); // get_struct  - head  r/2
 	it.step(); // get_number  p(1)
 	it.step(); // get_var p(A)
 
-	it.step(); // jmp g0      - body  r/2
+	it.step(); // jmp g0      - body  r/2:0
 	
-	it.step(); // allocate
+	it.step(); // allocate                       STACK DEPTH 3
 	it.step(); // put_struct (plus/2 ...
 	it.step(); // put_number
 	it.step(); // put_var(A)
@@ -447,12 +449,16 @@ it('Interpreter - complex - 3', function(){
 	it.step(); // setup
 	it.step(); // call f/1
 	
+	// At f/1:0 `head`
+	//
 	it.step(); // get_struct f/1 - head
 	it.step(); // unif_var
 	it.step(); // proceed
 	
+	// Back to r/2:0
+	//
 	it.step(); // return to r/2 -- maybe_retry
-	it.step(); // deallocate
+	it.step(); // deallocate                     CANNOT DEALLOCATE BECAUSE OF ADDITIONAL CHOICE POINT
 	it.step(); // proceed
 	
 	// returning to .q./0
@@ -462,7 +468,7 @@ it('Interpreter - complex - 3', function(){
 	
 	
 	should.equal(it.ctx.cu, true);
-	should.equal(it.stack.length, 2);
+	should.equal(it.stack.length, 3);
 });
 
 
@@ -508,12 +514,14 @@ it('Interpreter - complex - 4 - anon', function(){
 	//var it = prepare(rules, query, basic_tracer);
 	var it = prepare(rules, query);
 	
-	it.step(); // allocate
+	it.step(); // allocate           DEPTH 2
 	it.step(); // put_struct f/1
 	it.step(); // put_var _
 	it.step(); // setup
 	it.step(); // call
 	
+	// f/1:0
+	//
 	it.step(); // get_struct f/1
 	it.step(); // get_number 666
 	it.step(); // proceed
@@ -525,25 +533,34 @@ it('Interpreter - complex - 4 - anon', function(){
 	should.equal(it.ctx.cu, true);
 	
 	// there is still 1 fact that could match...
-	should.equal(it.stack.length, 2);
+	should.equal(it.stack.length, 2, "Still 1 more choice point should be available");
 	
 	it.backtrack();
 	
 	it.step(); // maybe_retry
 	it.step(); // call f/1:1 @ head
+	
+	// f/1:1
+	//
 	it.step(); // get_struct f/1
 	it.step(); // get_number 777
 	it.step(); // proceed
 	
+	// Back to .q./1:0
+	//
 	it.step(); // maybe_retry
+	
+	//console.log(it);
+	
 	it.step(); // deallocate
 	it.step(); // end
 	
 	
 	should.equal(it.ctx.cu, true);
 	
-	// this time around, no more matches possible
-	should.equal(it.stack.length, 1);
+	// this time around, no more match possible
+	//
+	should.equal(it.stack.length, 2, "No more choice point available BUT last choice succeeded");
 });
 
 it('Interpreter - complex - 5', function(){
@@ -603,12 +620,12 @@ it('Interpreter - complex - 5', function(){
 	should.equal(it.ctx.cu, true);
 	
 	// there is still 1 fact that could match...
-	should.equal(it.stack.length, 2);
+	should.equal(it.stack.length, 2, "1 choice point left on the stack");
 	
 	var vars = it.get_query_vars();
 	var vara = vars["A"];
 	
-	should.equal(vara.get_value(), 666);
+	should.equal(vara.get_value(), 666, "Getting number 666");
 	
 	it.backtrack();
 	
@@ -625,8 +642,7 @@ it('Interpreter - complex - 5', function(){
 	
 	should.equal(it.ctx.cu, true);
 	
-	// this time around, no more matches possible
-	should.equal(it.stack.length, 1);
+	should.equal(it.stack.length, 2, "1 Choice point left on the stack");
 	
 	vars = it.get_query_vars();
 	vara = vars["A"];
@@ -743,8 +759,9 @@ it('Interpreter - program - 1', function(){
 	// should not blow
 	it.backtrack();
 	
+	/*
 	should.throws(function(){
 		it.step();
 	}, ErrorNoMoreInstruction);
-
+	*/
 });

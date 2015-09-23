@@ -521,12 +521,11 @@ it('Interpreter - batch2 - program - 1', function(){
 	
 	/*  puzzle3   BAD :(
 	 *  =======
- 		Functor(list/5,
- 			Functor(house/5,"red","english",Var(_, Var(_)),Var(_, oldgold),Var(_, snails)),
- 			Var(_, Functor(house/5,Var(_, green),"spaniard",Var(_, coffee),Var(_, Var(_)),"dog")),
- 			Var(_, Functor(house/5,Var(_, ivory),"ukrainian","tea",Var(_, Var(_)),Var(_, Var(_)))),
- 			Var(_, Functor(house/5,"green",Var(_),Var(_),Var(_),Var(_))),
- 			Var(_, Functor(house/5,"yellow",Var(_),Var(_),"kools",Var(_))))
+	 *  list(	house(green,"spaniard",coffee,oldgold,"dog"),
+	 *  		house(ivory,"ukrainian","tea",oldgold,snails),
+	 *  		house("green",_,milk,_,_),
+	 *  		house("red","english",_,_,_),
+	 *  		house("yellow",_,_,"kools",_))
 	 */
 	
 	/* Puzzl4 :  :(

@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-09-22 */
+/*! prolog.js - v0.0.1 - 2015-09-23 */
 
 /**
  *  Token
@@ -1971,16 +1971,32 @@ Interpreter.prototype._execute = function( ctx ){
 	var result = {};
 	
 	if (ctx) {
+		/*
+		 *  If input `ctx` is specified,
+		 *   it is in the case of a `call` instruction.
+		 *   Thus, we are transferring the control flow
+		 *   to the beginning of the `head` 
+		 *   of the functor specified.
+		 */
+		
 		result = this._get_code(ctx.f, ctx.a, ctx.ci);
+		
 		this.ctx.p.f  = ctx.f;
 		this.ctx.p.a  = ctx.a;
 		this.ctx.p.ci = ctx.ci
+		this.ctx.p.i = 0;
 
 		this.ctx.cc   = result.cc;
 		this.ctx.p.ct = result.ct;
 		
 	}
 	else {
+		/*
+		 *  In the following case, we are either 
+		 *  -- `retrying`
+		 *  -- `backtracking`
+		 */
+		
 		result = this._get_code(this.ctx.p.f, this.ctx.p.a, this.ctx.p.ci);
 		this.ctx.cc = result.cc;
 	}
@@ -1996,12 +2012,13 @@ Interpreter.prototype._execute = function( ctx ){
 	 */
 
 	if (ctx) {
-		this.ctx.p.l = ctx.l ? ctx.l : 'head';	
+		this.ctx.p.l = ctx.l || 'head';	
 	} else {
 		if (!this.ctx.p.l)
 			this.ctx.p.l = this.ctx.cc.head ? 'head' : 'g0';
 	};
 
+	
 	
 	//this.ctx.cse = this.ctx.tse;
 
@@ -2187,6 +2204,12 @@ Interpreter.prototype.inst_call = function(inst) {
 	var fname = x0.name;
 	var arity = x0.args.length;
 	
+	/*  Takes care of
+	 *  - label `l` component
+	 *  - current code `cc`
+	 *  - instruction pointer `i` inside label
+	 */  
+
 	var result = this._execute({
 		 f:  fname
 		,a:  arity
@@ -2194,7 +2217,6 @@ Interpreter.prototype.inst_call = function(inst) {
 	});
 	
 	this.ctx.tse.p.ct = result.ct;
-	this.ctx.p.i = 0;
 	
 	//  Make the jump in the target environment
 	//
@@ -2231,19 +2253,28 @@ Interpreter.prototype.inst_maybe_retry = function() {
 	
 	this.ctx.tse.p.ci ++;
 
+	/*
+	 *  The Choice Point context is kept on the top of stack `tse`
+	 */
 	if (this.ctx.tse.p.ci < this.ctx.tse.p.ct) {
 		
-		// We can try the next clause
-		//  The fetch function will have incremented the
-		//   instruction pointer past this instruction
-		//   so we need to subtract 2 to get it pointing
-		//   back to the 'CALL' instruction.
-		//
-		this.ctx.p.i -= 2; 
+		/* We can try the next clause
+		 * 
+		    The fetch function will have incremented the
+		    instruction pointer past this instruction
+		    so we need to subtract 2 to get it pointing
+		    back to the 'CALL' instruction.
+		
+			The `backtrack` step will have already
+			loaded the code, we just have to cause a
+			`jump` by manipulating `i` directly.
+		*/
+		this.ctx.p.i -= 2;
+		
+		this._unwind_trail( this.ctx.tse.trail );
+		
 	};
 
-	this._unwind_trail( this.ctx.tse.trail );
-	
 };
 
 
@@ -2268,21 +2299,11 @@ Interpreter.prototype.inst_allocate = function() {
  *   Deallocates, if possible, a "choice point" environment.
  * 
  *   Cases:
- *   - No Choice Point left (or just this one): deallocate
- *   - Choice Point succeeds : do not deallocate environment
- *   - Choice Point fails & no other clause : deallocate environment
+ *   - Choice Point succeeds : do not deallocate environment   
+ *   - No Choice Point left
  */
 Interpreter.prototype.inst_deallocate = function() {
 
-	
-	if (this.ctx.tse.qenv)
-		return;
-
-	if (this.ctx.tse.p.ci+1 >= this.ctx.tse.p.ct) {
-		this._deallocate();	
-		return;
-	};
-	
 	/*
 	 * Cannot deallocate if we have had
 	 *  a successful choice point
@@ -2290,6 +2311,11 @@ Interpreter.prototype.inst_deallocate = function() {
 	if (this.ctx.cu)
 		return;
 
+	if (this.ctx.tse.p.ci+1 >= this.ctx.tse.p.ct) {
+		this._deallocate();	
+		return;
+	};
+	
 	this._deallocate();
 };
 
