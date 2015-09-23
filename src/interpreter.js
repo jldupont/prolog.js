@@ -79,9 +79,18 @@ Interpreter.prototype.set_question = function(question_code){
 		//
 		,cc: null
 
+		/*
+		 *   Related to `CALL` setup
+		 * 
+		 *   cv: the structure being built with
+		 *       `put_struct`, `put_var`, `put_term`, `put_number` and `put_value`
+		 * 
+		 */
+		,cv: null
+		
 		/*  Related to `HEAD` Processing
 		 * 
-		 *   csx:  The current index of the argument 
+		 *   csx:  The current local variable being used to deconstruct
 		 *          in the `head` functor.
 		 * 
 		 *   cs:   The current structure being worked on
@@ -499,6 +508,10 @@ Interpreter.prototype.inst_setup = function() {
 	//
 	this._save_continuation(this.ctx.tse.cp, 1);
 	
+	// Initialize the clause index
+	//
+	this.ctx.tse.p.ci = this.ctx.tse.p.ci || 0;
+	
 };
 
 
@@ -519,14 +532,12 @@ Interpreter.prototype.inst_call = function(inst) {
 	 *  We used some variables to construct
 	 *  the main structure at $x0 but we need
 	 *  to get rid of these or else the target
-	 *  functor might unify will values it shouldn't.
+	 *  functor might unify with values it shouldn't.
 	 */
-	for (var index=1;;index++)
-		if (this.ctx.tse.vars["$x" + index])
-			delete this.ctx.tse.vars["$x" + index];
-		else 
-			break;
-		
+	var temp_x0 = this.ctx.tse.vars['$x0'];
+	this.ctx.tse.vars = {};
+	this.ctx.tse.vars['$x0'] = temp_x0;
+	
 	// I know it's pessimistic
 	this.ctx.cu = false
 	
@@ -544,20 +555,18 @@ Interpreter.prototype.inst_call = function(inst) {
 	var fname = x0.name;
 	var arity = x0.args.length;
 	
-	var clause_index = this.ctx.tse.p.ci || 0;
-	this.ctx.tse.p.ci = clause_index;
-
 	var result = this._execute({
 		 f:  fname
 		,a:  arity
-		,ci: clause_index
+		,ci: this.ctx.tse.p.ci
 	});
 	
-	this.ctx.cse = this.ctx.tse;
-	
 	this.ctx.tse.p.ct = result.ct;
-	
 	this.ctx.p.i = 0;
+	
+	//  Make the jump in the target environment
+	//
+	this.ctx.cse = this.ctx.tse;
 	
 	// We got this far... so everything is good
 	this.ctx.cu = true;
@@ -1144,13 +1153,9 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 			var struct = new Functor(fname);
 			this.ctx.cs = struct;
 			
-			
-			// Also update the current environment
-			//this.ctx.cse.vars[x] = struct;
-
 			// And don't forget to actually perform
 			//  the 'write'!
-			value.safe_bind( struct );
+			value.bind( struct );
 			
 			// We are successful
 			this.ctx.cu = true;
@@ -1158,6 +1163,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 			
 		};
 		
+		throw new ErrorInternal("get_struct: invalid path ...");
 	};
 
 	if (value instanceof Functor) {
@@ -1216,8 +1222,6 @@ Interpreter.prototype.inst_get_term = function(inst) {
 
 Interpreter.prototype._get_x = function(inst, type) {
 	
-	//console.log("_get_x: ", inst, type);
-	
 	var p = inst.get('p');
 
 	this.ctx.cu = false;
@@ -1225,7 +1229,6 @@ Interpreter.prototype._get_x = function(inst, type) {
 	if (this.ctx.csm == 'w') {
 		this.ctx.cs.push_arg( p );
 		this.ctx.cu = true;
-		this.ctx.csi++;
 		return;
 	};
 	
