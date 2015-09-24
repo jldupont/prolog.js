@@ -2184,9 +2184,9 @@ Interpreter.prototype.inst_call = function(inst) {
 	 *  to get rid of these or else the target
 	 *  functor might unify with values it shouldn't.
 	 */
-	var temp_x0 = this.ctx.tse.vars['$x0'];
+	var x0 = this.ctx.tse.vars['$x0'];
 	this.ctx.tse.vars = {};
-	this.ctx.tse.vars['$x0'] = temp_x0;
+	this.ctx.tse.vars['$x0'] = x0;
 	
 	// I know it's pessimistic
 	this.ctx.cu = false
@@ -2200,7 +2200,6 @@ Interpreter.prototype.inst_call = function(inst) {
 	
 	// Get functor name & arity from the 
 	//  environment variable x0
-	var x0 = this.ctx.tse.vars['$x0'];
 	
 	var fname = x0.name;
 	var arity = x0.args.length;

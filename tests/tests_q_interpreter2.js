@@ -29,6 +29,32 @@ var Instruction = pr.Instruction;
 
 var ErrorNoMoreInstruction = pr.ErrorNoMoreInstruction;
 
+function call_tracer(where, ctx, data) {
+	
+	var depth;
+	var icount;
+	
+	if (ctx.ctx)
+		icount = Utils.pad(""+ctx.ctx.step_counter, 5)+ " -- ";
+	
+	if (ctx.stack)
+		depth = Utils.pad(""+ctx.stack.length, 5)+" -- ";
+	
+	if (where == 'before_inst') 
+		if (data.opcode == 'setup') {
+			console.log(icount, depth, "CALL: ", ctx.ctx.tse.vars['$x0']);
+		};
+	
+	if (where == 'before_inst')
+		if (data.opcode == 'deallocate') {
+			if (ctx.ctx.cu)
+				console.log(icount, depth, "EXIT: ", ctx.ctx.tse.vars['$x0']);
+			else
+				console.log(icount, depth, "REDO: ", ctx.ctx.tse.vars['$x0']);
+		};
+		
+};
+
 function basic_tracer(ctx, it_ctx, data) {
 
 	if (ctx == 'backtracking') {
@@ -541,8 +567,9 @@ it('Interpreter - batch2 - program - 1', function(){
 	Var.inspect_extended = false;
 	Var.inspect_compact = true;
 	
+	test(rules, query, expected, { tracer: call_tracer });
 	//test(rules, query, expected, { tracer: advanced_tracer });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
-	test(rules, query, expected);
+	//test(rules, query, expected);
 	
 });
