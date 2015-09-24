@@ -422,8 +422,8 @@ Interpreter.prototype._save_continuation = function(where, instruction_offset) {
 
 Interpreter.prototype._add_to_trail = function(which_trail, what_var) {
 	
-	var var_name = what_var.name;
-	which_trail[var_name] = what_var;
+	var vtrail_name = what_var.id + ":" + what_var.name;
+	which_trail[vtrail_name] = what_var;
 };
 
 
@@ -434,8 +434,8 @@ Interpreter.prototype.maybe_add_to_trail = function(which_trail, what_var) {
 	if (dvar.is_bound())
 		return;
 	
-	var var_name = dvar.name;
-	which_trail[var_name] = dvar;
+	var vtrail_name = dvar.id + ":" + dvar.name
+	which_trail[vtrail_name] = dvar;
 	
 	//console.log("| TRAILED: ", dvar.name, dvar.id);
 };
@@ -471,8 +471,14 @@ Interpreter.prototype._unwind_trail = function(which) {
 			continue;
 		
 		trail_var.unbind();
+		
 		//console.log("> TRAIL UNBOUND: ", trail_var.name);
 	};
+	
+	// Next time around, we might have a different clause
+	//  with different variables ... so do some cleanup!
+	which = {};
+
 };
 
 
@@ -862,7 +868,7 @@ Interpreter.prototype.inst_put_void = function() {
 
 	var vvar = new Var("_");
 	
-	this._add_to_trail(this.ctx.tse.trail, vvar);
+	//this._add_to_trail(this.ctx.tse.trail, vvar);
 	
 	struct.push_arg(vvar);
 };
@@ -889,7 +895,7 @@ Interpreter.prototype.inst_put_var = function(inst) {
 	//else
 	//	local_var = local_var.deref();
 	
-	this.maybe_add_to_trail(this.ctx.tse.trail, local_var);
+	//this.maybe_add_to_trail(this.ctx.tse.trail, local_var);
 	
 	struct.push_arg(local_var);
 };
@@ -956,6 +962,9 @@ Interpreter.prototype.inst_unif_value = function(inst) {
 	var that = this;
 	this.ctx.cu = Utils.unify(from_current_structure, value, function(t1) {
 		
+		// we are in the `head` and thus we accumulate the trail
+		//  in the current environment context
+		//
 		that.maybe_add_to_trail(that.ctx.cse.trail, t1);
 	});
 	
@@ -1015,7 +1024,8 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	};
 	
 	if (this.ctx.csm == 'w') {
-		this._add_to_trail(this.ctx.cse.trail, pv);
+		// We don't accumulate on trail because
+		//  there wasn't a binding yet
 		this.ctx.cs.push_arg( pv );
 		this.ctx.cu = true;
 		return;
@@ -1028,6 +1038,9 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	
 	var that = this;
 	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1) {
+		
+		// In the `head`, accumulate in current environment
+		//
 		that._add_to_trail(that.ctx.cse.trail, t1);
 	});
 	

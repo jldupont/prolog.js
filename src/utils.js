@@ -226,9 +226,6 @@ Utils.unify = function(t1, t2, on_bind) {
 		// Both unbound
 		// ============
 		
-		//if (t1d.is_anon && t2d.is_anon)
-		//	return false;
-
 		t1d.bind(t2, on_bind);
 		return true;
 	};
