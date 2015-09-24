@@ -127,7 +127,7 @@ Compiler.prototype.process_head = function(exp, with_body) {
 			
 			if (ctx.as_param) {
 				
-				result.push(new Instruction("unif_var", {x:ctx.v}));
+				result.push(new Instruction("get_var", {x:ctx.v}));
 				return;
 				
 			} else {

@@ -178,9 +178,9 @@ Utils.unify = function(t1, t2, on_bind) {
 	
 	if (t2)
 		t2id = t2.id ? t2.id : "?";
-	*/
-	//console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
 	
+	console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
+	*/
 	
 	//console.log("\n");
 	//console.log("++++ Utils.Unify: t1 = ",t1);
@@ -247,7 +247,7 @@ Utils.unify = function(t1, t2, on_bind) {
 		if (t2d.is_bound()) {
 			return Utils.unify(t2d.get_value(), t1, on_bind);
 		};
-		
+
 		t2d.bind(t1, on_bind);
 		return true;
 	};
@@ -260,7 +260,7 @@ Utils.unify = function(t1, t2, on_bind) {
 			return false;
 		
 		for (var index in t1.args)
-			if (!Utils.unify(t1.args[index], t2.args[index]), on_bind)
+			if (!Utils.unify(t1.args[index], t2.args[index], on_bind))
 				return false;
 		
 		return true;

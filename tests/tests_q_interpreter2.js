@@ -105,7 +105,7 @@ function advanced_tracer(where, it_ctx, data) {
 	
 	if (where == 'before_inst') {
 		
-		line = Utils.pad(""+it_ctx.ctx.step_counter, 5) + " -- ";
+		line = Utils.pad(""+it_ctx.ctx.step_counter, 8) + " -- ";
 		
 		maybe_var = data.get_parameter_name();
 		if (maybe_var)
@@ -119,6 +119,7 @@ function advanced_tracer(where, it_ctx, data) {
 		line += Utils.pad(format_instruction_pointer(it_ctx.ctx.p), 30)
 		+ " -- " + util.inspect(data)
 		+ " -- " + Utils.pad(""+it_ctx.ctx.cu, 10)
+		+ " mode("+it_ctx.ctx.csm+") -- "
 		+ " -- " + Utils.pad("", 5)
 		;
 		
@@ -253,7 +254,14 @@ var test = function(rules, query, expected, options) {
 
 	for (var index in expected) {
 		
-		run(it);
+		try {
+			run(it);	
+		} catch(e) {
+			if (dumpdb_enable)
+				dump_db(it.db.db);
+			throw e;
+		};
+		
 		
 		var vars = it.get_query_vars();
 				
@@ -274,7 +282,12 @@ var test = function(rules, query, expected, options) {
 			var av, ev;
 			
 			try {
-				av = a.get_value();
+				
+				if (a instanceof Var)
+					av = a.get_value();
+				else
+					av = a;
+				
 			} catch(err) {
 				console.log("STACK : ", it.stack);
 				console.log("\n*** VARS: ", vars);
@@ -400,6 +413,58 @@ it('Interpreter - batch2 - complex - 2', function(){
 	
 	Var.inspect_extended = false;
 	
+	/*
+		 exists/2  code ==>  [ { head: 
+	     [ 
+	     	get_struct   ( exists/2, x(0) ),
+	       get_var      ( p("A") ),
+	       get_var      ( x(1) ),
+	       get_struct   ( list/5, x(1) ),
+	       unif_value   ( p("A") ),
+	       unif_void   ,
+	       unif_void   ,
+	       unif_void   ,
+	       unif_void   ,
+	       proceed      
+	      ],
+	    f: 'exists',
+	    a: 2 } ]
+
+		puzzle/1  code ==>  [ { g0: 
+		     [ allocate    ,
+		       put_struct   ( house/5, x(1) ),
+		       put_term     ( p("red") ),
+		       put_term     ( p("english") ),
+		       put_void    ,
+		       put_void    ,
+		       put_void    ,
+		       put_struct   ( exists/2, x(0) ),
+		       put_value    ( x(1) ),
+		       put_var      ( p("Houses") ),
+		       setup       ,
+		       call        ,
+		       maybe_retry ,
+		       deallocate  ,
+		       proceed      ],
+		    head: 
+		     [ get_struct   ( puzzle/1, x(0) ),
+		       get_var      ( p("Houses") ),
+		       jump         ( p("g0") ) ],
+		    f: 'puzzle',
+		    a: 1 } ]
+		
+		
+		 .q./0  code ==>  [ { g0: 
+		     [ allocate    ,
+		       put_struct   ( puzzle/1, x(0) ),
+		       put_var      ( p("Houses") ),
+		       setup       ,
+		       call        ,
+		       maybe_retry ,
+		       deallocate  ,
+		       end          ] } ]
+       
+	 */
 	var rules = [
 	             "exists(A, list(A, _, _, _, _))."
 	             ,"puzzle(Houses) :-  exists(house(red, english, _, _, _), Houses)."
@@ -413,6 +478,8 @@ it('Interpreter - batch2 - complex - 2', function(){
 	                ];
 	
 	test(rules, query, expected);
+	//test(rules, query, expected, {dump_db: true});
+	//test(rules, query, expected, {tracer: advanced_tracer});
 });
 
 
@@ -558,8 +625,7 @@ it('Interpreter - batch2 - program - 1', function(){
 	
 	var expected = [
 	{
-		Houses: ''
-	//"Houses": 'list(house("yellow",norwegian,_,"kools",_),house("red","english",?CYCLE?,oldgold,snails),house("ivory",_,milk,_,_),house(green,"spaniard",coffee,?CYCLE?,"dog"),house(yellow,"ukrainian","tea",kools,_))'
+		Houses: 'list(house("yellow",norwegian,_,"kools",fox),house(blue,"ukrainian","tea",chesterfield,horse),house("red","english",milk,oldgold,snails),house(ivory,"spaniard",orangejuice,luckystike,"dog"),house("green",japanese,"coffee",parliament,_))'
 	}
 	                ];
 	
@@ -567,9 +633,9 @@ it('Interpreter - batch2 - program - 1', function(){
 	Var.inspect_extended = false;
 	Var.inspect_compact = true;
 	
-	test(rules, query, expected, { tracer: call_tracer });
+	//test(rules, query, expected, { tracer: call_tracer });
 	//test(rules, query, expected, { tracer: advanced_tracer });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
-	//test(rules, query, expected);
+	test(rules, query, expected);
 	
 });

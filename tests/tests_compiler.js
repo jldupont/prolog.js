@@ -311,12 +311,12 @@ it('Compiler - basic - 2', function(){
 	var expected = [[ 
   'get_struct   ( h1/3, x(0) )',
   'get_term     ( p("a") )',
-  'unif_var     ( x(1) )',
+  'get_var      ( x(1) )',
   'get_number   ( p(666) )',
   'get_struct   ( h2/3, x(1) )',
-  'unif_var     ( x(2) )',
-  'unif_var     ( x(3) )',
-  'unif_var     ( x(4) )',
+  'get_var      ( x(2) )',
+  'get_var      ( x(3) )',
+  'get_var      ( x(4) )',
   'get_struct   ( h3a/1, x(2) )',
   'unify_term   ( p("h3a") )',
   'get_struct   ( h3b/1, x(3) )',
@@ -514,7 +514,7 @@ it('Compiler - rule/fact - complex - 2', function(){
 			     ],
 		  head: [
 					'get_struct   ( f1/1, x(0) )',
-					'unif_var     ( x(1) )',
+					'get_var      ( x(1) )',
 					'get_struct   ( g1/1, x(1) )',
 					'unif_var     ( p("A") )',
 					'jump         ( p("g0") )'

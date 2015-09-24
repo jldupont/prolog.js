@@ -578,11 +578,11 @@ Var.prototype.bind = function(value, on_bind) {
 	if (this.value != null)
 		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
 	
+	if (on_bind) {
+		on_bind(this);
+	} 
+		
 	this.value = value;
-	
-	if (on_bind) on_bind(this);
-	
-	//console.log("::::: Binded: ", this);	
 };
 
 Var.prototype.is_bound = function(){
@@ -707,7 +707,9 @@ Instruction.prototype.is = function(opcode) {
 	return this.opcode == opcode;
 };
 
-Instruction.prototype.get = function(param) {
+Instruction.prototype.get = function(param, maybe_prefix) {
+	if (maybe_prefix)
+		return maybe_prefix + this.ctx[param];
 	return this.ctx[param];
 };
 
@@ -987,7 +989,7 @@ Compiler.prototype.process_head = function(exp, with_body) {
 			
 			if (ctx.as_param) {
 				
-				result.push(new Instruction("unif_var", {x:ctx.v}));
+				result.push(new Instruction("get_var", {x:ctx.v}));
 				return;
 				
 			} else {
@@ -2059,7 +2061,7 @@ Interpreter.prototype._save_continuation = function(where, instruction_offset) {
 
 Interpreter.prototype._add_to_trail = function(which_trail, what_var) {
 	
-	var vtrail_name = what_var.id + ":" + what_var.name;
+	var vtrail_name = what_var.name;
 	which_trail[vtrail_name] = what_var;
 };
 
@@ -2071,7 +2073,7 @@ Interpreter.prototype.maybe_add_to_trail = function(which_trail, what_var) {
 	if (dvar.is_bound())
 		return;
 	
-	var vtrail_name = dvar.id + ":" + dvar.name
+	var vtrail_name = dvar.name
 	which_trail[vtrail_name] = dvar;
 	
 	//console.log("| TRAILED: ", dvar.name, dvar.id);
@@ -2574,29 +2576,43 @@ Interpreter.prototype.inst_put_value = function(inst) {
  */
 Interpreter.prototype.inst_unif_value = function(inst) {
 	
-	var v = inst.get('p');
-	var pv = this.ctx.cse.vars[v];
+	var p = inst.get('p');
+	var pv = this.ctx.cse.vars[p];
 	
-	var value = pv.deref().get_value();
+	/*
+	 *  Cases:
+	 *    What is locally at 'p'
+	 *    1- a Var
+	 *    2- a Functor (structure) or a Token
+	 *    
+	 *  In case of (1) :
+	 *  ================
+	 *     in 'w' mode ==> push
+	 *     in 'r' mode ==> unify
+	 *     
+	 *  In case of (2) :
+	 *  ================
+	 *     in 'w' mode ==> push
+	 *     in 'r' mode ==> unify
+	 */
 
+	// `write` mode ?
+	//
+	if (this.ctx.csm == 'w') {
+		this.ctx.cs.push_arg( pv );
+		this.ctx.cu = true;
+		return;
+	};
+	
+	
+	var from_current_structure = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
 	// IMPORTANT: the variable should already
 	//            have been created in the local environment
 	// =====================================================
 	
-	
-	// `write` mode ?
-	//
-	if (this.ctx.csm == 'w') {
-		this.ctx.cs.push_arg( value );
-		this.ctx.cu = true;
-		return;
-	};
-
-	var from_current_structure = this.ctx.cs.get_arg( this.ctx.csi++ );
-	
 	var that = this;
-	this.ctx.cu = Utils.unify(from_current_structure, value, function(t1) {
+	this.ctx.cu = Utils.unify(from_current_structure, pv, function(t1) {
 		
 		// we are in the `head` and thus we accumulate the trail
 		//  in the current environment context
@@ -2698,15 +2714,15 @@ Interpreter.prototype.inst_unif_var = function(inst) {
  */
 Interpreter.prototype.inst_get_var = function(inst) {
 	
-	var p = inst.get('p');
-	var pv = new Var(p);
+	var local_var = inst.get('p') || inst.get('x', "$x");
 	
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 
-	pv.bind(value_or_var);
-	
-	this.ctx.cse.vars[p] = pv;
-	this._add_to_trail(this.ctx.cse.trail, pv);
+	// We don't need to trail anything here :
+	//  we are just using a reference and 
+	//  all local variables will get flushed during a subsequent `call`.
+	//
+	this.ctx.cse.vars[local_var] = value_or_var;
 	
 	this.ctx.cu = true;
 };
@@ -2749,7 +2765,7 @@ Interpreter.prototype.inst_get_value = function(inst) {
  */
 Interpreter.prototype.inst_get_struct = function(inst) {
 	
-	var x = "$x" + inst.get('x');
+	var x = inst.get('x', "$x");
 	
 	// Are we switching argument in the `head` functor?
 	//
@@ -2785,85 +2801,71 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 	this.ctx.csi = 0;
 	
 
-	
-	// Fetch the value from the target input variable
+	// Fetch the local value
 	var input_node = this.ctx.cse.vars[x];
 
-	
-	
-	if (!input_node) {
-		// need to create a variable in the current environment
-		var pv = new Var(x);
-		this.ctx.cse.vars[pv.name] = pv;
-		input_node = pv;
-	}; 
 
-	
-	/*
-	 *   We have the following cases:
-	 *   ----------------------------
-	 *   
-	 *   1) There is actually a structure present in the input node
-	 *   2) There is a variable
-	 *      a) The variable is bound   ==> "read" mode
-	 *         1) The variable dereferences to a compatible struct ==> SUCCESS
-	 *         2) The variable dereferences to an incompatible struct ==> FAIL
-	 *         3) The variable dereferences to something else than a struct ==> FAIL
-	 *         
-	 *      b) The variable is unbound ==> "write" mode 
-	 * 
-	 *   3) There is nothing yet ==> "write" mode
-	 */
+	var dvar;
 
 	if (input_node instanceof Var) {
 		
-		var dvar = input_node.deref();
+		dvar = input_node.deref();
+		
+		if ( !dvar.is_bound() ) {
 
-		if (!dvar.is_bound()) {
-			//console.log("WRITE MODE: ", value);
-			this.ctx.csm = "w";
+			/*
+			 * We have received a unbound variable ==> "w" mode + trail
+			 */
+			this._add_to_trail(this.ctx.cse.trail, input_node);
+			
+			this.ctx.csm = 'w';
 			
 			var struct = new Functor(fname);
 			this.ctx.cs = struct;
 			
-			// And don't forget to actually perform
-			//  the 'write'!
 			dvar.bind( struct );
 			
-			// TODO do we really need this??
-			this._add_to_trail(this.ctx.cse.trail, dvar);
-			
-			// We are successful
 			this.ctx.cu = true;
 			return;
-		};
-
-		// Let's pass-through to the next checks
-		//  (we are definitely in `read` mode at this point
-		//
-		input_node = dvar.get_value();
+		}
+		
+		
 	};
-		
+	
+	// We can only be in 'r' mode pass this point
 	//
-	// DON'T CHANGE THE ORDER HERE!
-	//
-	if (input_node instanceof Functor) {
+	this.ctx.csm = 'r';
+	
+	var node = input_node; 
+	
+	if (dvar) {
 		
-		if (input_node.get_name() != fname) {
+		/*
+		 *  We have a bound variable ==> "r" mode, unify
+		 */
+		node = dvar.get_value();
+		
+	};
+	
+	/*
+	 *  We have a proper structure
+	 *    passed on in the `head`
+	 */
+	if (node instanceof Functor) {
+		
+		if (node.get_name() != fname) {
 			return this.backtrack();	
 		};
 
-		if (input_node.get_arity() != +farity ) {
+		if (node.get_arity() != +farity ) {
 			return this.backtrack();
 		};
 		
-		this.ctx.cs = input_node;
+		this.ctx.cs = node;
 		this.ctx.cu = true;
-		this.ctx.csm = 'r';
 		return;
 	};
-	
-	
+
 	
 	
 	this.backtrack();
@@ -4010,9 +4012,9 @@ Utils.unify = function(t1, t2, on_bind) {
 	
 	if (t2)
 		t2id = t2.id ? t2.id : "?";
-	*/
-	//console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
 	
+	console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
+	*/
 	
 	//console.log("\n");
 	//console.log("++++ Utils.Unify: t1 = ",t1);
@@ -4079,7 +4081,7 @@ Utils.unify = function(t1, t2, on_bind) {
 		if (t2d.is_bound()) {
 			return Utils.unify(t2d.get_value(), t1, on_bind);
 		};
-		
+
 		t2d.bind(t1, on_bind);
 		return true;
 	};
@@ -4092,7 +4094,7 @@ Utils.unify = function(t1, t2, on_bind) {
 			return false;
 		
 		for (var index in t1.args)
-			if (!Utils.unify(t1.args[index], t2.args[index]), on_bind)
+			if (!Utils.unify(t1.args[index], t2.args[index], on_bind))
 				return false;
 		
 		return true;

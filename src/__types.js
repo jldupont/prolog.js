@@ -584,11 +584,11 @@ Var.prototype.bind = function(value, on_bind) {
 	if (this.value != null)
 		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
 	
+	if (on_bind) {
+		on_bind(this);
+	} 
+		
 	this.value = value;
-	
-	if (on_bind) on_bind(this);
-	
-	//console.log("::::: Binded: ", this);	
 };
 
 Var.prototype.is_bound = function(){
@@ -713,7 +713,9 @@ Instruction.prototype.is = function(opcode) {
 	return this.opcode == opcode;
 };
 
-Instruction.prototype.get = function(param) {
+Instruction.prototype.get = function(param, maybe_prefix) {
+	if (maybe_prefix)
+		return maybe_prefix + this.ctx[param];
 	return this.ctx[param];
 };
 
