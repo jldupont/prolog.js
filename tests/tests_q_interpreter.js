@@ -650,6 +650,8 @@ it('Interpreter - complex - 5', function(){
 
 it('Interpreter - program - 1', function(){
 
+	//console.log("\n~~~~~~~~~~~ Interpreter - program - 1");
+	
 	Var.inspect_extended = true;
 	
 	var rules = [

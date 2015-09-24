@@ -1062,42 +1062,16 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 Interpreter.prototype.inst_get_var = function(inst) {
 	
 	var p = inst.get('p');
+	var pv = new Var(p);
 	
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
-	
-	/*
-	 *  If we find a variable in the structure
-	 *     being deconstructed, put it locally.
-	 */
-	if (value_or_var instanceof Var) {
-		/*
-		 *  No need to trail here: it is a local
-		 *   variable and thus will be disposed of
-		 *   if a `retry` is attempted.
-		 */
-		this.ctx.cse.vars[p] = value_or_var;
-		this.ctx.cu = true;
-		return;
-	};
 
-	/*
-	 *  Anything kept locally must go
-	 *   in a proper variable
-	 */
-	var pv = this.ctx.cse.vars[p];
+	pv.bind(value_or_var);
 	
-	if (!pv) {
-		pv = new Var(p);
-		this.ctx.cse.vars[pv.name] = pv;
-	};
-		
-	var that = this;
-	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1){
-		that._add_to_trail(that.ctx.cse.trail, t1);
-	});
+	this.ctx.cse.vars[p] = pv;
+	this._add_to_trail(this.ctx.cse.trail, pv);
 	
-	if (!this.ctx.cu)
-		this.backtrack();
+	this.ctx.cu = true;
 };
 
 /**
