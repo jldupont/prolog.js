@@ -485,7 +485,7 @@ it('Interpreter - batch2 - complex - 2', function(){
 
 it('Interpreter - batch2 - program - 1', function(){
 	
-	console.log("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Interpreter - batch2 - program 1");
+	//console.log("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Interpreter - batch2 - program 1");
 	
 	var rules = [
 					 "exists(A, list(A, _, _, _, _))."
@@ -612,7 +612,7 @@ it('Interpreter - batch2 - program - 1', function(){
 	 * 
 	 */
 	
-	/* complete puzzle:
+	/* complete puzzle:  OK :)
 	 
 	 list(	house(yellow,norwegian,_,kools,fox),
 	 		house(blue,ukrainian,tea,chesterfield,horse),

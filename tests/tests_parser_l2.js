@@ -242,11 +242,22 @@ it('ParserL2 - operator `is`', function(){
 	process(text, expected);
 });
 
+it('ParserL2 - list - 0', function(){
+
+	var text = "[1]";
+	var expected =  [ 
+	                  'Functor(cons/2,Token(number,1),Token(nil,null))' 
+	                  ];
+	
+	process(text, expected);
+});
+
+
 it('ParserL2 - list - 1', function(){
 
 	var text = "[1,2,3]";
 	var expected =  [ 
-	                  'Functor(cons/2,Token(number,1),Functor(cons/2,Token(number,2),Functor(cons/1,Token(number,3))))' 
+	                  'Functor(cons/2,Token(number,1),Functor(cons/2,Token(number,2),Functor(cons/2,Token(number,3),Token(nil,null))))' 
 	                  ];
 	
 	process(text, expected);
@@ -256,6 +267,24 @@ it('ParserL2 - list - 2', function(){
 
 	var text = "[A,B | T]";
 	var expected = [ 'Functor(cons/2,Var(A),Functor(cons/2,Var(B),Var(T)))' ];
+	
+	process(text, expected);
+});
+
+it('ParserL2 - list - 3', function(){
+
+	var text = "[]";
+	var expected = [ 'Token(nil,null)' ];
+	
+	process(text, expected);
+});
+
+
+
+it('ParserL2 - list - complex - 1', function(){
+
+	var text = "f([A,B]) :- list(A,B).";
+	var expected = [ 'Functor(f/1,Functor(cons/4,Var(A),Functor(cons/1,Var(B)),OpNode(`:-`,1200),Functor(list/2,Var(A),Var(B))))' ];
 	
 	process(text, expected);
 });

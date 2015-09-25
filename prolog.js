@@ -762,13 +762,13 @@ Instruction.prototype.inspect = function(){
 
 function ErrorExpectingFunctor(msg, _args) {
 	this.message = msg;
-	this.args = args_;
+	this.args = _args;
 };
 ErrorExpectingFunctor.prototype = Error.prototype;
 
 function ErrorFunctorNotFound(msg, _args) {
 	this.message = msg;
-	this.args = args_;
+	this.args = _args;
 };
 ErrorFunctorNotFound.prototype = Error.prototype;
 
@@ -3538,8 +3538,17 @@ ParserL2.prototype.process = function(){
 
 		if (token.name == 'list:close') {
 			
-			if (this.context.diving_list)
+			if (this.context.diving_list) {
+				
+				if (expression.length < 2)
+					expression.push(new Token("nil"));
+				
+				if (expression.length == 0)
+					expression.push(new Token("nil"));
+				
 				return this._handleEnd( expression );
+			};
+				
 			
 			continue;
 		};
@@ -3692,6 +3701,7 @@ ParserL3.prototype.process = function(){
 	var result = [];
 	
 	for (var op_index in this.op_list) {
+		
 		var opcode = this.op_list[op_index]; 
 		
 		for (var index=0; index < (this.expressions).length; index++) {
@@ -3715,6 +3725,8 @@ ParserL3.prototype.process = function(){
  */
 ParserL3.process_expression = function(opcode, expression){
 
+	console.log("\nprocess_expression: ", opcode, expression);
+	
 	var result;
 
 	for(;;) {
@@ -3728,6 +3740,8 @@ ParserL3.process_expression = function(opcode, expression){
 		var current_count_of_opnodes_processed = tresult[1];
 		
 		result = tresult[0];
+		
+		console.log(opcode, expr, result);
 		
 		// we didn't make any progress... bail out
 		//

@@ -218,8 +218,17 @@ ParserL2.prototype.process = function(){
 
 		if (token.name == 'list:close') {
 			
-			if (this.context.diving_list)
+			if (this.context.diving_list) {
+				
+				if (expression.length < 2)
+					expression.push(new Token("nil"));
+				
+				if (expression.length == 0)
+					expression.push(new Token("nil"));
+				
 				return this._handleEnd( expression );
+			};
+				
 			
 			continue;
 		};

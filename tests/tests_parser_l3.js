@@ -34,6 +34,7 @@ var setup = function(text) {
 	var result = p.process();
 	var terms = result.terms;
 
+	console.log("Terms: ", terms);
 	
 	var p = new ParserL3(terms, Op.ordered_list_by_precedence);
 	
@@ -83,8 +84,25 @@ var process = function(text, expected) {
 	
 };
 
+it('ParserL3 - basic - 0 ', function(){
+
+	Functor.inspect_compact_version = true;
+	
+	var text = "f(A,B) :- list(A,B).";
+	var exp = [
+	           [ 'rule(f(Var(A),Var(B)),list(Var(A),Var(B)))' 
+	             ]
+	          ];
+
+	process(text, exp);
+	
+});
+
+
 
 it('ParserL3 - simple ', function(){
+
+	Functor.inspect_compact_version = false;
 	
 	var text = "A+B+C.";
 	var exp = [
@@ -261,16 +279,9 @@ it('ParserL3 - expression - 7 ', function(){
 });
 
 
-it('ParserL3 - list - 1', function(){
-	
-	var text = "[A,B | T ].";
-	var expected = [['Functor(cons/2,Var(A),Functor(cons/2,Var(B),Var(T)))']];
-	
-	process(text, expected);
-});
-
-
 it('ParserL3 - multi-expression - 1', function(){
+	
+	Functor.inspect_compact_version = false;
 	
 	var text = "f1(a,b,c). \n f2(d,e,f). \n f3(x,y,z).\n";
 	var expected = [ 
@@ -281,3 +292,46 @@ it('ParserL3 - multi-expression - 1', function(){
 	
 	process(text, expected);
 });
+
+
+it('ParserL3 - list - 1', function(){
+	
+	var text = "[A,B | T ].";
+	var expected = [['Functor(cons/2,Var(A),Functor(cons/2,Var(B),Var(T)))']];
+	
+	process(text, expected);
+});
+
+it('ParserL3 - list - 2', function(){
+	
+	Functor.inspect_compact_version = true;
+	
+	var text = "f([A,B]).";
+	var expected = [['f(cons(Var(A),cons(Var(B))))']];
+	
+	process(text, expected);
+});
+
+it('ParserL3 - list - 3', function(){
+
+	console.log("\n~~~~~~~~~~~ ParserL3 - list - 3");
+	
+	/* Parser L2 production:
+	 * 
+	 *    f(cons(Var(A),cons(Var(B)),  OpNode(`:-`,1200),  list(Var(A),Var(B))))
+	 * 
+	 */
+	
+	/* ISSUE ...
+	 *   f(cons(Var(A),rule(cons(Var(B)),list(Var(A),Var(B)))))
+	 * 
+	 */
+	
+	Functor.inspect_compact_version = true;
+	
+	var text = "f([A,B]) :- list(A,B).";
+	var expected = [['f(cons(Var(A),cons(Var(B))))']];
+	
+	process(text, expected);
+});
+

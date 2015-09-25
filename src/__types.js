@@ -768,13 +768,13 @@ Instruction.prototype.inspect = function(){
 
 function ErrorExpectingFunctor(msg, _args) {
 	this.message = msg;
-	this.args = args_;
+	this.args = _args;
 };
 ErrorExpectingFunctor.prototype = Error.prototype;
 
 function ErrorFunctorNotFound(msg, _args) {
 	this.message = msg;
-	this.args = args_;
+	this.args = _args;
 };
 ErrorFunctorNotFound.prototype = Error.prototype;
 

@@ -26,6 +26,51 @@ var Utils = pr.Utils;
 
 var ErrorInvalidHead = pr.ErrorInvalidHead;
 
+var process_rule = function(input_text, expecteds, options) {
+	
+	options = options || {};
+	
+	var expressions = setup(input_text);
+	
+	var results = [];
+	
+	if (options.show_parsed)
+		console.log("Parsed:", expressions);
+	
+	for (var index = 0; index<expressions.length; index++) {
+		
+		var expression = expressions[index][0];
+		
+		if (!expression)
+			break;
+
+		var c = new Compiler();
+		
+		//console.log("Expression: ", expression);
+
+		var result = c.process_rule(expression);
+		
+		results.push(result);
+	};
+	
+	if (options.show_compiled)
+		console.log(results);
+	
+	//if (expecteds.length!=results.length)
+	//	throw new Error();
+	
+	for (var index=0; index < results.length; index++) {
+		
+		var ri = results[index];
+		var expected = expecteds[index];
+		
+		var result = Utils.compare_objects(expected, ri);
+		should.equal(result, true, "input: " + util.inspect(ri));
+	};
+
+
+};
+
 
 var setup = function(text) {
 
@@ -181,46 +226,6 @@ var process_body = function(input_text, expecteds, show_results) {
 
 };
 
-var process_rule = function(input_text, expecteds) {
-	
-	var expressions = setup(input_text);
-	
-	var results = [];
-	
-	//console.log(expressions);
-	
-	for (var index = 0; index<expressions.length; index++) {
-		
-		var expression = expressions[index][0];
-		
-		if (!expression)
-			break;
-
-		var c = new Compiler();
-		
-		//console.log("Expression: ", expression);
-
-		var result = c.process_rule(expression);
-		
-		results.push(result);
-	};
-	
-	//console.log(results);
-	
-	//if (expecteds.length!=results.length)
-	//	throw new Error();
-	
-	for (var index=0; index < results.length; index++) {
-		
-		var ri = results[index];
-		var expected = expecteds[index];
-		
-		var result = Utils.compare_objects(expected, ri);
-		should.equal(result, true, "input: " + util.inspect(ri));
-	};
-
-
-};
 
 var process = function(input_text, expecteds) {
 	
@@ -1100,3 +1105,19 @@ it('Compiler - body - complex - 6', function(){
 	process_body(text, expected);
 });
 
+/*
+it('Compiler - list - 1', function(){
+	
+	//console.log("\n***complex 6***\n");
+	
+	var text = "f([A,B]) :- list(A,B).";
+	
+	
+	var expected = [
+	     { "head": []}
+	];
+	
+	process_rule(text, expected, {show_parsed: true, show_compiled: true});
+});
+
+*/
