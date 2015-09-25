@@ -307,7 +307,7 @@ it('ParserL3 - list - 2', function(){
 	Functor.inspect_compact_version = true;
 	
 	var text = "f([A,B]).";
-	var expected = [['f(cons(Var(A),cons(Var(B))))']];
+	var expected = [['f(cons(Var(A),cons(Var(B),Token(nil,null))))']];
 	
 	process(text, expected);
 });

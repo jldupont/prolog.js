@@ -284,7 +284,7 @@ it('ParserL2 - list - 3', function(){
 it('ParserL2 - list - complex - 1', function(){
 
 	var text = "f([A,B]) :- list(A,B).";
-	var expected = [ 'Functor(f/1,Functor(cons/4,Var(A),Functor(cons/1,Var(B)),OpNode(`:-`,1200),Functor(list/2,Var(A),Var(B))))' ];
+	var expected = [ 'Functor(f/1,Functor(cons/4,Var(A),Functor(cons/2,Var(B),Token(nil,null)),OpNode(`:-`,1200),Functor(list/2,Var(A),Var(B))))' ];
 	
 	process(text, expected);
 });
