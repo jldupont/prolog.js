@@ -306,7 +306,7 @@ it('ParserL2 - list - 2', function(){
 
 	var text = "[A,B | T]";
 	var expected = [ 
-	'Functor(cons/2,Token(var,A),Functor(cons/2,Token(var,B),Token(var,T)))' 
+	'Functor(cons/2,Var(A),Functor(cons/2,Var(B),Var(T)))' 
 	                 ];
 	
 	process(text, expected);
@@ -497,7 +497,7 @@ it('ParserL2 - list - complex - 1', function(){
 
 	var text = "f([A,B]) :- list(A,B).";
 	var expected = [ 
-	'f(cons(Token(var,A),cons(Token(var,B),Token(nil,null))))'
+	'f(cons(Var(A),cons(Var(B),Token(nil,null))))'
 	,'OpNode(`:-`,1200)'
 	,'list(Var(A),Var(B))'
 	                 ];

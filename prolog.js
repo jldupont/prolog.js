@@ -3525,7 +3525,7 @@ ParserL2.process_list = function(input, index) {
 	 */
 	var proc_token = function(token) {
 		
-		if (token.name == 'var') {
+		if (token && token.name == 'var') {
 			var v = new Var(token.value);
 			v.col = token.col;
 			v.line = token.line;

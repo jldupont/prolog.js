@@ -1108,19 +1108,46 @@ it('Compiler - body - complex - 6', function(){
 
 it('Compiler - list - 1', function(){
 	
-	//console.log("\n***complex 6***\n");
+	//console.log("\n***Compiler - list - 1\n");
 	
 	var text = "f([A,B]) :- list(A,B).";
 	
 	/*
-	   rule(f(cons(Token(var,A),cons(Token(var,B),Token(nil,null)))),list(Var(A),Var(B)))
+	   Functor(rule/2,
+	   	Functor(f/1,Functor(cons/2,Var(A),Functor(cons/2,Var(B),'Token(nil,null)'))),
+	   	Functor(list/2,Var(A),Var(B)))
 	 */
 	
 	
 	var expected = [
-	     { "head": []}
+	     { g0: 
+			   [ 
+			     'allocate'    ,
+			     'put_struct   ( list/2, x(0) )',
+			     'put_var      ( p("A") )',
+			     'put_var      ( p("B") )',
+			     'setup'       ,
+			     'call'        ,
+			     'maybe_retry' ,
+			     'deallocate'  ,
+			     'proceed'      
+			     ],
+			  head: 
+			   [ 
+			     'get_struct   ( f/1, x(0) )',
+			     'get_var      ( x(1) )',
+			     'get_struct   ( cons/2, x(1) )',
+			     'unif_var     ( p("A") )',
+			     'get_var      ( x(2) )',
+			     'get_struct   ( cons/2, x(2) )',
+			     'unif_var     ( p("B") )',
+			     'jump         ( p("g0") )' 
+			     ],
+		  f: 'f',
+		  a: 1 }
 	];
 	
-	process_rule(text, expected, {show_parsed: true, show_compiled: true});
+	//process_rule(text, expected, {show_parsed: true, show_compiled: true});
+	process_rule(text, expected);
 });
 

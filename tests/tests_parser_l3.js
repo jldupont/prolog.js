@@ -218,7 +218,7 @@ it('ParserL3 - expression - 3', function(){
 	var expected = [[
    //rule(append(cons(Token(var,H),cons(Token(var,T),Token(nil,null))),Var(L2),cons(Token(var,H),cons(Token(var,L3),Token(nil,null)))),
    //       append(Var(T),Var(L2),Var(L3)))
-	                 'rule(append(cons(Token(var,H),Token(var,T)),Var(L2),cons(Token(var,H),Token(var,L3))),append(Var(T),Var(L2),Var(L3)))'	                
+	                 'rule(append(cons(Var(H),Var(T)),Var(L2),cons(Var(H),Var(L3))),append(Var(T),Var(L2),Var(L3)))'	                
 	                 ]];
 	
 	process(text, expected);
@@ -306,7 +306,7 @@ it('ParserL3 - list - 1', function(){
 	
 	var text = "[A,B | T ].";
 	var expected = [[
-	                 'cons(Token(var,A),cons(Token(var,B),Token(var,T)))'
+	                 'cons(Var(A),cons(Var(B),Var(T)))'
 	                 ]];
 	
 	process(text, expected);
@@ -318,7 +318,7 @@ it('ParserL3 - list - 2', function(){
 	
 	var text = "f([A,B]).";
 	var expected = [[
-	                 'f(cons(Token(var,A),cons(Token(var,B),Token(nil,null))))'
+	                 'f(cons(Var(A),cons(Var(B),Token(nil,null))))'
 	                 ]];
 	
 	process(text, expected);
@@ -326,7 +326,7 @@ it('ParserL3 - list - 2', function(){
 
 it('ParserL3 - list - 3', function(){
 
-	console.log("\n~~~~~~~~~~~ ParserL3 - list - 3");
+	//console.log("\n~~~~~~~~~~~ ParserL3 - list - 3");
 	
 	/* Parser L2 production:
 	 * 
@@ -343,7 +343,7 @@ it('ParserL3 - list - 3', function(){
 	
 	var text = "f([A,B]) :- list(A,B).";
 	var expected = [[
-	                 'rule(f(cons(Token(var,A),cons(Token(var,B),Token(nil,null)))),list(Var(A),Var(B)))'
+	                 'rule(f(cons(Var(A),cons(Var(B),Token(nil,null)))),list(Var(A),Var(B)))'
 	                 ]];
 	
 	process(text, expected);
