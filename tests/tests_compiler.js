@@ -1105,12 +1105,16 @@ it('Compiler - body - complex - 6', function(){
 	process_body(text, expected);
 });
 
-/*
+
 it('Compiler - list - 1', function(){
 	
 	//console.log("\n***complex 6***\n");
 	
 	var text = "f([A,B]) :- list(A,B).";
+	
+	/*
+	   rule(f(cons(Token(var,A),cons(Token(var,B),Token(nil,null)))),list(Var(A),Var(B)))
+	 */
 	
 	
 	var expected = [
@@ -1120,4 +1124,3 @@ it('Compiler - list - 1', function(){
 	process_rule(text, expected, {show_parsed: true, show_compiled: true});
 });
 
-*/

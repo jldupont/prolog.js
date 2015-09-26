@@ -3471,6 +3471,31 @@ ParserL2.preprocess_list = function(input, index) {
 
 ParserL2.nil = new Token('nil');
 
+ParserL2.prototype.get_token = function() {
+	
+	/*
+	 *  Swap Token('var', X) ==> Var(X)
+	 */
+	var maybe_translate_var = function(token) {
+		
+		if (token == null)
+			return null;
+		
+		if (token.name == 'var') {
+			var v = new Var(token.value);
+			v.col = token.col;
+			v.line = token.line;
+			return v;
+		};
+		return token;
+	};
+	
+	var token = this.tokens[this.index] || null;
+	this.index = this.index + 1;
+	
+	return maybe_translate_var(token);
+};
+
 /**
  *  Processes the input stream assuming it is a list
  *   and returns a cons/2 structure
@@ -3495,8 +3520,23 @@ ParserL2.process_list = function(input, index) {
 	
 	index++;
 	
+	/*
+	 *  Swap Token('var', X) ==> Var(X)
+	 */
+	var proc_token = function(token) {
+		
+		if (token.name == 'var') {
+			var v = new Var(token.value);
+			v.col = token.col;
+			v.line = token.line;
+			return v;
+		};
+		return token;
+	};
+	
 	var output =  ParserL2._process_list(function(){
-		return input[index++];
+		var token = input[index++];
+		return proc_token(token);
 	});
 
 	//var result = (output.name == 'nil' ? output: output.args[0]); 
@@ -3589,8 +3629,7 @@ ParserL2.prototype.process = function(){
 	for (;;) {
 		
 		// Pop a token from the input list
-		token = this.tokens[this.index] || null;
-		this.index = this.index + 1;
+		token = this.get_token();
 		
 		if (token == null || token instanceof Eos)
 			return this._handleEnd( expression );
@@ -3607,15 +3646,6 @@ ParserL2.prototype.process = function(){
 			continue;
 		};
 		
-		
-		// Translate Token for variable to Var
-		if (token.name == 'var') {
-			var v = new Var(token.value);
-			v.col = token.col;
-			v.line = token.line;
-			expression.push(v);
-			continue;
-		};
 		
 		// Handle the case `(exp...)`
 		//
