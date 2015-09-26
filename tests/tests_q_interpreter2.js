@@ -148,14 +148,17 @@ function advanced_tracer(where, it_ctx, data, options) {
 			if (it_ctx.ctx.tse)
 				maybe_value = it_ctx.ctx.tse.vars[maybe_var];
 
-		if (maybe_var) {
+		if (!dump_vars && maybe_var) {
 			line += util.inspect(maybe_value);
 			console.log(line);
 		}
 		
 		if (dump_vars) {
 			console.log("CSE: ", it_ctx.ctx.cse.vars);
-			console.log("TSE: ", it_ctx.ctx.tse.vars);
+			
+			if (it_ctx.ctx.cse.vars != it_ctx.ctx.tse.vars)
+				console.log("TSE: ", it_ctx.ctx.tse.vars);
+			console.log("\n");
 		}
 			
 		
@@ -294,7 +297,7 @@ var test = function(rules, query, expected, options) {
 				throw new Error("Missing expect value @ index:"+vindex);
 			};
 			
-			var av, ev;
+			var av;
 			
 			try {
 				
@@ -313,6 +316,9 @@ var test = function(rules, query, expected, options) {
 				throw err;
 			};
 
+			if (!(typeof e == 'string'))
+				e = ""+e;
+			
 			if (!(typeof av == 'string'))
 				av = util.inspect(av);
 			
@@ -733,13 +739,15 @@ append/3  code ==>  [ { head:
 	var query = "append([1,2], [3,4], X).";
 	
 	var expected = [
-	                { "$cu": true }
+	                { "$cu": true, X: 'cons(1,cons(2,cons(3,cons(4,nil))))' }
 	                ];
 
 	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
 	
-	//test(rules, query, expected);
-	test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
 	//test(rules, query, expected, { tracer: call_tracer });
 });

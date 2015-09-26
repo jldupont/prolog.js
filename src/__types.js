@@ -39,7 +39,10 @@ Token.inspect_compact = false;
 Token.prototype.inspect = function(){
 	
 	if (Token.inspect_compact)
-		return this.value;
+		if (this.name == 'nil')
+			return 'nil';
+		else
+			return this.value;
 	
 	var result = "";
 	

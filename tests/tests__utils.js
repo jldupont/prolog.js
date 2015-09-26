@@ -230,3 +230,14 @@ it('Utils - Unify - deref - 2', function(){
 	should.equal(result, null);
 	
 });
+
+it('Utils - List - 1', function(){
+
+	var x = new Var('x');
+	var nil = new Token('nil');
+	
+	var result = Utils.unify(x, nil);
+	
+	should.equal(result, true);
+	
+});

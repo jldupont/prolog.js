@@ -33,7 +33,10 @@ Token.inspect_compact = false;
 Token.prototype.inspect = function(){
 	
 	if (Token.inspect_compact)
-		return this.value;
+		if (this.name == 'nil')
+			return 'nil';
+		else
+			return this.value;
 	
 	var result = "";
 	
@@ -2712,7 +2715,7 @@ Interpreter.prototype.inst_unif_nil = function() {
 	};
 
 	var cell = this.ctx.cs.get_arg( this.ctx.csi++ );
-	this.ctx.cu = (cell instanceof Token) && (cell.name == 'nil');
+	this.ctx.cu = Utils.unify(cell, new Token('nil') );
 
 	if (!this.ctx.cu)
 		this.backtrack();	
@@ -2826,10 +2829,6 @@ Interpreter.prototype.inst_get_value = function(inst) {
 
 	var pv = this.ctx.cse.vars[p];
 	
-	console.log("get_value, p: ", p, pv);
-	
-	//var dvar = p.deref();
-
 	var that = this;
 	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1) {
 		that.maybe_add_to_trail(that.ctx.cse.trail, t1);
