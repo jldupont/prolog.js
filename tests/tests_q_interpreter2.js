@@ -411,6 +411,7 @@ it('Interpreter - batch2 - complex - 2', function(){
 	
 	//console.log("\n\n\n ~~~~~~~~~~~~~~~ Interpreter - batch2 - complex - 2");
 	
+	Functor.inspect_compact_version = true;
 	Var.inspect_extended = false;
 	
 	/*
@@ -474,7 +475,7 @@ it('Interpreter - batch2 - complex - 2', function(){
 	var query = "puzzle(Houses).";
 	
 	var expected = [
-{"Houses": 'Functor(list/5,Functor(house/5,"red","english",Var(_),Var(_),Var(_)),Var(_),Var(_),Var(_),Var(_))'  }
+{"Houses": 'list(house("red","english",Var(_),Var(_),Var(_)),Var(_),Var(_),Var(_),Var(_))'  }
 	                ];
 	
 	test(rules, query, expected);

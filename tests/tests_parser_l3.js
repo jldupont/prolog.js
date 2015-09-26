@@ -317,7 +317,9 @@ it('ParserL3 - list - 2', function(){
 	Functor.inspect_compact_version = true;
 	
 	var text = "f([A,B]).";
-	var expected = [['f(cons(Var(A),cons(Var(B),Token(nil,null))))']];
+	var expected = [[
+	                 'f(cons(Token(var,A),cons(Token(var,B),Token(nil,null))))'
+	                 ]];
 	
 	process(text, expected);
 });
@@ -340,7 +342,9 @@ it('ParserL3 - list - 3', function(){
 	Functor.inspect_compact_version = true;
 	
 	var text = "f([A,B]) :- list(A,B).";
-	var expected = [['f(cons(Var(A),cons(Var(B))))']];
+	var expected = [[
+	                 'rule(f(cons(Token(var,A),cons(Token(var,B),Token(nil,null)))),list(Var(A),Var(B)))'
+	                 ]];
 	
 	process(text, expected);
 });
