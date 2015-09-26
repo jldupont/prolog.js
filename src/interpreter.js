@@ -872,6 +872,15 @@ Interpreter.prototype.inst_put_void = function() {
 	struct.push_arg(vvar);
 };
 
+Interpreter.prototype.inst_put_nil = function() {
+
+	// Structure being built on the top of stack
+	var cv = this.ctx.cv;
+	var struct = this.ctx.tse.vars[cv];
+
+	struct.push_arg( new Token('nil') );
+};
+
 /**
  *   Instruction "put_var"
  * 
@@ -891,10 +900,6 @@ Interpreter.prototype.inst_put_var = function(inst) {
 		local_var = new Var(vname);
 		this.ctx.cse.vars[local_var.name] = local_var;
 	} 
-	//else
-	//	local_var = local_var.deref();
-	
-	//this.maybe_add_to_trail(this.ctx.tse.trail, local_var);
 	
 	struct.push_arg(local_var);
 };
@@ -1002,6 +1007,24 @@ Interpreter.prototype.inst_unif_void = function() {
 };
 
 /**
+ *   Skip a structure's argument
+ */
+Interpreter.prototype.inst_unif_nil = function() {
+	
+	if (this.ctx.csm == 'w') {
+		this.ctx.cs.push_arg( new Token('nil') );
+		this.ctx.cu = true;
+		return;
+	};
+
+	var cell = this.ctx.cs.get_arg( this.ctx.csi++ );
+	this.ctx.cu = (cell instanceof Token) && (cell.name == 'nil');
+
+	if (!this.ctx.cu)
+		this.backtrack();	
+};
+
+/**
  *   Instruction "unif_var" $x
  *   
  *   Unify the value at the current variable
@@ -1036,7 +1059,12 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 		this.ctx.cse.vars[pv.name] = pv;
 	};
 	
+	
+	
 	if (this.ctx.csm == 'w') {
+		
+		//console.log("unif_var (W): ", JSON.stringify(pv));
+		
 		// We don't accumulate on trail because
 		//  there wasn't a binding yet
 		this.ctx.cs.push_arg( pv );
@@ -1048,6 +1076,8 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	// Get from the structure being worked on
 	//
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
+	
+	//console.log("unif_var: ", value_or_var);
 	
 	var that = this;
 	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1) {
@@ -1091,23 +1121,23 @@ Interpreter.prototype.inst_get_var = function(inst) {
 /**
  *  Instruction `get_value`
  *  
- *  Used in the `head` when a variable already appeared
- *   earlier at the `root`.
- *    
+ *  Used in the `head` when a variable already appeared earlier
  *  
  * @param inst
  */
 Interpreter.prototype.inst_get_value = function(inst) {
 	
-	var value;
-	
 	var p = inst.get('p');
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
+
+	var pv = this.ctx.cse.vars[p];
 	
-	var dvar = p.deref();
+	console.log("get_value, p: ", p, pv);
+	
+	//var dvar = p.deref();
 
 	var that = this;
-	this.ctx.cu = Utils.unify(dvar, value_or_var, function(t1) {
+	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1) {
 		that.maybe_add_to_trail(that.ctx.cse.trail, t1);
 	});
 	

@@ -34,8 +34,13 @@ function Token(name, maybe_value, maybe_attrs) {
 };
 
 Token.inspect_quoted = false;
+Token.inspect_compact = false;
 
 Token.prototype.inspect = function(){
+	
+	if (Token.inspect_compact)
+		return this.value;
+	
 	var result = "";
 	
 	result = "Token("+this.name+","+this.value+")";

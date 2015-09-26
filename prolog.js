@@ -28,8 +28,13 @@ function Token(name, maybe_value, maybe_attrs) {
 };
 
 Token.inspect_quoted = false;
+Token.inspect_compact = false;
 
 Token.prototype.inspect = function(){
+	
+	if (Token.inspect_compact)
+		return this.value;
+	
 	var result = "";
 	
 	result = "Token("+this.name+","+this.value+")";
@@ -946,12 +951,27 @@ Compiler.prototype.process_rule = function(exp) {
 	var head = exp.args[0];
 	var body = exp.args[1];
 	
-	var result = this.process_body(body);
+	var result = {};
 	
 	var with_body = true;
+	var not_query = false;
+	
 	result['head'] = this.process_head(head, with_body);
+	
+	var head_vars = result.head.vars;
+
+	var body_code  = this.process_body(body, not_query, head_vars);
+	
+	// I know this is ugly but we had to process
+	//  the head first in order to retrieve the vars.
+	for (var label in body_code)
+		result[label] = body_code[label];
+	
 	result['f'] = head.name;
 	result['a'] = head.args.length;
+	
+	// clean-up
+	delete result.head.vars;
 	
 	return result;
 };
@@ -1066,6 +1086,11 @@ Compiler.prototype.process_head = function(exp, with_body) {
 		
 		if (ctx.n instanceof Token) {
 			
+			if (ctx.n.name == 'nil') {
+				result.push(new Instruction('unif_nil'));
+				return;
+			};
+			
 			if (ctx.n.name == 'term') {
 				
 				if (ctx.root_param)
@@ -1091,6 +1116,8 @@ Compiler.prototype.process_head = function(exp, with_body) {
 		result.push(new Instruction("jump", {p:'g0'}));
 	else
 		result.push(new Instruction("proceed"));
+	
+	result.vars = vars;
 	
 	return result;
 };
@@ -1136,7 +1163,7 @@ Compiler.prototype.process_query = function(exp) {
  *   
  *   @raise
  */
-Compiler.prototype.process_body = function(exp, is_query) {
+Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 	
 	var map = {};
 	var result = {};
@@ -1298,7 +1325,7 @@ Compiler.prototype.process_body = function(exp, is_query) {
 		if (type == 'root') {
 			label = 'g0';
 			
-			result[label] = that.process_goal( ctx.n, is_query );
+			result[label] = that.process_goal( ctx.n, is_query, head_vars );
 			return;
 		}
 		
@@ -1310,8 +1337,8 @@ Compiler.prototype.process_body = function(exp, is_query) {
 		 *     type:  conj | disj
 		 */
 		
-		var lcode = that.process_goal(left_or_root.n, is_query);
-		var rcode = that.process_goal(right_maybe.n, is_query);
+		var lcode = that.process_goal(left_or_root.n, is_query, head_vars);
+		var rcode = that.process_goal(right_maybe.n, is_query, head_vars);
 
 		
 		// CAUTION: lcode/rcode *may* be undefined
@@ -1362,7 +1389,9 @@ Compiler.prototype.process_body = function(exp, is_query) {
  *   the rest of the expression is treated as a structure.
  *   
  */
-Compiler.prototype.process_goal = function(exp, is_query) {
+Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
+	
+	head_vars = head_vars || {};
 	
 	if (exp == undefined)
 		return undefined;
@@ -1391,7 +1420,10 @@ Compiler.prototype.process_goal = function(exp, is_query) {
 				if (n.name[0] == "_")
 					results.push(new Instruction("put_void"));
 				else
-					results.push(new Instruction("put_var", {p: n.name}));
+					if (head_vars[n.name] || is_query)
+						results.push(new Instruction("put_var", {p: n.name}));
+					else 
+						results.push(new Instruction("unif_var", {p: n.name}));
 			};
 
 			if (n instanceof Value) {
@@ -1405,6 +1437,8 @@ Compiler.prototype.process_goal = function(exp, is_query) {
 				if (n.name == 'term')
 					results.push(new Instruction("put_term", {p: n.value}));
 				
+				if (n.name == 'nil')
+					results.push(new Instruction("put_nil"));
 			};
 			
 		};//for
@@ -2532,6 +2566,15 @@ Interpreter.prototype.inst_put_void = function() {
 	struct.push_arg(vvar);
 };
 
+Interpreter.prototype.inst_put_nil = function() {
+
+	// Structure being built on the top of stack
+	var cv = this.ctx.cv;
+	var struct = this.ctx.tse.vars[cv];
+
+	struct.push_arg( new Token('nil') );
+};
+
 /**
  *   Instruction "put_var"
  * 
@@ -2551,10 +2594,6 @@ Interpreter.prototype.inst_put_var = function(inst) {
 		local_var = new Var(vname);
 		this.ctx.cse.vars[local_var.name] = local_var;
 	} 
-	//else
-	//	local_var = local_var.deref();
-	
-	//this.maybe_add_to_trail(this.ctx.tse.trail, local_var);
 	
 	struct.push_arg(local_var);
 };
@@ -2662,6 +2701,24 @@ Interpreter.prototype.inst_unif_void = function() {
 };
 
 /**
+ *   Skip a structure's argument
+ */
+Interpreter.prototype.inst_unif_nil = function() {
+	
+	if (this.ctx.csm == 'w') {
+		this.ctx.cs.push_arg( new Token('nil') );
+		this.ctx.cu = true;
+		return;
+	};
+
+	var cell = this.ctx.cs.get_arg( this.ctx.csi++ );
+	this.ctx.cu = (cell instanceof Token) && (cell.name == 'nil');
+
+	if (!this.ctx.cu)
+		this.backtrack();	
+};
+
+/**
  *   Instruction "unif_var" $x
  *   
  *   Unify the value at the current variable
@@ -2696,7 +2753,12 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 		this.ctx.cse.vars[pv.name] = pv;
 	};
 	
+	
+	
 	if (this.ctx.csm == 'w') {
+		
+		//console.log("unif_var (W): ", JSON.stringify(pv));
+		
 		// We don't accumulate on trail because
 		//  there wasn't a binding yet
 		this.ctx.cs.push_arg( pv );
@@ -2708,6 +2770,8 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	// Get from the structure being worked on
 	//
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
+	
+	//console.log("unif_var: ", value_or_var);
 	
 	var that = this;
 	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1) {
@@ -2751,23 +2815,23 @@ Interpreter.prototype.inst_get_var = function(inst) {
 /**
  *  Instruction `get_value`
  *  
- *  Used in the `head` when a variable already appeared
- *   earlier at the `root`.
- *    
+ *  Used in the `head` when a variable already appeared earlier
  *  
  * @param inst
  */
 Interpreter.prototype.inst_get_value = function(inst) {
 	
-	var value;
-	
 	var p = inst.get('p');
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
+
+	var pv = this.ctx.cse.vars[p];
 	
-	var dvar = p.deref();
+	console.log("get_value, p: ", p, pv);
+	
+	//var dvar = p.deref();
 
 	var that = this;
-	this.ctx.cu = Utils.unify(dvar, value_or_var, function(t1) {
+	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1) {
 		that.maybe_add_to_trail(that.ctx.cse.trail, t1);
 	});
 	
@@ -4199,6 +4263,7 @@ Utils.unify = function(t1, t2, on_bind) {
 	
 	if (t2)
 		t2id = t2.id ? t2.id : "?";
+	
 	
 	console.log("++++ Utils.Unify: ",t1,t1id, t2, t2id);
 	*/

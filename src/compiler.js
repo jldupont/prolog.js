@@ -63,12 +63,27 @@ Compiler.prototype.process_rule = function(exp) {
 	var head = exp.args[0];
 	var body = exp.args[1];
 	
-	var result = this.process_body(body);
+	var result = {};
 	
 	var with_body = true;
+	var not_query = false;
+	
 	result['head'] = this.process_head(head, with_body);
+	
+	var head_vars = result.head.vars;
+
+	var body_code  = this.process_body(body, not_query, head_vars);
+	
+	// I know this is ugly but we had to process
+	//  the head first in order to retrieve the vars.
+	for (var label in body_code)
+		result[label] = body_code[label];
+	
 	result['f'] = head.name;
 	result['a'] = head.args.length;
+	
+	// clean-up
+	delete result.head.vars;
 	
 	return result;
 };
@@ -183,6 +198,11 @@ Compiler.prototype.process_head = function(exp, with_body) {
 		
 		if (ctx.n instanceof Token) {
 			
+			if (ctx.n.name == 'nil') {
+				result.push(new Instruction('unif_nil'));
+				return;
+			};
+			
 			if (ctx.n.name == 'term') {
 				
 				if (ctx.root_param)
@@ -208,6 +228,8 @@ Compiler.prototype.process_head = function(exp, with_body) {
 		result.push(new Instruction("jump", {p:'g0'}));
 	else
 		result.push(new Instruction("proceed"));
+	
+	result.vars = vars;
 	
 	return result;
 };
@@ -253,7 +275,7 @@ Compiler.prototype.process_query = function(exp) {
  *   
  *   @raise
  */
-Compiler.prototype.process_body = function(exp, is_query) {
+Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 	
 	var map = {};
 	var result = {};
@@ -415,7 +437,7 @@ Compiler.prototype.process_body = function(exp, is_query) {
 		if (type == 'root') {
 			label = 'g0';
 			
-			result[label] = that.process_goal( ctx.n, is_query );
+			result[label] = that.process_goal( ctx.n, is_query, head_vars );
 			return;
 		}
 		
@@ -427,8 +449,8 @@ Compiler.prototype.process_body = function(exp, is_query) {
 		 *     type:  conj | disj
 		 */
 		
-		var lcode = that.process_goal(left_or_root.n, is_query);
-		var rcode = that.process_goal(right_maybe.n, is_query);
+		var lcode = that.process_goal(left_or_root.n, is_query, head_vars);
+		var rcode = that.process_goal(right_maybe.n, is_query, head_vars);
 
 		
 		// CAUTION: lcode/rcode *may* be undefined
@@ -479,7 +501,9 @@ Compiler.prototype.process_body = function(exp, is_query) {
  *   the rest of the expression is treated as a structure.
  *   
  */
-Compiler.prototype.process_goal = function(exp, is_query) {
+Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
+	
+	head_vars = head_vars || {};
 	
 	if (exp == undefined)
 		return undefined;
@@ -508,7 +532,10 @@ Compiler.prototype.process_goal = function(exp, is_query) {
 				if (n.name[0] == "_")
 					results.push(new Instruction("put_void"));
 				else
-					results.push(new Instruction("put_var", {p: n.name}));
+					if (head_vars[n.name] || is_query)
+						results.push(new Instruction("put_var", {p: n.name}));
+					else 
+						results.push(new Instruction("unif_var", {p: n.name}));
 			};
 
 			if (n instanceof Value) {
@@ -522,6 +549,8 @@ Compiler.prototype.process_goal = function(exp, is_query) {
 				if (n.name == 'term')
 					results.push(new Instruction("put_term", {p: n.value}));
 				
+				if (n.name == 'nil')
+					results.push(new Instruction("put_nil"));
 			};
 			
 		};//for

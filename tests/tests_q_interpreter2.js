@@ -90,7 +90,11 @@ function format_instruction_pointer( p ) {
 	return p.f+"/"+p.a+":"+p.ci+" @ "+p.l+":"+(p.i-1);
 };
 
-function advanced_tracer(where, it_ctx, data) {
+function advanced_tracer(where, it_ctx, data, options) {
+	
+	options = options || {};
+	
+	var dump_vars = options.dump_vars;
 	
 	var line = ""; 
 	var maybe_value, maybe_var;
@@ -148,6 +152,11 @@ function advanced_tracer(where, it_ctx, data) {
 			line += util.inspect(maybe_value);
 			console.log(line);
 		}
+		
+		if (dump_vars) {
+			console.log("CSE: ", it_ctx.ctx.cse.vars);
+			console.log("TSE: ", it_ctx.ctx.tse.vars);
+		}
 			
 		
 	};
@@ -175,7 +184,7 @@ var parser = function(text) {
 };
 
 
-var prepare = function(rules_and_facts, query, tracer) {
+var prepare = function(rules_and_facts, query, tracer, options) {
 	
 	var crules = compile_rules_and_facts(rules_and_facts);
 	var cquery = compile_query(query);
@@ -189,8 +198,14 @@ var prepare = function(rules_and_facts, query, tracer) {
 	
 	var it = new Interpreter(db, builtins);
 	
+	var tr = function(where, it_ctx, data) {
+		
+		if (tracer)
+			tracer(where, it_ctx, data, options);
+	};
+	
 	if (tracer)
-		it.set_tracer(tracer);
+		it.set_tracer(tr);
 	
 	it.set_question(cquery);
 	
@@ -250,7 +265,7 @@ var test = function(rules, query, expected, options) {
 	
 	var dumpdb_enable = options.dump_db == true;
 	
-	var it = prepare(rules, query, tracer);
+	var it = prepare(rules, query, tracer, options);
 
 	for (var index in expected) {
 		
@@ -261,9 +276,9 @@ var test = function(rules, query, expected, options) {
 				dump_db(it.db.db);
 			throw e;
 		};
-		
-		
+
 		var vars = it.get_query_vars();
+		vars["$cu"] = it.ctx.cu;
 				
 		var expect = expected[index];
 		
@@ -275,7 +290,7 @@ var test = function(rules, query, expected, options) {
 			if (!a) {
 				console.log("*** VARS: ", vars);
 				if (dumpdb_enable)
-					console.log("DB: ", it.db.db)
+					dump_db(it.db.db)
 				throw new Error("Missing expect value @ index:"+vindex);
 			};
 			
@@ -639,4 +654,92 @@ it('Interpreter - batch2 - program - 1', function(){
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
 	test(rules, query, expected);
 	
+});
+
+
+it('Interpreter - batch3 - program - 1', function(){
+
+	/*
+	 * append([],L,L).
+		append([H|T],L,[H|LT]):-append(T,L,LT).
+	 */
+	
+/*
+append/3  code ==>  [ { head: 
+     [ get_struct   ( append/3, x(0) ),
+       unif_nil
+       get_var      ( p("L") ),
+       get_value    ( p("L") ),
+       proceed      ],
+    f: 'append',
+    a: 3 },
+  { g0: 
+     [ allocate    ,
+       put_struct   ( append/3, x(0) ),
+       put_var      ( p("T") ),
+       put_var      ( p("L") ),
+       put_var      ( p("LT") ),
+       setup       ,
+       call        ,
+       maybe_retry ,
+       deallocate  ,
+       proceed      ],
+    head: 
+     [ get_struct   ( append/3, x(0) ),
+       get_var      ( x(1) ),
+       get_var      ( p("L") ),
+       get_var      ( x(2) ),
+       get_struct   ( cons/2, x(1) ),
+       unif_var     ( p("H") ),
+       unif_var     ( p("T") ),
+       get_struct   ( cons/2, x(2) ),
+       unif_value   ( p("H") ),
+       unif_var     ( p("LT") ),
+       jump         ( p("g0") ) ],
+    f: 'append',
+    a: 3 } ]
+
+
+ .q./0  code ==>  [ { g0: 
+     [ allocate    ,
+       put_struct   ( cons/2, x(1) ),
+       put_number   ( p(2) ),
+       put_struct   ( cons/2, x(2) ),
+       put_number   ( p(1) ),
+       put_value    ( x(1) ),
+       put_struct   ( cons/2, x(3) ),
+       put_number   ( p(4) ),
+       put_struct   ( cons/2, x(4) ),
+       put_number   ( p(3) ),
+       put_value    ( x(3) ),
+       put_struct   ( append/3, x(0) ),
+       put_value    ( x(2) ),
+       put_value    ( x(4) ),
+       put_var      ( p("X") ),
+       setup       ,
+       call        ,
+       maybe_retry ,
+       deallocate  ,
+       end          ] } ]
+
+ */	
+	var rules = [
+				 "append([],L,L)."
+				,"append([H|T],L,[H|LT]):-append(T,L,LT)."
+				];
+	
+
+	//var query = "append([1,2], [3,4], [1,2,3,4]).";
+	var query = "append([1,2], [3,4], X).";
+	
+	var expected = [
+	                { "$cu": true }
+	                ];
+
+	Token.inspect_compact = true;
+	
+	//test(rules, query, expected);
+	test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: call_tracer });
 });
