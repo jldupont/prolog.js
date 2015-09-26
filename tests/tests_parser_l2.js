@@ -505,3 +505,24 @@ it('ParserL2 - list - complex - 1', function(){
 	process(text, expected);
 });
 
+
+it('ParserL2 - list - complex - 2', function(){
+
+	var text = "test(X) :- X1 is X + 1, X1 > 0.";
+	var expected = [
+	                
+'test(Var(X))',
+'OpNode(`:-`,1200)',
+'Var(X1)',
+'OpNode(`is`,700)',
+'Var(X)',
+'OpNode(`+`,null)',
+'Token(number,1)',
+'OpNode(`,`,1000)',
+'Var(X1)',
+'OpNode(`>`,700)',
+'Token(number,0)'
+	                 ];
+	
+	process(text, expected);
+});

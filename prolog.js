@@ -14,6 +14,10 @@ function Token(name, maybe_value, maybe_attrs) {
 	this.name = name;
 	this.value = maybe_value || null;
 	
+	// so, 0 || null ==> null ...
+	if (maybe_value ===0)
+		this.value = 0;
+	
 	// Precedence - this is fixed for Tokens
 	//  until possibly later in the parsing pipeline
 	this.prec = 0;
@@ -36,7 +40,7 @@ Token.prototype.inspect = function(){
 		if (this.name == 'nil')
 			return 'nil';
 		else
-			return this.value;
+			return ""+this.value;
 	
 	var result = "";
 	
@@ -750,7 +754,7 @@ Instruction.prototype.inspect = function(){
 	
 	for (var i=0, inserted=false;i<params.length;i++) {
 		
-		if (this.ctx[params[i]] !=undefined ) {
+		if (this.ctx[params[i]] != undefined ) {
 			
 			if (inserted || (this.ctx.f && !inserted))
 				result += ", ";

@@ -284,6 +284,17 @@ it('ParserL3 - expression - 7 ', function(){
 	process(text, expected);
 });
 
+it('ParserL3 - expression - 8 ', function(){
+	
+	var text = "X is A+B.";
+	
+	var expected =  [ [ 
+	                    'Functor(is/2,Var(X),Functor(plus/2,Var(A),Var(B)))' 
+	                    ] ];
+	
+	process(text, expected);
+});
+
 
 it('ParserL3 - multi-expression - 1', function(){
 	

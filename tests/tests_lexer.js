@@ -502,3 +502,23 @@ it('Lex - expression - 1', function(){
 
 	should.equal(result, true);
 });
+/*
+it('Lex - expression - 2', function(){
+
+	var text = "test(X) :- X1 is X + 1, X1 > 0.";
+	
+	var elist = [new Token('term', 'X'), 
+	             new Token('term', '+-'),
+	             new Token('term', 'Y'),
+	             ];
+	
+	var l = new Lexer(text);
+	var list = l.process();
+
+	//console.log(list);
+	
+	var result = Token.check_for_match(list, elist);
+
+	should.equal(result, true);
+});
+*/

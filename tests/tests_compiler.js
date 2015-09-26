@@ -1152,3 +1152,26 @@ it('Compiler - list - 1', function(){
 	process_rule(text, expected);
 });
 
+
+
+
+it('Compiler - expression - 1', function(){
+	
+	//console.log("\n***Compiler - expression - 1\n");
+	
+	var text = "test(X) :- X1 is X + 1, X1 > 0.";
+	
+	/*
+	 Functor(rule/2,
+	 	Functor(test/1,Var(X)),Functor(conj/2,Functor(is/2,Var(X1),Functor(plus/2,Var(X),'Token(number,1)')),
+	 	Functor(gt/2,Var(X1),'Token(number,null)')))
+	 */
+	
+	
+	var expected = [
+	];
+	
+	process_rule(text, expected, {show_parsed: true, show_compiled: true, show_parsed: true});
+	//process_rule(text, expected);
+});
+

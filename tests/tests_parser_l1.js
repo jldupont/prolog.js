@@ -16,13 +16,18 @@ var Eos = pr.Eos;
 var Nothing = pr.Nothing;
 
 
-var process = function(text, expected_list){
+var process = function(text, expected_list, options){
+	
+	options = options || {};
 	
 	var l = new Lexer(text);
 	var list = l.process();
 
 	var t = new ParserL1(list, {convert_fact: false});
 	var tresult = t.process();
+	
+	if (options.show_parsed)
+		console.log("Parsed: ", tresult);
 	
 	var check = Token.check_for_match(tresult, expected_list);
 	
@@ -145,5 +150,30 @@ it('ParserL1 - list - nil', function(){
 	                     new Token('newline',  null)
 	                     ];
 	
+	process(text, expected_list);
+});
+
+it('ParserL1 - expression - 1', function(){
+
+	var text = "test(X) :- X1 is X + 1, X1 > 0.";
+
+	var expected_list = [
+		new Token('functor','test'),
+		new Token('var','X'),
+		new Token('parens_close',null),
+		new Token('op:rule',':-'),
+		new Token('var','X1'),
+		new Token('op:is','is'),
+		new Token('var','X'),
+		new Token('op:plus','+'),
+		new Token('number',1),
+		new Token('op:conj',','),
+		new Token('var','X1'),
+		new Token('op:gt','>'),
+		new Token('number',0),
+		new Token('period',null)	                     
+		];
+	
+	//process(text, expected_list, {show_parsed: true});
 	process(text, expected_list);
 });
