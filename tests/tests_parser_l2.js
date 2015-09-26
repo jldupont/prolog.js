@@ -305,7 +305,9 @@ it('ParserL2 - list - 1', function(){
 it('ParserL2 - list - 2', function(){
 
 	var text = "[A,B | T]";
-	var expected = [ 'Functor(cons/2,Token(var,A),Functor(cons/2,Token(var,B),Functor(cons/2,Token(var,T),Token(nil,null))))' ];
+	var expected = [ 
+	'Functor(cons/2,Token(var,A),Functor(cons/2,Token(var,B),Token(var,T)))' 
+	                 ];
 	
 	process(text, expected);
 });
@@ -433,7 +435,7 @@ it('ParserL2 - list proc - 4', function(){
 it('ParserL2 - list proc - 5', function(){
 
 	var text = "[1,2|3]";
-	var expected = "cons(Token(number,1),cons(Token(number,2),cons(Token(number,3),Token(nil,null))))";
+	var expected = "cons(Token(number,1),cons(Token(number,2),Token(number,3)))";
 	
 	process_list(text, expected);
 });
@@ -441,7 +443,7 @@ it('ParserL2 - list proc - 5', function(){
 it('ParserL2 - list proc - 6', function(){
 
 	var text = "[1|2]";
-	var expected = "cons(Token(number,1),cons(Token(number,2),Token(nil,null)))";
+	var expected = "cons(Token(number,1),Token(number,2))";
 	
 	process_list(text, expected);
 });

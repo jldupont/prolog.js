@@ -218,7 +218,7 @@ it('ParserL3 - expression - 3', function(){
 	var expected = [[
    //rule(append(cons(Token(var,H),cons(Token(var,T),Token(nil,null))),Var(L2),cons(Token(var,H),cons(Token(var,L3),Token(nil,null)))),
    //       append(Var(T),Var(L2),Var(L3)))
-	                 'rule(append(cons(Token(var,H),cons(Token(var,T),Token(nil,null))),Var(L2),cons(Token(var,H),cons(Token(var,L3),Token(nil,null)))),append(Var(T),Var(L2),Var(L3)))'	                
+	                 'rule(append(cons(Token(var,H),Token(var,T)),Var(L2),cons(Token(var,H),Token(var,L3))),append(Var(T),Var(L2),Var(L3)))'	                
 	                 ]];
 	
 	process(text, expected);
@@ -306,7 +306,7 @@ it('ParserL3 - list - 1', function(){
 	
 	var text = "[A,B | T ].";
 	var expected = [[
-	                 'cons(Token(var,A),cons(Token(var,B),cons(Token(var,T),Token(nil,null))))'
+	                 'cons(Token(var,A),cons(Token(var,B),Token(var,T)))'
 	                 ]];
 	
 	process(text, expected);

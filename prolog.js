@@ -835,6 +835,11 @@ function ErrorExpectingListStart(msg) {
 };
 ErrorExpectingListStart.prototype = Error.prototype;
 
+function ErrorExpectingListEnd(msg) {
+	this.message = msg;
+};
+ErrorExpectingListEnd.prototype = Error.prototype;
+
 function ErrorSyntax(msg, type) {
 	this.message = msg;
 	this.type = type;
@@ -870,6 +875,7 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorSyntax = ErrorSyntax;
 	
 	module.exports.ErrorExpectingListStart = ErrorExpectingListStart;
+	module.exports.ErrorExpectingListEnd = ErrorExpectingListEnd;
 };
 /**
  *  The builtin 'call' functor
@@ -3503,13 +3509,10 @@ ParserL2.process_list = function(input, index) {
  *  Processed a list of terms to a cons/2 structure
  *  
  */
-ParserL2._process_list = function(get_token){
+ParserL2._process_list = function(get_token, maybe_token){
 
-	var expecting_tail = false;
+	var head = maybe_token || get_token();
 	
-	var head = get_token();
-	
-	//var next_token = get_token();
 	
 	/*
 	 *  Cases:
@@ -3523,7 +3526,7 @@ ParserL2._process_list = function(get_token){
 	 */
 
 	
-	while (head && (head.name == 'op:conj' || head.name == 'list:tail'))
+	while (head && (head.name == 'op:conj'))
 		head = get_token();
 	
 	if (!head || head.name == 'nil') {
@@ -3546,8 +3549,21 @@ ParserL2._process_list = function(get_token){
 	else {
 		cons.push_arg(head);
 	}
+
+	var next_token = get_token();
+	
+	if (next_token.name == 'list:tail') {
+		next_token = get_token();
+		cons.push_arg( next_token );
 		
-	var tail = ParserL2._process_list( get_token );
+		next_token = get_token();
+		if (next_token.name != 'list:close')
+			throw new ErrorExpectingListEnd("Expecting list end, got:" + JSON.stringify(next_token));
+		
+		return cons;
+	};
+	
+	var tail = ParserL2._process_list( get_token, next_token );
 	cons.push_arg( tail );
 	
 	return cons;

@@ -841,6 +841,11 @@ function ErrorExpectingListStart(msg) {
 };
 ErrorExpectingListStart.prototype = Error.prototype;
 
+function ErrorExpectingListEnd(msg) {
+	this.message = msg;
+};
+ErrorExpectingListEnd.prototype = Error.prototype;
+
 function ErrorSyntax(msg, type) {
 	this.message = msg;
 	this.type = type;
@@ -876,4 +881,5 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorSyntax = ErrorSyntax;
 	
 	module.exports.ErrorExpectingListStart = ErrorExpectingListStart;
+	module.exports.ErrorExpectingListEnd = ErrorExpectingListEnd;
 };
