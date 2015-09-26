@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-09-25 */
+/*! prolog.js - v0.0.1 - 2015-09-26 */
 
 /**
  *  Token
@@ -830,6 +830,12 @@ function ErrorNotBound(msg) {
 };
 ErrorNotBound.prototype = Error.prototype;
 
+function ErrorExpectingListStart(msg) {
+	this.message = msg;
+};
+ErrorExpectingListStart.prototype = Error.prototype;
+
+
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
 	module.exports.Eos = Eos;
@@ -855,6 +861,8 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorInternal = ErrorInternal;
 	module.exports.ErrorAlreadyBound = ErrorAlreadyBound;
 	module.exports.ErrorNotBound = ErrorNotBound;
+	
+	module.exports.ErrorExpectingListStart = ErrorExpectingListStart;
 };
 /**
  *  The builtin 'call' functor
@@ -3471,27 +3479,51 @@ ParserL2._process_list = function(get_token){
 	
 	var cons = new Functor('cons');
 		
-	if (head.name == 'list:open')
-		cons.push_arg( ParserL2._process_list( get_token ));
-	else
+	if (head.name == 'list:open') {
+		var value = ParserL2._process_list( get_token );
+		cons.push_arg( value );
+	}
+	else {
 		cons.push_arg(head);
-
-	cons.push_arg( ParserL2._process_list( get_token ) );
+	}
+		
+	var tail = ParserL2._process_list( get_token );
+	cons.push_arg( tail );
 	
 	return cons;
 };
 
+/**
+ *  Processes the input stream assuming it is a list
+ *   and returns a cons/2 structure
+ * 
+ * @param input
+ * @param index
+ * @returns { index, result }
+ * 
+ */
 ParserL2.process_list = function(input, index) {
 	
 	index = index || 0;
+
+	var token_1 = input[index];
+	var token_1_name = token_1.name || null;
+	
+	if (token_1_name == 'nil')
+		return { index: index, result: token_1};
+	
+	if (token_1_name != 'list:open')
+		throw new ErrorExpectingListStart("Expected the start of a list, got: "+JSON.stringify(input));
+	
+	index++;
 	
 	var output =  ParserL2._process_list(function(){
 		return input[index++];
 	});
 
-	var result = (output.name == 'nil' ? output: output.args[0]); 
+	//var result = (output.name == 'nil' ? output: output.args[0]); 
 	
-	return {index: index, result: result };
+	return {index: index, result: output };
 };
 
 
@@ -3522,23 +3554,15 @@ ParserL2.prototype.process = function(){
 		// We must ensure that a list is transformed
 		//  in a cons/2 structure
 		//
-		if (this.context.diving_list) {
+		
+		if (token.name == 'list:open') {
 			
-			/*
-			 *  Already 1 cell in the cons ?
-			 *  Case 1: a new term is available ==> go down 1 level
-			 *  Case 2: a list:close term ==> close this with a nil and pop 1 level
-			 */
-			if (expression.length == 1) {
-				if (token.name == "list:close") {
-					expression.push(new Token('nil'));
-					return this._handleEnd( expression );
-				};
-				
-				
-				
-			};
+			var lresult = ParserL2.process_list(this.tokens, this.index-1);
+			this.index = lresult.index;
+			expression.push(lresult.result);
+			continue;
 		};
+		
 		
 		// Translate Token for variable to Var
 		if (token.name == 'var') {
@@ -3559,8 +3583,6 @@ ParserL2.prototype.process = function(){
 			token.is_operator = false;
 		};
 
-		if (this.context.diving_list && token.name == 'list:tail')
-			continue;
 		
 		if (token.is_operator) {
 
@@ -3645,22 +3667,6 @@ ParserL2.prototype.process = function(){
 			continue;
 		};
 
-		if (token.name == 'list:close') {
-			
-			if (this.context.diving_list) {
-				
-				if (expression.length < 2)
-					expression.push(new Token("nil"));
-				
-				if (expression.length == 0)
-					expression.push(new Token("nil"));
-				
-				return this._handleEnd( expression );
-			};
-				
-			
-			continue;
-		};
 
 		
 		
@@ -3700,23 +3706,6 @@ ParserL2.prototype.process = function(){
 			continue;
 		};
 		
-		// Handle list
-		//
-		if (token.name == 'list:open') {
-			
-			var result = this._handleList();
-			var new_index = result.index;
-			
-			this.index = new_index;
-			
-			var functor_node = new Functor('cons');
-			functor_node.args = result.terms[0];
-			functor_node.line = token.line;
-			functor_node.col  = token.col;
-			
-			expression.push( functor_node );
-			continue;			
-		};
 		
 		
 		
@@ -3745,20 +3734,6 @@ ParserL2.prototype._handleFunctor = function() {
 	return parser_level_down.process();
 };
 
-/**
- *  Handles the tokens related to a list
- *  
- *   @return Result
- */
-ParserL2.prototype._handleList = function() {
-	
-	var parser_level_down = new ParserL2(this.tokens, 
-										this.index,
-										{diving_list: true}
-										);
-	
-	return parser_level_down.process();
-};
 
 
 ParserL2.prototype._handleEnd = function(current_expression) {
@@ -3769,9 +3744,6 @@ ParserL2.prototype._handleEnd = function(current_expression) {
 	if (this.context.diving_functor)
 		return new Result(current_expression, this.index);
 
-	//if (this.context.diving_list)
-	//	return new Result(current_expression, this.index);
-	
 	return new Result(this.result, this.index);
 };
 

@@ -34,7 +34,7 @@ var setup = function(text) {
 	var result = p.process();
 	var terms = result.terms;
 
-	console.log("Terms: ", terms);
+	//console.log("Terms: ", terms);
 	
 	var p = new ParserL3(terms, Op.ordered_list_by_precedence);
 	
@@ -212,12 +212,18 @@ it('ParserL3 - expression - 2', function(){
 
 it('ParserL3 - expression - 3', function(){
 	
+	Functor.inspect_compact_version = true;
+	
 	var text = "append([H|T],L2,[H|L3])  :-  append(T,L2,L3).";
 	var expected = [[
-	                 'Functor(rule/2,Functor(append/3,Functor(cons/2,Var(H),Var(T)),Var(L2),Functor(cons/2,Var(H),Var(L3))),Functor(append/3,Var(T),Var(L2),Var(L3)))'	                
+   //rule(append(cons(Token(var,H),cons(Token(var,T),Token(nil,null))),Var(L2),cons(Token(var,H),cons(Token(var,L3),Token(nil,null)))),
+   //       append(Var(T),Var(L2),Var(L3)))
+	                 'rule(append(cons(Token(var,H),cons(Token(var,T),Token(nil,null))),Var(L2),cons(Token(var,H),cons(Token(var,L3),Token(nil,null)))),append(Var(T),Var(L2),Var(L3)))'	                
 	                 ]];
 	
 	process(text, expected);
+	
+	Functor.inspect_compact_version = false;
 });
 
 it('ParserL3 - expression - 4 ', function(){
@@ -296,8 +302,12 @@ it('ParserL3 - multi-expression - 1', function(){
 
 it('ParserL3 - list - 1', function(){
 	
+	Functor.inspect_compact_version = true;
+	
 	var text = "[A,B | T ].";
-	var expected = [['Functor(cons/2,Var(A),Functor(cons/2,Var(B),Var(T)))']];
+	var expected = [[
+	                 'cons(Token(var,A),cons(Token(var,B),cons(Token(var,T),Token(nil,null))))'
+	                 ]];
 	
 	process(text, expected);
 });

@@ -55,6 +55,8 @@ var setup = function(text, convert_fact) {
 	var t = new ParserL1(tokens, {convert_fact: convert_fact});
 	var ttokens = t.process();
 	
+	//console.log(ttokens);
+	
 	var p = new ParserL2(ttokens);
 	
 	var result = p.process();
@@ -303,7 +305,7 @@ it('ParserL2 - list - 1', function(){
 it('ParserL2 - list - 2', function(){
 
 	var text = "[A,B | T]";
-	var expected = [ 'Functor(cons/2,Var(A),Functor(cons/2,Var(B),Var(T)))' ];
+	var expected = [ 'Functor(cons/2,Token(var,A),Functor(cons/2,Token(var,B),Functor(cons/2,Token(var,T),Token(nil,null))))' ];
 	
 	process(text, expected);
 });
@@ -317,14 +319,6 @@ it('ParserL2 - list - 3', function(){
 });
 
 
-
-it('ParserL2 - list - complex - 1', function(){
-
-	var text = "f([A,B]) :- list(A,B).";
-	var expected = [ 'Functor(f/1,Functor(cons/4,Var(A),Functor(cons/2,Var(B),Token(nil,null)),OpNode(`:-`,1200),Functor(list/2,Var(A),Var(B))))' ];
-	
-	process(text, expected);
-});
 
 // =====================
 
@@ -459,3 +453,53 @@ it('ParserL2 - list proc - 7', function(){
 	
 	process_list(text, expected);
 });
+
+/**
+ *  Just process the list, nothing else
+ */
+it('ParserL2 - list proc - 8', function(){
+
+	var text = "[[1,2],3](";
+	var expected = "cons(cons(Token(number,1),cons(Token(number,2),Token(nil,null))),cons(Token(number,3),Token(nil,null)))";
+	
+	process_list(text, expected);
+});
+
+
+/**
+ * TODO not clear we want support for this
+ *      syntax error this way,
+ */
+it('ParserL2 - list proc - errors 1', function(){
+
+	var text = "[";
+	var expected = "Token(nil,null)";
+	
+	process_list(text, expected);
+});
+
+/**
+ * TODO not clear we want support for this
+ *      syntax error this way,
+ */
+it('ParserL2 - list proc - errors 2', function(){
+
+	var text = "[1,";
+	var expected = "cons(Token(number,1),Token(nil,null))";
+	
+	process_list(text, expected);
+});
+
+
+it('ParserL2 - list - complex - 1', function(){
+
+	var text = "f([A,B]) :- list(A,B).";
+	var expected = [ 
+	'f(cons(Token(var,A),cons(Token(var,B),Token(nil,null))))'
+	,'OpNode(`:-`,1200)'
+	,'list(Var(A),Var(B))'
+	                 ];
+	
+	process(text, expected);
+});
+

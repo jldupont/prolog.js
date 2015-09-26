@@ -836,6 +836,12 @@ function ErrorNotBound(msg) {
 };
 ErrorNotBound.prototype = Error.prototype;
 
+function ErrorExpectingListStart(msg) {
+	this.message = msg;
+};
+ErrorExpectingListStart.prototype = Error.prototype;
+
+
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
 	module.exports.Eos = Eos;
@@ -861,4 +867,6 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorInternal = ErrorInternal;
 	module.exports.ErrorAlreadyBound = ErrorAlreadyBound;
 	module.exports.ErrorNotBound = ErrorNotBound;
+	
+	module.exports.ErrorExpectingListStart = ErrorExpectingListStart;
 };
