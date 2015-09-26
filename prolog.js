@@ -172,6 +172,8 @@ Op._list = [
 	   ,new Op("unif",    '=',   700, 'xfx')
 	   ,new Op("em",      '=<',  700, 'xfx')
 	   ,new Op("ge",      '>=',  700, 'xfx')
+	   ,new Op("lt",      '<',   700, 'xfx')
+	   ,new Op("gt",      '>',   700, 'xfx')
 	   ,new Op("is",      'is',  700, 'xfx')
 	    
 	   ,new Op("minus",   '-',   500, 'yfx')
@@ -3108,6 +3110,8 @@ Lexer.token_map = {
 	,',':  function() { return new Token('op:conj', ',',  {is_operator: true}) }
 	,';':  function() { return new Token('op:disj', ';',  {is_operator: true}) }
 	,'=':  function() { return new Token('op:unif', '=',  {is_operator: true}) }
+	,'<':  function() { return new Token('op:lt',   '<',  {is_operator: true}) }
+	,'>':  function() { return new Token('op:gt',   '>',  {is_operator: true}) }
 	,'=<': function() { return new Token('op:em',   '=<',  {is_operator: true}) }
 	,'>=': function() { return new Token('op:ge',   '>=',  {is_operator: true}) }
 	,'-':  function() { return new Token('op:minus', '-', {is_operator: true}) }

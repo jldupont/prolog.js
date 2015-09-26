@@ -49,6 +49,8 @@ Lexer.token_map = {
 	,',':  function() { return new Token('op:conj', ',',  {is_operator: true}) }
 	,';':  function() { return new Token('op:disj', ';',  {is_operator: true}) }
 	,'=':  function() { return new Token('op:unif', '=',  {is_operator: true}) }
+	,'<':  function() { return new Token('op:lt',   '<',  {is_operator: true}) }
+	,'>':  function() { return new Token('op:gt',   '>',  {is_operator: true}) }
 	,'=<': function() { return new Token('op:em',   '=<',  {is_operator: true}) }
 	,'>=': function() { return new Token('op:ge',   '>=',  {is_operator: true}) }
 	,'-':  function() { return new Token('op:minus', '-', {is_operator: true}) }

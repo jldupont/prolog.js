@@ -178,6 +178,8 @@ Op._list = [
 	   ,new Op("unif",    '=',   700, 'xfx')
 	   ,new Op("em",      '=<',  700, 'xfx')
 	   ,new Op("ge",      '>=',  700, 'xfx')
+	   ,new Op("lt",      '<',   700, 'xfx')
+	   ,new Op("gt",      '>',   700, 'xfx')
 	   ,new Op("is",      'is',  700, 'xfx')
 	    
 	   ,new Op("minus",   '-',   500, 'yfx')
