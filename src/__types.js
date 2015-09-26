@@ -841,6 +841,12 @@ function ErrorExpectingListStart(msg) {
 };
 ErrorExpectingListStart.prototype = Error.prototype;
 
+function ErrorSyntax(msg, type) {
+	this.message = msg;
+	this.type = type;
+};
+ErrorSyntax.prototype = Error.prototype;
+
 
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
@@ -867,6 +873,7 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorInternal = ErrorInternal;
 	module.exports.ErrorAlreadyBound = ErrorAlreadyBound;
 	module.exports.ErrorNotBound = ErrorNotBound;
+	module.exports.ErrorSyntax = ErrorSyntax;
 	
 	module.exports.ErrorExpectingListStart = ErrorExpectingListStart;
 };

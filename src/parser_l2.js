@@ -130,41 +130,6 @@ ParserL2.preprocess_list = function(input, index) {
 
 ParserL2.nil = new Token('nil');
 
-/*
- *  Processed a list of terms to a cons/2 structure
- *  
- */
-ParserL2._process_list = function(get_token){
-
-	var head = get_token();
-	
-	while (head && (head.name == 'op:conj' || head.name == 'list:tail'))
-		head = get_token();
-	
-	if (!head || head.name == 'nil') {
-		return ParserL2.nil;
-	};
-
-	if (head.name == 'list:close') {
-		return ParserL2.nil;
-	};
-	
-	var cons = new Functor('cons');
-		
-	if (head.name == 'list:open') {
-		var value = ParserL2._process_list( get_token );
-		cons.push_arg( value );
-	}
-	else {
-		cons.push_arg(head);
-	}
-		
-	var tail = ParserL2._process_list( get_token );
-	cons.push_arg( tail );
-	
-	return cons;
-};
-
 /**
  *  Processes the input stream assuming it is a list
  *   and returns a cons/2 structure
@@ -197,6 +162,62 @@ ParserL2.process_list = function(input, index) {
 	
 	return {index: index, result: output };
 };
+
+
+/*
+ *  Processed a list of terms to a cons/2 structure
+ *  
+ */
+ParserL2._process_list = function(get_token){
+
+	var expecting_tail = false;
+	
+	var head = get_token();
+	
+	//var next_token = get_token();
+	
+	/*
+	 *  Cases:
+	 *  * Constant, Functor, Var, nil  ==> OK, proper head 
+	 *  * list:open  ==> start a new cons/2
+	 *  * list:close ==> should have been replaced already but issue `nil`
+	 *                   if this wasn't done
+	 *    
+	 *  * op:conj    ==> Syntax Error
+	 *  * list:tail
+	 */
+
+	
+	while (head && (head.name == 'op:conj' || head.name == 'list:tail'))
+		head = get_token();
+	
+	if (!head || head.name == 'nil') {
+		return ParserL2.nil;
+	};
+
+	if (head.name == 'list:close') {
+		return ParserL2.nil;
+	};
+
+	
+	
+	
+	var cons = new Functor('cons');
+		
+	if (head.name == 'list:open') {
+		var value = ParserL2._process_list( get_token );
+		cons.push_arg( value );
+	}
+	else {
+		cons.push_arg(head);
+	}
+		
+	var tail = ParserL2._process_list( get_token );
+	cons.push_arg( tail );
+	
+	return cons;
+};
+
 
 
 /**
