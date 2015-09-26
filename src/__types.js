@@ -122,11 +122,12 @@ function Result(term_list, last_index) {
  * Operator
  * @constructor
  */
-function Op(name, symbol, precedence, type) {
+function Op(name, symbol, precedence, type, is_primitive) {
 	this.name = name;
 	this.symbol = symbol;
 	this.prec = precedence;
 	this.type = type;
+	this.is_primitive = is_primitive || false;
 	
 	// from the lexer
 	this.line = 0;
@@ -180,15 +181,15 @@ Op._list = [
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
 	   ,new Op("unif",    '=',   700, 'xfx')
-	   ,new Op("em",      '=<',  700, 'xfx')
-	   ,new Op("ge",      '>=',  700, 'xfx')
-	   ,new Op("lt",      '<',   700, 'xfx')
-	   ,new Op("gt",      '>',   700, 'xfx')
-	   ,new Op("is",      'is',  700, 'xfx')
+	   ,new Op("em",      '=<',  700, 'xfx', true)
+	   ,new Op("ge",      '>=',  700, 'xfx', true)
+	   ,new Op("lt",      '<',   700, 'xfx', true)
+	   ,new Op("gt",      '>',   700, 'xfx', true)
+	   ,new Op("is",      'is',  700, 'xfx', true)
 	    
-	   ,new Op("minus",   '-',   500, 'yfx')
-	   ,new Op("plus",    '+',   500, 'yfx')
-	   ,new Op("mult",    '*',   400, 'yfx')
+	   ,new Op("minus",   '-',   500, 'yfx', true)
+	   ,new Op("plus",    '+',   500, 'yfx', true)
+	   ,new Op("mult",    '*',   400, 'yfx', true)
 	    
 	   ,new Op("uminus",   '-',  200, 'fy')
 	   ,new Op("uplus",    '+',  200, 'fy') 
@@ -412,6 +413,7 @@ function Functor(name, maybe_arguments_list) {
 	this.name = name;
 	this.original_token = null;
 	this.prec = 0;
+	this.is_primitive = false;
 	
 	// from the lexer
 	this.line = 0;

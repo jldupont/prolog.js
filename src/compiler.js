@@ -512,7 +512,8 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 	
 	var results = [];
 
-	results.push(new Instruction('allocate'));
+	if (!exp.is_primitive)
+		results.push(new Instruction('allocate'));
 	
 	v.process(function(ctx){
 		
@@ -558,10 +559,13 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 		// Only root functor gets a CALL
 		//
 		if (ctx.root) {
-			results.push(new Instruction('setup'));
-			results.push(new Instruction('call'));
-			results.push(new Instruction('maybe_retry'));
-			results.push(new Instruction('deallocate'));
+			
+			if (!ctx.n.is_primitive) {
+				results.push(new Instruction('setup'));
+				results.push(new Instruction('call'));
+				results.push(new Instruction('maybe_retry'));
+				results.push(new Instruction('deallocate'));
+			};
 			
 			if (is_query)
 				results.push(new Instruction('end'));
@@ -569,6 +573,12 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 				results.push(new Instruction('proceed'));
 		};
 			
+		/*  ... unless we have a primitive functor
+		 * 
+		 */
+		if (ctx.n.is_primitive) {
+			results.push(new Instruction('exec', {x: ctx.vc}));
+		};
 		
 	});
 	

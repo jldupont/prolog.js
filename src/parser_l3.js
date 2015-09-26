@@ -186,6 +186,7 @@ ParserL3._process_one = function(opcode, node_left, node_center, node_right) {
 	var functor = new Functor(opcode.name);
 	functor.col = node_center.col;
 	functor.line = node_center.line;
+	functor.is_primitive = opcode.is_primitive;
 	
 	var is_unary = Op.is_unary(opcode.type); 
 	
