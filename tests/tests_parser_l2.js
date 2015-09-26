@@ -18,7 +18,28 @@ var ParserL1 = pr.ParserL1;
 var OpNode = pr.OpNode;
 
 
+var preprocess_list = function(text, expected) {
+	var tokens = setup_l1(text);
+	
+	var list = ParserL2.preprocess_list(tokens);
+	
+	var result = compare(list, expected);
+	
+	should.equal(result, true, "Got: " + util.inspect(list));
+};
 
+var process_list = function(text, expected) {
+	var tokens = setup_l1(text);
+	
+	//var prelist = ParserL2.preprocess_list(tokens);
+	
+	var proc_result = ParserL2.process_list(tokens);
+	var list = proc_result.result;
+	
+	var result = util.inspect(list);
+	
+	should.equal(result, expected, "Got: " + util.inspect(list));
+};
 
 
 var setup = function(text, convert_fact) {
@@ -43,6 +64,22 @@ var setup = function(text, convert_fact) {
 	//console.log(exp0);
 	
 	return exp0;
+};
+
+var setup_l1 = function(text, convert_fact) {
+
+	Functor.inspect_short_version = false;
+	
+	Functor.inspect_quoted = false;
+	Token.inspect_quoted = false;
+	
+	var l = new Lexer(text);
+	var tokens = l.process();
+
+	var t = new ParserL1(tokens, {convert_fact: convert_fact});
+	var ttokens = t.process();
+	
+	return ttokens;
 };
 
 var compare = function(input, expected) {
@@ -287,4 +324,138 @@ it('ParserL2 - list - complex - 1', function(){
 	var expected = [ 'Functor(f/1,Functor(cons/4,Var(A),Functor(cons/2,Var(B),Token(nil,null)),OpNode(`:-`,1200),Functor(list/2,Var(A),Var(B))))' ];
 	
 	process(text, expected);
+});
+
+// =====================
+
+
+
+
+it('ParserL2 - list preproc - 1', function(){
+
+	//console.log("\n~~~~~~~~~~~~ ParserL2 - list preproc -1 ");
+	
+	var text = "[1,2]";
+	var expected = [
+	                "Token(list:open,null)"
+	                ,"Token(number,1)"
+	                ,"Token(number,2)"
+	                ,"Token(list:close,null)"
+	                ]; 
+	
+	preprocess_list(text, expected);
+});
+
+it('ParserL2 - list preproc - 2', function(){
+
+	//console.log("\n~~~~~~~~~~~~ ParserL2 - list preproc - 2 ");
+	
+	var text = "[]";
+	var expected = [ "Token(nil,null)" ];
+	
+	preprocess_list(text, expected);
+});
+
+it('ParserL2 - list preproc - 3', function(){
+
+	//console.log("\n~~~~~~~~~~~~ ParserL2 - list preproc - 3 ");
+	
+	var text = "[1,2,3]";
+	var expected = [ 
+	                "Token(list:open,null)"
+	                , "Token(number,1)", "Token(number,2)", "Token(number,3)"
+	                ,"Token(list:close,null)"
+	                 ];
+	
+	preprocess_list(text, expected);
+});
+
+/*
+ *   TODO It is not clear we want to support this
+ */
+it('ParserL2 - list preproc - 4', function(){
+
+	//console.log("\n~~~~~~~~~~~~ ParserL2 - list preproc - 4 ");
+	
+	var text = "[1,,2,3]";
+	var expected = [ 
+        "Token(list:open,null)"
+        , "Token(number,1)", "Token(number,2)", "Token(number,3)"
+        ,"Token(list:close,null)"
+        ];
+	
+	preprocess_list(text, expected);
+});
+
+
+
+
+
+
+it('ParserL2 - list proc - 1', function(){
+
+	//console.log("\n~~~~~~~~~~~~ ParserL2 - list proc -1 ");
+	
+	Functor.inspect_compact_version = true;
+	
+	var text = "[66,77]";
+	var expected = "cons(Token(number,66),cons(Token(number,77),Token(nil,null)))";
+	
+	process_list(text, expected);
+});
+
+it('ParserL2 - list proc - 2', function(){
+
+	//console.log("\n~~~~~~~~~~~~ ParserL2 - list proc - 2 ");
+	
+	Functor.inspect_compact_version = true;
+	
+	var text = "[1]";
+	var expected = "cons(Token(number,1),Token(nil,null))";
+	
+	process_list(text, expected);
+});
+
+it('ParserL2 - list proc - 3', function(){
+
+	//console.log("\n~~~~~~~~~~~~ ParserL2 - list proc - 3 ");
+	
+	var text = "[]";
+	var expected = "Token(nil,null)";
+	
+	process_list(text, expected);
+});
+
+it('ParserL2 - list proc - 4', function(){
+
+	//console.log("\n~~~~~~~~~~~~ ParserL2 - list proc - 4 ");
+	
+	var text = "[1,2,3]";
+	var expected = "cons(Token(number,1),cons(Token(number,2),cons(Token(number,3),Token(nil,null))))";
+	
+	process_list(text, expected);
+});
+
+it('ParserL2 - list proc - 5', function(){
+
+	var text = "[1,2|3]";
+	var expected = "cons(Token(number,1),cons(Token(number,2),cons(Token(number,3),Token(nil,null))))";
+	
+	process_list(text, expected);
+});
+
+it('ParserL2 - list proc - 6', function(){
+
+	var text = "[1|2]";
+	var expected = "cons(Token(number,1),cons(Token(number,2),Token(nil,null)))";
+	
+	process_list(text, expected);
+});
+
+it('ParserL2 - list proc - 7', function(){
+
+	var text = "[[1,2],3]";
+	var expected = "cons(cons(Token(number,1),cons(Token(number,2),Token(nil,null))),cons(Token(number,3),Token(nil,null)))";
+	
+	process_list(text, expected);
 });

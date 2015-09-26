@@ -63,7 +63,7 @@ ParserL3.prototype.process = function(){
  */
 ParserL3.process_expression = function(opcode, expression){
 
-	console.log("- process_expression: ",opcode, expression);
+	//console.log("- process_expression: ",opcode, expression);
 	
 	var result;
 
@@ -78,8 +78,6 @@ ParserL3.process_expression = function(opcode, expression){
 		var current_count_of_opnodes_processed = tresult[1];
 		
 		result = tresult[0];
-		
-		//console.log(">> ", opcode, expr, result);
 		
 		// we didn't make any progress... bail out
 		//
@@ -124,16 +122,6 @@ ParserL3._process_expression = function(opcode, expression){
 			result.push(node);
 			continue;
 		};
-		
-		
-		// We need to get the proper precedence
-		//  for the operator we which to be processing for
-		//
-		// The unary operators come with `null` as precedence
-		//  because the parser needs to figure out if it's really
-		//  used in the unary or infix context.
-		//
-		var opnode_center = OpNode.create_from_name(opcode.name);
 
 		
 		// gather 'node left' and 'node right'
@@ -146,45 +134,20 @@ ParserL3._process_expression = function(opcode, expression){
 		var node_left  = result[node_index - 1 ];
 		var node_right = expression[node_index + 1 ];
 		
-		
-		// A good dose of complexity goes on here
-		//
-		var type   = Op.classify_triplet(node_left, opnode_center, node_right);
-		var compat = Op.are_compatible_types(type, opcode.type);
-		
-		console.log("Left:   ", node_left);
-		console.log("Center: ", opnode_center);
-		console.log("Right:  ", node_right);
-		
-		console.log("type("+type+") compat("+compat+")");
-		
-		if (!compat) {
+		var iresult = this._process_one(opcode, node_left, node, node_right);
+
+		if (iresult == null) {
 			result.push(node);
 			continue;
 		};
-
-		
+			
 		processed_nodes++;
-		
-		// We have compatibility and thus
-		//  substitute for a Functor
-		// We only have 2 cases:
-		//  pattern 1:  `F_`  : a unary operator
-		//  pattern 2:  `_F_` : a infix operator
-		
-		var functor = new Functor(opcode.name);
-		functor.col = node.col;
-		functor.line = node.line;
-		
-		if (Op.is_unary(opcode.type)) {
-			functor.args = [node_right];
-		} else {
-			// we've already pushed node_left... remove it
-			result.pop();
-			functor.args = [node_left, node_right];
-		};
 
-		result.push(functor);
+		if (!iresult.is_unary)
+			result.pop();
+		
+		result.push(iresult.result);
+		
 		node_index++;			
 
 	}; // expression	
@@ -210,12 +173,6 @@ ParserL3._process_one = function(opcode, node_left, node_center, node_right) {
 	var type   = Op.classify_triplet(node_left, opnode_center, node_right);
 	var compat = Op.are_compatible_types(type, opcode.type);
 	
-	console.log("Left:   ", node_left);
-	console.log("Center: ", opnode_center);
-	console.log("Right:  ", node_right);
-	
-	console.log("type("+type+") compat("+compat+")");
-	
 	if (!compat) {
 		return null;
 	};
@@ -227,8 +184,8 @@ ParserL3._process_one = function(opcode, node_left, node_center, node_right) {
 	//  pattern 2:  `_F_` : a infix operator
 	
 	var functor = new Functor(opcode.name);
-	functor.col = node.col;
-	functor.line = node.line;
+	functor.col = node_center.col;
+	functor.line = node_center.line;
 	
 	var is_unary = Op.is_unary(opcode.type); 
 	

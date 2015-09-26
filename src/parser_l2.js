@@ -87,6 +87,94 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 	return null;
 };
 
+/*
+ * Get rid of all `,`
+ * 
+ * NOTE: not used really
+ */
+ParserL2.preprocess_list = function(input, index) {
+	
+	index = index || 0;
+	
+	var result = [];
+	var depth  = 0;
+	
+	for (;;index++) {
+		
+		var token = input[index];
+		if (!token)
+			break;
+		
+		if (token.name == 'list:open') {
+			depth++;
+			result.push(token);
+			continue;
+		};
+		
+		if (token.name == 'list:close') {
+			depth--;
+			result.push(token);
+			if (depth == 0)
+				break;
+			continue;
+		};
+		
+		if (token.name == 'op:conj')
+			continue;
+			
+		result.push(token);
+	};
+	
+	return result;
+};
+
+ParserL2.nil = new Token('nil');
+
+/*
+ *  Processed a list of terms to a cons/2 structure
+ *  
+ */
+ParserL2._process_list = function(get_token){
+
+	var head = get_token();
+	
+	while (head && (head.name == 'op:conj' || head.name == 'list:tail'))
+		head = get_token();
+	
+	if (!head || head.name == 'nil') {
+		return ParserL2.nil;
+	};
+
+	if (head.name == 'list:close') {
+		return ParserL2.nil;
+	};
+	
+	var cons = new Functor('cons');
+		
+	if (head.name == 'list:open')
+		cons.push_arg( ParserL2._process_list( get_token ));
+	else
+		cons.push_arg(head);
+
+	cons.push_arg( ParserL2._process_list( get_token ) );
+	
+	return cons;
+};
+
+ParserL2.process_list = function(input, index) {
+	
+	index = index || 0;
+	
+	var output =  ParserL2._process_list(function(){
+		return input[index++];
+	});
+
+	var result = (output.name == 'nil' ? output: output.args[0]); 
+	
+	return {index: index, result: result };
+};
+
+
 /**
  * Process the token list
  *
@@ -111,6 +199,27 @@ ParserL2.prototype.process = function(){
 		if (token == null || token instanceof Eos)
 			return this._handleEnd( expression );
 
+		// We must ensure that a list is transformed
+		//  in a cons/2 structure
+		//
+		if (this.context.diving_list) {
+			
+			/*
+			 *  Already 1 cell in the cons ?
+			 *  Case 1: a new term is available ==> go down 1 level
+			 *  Case 2: a list:close term ==> close this with a nil and pop 1 level
+			 */
+			if (expression.length == 1) {
+				if (token.name == "list:close") {
+					expression.push(new Token('nil'));
+					return this._handleEnd( expression );
+				};
+				
+				
+				
+			};
+		};
+		
 		// Translate Token for variable to Var
 		if (token.name == 'var') {
 			var v = new Var(token.value);
@@ -339,6 +448,9 @@ ParserL2.prototype._handleEnd = function(current_expression) {
 	
 	if (this.context.diving_functor)
 		return new Result(current_expression, this.index);
+
+	//if (this.context.diving_list)
+	//	return new Result(current_expression, this.index);
 	
 	return new Result(this.result, this.index);
 };
