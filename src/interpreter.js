@@ -891,11 +891,157 @@ Interpreter.prototype.inst_op_is = function(_inst) {
 	var lvar = x0.args[0];
 	var rval = x0.args[1];
 
+	if (!(lvar instanceof Var))
+		throw new ErrorExpectingVariable("Expecting a variable as lvalue of `is`, got: "+JSON.stringify(lvar));
+	
 	// lvar is not supposed to be bound yet!
 	//
 	lvar.bind(rval);
 	
 	this.ctx.cu = true;
+};
+
+
+Interpreter.prototype._get_values = function() {
+
+	var x0 = this.ctx.cse.vars["$x0"];
+	
+	// Expecting variables or values
+	var l = x0.args[0];
+	var r = x0.args[1];
+
+	var lval, rval;
+	
+	if (l instanceof Var)
+		lval = l.deref().get_value();
+	else
+		if (Utils.isNumeric(l))
+			lval = l
+		else
+			lval = l.value
+	
+	if (r instanceof Var )
+		rval = r.deref().get_value();
+	else
+		if (Utils.isNumeric(r))
+			rval = r;
+		else
+			rval = r.value;
+	
+	return {r: rval, l: lval};
+};
+
+/**
+ *  Instruction `plus`
+ * 
+ */
+Interpreter.prototype.inst_op_plus = function(inst) {
+
+	var x = inst.get("x", "$x");
+	
+	var values = this._get_values();
+	
+	this.ctx.cse.vars[x] =  values.l + values.r;
+	
+	this.ctx.cu = true;
+};
+
+/**
+ *  Instruction `minus`
+ * 
+ */
+Interpreter.prototype.inst_op_minus = function(inst) {
+
+	var x = inst.get("x", "$x");
+	
+	var values = this._get_values();
+	
+	this.ctx.cse.vars[x] =  values.l - values.r;
+	
+	this.ctx.cu = true;
+};
+
+/**
+ *  Instruction `mult`
+ * 
+ */
+Interpreter.prototype.inst_op_mult = function(inst) {
+
+	var x = inst.get("x", "$x");
+	
+	var values = this._get_values();
+	
+	this.ctx.cse.vars[x] =  values.l * values.r;
+	
+	this.ctx.cu = true;
+};
+
+/**
+ *  Instruction `div`
+ * 
+ */
+Interpreter.prototype.inst_op_div = function(inst) {
+
+	var x = inst.get("x", "$x");
+	
+	var values = this._get_values();
+	
+	this.ctx.cse.vars[x] =  values.l / values.r;
+	
+	this.ctx.cu = true;
+};
+
+
+/**
+ *  Instruction `>`
+ * 
+ */
+Interpreter.prototype.inst_op_gt = function() {
+
+	var values = this._get_values();
+	
+	this.ctx.cu = values.l > values.r;
+	
+	this._exit();
+};
+
+/**
+ *  Instruction `<`
+ * 
+ */
+Interpreter.prototype.inst_op_lt = function() {
+
+	var values = this._get_values();
+	
+	this.ctx.cu = values.l < values.r;
+	
+	this._exit();
+};
+
+/**
+ *  Instruction `>=`
+ * 
+ */
+Interpreter.prototype.inst_op_ge = function() {
+
+	var values = this._get_values();
+	
+	this.ctx.cu = values.l >= values.r;
+	
+	this._exit();
+};
+
+/**
+ *  Instruction `=<`
+ * 
+ */
+Interpreter.prototype.inst_op_em = function() {
+
+	var values = this._get_values();
+	
+	this.ctx.cu = values.l <= values.r;
+	
+	this._exit();
 };
 
 

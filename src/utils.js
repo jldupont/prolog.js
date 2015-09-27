@@ -279,6 +279,10 @@ Utils.pad = function(string, width, what_char) {
 	return string + Array(width - string.length).join(what_char || " ");	
 };
 
+Utils.isNumeric = function(n) {
+	return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
 if (typeof module!= 'undefined') {
 	module.exports.Utils = Utils;
 };

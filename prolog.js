@@ -184,6 +184,7 @@ Op._list = [
 	   ,new Op("minus",   '-',   500, 'yfx', {primitive: true, retvalue: true})
 	   ,new Op("plus",    '+',   500, 'yfx', {primitive: true, retvalue: true})
 	   ,new Op("mult",    '*',   400, 'yfx', {primitive: true, retvalue: true})
+	   ,new Op("div",     '/',   400, 'yfx', {primitive: true, retvalue: true})
 	    
 	   ,new Op("uminus",   '-',  200, 'fy')
 	   ,new Op("uplus",    '+',  200, 'fy') 
@@ -791,6 +792,14 @@ function ErrorExpectingFunctor(msg, _args) {
 };
 ErrorExpectingFunctor.prototype = Error.prototype;
 
+
+function ErrorExpectingVariable(msg, _args) {
+	this.message = msg;
+	this.args = _args;
+};
+ErrorExpectingVariable.prototype = Error.prototype;
+
+
 function ErrorFunctorNotFound(msg, _args) {
 	this.message = msg;
 	this.args = _args;
@@ -886,6 +895,7 @@ if (typeof module!= 'undefined') {
 	
 	// Errors
 	module.exports.ErrorExpectingFunctor = ErrorExpectingFunctor;
+	module.exports.ErrorExpectingVariable = ErrorExpectingVariable; 
 	module.exports.ErrorInvalidHead = ErrorInvalidHead;
 	module.exports.ErrorRuleInQuestion = ErrorRuleInQuestion;
 	module.exports.ErrorExpectingGoal = ErrorExpectingGoal;
@@ -2666,11 +2676,157 @@ Interpreter.prototype.inst_op_is = function(_inst) {
 	var lvar = x0.args[0];
 	var rval = x0.args[1];
 
+	if (!(lvar instanceof Var))
+		throw new ErrorExpectingVariable("Expecting a variable as lvalue of `is`, got: "+JSON.stringify(lvar));
+	
 	// lvar is not supposed to be bound yet!
 	//
 	lvar.bind(rval);
 	
 	this.ctx.cu = true;
+};
+
+
+Interpreter.prototype._get_values = function() {
+
+	var x0 = this.ctx.cse.vars["$x0"];
+	
+	// Expecting variables or values
+	var l = x0.args[0];
+	var r = x0.args[1];
+
+	var lval, rval;
+	
+	if (l instanceof Var)
+		lval = l.deref().get_value();
+	else
+		if (Utils.isNumeric(l))
+			lval = l
+		else
+			lval = l.value
+	
+	if (r instanceof Var )
+		rval = r.deref().get_value();
+	else
+		if (Utils.isNumeric(r))
+			rval = r;
+		else
+			rval = r.value;
+	
+	return {r: rval, l: lval};
+};
+
+/**
+ *  Instruction `plus`
+ * 
+ */
+Interpreter.prototype.inst_op_plus = function(inst) {
+
+	var x = inst.get("x", "$x");
+	
+	var values = this._get_values();
+	
+	this.ctx.cse.vars[x] =  values.l + values.r;
+	
+	this.ctx.cu = true;
+};
+
+/**
+ *  Instruction `minus`
+ * 
+ */
+Interpreter.prototype.inst_op_minus = function(inst) {
+
+	var x = inst.get("x", "$x");
+	
+	var values = this._get_values();
+	
+	this.ctx.cse.vars[x] =  values.l - values.r;
+	
+	this.ctx.cu = true;
+};
+
+/**
+ *  Instruction `mult`
+ * 
+ */
+Interpreter.prototype.inst_op_mult = function(inst) {
+
+	var x = inst.get("x", "$x");
+	
+	var values = this._get_values();
+	
+	this.ctx.cse.vars[x] =  values.l * values.r;
+	
+	this.ctx.cu = true;
+};
+
+/**
+ *  Instruction `div`
+ * 
+ */
+Interpreter.prototype.inst_op_div = function(inst) {
+
+	var x = inst.get("x", "$x");
+	
+	var values = this._get_values();
+	
+	this.ctx.cse.vars[x] =  values.l / values.r;
+	
+	this.ctx.cu = true;
+};
+
+
+/**
+ *  Instruction `>`
+ * 
+ */
+Interpreter.prototype.inst_op_gt = function() {
+
+	var values = this._get_values();
+	
+	this.ctx.cu = values.l > values.r;
+	
+	this._exit();
+};
+
+/**
+ *  Instruction `<`
+ * 
+ */
+Interpreter.prototype.inst_op_lt = function() {
+
+	var values = this._get_values();
+	
+	this.ctx.cu = values.l < values.r;
+	
+	this._exit();
+};
+
+/**
+ *  Instruction `>=`
+ * 
+ */
+Interpreter.prototype.inst_op_ge = function() {
+
+	var values = this._get_values();
+	
+	this.ctx.cu = values.l >= values.r;
+	
+	this._exit();
+};
+
+/**
+ *  Instruction `=<`
+ * 
+ */
+Interpreter.prototype.inst_op_em = function() {
+
+	var values = this._get_values();
+	
+	this.ctx.cu = values.l <= values.r;
+	
+	this._exit();
 };
 
 
@@ -3262,7 +3418,7 @@ function Lexer (text) {
 	this.current_line = 0;
 	this.offset = 0;
 	
-	this._tokenRegexp = />=|=<|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\-\+|[()\.,]|[\n]|./gm;
+	this._tokenRegexp = />=|=<|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\/|\-\+|[()\.,]|[\n]|./gm;
 };
 
 Lexer.prototype._handleNewline = function(){
@@ -3293,6 +3449,7 @@ Lexer.token_map = {
 	,'-':  function() { return new Token('op:minus', '-', {is_operator: true}) }
 	,'+':  function() { return new Token('op:plus',  '+', {is_operator: true}) }
 	,'*':  function() { return new Token('op:mult',  '*', {is_operator: true}) }
+	,'/':  function() { return new Token('op:div',   '/', {is_operator: true}) }
 	,'is': function() { return new Token('op:is',    'is',{is_operator: true}) }
 	,'|':  function() { return new Token('list:tail','|'  ) }
 	
@@ -4543,6 +4700,10 @@ Utils.pad = function(string, width, what_char) {
 	
 	return string + Array(width - string.length).join(what_char || " ");	
 };
+
+Utils.isNumeric = function(n) {
+	return !isNaN(parseFloat(n)) && isFinite(n);
+}
 
 if (typeof module!= 'undefined') {
 	module.exports.Utils = Utils;

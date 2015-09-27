@@ -882,3 +882,329 @@ it('Interpreter - primitive - 4', function(){
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
 	//test(rules, query, expected, { tracer: call_tracer });
 });
+
+it('Interpreter - primitive - 5', function(){
+
+	var rules = [
+	             "p(X):- X1 is X+10, X1 > 15."
+				
+				];
+	
+
+	var query = "p(6).";
+	
+	var expected = [
+	                { "$cu": true }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+it('Interpreter - primitive - 6', function(){
+
+	var rules = [
+	             "p(X):- X1 is X+10, X1 > 15."
+				
+				];
+	
+
+	var query = "p(5).";
+	
+	var expected = [
+	                { "$cu": false }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+it('Interpreter - primitive - 7', function(){
+
+	var rules = [
+	             "p(X):- X1 is X+10, X1 >= 15."
+				
+				];
+	
+
+	var query = "p(5).";
+	
+	var expected = [
+	                { "$cu": true }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+it('Interpreter - primitive - 8', function(){
+
+	var rules = [
+	             "p(X):- X1 is X+10, X1 =< 15."
+				
+				];
+	
+
+	var query = "p(5).";
+	
+	var expected = [
+	                { "$cu": true }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+it('Interpreter - primitive - 9a', function(){
+
+	var rules = [
+	             "p(X):- X1 is X-1, X1 > 10."
+				
+				];
+	
+
+	var query = "p(11).";
+	
+	var expected = [
+	                { "$cu": false }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+it('Interpreter - primitive - 9b', function(){
+
+	var rules = [
+	             "p(X):- X1 is X-1, X1 > 10."
+				
+				];
+	
+
+	var query = "p(12).";
+	
+	var expected = [
+	                { "$cu": true }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+it('Interpreter - primitive - 9c', function(){
+
+	var rules = [
+	             "p(X):- X1 is X-1, X1 < 0."
+				
+				];
+	
+
+	var query = "p(0).";
+	
+	var expected = [
+	                { "$cu": true }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+it('Interpreter - primitive - 10', function(){
+
+	var rules = [
+	             "p(X, X1):- X1 is X*10, X1 > 1."
+				
+				];
+	
+
+	var query = "p(10, X1).";
+	
+	var expected = [
+	                { "$cu": true, X1: 100 }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+it('Interpreter - primitive - 11a (div)', function(){
+
+	var rules = [
+	             "p(X, X1):- X1 is X/2, X1 > 1."
+				
+				];
+	
+
+	var query = "p(10, X1).";
+	
+	var expected = [
+	                { "$cu": true, X1: 5 }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+it('Interpreter - primitive - 11b (div)', function(){
+
+	var rules = [
+	             "p(X, X1):- X1 is X/2, X1 > 1."
+				
+				];
+	
+
+	var query = "p(9, X1).";
+	
+	var expected = [
+	                { "$cu": true, X1: 4.5 }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+it('Interpreter - primitive - 12a', function(){
+
+	var rules = [
+	             "p(X, X1):- X1 is X*2+3, X1 > 1."
+				
+				];
+	
+
+	var query = "p(9, X1).";
+	
+	var expected = [
+	                { "$cu": true, X1: 21 }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+/*
+g0: 
+     [ prepare     ,
+       put_var     p("X"),
+       put_number  p(2),
+       op_mult     x(1),
+       prepare     ,
+       put_value   x(1),
+       op_expr     ,                ??????????
+       prepare     ,
+       put_value   x(2),
+       put_number  p(3),
+       op_plus     x(3),
+       prepare     ,
+       put_var     p("X1"),
+       put_value   x(3),
+       op_is       ,
+       prepare     ,
+       put_var     p("X1"),
+       put_number  p(1),
+       op_gt       ,
+       proceed      ],
+ */
+/*
+it('Interpreter - primitive - 12b', function(){
+
+	var rules = [
+	             "p(X, X1):- X1 is (X*2)+3, X1 > 1."
+				
+				];
+	
+
+
+	var query = "p(9, X1).";
+	
+	var expected = [
+	                { "$cu": true, X1: 21 }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	//test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+*/

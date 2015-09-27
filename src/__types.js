@@ -190,6 +190,7 @@ Op._list = [
 	   ,new Op("minus",   '-',   500, 'yfx', {primitive: true, retvalue: true})
 	   ,new Op("plus",    '+',   500, 'yfx', {primitive: true, retvalue: true})
 	   ,new Op("mult",    '*',   400, 'yfx', {primitive: true, retvalue: true})
+	   ,new Op("div",     '/',   400, 'yfx', {primitive: true, retvalue: true})
 	    
 	   ,new Op("uminus",   '-',  200, 'fy')
 	   ,new Op("uplus",    '+',  200, 'fy') 
@@ -797,6 +798,14 @@ function ErrorExpectingFunctor(msg, _args) {
 };
 ErrorExpectingFunctor.prototype = Error.prototype;
 
+
+function ErrorExpectingVariable(msg, _args) {
+	this.message = msg;
+	this.args = _args;
+};
+ErrorExpectingVariable.prototype = Error.prototype;
+
+
 function ErrorFunctorNotFound(msg, _args) {
 	this.message = msg;
 	this.args = _args;
@@ -892,6 +901,7 @@ if (typeof module!= 'undefined') {
 	
 	// Errors
 	module.exports.ErrorExpectingFunctor = ErrorExpectingFunctor;
+	module.exports.ErrorExpectingVariable = ErrorExpectingVariable; 
 	module.exports.ErrorInvalidHead = ErrorInvalidHead;
 	module.exports.ErrorRuleInQuestion = ErrorRuleInQuestion;
 	module.exports.ErrorExpectingGoal = ErrorExpectingGoal;
