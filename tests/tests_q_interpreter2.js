@@ -1207,3 +1207,39 @@ it('Interpreter - primitive - 12b', function(){
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
 	//test(rules, query, expected, { tracer: call_tracer });
 });
+
+
+
+
+// =================================================================================================== CUT
+
+
+
+
+
+it('Interpreter - cut - 1', function(){
+
+	var rules = [
+	             "p(X, Y) :- !, X>0, Y>0."
+				
+				];
+	
+
+
+	var query = "p(9, 0).";
+	
+	var expected = [
+	                { "$cu": true }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	//test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+

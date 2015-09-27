@@ -216,7 +216,7 @@ Visitor3.prototype._process = function(node, vc) {
 		throw new ErrorExpectingFunctor("Visitor3: got an undefined node.");
 	
 	if (!(node instanceof Functor)) 
-		throw new ErrorExpectingFunctor("Visitor3: expecting a Functor, got: ", node);
+		throw new ErrorExpectingFunctor("Visitor3: expecting a Functor, got: " + JSON.stringify(node));
 	
 	/*
 	 * Since we are only just concerned about Conjunctions and Disjunctions

@@ -16,6 +16,8 @@
  *  * replace `+ +` with `+`
  *  * replace `+-`  with `-`
  *  
+ *  * translate `!` to functor('cut')
+ *  
  *  * translate `( exp ... )` ==> functor `ident( exp ...)` 
  *  * Translate `Token(var, name)` ==> `Var(name)` 
  *  
@@ -379,6 +381,7 @@ ParserL2.prototype.process = function(){
 		};
 		
 		
+		
 		// We are removing at this layer
 		//  because we might want to introduce directives
 		//  at parser layer 1
@@ -441,7 +444,15 @@ ParserL2.prototype.process = function(){
 			continue;
 		};
 		
-		
+		if (token.name == 'term' && token.value == '!') {
+			var fcut = new Functor("cut");
+			
+			fcut.original_token = token;
+			fcut.line = token.line;
+			fcut.col  = token.col;
+			expression.push( fcut );
+			continue;
+		};
 		
 		
 		// default is to build the expression 

@@ -461,7 +461,11 @@ Functor.prototype.inspect = function(){
 			result = "Functor("+this.name+"/"+arity+")";
 		else {
 			var fargs = this.format_args(this.args);
-			result = "Functor("+this.name+"/"+arity+","+fargs+")";
+			
+			if (arity>0)
+				result = "Functor("+this.name+"/"+arity+","+fargs+")";
+			else
+				result = "Functor("+this.name+"/"+arity+")";
 		}
 		
 	}; 
@@ -4123,6 +4127,7 @@ ParserL2.prototype.process = function(){
 		};
 		
 		
+		
 		// We are removing at this layer
 		//  because we might want to introduce directives
 		//  at parser layer 1
@@ -4185,7 +4190,15 @@ ParserL2.prototype.process = function(){
 			continue;
 		};
 		
-		
+		if (token.name == 'term' && token.value == '!') {
+			var fcut = new Functor("cut");
+			
+			fcut.original_token = token;
+			fcut.line = token.line;
+			fcut.col  = token.col;
+			expression.push( fcut );
+			continue;
+		};
 		
 		
 		// default is to build the expression 
@@ -4941,7 +4954,7 @@ Visitor3.prototype._process = function(node, vc) {
 		throw new ErrorExpectingFunctor("Visitor3: got an undefined node.");
 	
 	if (!(node instanceof Functor)) 
-		throw new ErrorExpectingFunctor("Visitor3: expecting a Functor, got: ", node);
+		throw new ErrorExpectingFunctor("Visitor3: expecting a Functor, got: " + JSON.stringify(node));
 	
 	/*
 	 * Since we are only just concerned about Conjunctions and Disjunctions

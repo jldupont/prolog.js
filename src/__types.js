@@ -467,7 +467,11 @@ Functor.prototype.inspect = function(){
 			result = "Functor("+this.name+"/"+arity+")";
 		else {
 			var fargs = this.format_args(this.args);
-			result = "Functor("+this.name+"/"+arity+","+fargs+")";
+			
+			if (arity>0)
+				result = "Functor("+this.name+"/"+arity+","+fargs+")";
+			else
+				result = "Functor("+this.name+"/"+arity+")";
 		}
 		
 	}; 
