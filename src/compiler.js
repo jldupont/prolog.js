@@ -337,7 +337,7 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 		//         For primitive operators, the instruction
 		//          handler will take care of backtracking if necessary.
 		//
-		var is_left_primitive = lctx.n && lctx.n.is_primitive;
+		var is_left_primitive = lctx.n && lctx.n.attrs.primitive;
 		
 		if (!is_left_primitive)
 			result[llabel].push(new Instruction("maybe_fail"));
@@ -505,7 +505,7 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 	if (exp == undefined)
 		return undefined;
 	
-	if (exp.is_primitive) {
+	if (exp.attrs.primitive) {
 		return this.process_primitive(exp, is_query, head_vars);
 	};
 	
@@ -627,7 +627,7 @@ Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 		
 		var inst_name = "op_"+op_name;
 		
-		if (ctx.n.is_boolean)
+		if (ctx.n.attrs.boolean || !ctx.n.attrs.retvalue)
 			results.push(new Instruction(inst_name));
 		else
 			results.push(new Instruction(inst_name, {x: ctx.vc}));

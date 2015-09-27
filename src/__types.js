@@ -122,13 +122,12 @@ function Result(term_list, last_index) {
  * Operator
  * @constructor
  */
-function Op(name, symbol, precedence, type, is_primitive, is_boolean) {
+function Op(name, symbol, precedence, type, attrs) {
 	this.name = name;
 	this.symbol = symbol;
 	this.prec = precedence;
 	this.type = type;
-	this.is_primitive = is_primitive || false;
-	this.is_boolean = is_boolean || false;
+	this.attrs = attrs || {};
 	
 	// from the lexer
 	this.line = 0;
@@ -181,16 +180,16 @@ Op._list = [
 	    new Op("rule",    ':-', 1200, 'xfx')
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
-	   ,new Op("unif",    '=',   700, 'xfx', true, true)
-	   ,new Op("em",      '=<',  700, 'xfx', true, true)
-	   ,new Op("ge",      '>=',  700, 'xfx', true, true)
-	   ,new Op("lt",      '<',   700, 'xfx', true, true)
-	   ,new Op("gt",      '>',   700, 'xfx', true, true)
-	   ,new Op("is",      'is',  700, 'xfx', true)
+	   ,new Op("unif",    '=',   700, 'xfx', {primitive: true, boolean: true})
+	   ,new Op("em",      '=<',  700, 'xfx', {primitive: true, boolean: true})
+	   ,new Op("ge",      '>=',  700, 'xfx', {primitive: true, boolean: true})
+	   ,new Op("lt",      '<',   700, 'xfx', {primitive: true, boolean: true})
+	   ,new Op("gt",      '>',   700, 'xfx', {primitive: true, boolean: true})
+	   ,new Op("is",      'is',  700, 'xfx', {primitive: true, retvalue: false})
 	    
-	   ,new Op("minus",   '-',   500, 'yfx', true)
-	   ,new Op("plus",    '+',   500, 'yfx', true)
-	   ,new Op("mult",    '*',   400, 'yfx', true)
+	   ,new Op("minus",   '-',   500, 'yfx', {primitive: true, retvalue: true})
+	   ,new Op("plus",    '+',   500, 'yfx', {primitive: true, retvalue: true})
+	   ,new Op("mult",    '*',   400, 'yfx', {primitive: true, retvalue: true})
 	    
 	   ,new Op("uminus",   '-',  200, 'fy')
 	   ,new Op("uplus",    '+',  200, 'fy') 
@@ -416,8 +415,11 @@ function Functor(name, maybe_arguments_list) {
 	this.prec = 0;
 	
 	// That's what we assume for the general case.
-	this.is_primitive = false;
-	this.is_boolean = false;
+	this.attrs = {
+		primitive: false
+		,boolean: false
+		,retvalue: false
+	}
 	
 	// from the lexer
 	this.line = 0;

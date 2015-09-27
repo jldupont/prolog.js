@@ -819,33 +819,74 @@ Interpreter.prototype.inst_proceed = function() {
 };
 
 
-//=========================================================================== EXEC
+//=========================================================================== PRIMITIVES
+
 
 /**
- *   Instruction `exec`
+ *   Instruction `prepare`
  *   
- *   "x" points to the local variable which contains the
- *     primitive functor.  The arguments of the functor
- *     can either be references to variables or constants.
- *      
+ *   `x` contains the local register's index where
+ *       to store the result      
  */
-Interpreter.prototype.inst_exec = function(inst) {
+Interpreter.prototype.inst_prepare = function(_inst) {
+
+	this.ctx.cse.vars["$x0"] = new Functor('$op');
+	this.ctx.cu = true;
+};
+
+/**
+ *   Instruction `op_unif`
+ *
+ *   $x0.arg[0]
+ *   $x0.arg[1]
+ *   
+ */
+Interpreter.prototype.inst_op_unif = function(_inst) {
+
+	var x0 = this.ctx.cse.vars["$x0"];
 	
-	var x = inst.get('x', "$x");
+	this.ctx.cu = Utils.unify(x0.args[0], x0.args[1]);
 	
-	var functor = this.ctx.cse.vars[x];
+	return this._op_exit(); 
+};
+
+/**
+ *   Instruction `op_is`
+ *   
+ *   `x` contains the local register's index where
+ *       to store the result      
+ */
+Interpreter.prototype._op_exit = function() {
+
+	if (this.ctx.cu)
+		return;
 	
-	
-	if (this.ctx.cu) {
-		this._restore_continuation( this.ctx.cse.cp );
-		this._execute();
+	// A disjunction is available?
+	//
+	if (this.ctx.cse.te) {
+		
+		this._goto( this.ctx.cse.te );
+		
+		// just making sure
+		this.ctx.cse.te = null;
+		
 		return;
 	};
 	
 	this.backtrack();
 };
 
+/**
+ *   Instruction `op_is`
+ *   
+ *   `x` contains the local register's index where
+ *       to store the result      
+ */
+Interpreter.prototype.inst_op_is = function(_inst) {
 
+	
+	
+};
 
 
 //=========================================================================== CALL

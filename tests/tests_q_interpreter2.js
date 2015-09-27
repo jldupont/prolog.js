@@ -290,7 +290,7 @@ var test = function(rules, query, expected, options) {
 			var e = expect[vindex];
 			var a = vars[vindex];
 			
-			if (!a) {
+			if (a === undefined) {
 				console.log("*** VARS: ", vars);
 				if (dumpdb_enable)
 					dump_db(it.db.db)
@@ -767,6 +767,59 @@ it('Interpreter - Disj - 1', function(){
 	
 	var expected = [
 	                { "$cu": true }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+// ============================================================================================= ==========
+// ============================================================================================= PRIMITIVES
+// ============================================================================================= ==========
+
+it('Interpreter - primitive - 1', function(){
+
+	var rules = [
+	             "p(X):- X = 1."
+				
+				];
+	
+	var query = "p(1).";
+	
+	var expected = [
+	                { "$cu": true }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+it('Interpreter - primitive - 2', function(){
+
+	var rules = [
+	             "p(X):- X = 1."
+				
+				];
+	
+
+	var query = "p(2).";
+	
+	var expected = [
+	                { "$cu": false }
 	                ];
 
 	Token.inspect_compact = true;

@@ -116,13 +116,12 @@ function Result(term_list, last_index) {
  * Operator
  * @constructor
  */
-function Op(name, symbol, precedence, type, is_primitive, is_boolean) {
+function Op(name, symbol, precedence, type, attrs) {
 	this.name = name;
 	this.symbol = symbol;
 	this.prec = precedence;
 	this.type = type;
-	this.is_primitive = is_primitive || false;
-	this.is_boolean = is_boolean || false;
+	this.attrs = attrs || {};
 	
 	// from the lexer
 	this.line = 0;
@@ -175,16 +174,16 @@ Op._list = [
 	    new Op("rule",    ':-', 1200, 'xfx')
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
-	   ,new Op("unif",    '=',   700, 'xfx', true, true)
-	   ,new Op("em",      '=<',  700, 'xfx', true, true)
-	   ,new Op("ge",      '>=',  700, 'xfx', true, true)
-	   ,new Op("lt",      '<',   700, 'xfx', true, true)
-	   ,new Op("gt",      '>',   700, 'xfx', true, true)
-	   ,new Op("is",      'is',  700, 'xfx', true)
+	   ,new Op("unif",    '=',   700, 'xfx', {primitive: true, boolean: true})
+	   ,new Op("em",      '=<',  700, 'xfx', {primitive: true, boolean: true})
+	   ,new Op("ge",      '>=',  700, 'xfx', {primitive: true, boolean: true})
+	   ,new Op("lt",      '<',   700, 'xfx', {primitive: true, boolean: true})
+	   ,new Op("gt",      '>',   700, 'xfx', {primitive: true, boolean: true})
+	   ,new Op("is",      'is',  700, 'xfx', {primitive: true, retvalue: false})
 	    
-	   ,new Op("minus",   '-',   500, 'yfx', true)
-	   ,new Op("plus",    '+',   500, 'yfx', true)
-	   ,new Op("mult",    '*',   400, 'yfx', true)
+	   ,new Op("minus",   '-',   500, 'yfx', {primitive: true, retvalue: true})
+	   ,new Op("plus",    '+',   500, 'yfx', {primitive: true, retvalue: true})
+	   ,new Op("mult",    '*',   400, 'yfx', {primitive: true, retvalue: true})
 	    
 	   ,new Op("uminus",   '-',  200, 'fy')
 	   ,new Op("uplus",    '+',  200, 'fy') 
@@ -410,8 +409,11 @@ function Functor(name, maybe_arguments_list) {
 	this.prec = 0;
 	
 	// That's what we assume for the general case.
-	this.is_primitive = false;
-	this.is_boolean = false;
+	this.attrs = {
+		primitive: false
+		,boolean: false
+		,retvalue: false
+	}
 	
 	// from the lexer
 	this.line = 0;
@@ -1243,7 +1245,7 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 		//         For primitive operators, the instruction
 		//          handler will take care of backtracking if necessary.
 		//
-		var is_left_primitive = lctx.n && lctx.n.is_primitive;
+		var is_left_primitive = lctx.n && lctx.n.attrs.primitive;
 		
 		if (!is_left_primitive)
 			result[llabel].push(new Instruction("maybe_fail"));
@@ -1411,7 +1413,7 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 	if (exp == undefined)
 		return undefined;
 	
-	if (exp.is_primitive) {
+	if (exp.attrs.primitive) {
 		return this.process_primitive(exp, is_query, head_vars);
 	};
 	
@@ -1533,7 +1535,7 @@ Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 		
 		var inst_name = "op_"+op_name;
 		
-		if (ctx.n.is_boolean)
+		if (ctx.n.attrs.boolean || !ctx.n.attrs.retvalue)
 			results.push(new Instruction(inst_name));
 		else
 			results.push(new Instruction(inst_name, {x: ctx.vc}));
@@ -2595,33 +2597,74 @@ Interpreter.prototype.inst_proceed = function() {
 };
 
 
-//=========================================================================== EXEC
+//=========================================================================== PRIMITIVES
+
 
 /**
- *   Instruction `exec`
+ *   Instruction `prepare`
  *   
- *   "x" points to the local variable which contains the
- *     primitive functor.  The arguments of the functor
- *     can either be references to variables or constants.
- *      
+ *   `x` contains the local register's index where
+ *       to store the result      
  */
-Interpreter.prototype.inst_exec = function(inst) {
+Interpreter.prototype.inst_prepare = function(_inst) {
+
+	this.ctx.cse.vars["$x0"] = new Functor('$op');
+	this.ctx.cu = true;
+};
+
+/**
+ *   Instruction `op_unif`
+ *
+ *   $x0.arg[0]
+ *   $x0.arg[1]
+ *   
+ */
+Interpreter.prototype.inst_op_unif = function(_inst) {
+
+	var x0 = this.ctx.cse.vars["$x0"];
 	
-	var x = inst.get('x', "$x");
+	this.ctx.cu = Utils.unify(x0.args[0], x0.args[1]);
 	
-	var functor = this.ctx.cse.vars[x];
+	return this._op_exit(); 
+};
+
+/**
+ *   Instruction `op_is`
+ *   
+ *   `x` contains the local register's index where
+ *       to store the result      
+ */
+Interpreter.prototype._op_exit = function() {
+
+	if (this.ctx.cu)
+		return;
 	
-	
-	if (this.ctx.cu) {
-		this._restore_continuation( this.ctx.cse.cp );
-		this._execute();
+	// A disjunction is available?
+	//
+	if (this.ctx.cse.te) {
+		
+		this._goto( this.ctx.cse.te );
+		
+		// just making sure
+		this.ctx.cse.te = null;
+		
 		return;
 	};
 	
 	this.backtrack();
 };
 
+/**
+ *   Instruction `op_is`
+ *   
+ *   `x` contains the local register's index where
+ *       to store the result      
+ */
+Interpreter.prototype.inst_op_is = function(_inst) {
 
+	
+	
+};
 
 
 //=========================================================================== CALL
@@ -4199,8 +4242,7 @@ ParserL3._process_one = function(opcode, node_left, node_center, node_right) {
 	var functor = new Functor(opcode.name);
 	functor.col = node_center.col;
 	functor.line = node_center.line;
-	functor.is_primitive = opcode.is_primitive;
-	functor.is_boolean   = opcode.is_boolean;
+	functor.attrs = opcode.attrs;
 	
 	var is_unary = Op.is_unary(opcode.type); 
 	
