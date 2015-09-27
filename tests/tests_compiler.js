@@ -1257,3 +1257,54 @@ it('Compiler - expression - 2', function(){
 	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_parsed: true});
 	process_rule(text, expected);
 });
+
+
+it('Compiler - sub-expression - 1', function(){
+	
+	//console.log("\n***Compiler - expression - 1\n");
+	
+	Instruction.inspect_compact = true;
+	
+	var text = "test(X, X1) :- X1 is (X+2)*3.";
+	
+	/*
+		Functor(rule/2,
+			Functor(test/1,Var(X)),
+			Functor(is/2,Var(X1),
+				Functor(mult/2,Functor(plus/2,Var(X),'Token(number,2)'),
+				'Token(number,3)')))	 
+		*/
+	
+	
+	var expected = [
+	  {
+		head: 
+		    [ 
+		      'get_struct  test/2, x(0)',
+		      'get_var     p("X")',
+		      'get_var     p("X1")',
+		      'jump        p("g0")' 
+		      ],
+		   g0: 
+		    [ 
+		      'prepare'     ,
+		      'put_var     p("X")',
+		      'put_number  p(2)',
+		      'op_plus     x(1)',
+		      'prepare'     ,
+		      'put_value   x(1)',
+		      'put_number  p(3)',
+		      'op_mult     x(2)',
+		      'prepare'     ,
+		      'put_var     p("X1")',
+		      'put_value   x(2)',
+		      'op_is'       ,
+		      'proceed'      
+		      ],
+		   f: 'test',
+		   a: 2 }
+	];
+	
+	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_parsed: true});
+	process_rule(text, expected);
+});

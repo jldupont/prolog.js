@@ -314,6 +314,8 @@ ParserL2.prototype.process = function(){
 			token.value = 'expr';
 			token.prec = 0;
 			token.is_operator = false;
+			token.attrs= token.attrs || {};
+			token.attrs.primitive = true;
 		};
 
 		

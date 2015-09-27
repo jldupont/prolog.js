@@ -1423,6 +1423,7 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 	if (exp == undefined)
 		return undefined;
 	
+	
 	if (exp.attrs.primitive) {
 		return this.process_primitive(exp, is_query, head_vars);
 	};
@@ -1498,11 +1499,13 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 
 Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 
+	
 	var v = new Visitor2(exp);
 	
 	var results = [];
 
 	v.process(function(ctx){
+
 		
 		var op_name = ctx.n.name;
 		
@@ -4055,6 +4058,8 @@ ParserL2.prototype.process = function(){
 			token.value = 'expr';
 			token.prec = 0;
 			token.is_operator = false;
+			token.attrs= token.attrs || {};
+			token.attrs.primitive = true;
 		};
 
 		
@@ -4269,6 +4274,9 @@ ParserL3.prototype.process = function(){
 			var expression = result[index] || this.expressions[index];
 			
 			var r = ParserL3.process_expression(opcode, expression);
+			
+			//console.log("ParserL3.process: ", r);
+			
 			result[index] = r;
 		};
 		
@@ -4321,7 +4329,17 @@ ParserL3._process_expression = function(opcode, expression){
 	for (var node_index=0; node_index < expression.length; node_index++) {
 		
 		var node = expression[node_index];
-			
+		
+		
+		/*
+		 *  Now that we have reduced the sub-expressions
+		 *   within parens, let's get rid of the `expr` delimiter.
+		 */
+		if (node instanceof Functor)
+			if (node.name == 'expr' && node.args.length == 1)
+				node = node.args[0];
+		
+		
 		// The recursion case first of course
 		if (node instanceof Functor) {
 			var exp_from_args = node.args;
@@ -4377,6 +4395,8 @@ ParserL3._process_expression = function(opcode, expression){
 
 
 ParserL3._process_one = function(opcode, node_left, node_center, node_right) { 
+	
+	//console.log(">>>> process_one: ", opcode, node_left, node_center, node_right);
 	
 	// We need to get the proper precedence
 	//  for the operator we which to be processing for

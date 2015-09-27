@@ -360,3 +360,33 @@ it('ParserL3 - list - 3', function(){
 	process(text, expected);
 });
 
+
+it('ParserL3 - sub-expr - 1', function(){
+	
+	Functor.inspect_compact_version = true;
+	
+	var text = "(X+2)*3.";
+	
+	// mult(expr(plus(Var(X),Token(number,2))),Token(number,3))
+	
+	var expected = [[
+	                 'mult(plus(Var(X),Token(number,2)),Token(number,3))'
+	                 ]];
+	
+	process(text, expected);
+});
+
+it('ParserL3 - sub-expr - 2', function(){
+	
+	Functor.inspect_compact_version = true;
+	
+	var text = "(X+2)*(3+Y).";
+	
+	// mult(expr(plus(Var(X),Token(number,2))),Token(number,3))
+	
+	var expected = [[
+	                 'mult(plus(Var(X),Token(number,2)),plus(Token(number,3),Var(Y)))'
+	               ]];
+	
+	process(text, expected);
+});

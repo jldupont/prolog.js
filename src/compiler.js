@@ -505,6 +505,7 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 	if (exp == undefined)
 		return undefined;
 	
+	
 	if (exp.attrs.primitive) {
 		return this.process_primitive(exp, is_query, head_vars);
 	};
@@ -580,11 +581,13 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 
 Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 
+	
 	var v = new Visitor2(exp);
 	
 	var results = [];
 
 	v.process(function(ctx){
+
 		
 		var op_name = ctx.n.name;
 		
