@@ -751,3 +751,31 @@ append/3  code ==>  [ { head:
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
 	//test(rules, query, expected, { tracer: call_tracer });
 });
+
+it('Interpreter - Disj - 1', function(){
+
+	var rules = [
+	             "f1(666)."
+	            ,"f2(777)." 
+				,"test(X) :- f1(X) ; f2(X)."
+				
+				];
+	
+
+	//var query = "append([1,2], [3,4], [1,2,3,4]).";
+	var query = "test(777).";
+	
+	var expected = [
+	                { "$cu": true }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});

@@ -319,6 +319,13 @@ Interpreter.prototype._get_code = function(functor_name, arity, clause_index) {
 };//_get_code
 
 
+Interpreter.prototype._goto = function( label ){
+	
+	this.ctx.p.l = label;
+	this.ctx.p.i = 0;
+	
+};
+
 /**
  *  Jump to a specific code instruction in the database
  * 
@@ -748,7 +755,7 @@ Interpreter.prototype.inst_maybe_fail = function() {
  */
 Interpreter.prototype.inst_try_else = function( inst ) {
 	
-	var vname = inst.get("p", "g");
+	var vname = inst.get("p");
 	this.ctx.cse.te = vname;
 };
 
@@ -788,12 +795,25 @@ Interpreter.prototype.inst_jump = function( inst ) {
  *   
  */
 Interpreter.prototype.inst_proceed = function() {
-	
+		
 	if (this.ctx.cu) {
 		this._restore_continuation( this.ctx.cse.cp );
 		this._execute();
 		return;
 	};
+	
+	// A disjunction is available?
+	//
+	if (this.ctx.cse.te) {
+		
+		this._goto( this.ctx.cse.te );
+		
+		// just making sure
+		this.ctx.cse.te = null;
+		
+		return;
+	};
+	
 	
 	this.backtrack();
 };
