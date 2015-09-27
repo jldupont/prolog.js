@@ -1510,10 +1510,7 @@ Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 				if (n.name[0] == "_")
 					results.push(new Instruction("put_void"));
 				else
-					if (head_vars[n.name] || is_query)
-						results.push(new Instruction("put_var", {p: n.name}));
-					else 
-						results.push(new Instruction("unif_var", {p: n.name}));
+					results.push(new Instruction("put_var", {p: n.name}));
 			};
 
 			if (n instanceof Value) {
@@ -2615,8 +2612,8 @@ Interpreter.prototype.inst_prepare = function(_inst) {
 /**
  *   Instruction `op_unif`
  *
- *   $x0.arg[0]
- *   $x0.arg[1]
+ *   $x0.arg[0]  ==> lvalue
+ *   $x0.arg[1]  ==> rvalue
  *   
  */
 Interpreter.prototype.inst_op_unif = function(_inst) {
@@ -2625,16 +2622,14 @@ Interpreter.prototype.inst_op_unif = function(_inst) {
 	
 	this.ctx.cu = Utils.unify(x0.args[0], x0.args[1]);
 	
-	return this._op_exit(); 
+	return this._exit(); 
 };
 
 /**
- *   Instruction `op_is`
+ *   Exit procedure for all primitives
  *   
- *   `x` contains the local register's index where
- *       to store the result      
  */
-Interpreter.prototype._op_exit = function() {
+Interpreter.prototype._exit = function() {
 
 	if (this.ctx.cu)
 		return;
@@ -2657,13 +2652,25 @@ Interpreter.prototype._op_exit = function() {
 /**
  *   Instruction `op_is`
  *   
- *   `x` contains the local register's index where
- *       to store the result      
+ *     `Var is value`
+ *   
+ *   $x0.arg[0] ==> lvalue
+ *   $x0.arg[1] ==> rvalue
+ *   
  */
 Interpreter.prototype.inst_op_is = function(_inst) {
 
+	var x0 = this.ctx.cse.vars["$x0"];
 	
+	// Expecting a variable for lvalue
+	var lvar = x0.args[0];
+	var rval = x0.args[1];
+
+	// lvar is not supposed to be bound yet!
+	//
+	lvar.bind(rval);
 	
+	this.ctx.cu = true;
 };
 
 

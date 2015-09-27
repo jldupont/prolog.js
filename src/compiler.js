@@ -602,10 +602,7 @@ Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 				if (n.name[0] == "_")
 					results.push(new Instruction("put_void"));
 				else
-					if (head_vars[n.name] || is_query)
-						results.push(new Instruction("put_var", {p: n.name}));
-					else 
-						results.push(new Instruction("unif_var", {p: n.name}));
+					results.push(new Instruction("put_var", {p: n.name}));
 			};
 
 			if (n instanceof Value) {
