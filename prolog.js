@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-09-26 */
+/*! prolog.js - v0.0.1 - 2015-09-27 */
 
 /**
  *  Token
@@ -116,12 +116,13 @@ function Result(term_list, last_index) {
  * Operator
  * @constructor
  */
-function Op(name, symbol, precedence, type, is_primitive) {
+function Op(name, symbol, precedence, type, is_primitive, is_boolean) {
 	this.name = name;
 	this.symbol = symbol;
 	this.prec = precedence;
 	this.type = type;
 	this.is_primitive = is_primitive || false;
+	this.is_boolean = is_boolean || false;
 	
 	// from the lexer
 	this.line = 0;
@@ -174,11 +175,11 @@ Op._list = [
 	    new Op("rule",    ':-', 1200, 'xfx')
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
-	   ,new Op("unif",    '=',   700, 'xfx')
-	   ,new Op("em",      '=<',  700, 'xfx', true)
-	   ,new Op("ge",      '>=',  700, 'xfx', true)
-	   ,new Op("lt",      '<',   700, 'xfx', true)
-	   ,new Op("gt",      '>',   700, 'xfx', true)
+	   ,new Op("unif",    '=',   700, 'xfx', true, true)
+	   ,new Op("em",      '=<',  700, 'xfx', true, true)
+	   ,new Op("ge",      '>=',  700, 'xfx', true, true)
+	   ,new Op("lt",      '<',   700, 'xfx', true, true)
+	   ,new Op("gt",      '>',   700, 'xfx', true, true)
 	   ,new Op("is",      'is',  700, 'xfx', true)
 	    
 	   ,new Op("minus",   '-',   500, 'yfx', true)
@@ -407,7 +408,10 @@ function Functor(name, maybe_arguments_list) {
 	this.name = name;
 	this.original_token = null;
 	this.prec = 0;
+	
+	// That's what we assume for the general case.
 	this.is_primitive = false;
+	this.is_boolean = false;
 	
 	// from the lexer
 	this.line = 0;
@@ -717,6 +721,7 @@ function Instruction(opcode, ctx) {
 	this.ctx = ctx || null;
 };
 
+Instruction.inspect_compact = false;
 Instruction.inspect_quoted = false;
 
 Instruction.prototype.is = function(opcode) {
@@ -749,7 +754,8 @@ Instruction.prototype.inspect = function(){
 	if (this.ctx == null)
 		return result;
 	
-	result += " ( ";
+	if (!Instruction.inspect_compact)
+		result += " ( ";
 	
 	if (this.ctx.f)
 		result += this.ctx.f+"/"+this.ctx.a;
@@ -766,7 +772,8 @@ Instruction.prototype.inspect = function(){
 		}
 	};
 	
-	result += " )";
+	if (!Instruction.inspect_compact)
+		result += " )";
 	
 	if (Instruction.inspect_quoted)
 		result = "'"+result+"'";
@@ -1232,8 +1239,14 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 		
 		// Step 0: include the boundary instruction
 		//         between the 2 goals forming a conjunction
+		//
+		//         For primitive operators, the instruction
+		//          handler will take care of backtracking if necessary.
+		//
+		var is_left_primitive = lctx.n && lctx.n.is_primitive;
 		
-		result[llabel].push(new Instruction("maybe_fail"));
+		if (!is_left_primitive)
+			result[llabel].push(new Instruction("maybe_fail"));
 		
 		// Step 1, combine code of R under code for L
 		//      
@@ -1312,15 +1325,6 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 	
 	v.process(function(jctx, left_or_root, right_maybe){
 
-		/*
-		if (show_debug) {
-			console.log("jctx: ", jctx);
-			console.log("lctx: ", left_or_root);
-			console.log("rctx: ", right_maybe, "\n");
-		};
-		*/
-		
-		
 		var type = jctx.type;
 		var goal_id = jctx.goal_id;
 		var is_root = jctx.root;
@@ -1407,12 +1411,16 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 	if (exp == undefined)
 		return undefined;
 	
+	if (exp.is_primitive) {
+		return this.process_primitive(exp, is_query, head_vars);
+	};
+	
+	
 	var v = new Visitor2(exp);
 	
 	var results = [];
 
-	if (!exp.is_primitive)
-		results.push(new Instruction('allocate'));
+	results.push(new Instruction('allocate'));
 	
 	v.process(function(ctx){
 		
@@ -1459,12 +1467,10 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 		//
 		if (ctx.root) {
 			
-			if (!ctx.n.is_primitive) {
-				results.push(new Instruction('setup'));
-				results.push(new Instruction('call'));
-				results.push(new Instruction('maybe_retry'));
-				results.push(new Instruction('deallocate'));
-			};
+			results.push(new Instruction('setup'));
+			results.push(new Instruction('call'));
+			results.push(new Instruction('maybe_retry'));
+			results.push(new Instruction('deallocate'));
 			
 			if (is_query)
 				results.push(new Instruction('end'));
@@ -1472,19 +1478,74 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 				results.push(new Instruction('proceed'));
 		};
 			
-		/*  ... unless we have a primitive functor
-		 * 
-		 */
-		if (ctx.n.is_primitive) {
-			results.push(new Instruction('exec', {x: ctx.vc}));
-		};
 		
 	});
-	
+
 	return results;
 };
 
+Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 
+	var v = new Visitor2(exp);
+	
+	var results = [];
+
+	v.process(function(ctx){
+		
+		var op_name = ctx.n.name;
+		
+		/*
+		 *  This instruction will clear the primitive's
+		 *   context in $x0
+		 */
+		results.push(new Instruction("prepare"));
+		
+		for (var index=0; index<ctx.args.length; index++) {
+			
+			var n = ctx.args[index];
+			
+			if (n instanceof Var) {
+				if (n.name[0] == "_")
+					results.push(new Instruction("put_void"));
+				else
+					if (head_vars[n.name] || is_query)
+						results.push(new Instruction("put_var", {p: n.name}));
+					else 
+						results.push(new Instruction("unif_var", {p: n.name}));
+			};
+
+			if (n instanceof Value) {
+				results.push(new Instruction("put_value", {x: n.name}));
+			};
+			
+			if (n instanceof Token) {
+				if (n.name == 'number')
+					results.push(new Instruction("put_number", {p: n.value}));
+				
+				if (n.name == 'term')
+					results.push(new Instruction("put_term", {p: n.value}));
+				
+				if (n.name == 'nil')
+					results.push(new Instruction("put_nil"));
+			};
+			
+		};//for
+		
+		var inst_name = "op_"+op_name;
+		
+		if (ctx.n.is_boolean)
+			results.push(new Instruction(inst_name));
+		else
+			results.push(new Instruction(inst_name, {x: ctx.vc}));
+		
+	});
+
+
+	results.push(new Instruction('proceed'));
+	
+	return results;
+	
+};
 
 
 
@@ -2463,7 +2524,7 @@ Interpreter.prototype.inst_maybe_fail = function() {
  */
 Interpreter.prototype.inst_try_else = function( inst ) {
 	
-	var vname = "g" + inst.get("p");
+	var vname = inst.get("p", "g");
 	this.ctx.cse.te = vname;
 };
 
@@ -2512,6 +2573,35 @@ Interpreter.prototype.inst_proceed = function() {
 	
 	this.backtrack();
 };
+
+
+//=========================================================================== EXEC
+
+/**
+ *   Instruction `exec`
+ *   
+ *   "x" points to the local variable which contains the
+ *     primitive functor.  The arguments of the functor
+ *     can either be references to variables or constants.
+ *      
+ */
+Interpreter.prototype.inst_exec = function(inst) {
+	
+	var x = inst.get('x', "$x");
+	
+	var functor = this.ctx.cse.vars[x];
+	
+	
+	if (this.ctx.cu) {
+		this._restore_continuation( this.ctx.cse.cp );
+		this._execute();
+		return;
+	};
+	
+	this.backtrack();
+};
+
+
 
 
 //=========================================================================== CALL
@@ -2631,7 +2721,7 @@ Interpreter.prototype.inst_put_var = function(inst) {
  */
 Interpreter.prototype.inst_put_value = function(inst) {
 	
-	var vname = "$x" + inst.get("x");
+	var vname = inst.get("x", "$x");
 	
 	var value = this.ctx.tse.vars[vname];
 	
@@ -2761,7 +2851,7 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	var v = inst.get('p');
 
 	if (!v) {
-		v = "$x" + inst.get('x');
+		v = inst.get('x', "$x");
 	};
 	
 	var pv = this.ctx.cse.vars[v];
@@ -4090,6 +4180,7 @@ ParserL3._process_one = function(opcode, node_left, node_center, node_right) {
 	functor.col = node_center.col;
 	functor.line = node_center.line;
 	functor.is_primitive = opcode.is_primitive;
+	functor.is_boolean   = opcode.is_boolean;
 	
 	var is_unary = Op.is_unary(opcode.type); 
 	

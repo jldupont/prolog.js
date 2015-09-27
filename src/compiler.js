@@ -333,8 +333,14 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 		
 		// Step 0: include the boundary instruction
 		//         between the 2 goals forming a conjunction
+		//
+		//         For primitive operators, the instruction
+		//          handler will take care of backtracking if necessary.
+		//
+		var is_left_primitive = lctx.n && lctx.n.is_primitive;
 		
-		result[llabel].push(new Instruction("maybe_fail"));
+		if (!is_left_primitive)
+			result[llabel].push(new Instruction("maybe_fail"));
 		
 		// Step 1, combine code of R under code for L
 		//      
@@ -413,15 +419,6 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 	
 	v.process(function(jctx, left_or_root, right_maybe){
 
-		/*
-		if (show_debug) {
-			console.log("jctx: ", jctx);
-			console.log("lctx: ", left_or_root);
-			console.log("rctx: ", right_maybe, "\n");
-		};
-		*/
-		
-		
 		var type = jctx.type;
 		var goal_id = jctx.goal_id;
 		var is_root = jctx.root;
@@ -508,12 +505,16 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 	if (exp == undefined)
 		return undefined;
 	
+	if (exp.is_primitive) {
+		return this.process_primitive(exp, is_query, head_vars);
+	};
+	
+	
 	var v = new Visitor2(exp);
 	
 	var results = [];
 
-	if (!exp.is_primitive)
-		results.push(new Instruction('allocate'));
+	results.push(new Instruction('allocate'));
 	
 	v.process(function(ctx){
 		
@@ -560,12 +561,10 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 		//
 		if (ctx.root) {
 			
-			if (!ctx.n.is_primitive) {
-				results.push(new Instruction('setup'));
-				results.push(new Instruction('call'));
-				results.push(new Instruction('maybe_retry'));
-				results.push(new Instruction('deallocate'));
-			};
+			results.push(new Instruction('setup'));
+			results.push(new Instruction('call'));
+			results.push(new Instruction('maybe_retry'));
+			results.push(new Instruction('deallocate'));
 			
 			if (is_query)
 				results.push(new Instruction('end'));
@@ -573,19 +572,74 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 				results.push(new Instruction('proceed'));
 		};
 			
-		/*  ... unless we have a primitive functor
-		 * 
-		 */
-		if (ctx.n.is_primitive) {
-			results.push(new Instruction('exec', {x: ctx.vc}));
-		};
 		
 	});
-	
+
 	return results;
 };
 
+Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 
+	var v = new Visitor2(exp);
+	
+	var results = [];
+
+	v.process(function(ctx){
+		
+		var op_name = ctx.n.name;
+		
+		/*
+		 *  This instruction will clear the primitive's
+		 *   context in $x0
+		 */
+		results.push(new Instruction("prepare"));
+		
+		for (var index=0; index<ctx.args.length; index++) {
+			
+			var n = ctx.args[index];
+			
+			if (n instanceof Var) {
+				if (n.name[0] == "_")
+					results.push(new Instruction("put_void"));
+				else
+					if (head_vars[n.name] || is_query)
+						results.push(new Instruction("put_var", {p: n.name}));
+					else 
+						results.push(new Instruction("unif_var", {p: n.name}));
+			};
+
+			if (n instanceof Value) {
+				results.push(new Instruction("put_value", {x: n.name}));
+			};
+			
+			if (n instanceof Token) {
+				if (n.name == 'number')
+					results.push(new Instruction("put_number", {p: n.value}));
+				
+				if (n.name == 'term')
+					results.push(new Instruction("put_term", {p: n.value}));
+				
+				if (n.name == 'nil')
+					results.push(new Instruction("put_nil"));
+			};
+			
+		};//for
+		
+		var inst_name = "op_"+op_name;
+		
+		if (ctx.n.is_boolean)
+			results.push(new Instruction(inst_name));
+		else
+			results.push(new Instruction(inst_name, {x: ctx.vc}));
+		
+	});
+
+
+	results.push(new Instruction('proceed'));
+	
+	return results;
+	
+};
 
 
 

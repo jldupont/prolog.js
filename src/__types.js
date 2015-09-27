@@ -122,12 +122,13 @@ function Result(term_list, last_index) {
  * Operator
  * @constructor
  */
-function Op(name, symbol, precedence, type, is_primitive) {
+function Op(name, symbol, precedence, type, is_primitive, is_boolean) {
 	this.name = name;
 	this.symbol = symbol;
 	this.prec = precedence;
 	this.type = type;
 	this.is_primitive = is_primitive || false;
+	this.is_boolean = is_boolean || false;
 	
 	// from the lexer
 	this.line = 0;
@@ -180,11 +181,11 @@ Op._list = [
 	    new Op("rule",    ':-', 1200, 'xfx')
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
-	   ,new Op("unif",    '=',   700, 'xfx')
-	   ,new Op("em",      '=<',  700, 'xfx', true)
-	   ,new Op("ge",      '>=',  700, 'xfx', true)
-	   ,new Op("lt",      '<',   700, 'xfx', true)
-	   ,new Op("gt",      '>',   700, 'xfx', true)
+	   ,new Op("unif",    '=',   700, 'xfx', true, true)
+	   ,new Op("em",      '=<',  700, 'xfx', true, true)
+	   ,new Op("ge",      '>=',  700, 'xfx', true, true)
+	   ,new Op("lt",      '<',   700, 'xfx', true, true)
+	   ,new Op("gt",      '>',   700, 'xfx', true, true)
 	   ,new Op("is",      'is',  700, 'xfx', true)
 	    
 	   ,new Op("minus",   '-',   500, 'yfx', true)
@@ -413,7 +414,10 @@ function Functor(name, maybe_arguments_list) {
 	this.name = name;
 	this.original_token = null;
 	this.prec = 0;
+	
+	// That's what we assume for the general case.
 	this.is_primitive = false;
+	this.is_boolean = false;
 	
 	// from the lexer
 	this.line = 0;
@@ -723,6 +727,7 @@ function Instruction(opcode, ctx) {
 	this.ctx = ctx || null;
 };
 
+Instruction.inspect_compact = false;
 Instruction.inspect_quoted = false;
 
 Instruction.prototype.is = function(opcode) {
@@ -755,7 +760,8 @@ Instruction.prototype.inspect = function(){
 	if (this.ctx == null)
 		return result;
 	
-	result += " ( ";
+	if (!Instruction.inspect_compact)
+		result += " ( ";
 	
 	if (this.ctx.f)
 		result += this.ctx.f+"/"+this.ctx.a;
@@ -772,7 +778,8 @@ Instruction.prototype.inspect = function(){
 		}
 	};
 	
-	result += " )";
+	if (!Instruction.inspect_compact)
+		result += " )";
 	
 	if (Instruction.inspect_quoted)
 		result = "'"+result+"'";

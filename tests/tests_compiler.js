@@ -1159,6 +1159,8 @@ it('Compiler - expression - 1', function(){
 	
 	//console.log("\n***Compiler - expression - 1\n");
 	
+	Instruction.inspect_compact = true;
+	
 	var text = "test(X) :- X1 is X + 1, X1 > 0.";
 	
 	/*
@@ -1169,9 +1171,89 @@ it('Compiler - expression - 1', function(){
 	
 	
 	var expected = [
+	{ head: 
+		   [ 'get_struct  test/1, x(0)',
+		     'get_var     p("X")',
+		     'jump        p("g0")' 
+		     ],
+		  g0: 
+		   [ 
+		     'prepare'     ,
+		     'put_var     p("X")',
+		     'put_number  p(1)',
+		     'op_plus     x(1)',
+		     'prepare'     ,
+		     'unif_var    p("X1")',
+		     'put_value   x(1)',
+		     'op_is       x(2)',
+		     'prepare'     ,
+		     'unif_var    p("X1")',
+		     'put_number  p(0)',
+		     'op_gt'       ,
+		     'proceed'
+		     ],
+		  f: 'test',
+		  a: 1 }	                
 	];
 	
-	process_rule(text, expected, {show_parsed: true, show_compiled: true, show_parsed: true});
-	//process_rule(text, expected);
+	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_parsed: true});
+	process_rule(text, expected);
 });
 
+it('Compiler - expression - 2', function(){
+	
+	//console.log("\n***Compiler - expression - 1\n");
+	
+	Instruction.inspect_compact = true;
+	
+	var text = "test(X) :- X1 is X + 1 , X1 > 0 ; X = 666.";
+	
+	/*
+	 Functor(rule/2,
+	 	Functor(test/1,Var(X)),Functor(conj/2,Functor(is/2,Var(X1),Functor(plus/2,Var(X),'Token(number,1)')),
+	 	Functor(gt/2,Var(X1),'Token(number,null)')))
+	 */
+	
+	
+	var expected = [
+	                
+		{ head: 
+			   [ 
+			     'get_struct  test/1, x(0)',
+			     'get_var     p("X")',
+			     'jump        p("g0")' 
+			     ],
+			  g4: 
+			   [ 
+			     'try_finally' ,
+			     'prepare'     ,
+			     'put_var     p("X")',
+			     'put_number  p(666)',
+			     'op_unif'     ,
+			     'proceed'      
+			     ],
+			  g0: 
+			   [ 
+			     'try_else    p("g4")',
+			     'prepare'     ,
+			     'put_var     p("X")',
+			     'put_number  p(1)',
+			     'op_plus     x(1)',
+			     'prepare'     ,
+			     'unif_var    p("X1")',
+			     'put_value   x(1)',
+			     'op_is       x(2)',
+			     'prepare'     ,
+			     'unif_var    p("X1")',
+			     'put_number  p(0)',
+			     'op_gt'       ,
+			     'proceed'      
+			     ],
+			  f: 'test',
+			  a: 1 }
+		
+	];
+	
+	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_parsed: true});
+	process_rule(text, expected);
+});

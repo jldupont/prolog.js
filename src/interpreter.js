@@ -748,7 +748,7 @@ Interpreter.prototype.inst_maybe_fail = function() {
  */
 Interpreter.prototype.inst_try_else = function( inst ) {
 	
-	var vname = "g" + inst.get("p");
+	var vname = inst.get("p", "g");
 	this.ctx.cse.te = vname;
 };
 
@@ -797,6 +797,35 @@ Interpreter.prototype.inst_proceed = function() {
 	
 	this.backtrack();
 };
+
+
+//=========================================================================== EXEC
+
+/**
+ *   Instruction `exec`
+ *   
+ *   "x" points to the local variable which contains the
+ *     primitive functor.  The arguments of the functor
+ *     can either be references to variables or constants.
+ *      
+ */
+Interpreter.prototype.inst_exec = function(inst) {
+	
+	var x = inst.get('x', "$x");
+	
+	var functor = this.ctx.cse.vars[x];
+	
+	
+	if (this.ctx.cu) {
+		this._restore_continuation( this.ctx.cse.cp );
+		this._execute();
+		return;
+	};
+	
+	this.backtrack();
+};
+
+
 
 
 //=========================================================================== CALL
@@ -916,7 +945,7 @@ Interpreter.prototype.inst_put_var = function(inst) {
  */
 Interpreter.prototype.inst_put_value = function(inst) {
 	
-	var vname = "$x" + inst.get("x");
+	var vname = inst.get("x", "$x");
 	
 	var value = this.ctx.tse.vars[vname];
 	
@@ -1046,7 +1075,7 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	var v = inst.get('p');
 
 	if (!v) {
-		v = "$x" + inst.get('x');
+		v = inst.get('x', "$x");
 	};
 	
 	var pv = this.ctx.cse.vars[v];
