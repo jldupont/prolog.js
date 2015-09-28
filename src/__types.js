@@ -756,7 +756,7 @@ Instruction.prototype.get_parameter_name = function(){
 
 Instruction.prototype.inspect = function(){
 	
-	const params = [ 'p', 'x' ];
+	const params = [ 'p', 'x', 'y' ];
 	var result = ""; 
 	
 	if (this.ctx && this.ctx.l)
@@ -890,6 +890,12 @@ function ErrorSyntax(msg, type) {
 };
 ErrorSyntax.prototype = Error.prototype;
 
+function ErrorInvalidToken(msg) {
+	this.message = msg;
+};
+ErrorInvalidToken.prototype = Error.prototype;
+
+ErrorInvalidToken
 
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
@@ -907,6 +913,7 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorExpectingFunctor = ErrorExpectingFunctor;
 	module.exports.ErrorExpectingVariable = ErrorExpectingVariable; 
 	module.exports.ErrorInvalidHead = ErrorInvalidHead;
+	module.exports.ErrorInvalidToken = ErrorInvalidToken;
 	module.exports.ErrorRuleInQuestion = ErrorRuleInQuestion;
 	module.exports.ErrorExpectingGoal = ErrorExpectingGoal;
 	module.exports.ErrorNoMoreInstruction = ErrorNoMoreInstruction;

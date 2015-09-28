@@ -105,6 +105,15 @@ it('Utils - Unify - complex 3', function(){
 
 });
 
+it('Utils - Unify - number 1', function(){
+
+	var result = Utils.unify(1, 1);
+	
+	should.ok(result);
+	
+});
+
+
 it('Utils - Unify - var 1', function(){
 
 	var v1 = new Var('x');

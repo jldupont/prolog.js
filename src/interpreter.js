@@ -194,12 +194,54 @@ Interpreter.prototype.backtrack = function() {
 	if (this.tracer)
 		this.tracer("backtracking", this.ctx);
 	
-	
 	// Pretend we've got a failure
 	//  but in most cases this will anyhow be the case...
 	this.ctx.cu = false;
 	this.ctx.end = false;
 	
+	// We are at the top of the stack
+	if (this.ctx.tse.qenv)
+		return false;
+	
+	/*
+	 * Are we at a cut ?
+	 */	
+	var maybe_cut_spos = this.ctx.tse.cut;
+	
+	if (maybe_cut_spos == undefined ) {
+		this._restore_continuation( this.ctx.tse.cp );
+		this._execute();
+		return true;
+	};
+		
+	console.log("... Handling cut point...");
+	
+	/*
+	 * We are a cut point ...
+	 */
+	for (;;) {
+		
+		// We are at the top of the stack
+		if (this.ctx.tse.qenv)
+			break;
+		
+		console.log("Unwinding ... :", this.ctx.tse.spos);
+		this._unwind_trail( this.ctx.tse.trail );
+		
+		var spos = this.ctx.tse.spos;
+
+		// Reached the end of the cut ?
+		if (maybe_cut_spos == spos )
+			break;
+		
+
+		this.stack.pop();
+		this.ctx.tse = this.stack[ this.stack.length-1 ];
+		this.ctx.cse = this.ctx.tse;
+		
+		
+	};
+
 	// We are at the top of the stack
 	if (this.ctx.tse.qenv)
 		return false;
@@ -574,6 +616,8 @@ Interpreter.prototype.inst_call = function(inst) {
 	var fname = x0.name;
 	var arity = x0.args.length;
 	
+	//console.log(".......... CALLING: ", fname, arity);
+	
 	/*  Takes care of
 	 *  - label `l` component
 	 *  - current code `cc`
@@ -823,6 +867,31 @@ Interpreter.prototype.inst_proceed = function() {
 
 
 /**
+ *   Instruction `cut`
+ *
+ *   A special environment containing the current stack depth 
+ *    is pushed on the stack.  When backtracking occurs and lands
+ *    on this environment entry, all the choice point entries on
+ *    the stack up to the stack depth indicated in the `cut` environment
+ *    is unwound.
+ *   
+ */
+Interpreter.prototype.inst_cut = function() {
+
+	var cut_stack_position = this.ctx.cse.spos; 
+	
+	console.log("*** Placing cut point at: ", cut_stack_position);
+
+	this.ctx.tse.cut = cut_stack_position;
+	
+	// not sure this is necessary
+	//
+	this.ctx.cu = true;
+};
+
+
+
+/**
  *   Instruction `prepare`
  *   
  *   `x` contains the local register's index where
@@ -830,9 +899,86 @@ Interpreter.prototype.inst_proceed = function() {
  */
 Interpreter.prototype.inst_prepare = function(_inst) {
 
-	this.ctx.cse.vars["$x0"] = new Functor('$op');
+	this.ctx.cse.vars["$y0"] = new Functor('$op');
 	this.ctx.cu = true;
 };
+
+
+/**
+ *   Instruction `push_var`
+ *   
+ */
+Interpreter.prototype.inst_push_var = function(inst) {
+
+	var vname = inst.get("p");
+	
+	var struct = this.ctx.cse.vars['$y0'];
+
+	// Do we have a local variable already setup?
+	var local_var = this.ctx.cse.vars[vname];
+	if (!local_var) {
+		local_var = new Var(vname);
+		this.ctx.cse.vars[local_var.name] = local_var;
+	} 
+	
+	struct.push_arg(local_var);
+};
+
+Interpreter.prototype._get_value = function(token) {
+	
+	if (token instanceof Var) {
+		var dvar = token.deref();
+		if (!dvar.is_bound())
+			throw new ErrorErrorNotBound("Expecting bound variable for: "+token.name);
+		
+		// not the prettiest solution I know
+		token = dvar.get_value();
+	};
+		
+	
+	if (Utils.isNumeric(token))
+		return token;
+	
+	if (token instanceof Token)
+		if (token.name == 'number')
+			return token.value;
+	
+	throw new ErrorInvalidToken("Invalid Token: Got: "+JSON.stringify(token));
+};
+
+/**
+ *   Instruction "push_value"
+ * 
+ *   Inserts a 'value' in the structure being built.
+ *    
+ */
+Interpreter.prototype.inst_push_value = function(inst) {
+	
+	var vname = inst.get("y", "$y");
+	var struct = this.ctx.cse.vars["$y0"];
+	
+	var yvar = this.ctx.cse.vars[vname];
+	var value = this._get_value(yvar);
+	
+	
+	struct.push_arg(value);
+};
+
+/**
+ *   Instruction "push_number"
+ * 
+ *   Inserts a 'number' in the structure being built.
+ *    
+ */
+Interpreter.prototype.inst_push_number = function(inst) {
+	
+	var p = inst.get("p");
+	
+	var struct = this.ctx.cse.vars["$y0"];
+	struct.push_arg(p);
+};
+
+
 
 /**
  *   Instruction `op_unif`
@@ -843,9 +989,12 @@ Interpreter.prototype.inst_prepare = function(_inst) {
  */
 Interpreter.prototype.inst_op_unif = function(_inst) {
 
-	var x0 = this.ctx.cse.vars["$x0"];
+	var y0 = this.ctx.cse.vars["$y0"];
 	
-	this.ctx.cu = Utils.unify(x0.args[0], x0.args[1]);
+	var vy0 = this._get_value(y0.args[0]);
+	var vy1 = this._get_value(y0.args[1]);
+	
+	this.ctx.cu = Utils.unify(vy0, vy1);
 	
 	return this._exit(); 
 };
@@ -885,11 +1034,11 @@ Interpreter.prototype._exit = function() {
  */
 Interpreter.prototype.inst_op_is = function(_inst) {
 
-	var x0 = this.ctx.cse.vars["$x0"];
+	var y0 = this.ctx.cse.vars["$y0"];
 	
 	// Expecting a variable for lvalue
-	var lvar = x0.args[0];
-	var rval = x0.args[1];
+	var lvar = y0.args[0];
+	var rval = y0.args[1];
 
 	if (!(lvar instanceof Var))
 		throw new ErrorExpectingVariable("Expecting a variable as lvalue of `is`, got: "+JSON.stringify(lvar));
@@ -904,11 +1053,11 @@ Interpreter.prototype.inst_op_is = function(_inst) {
 
 Interpreter.prototype._get_values = function() {
 
-	var x0 = this.ctx.cse.vars["$x0"];
+	var y0 = this.ctx.cse.vars["$y0"];
 	
 	// Expecting variables or values
-	var l = x0.args[0];
-	var r = x0.args[1];
+	var l = y0.args[0];
+	var r = y0.args[1];
 
 	var lval, rval;
 	
@@ -937,11 +1086,11 @@ Interpreter.prototype._get_values = function() {
  */
 Interpreter.prototype.inst_op_plus = function(inst) {
 
-	var x = inst.get("x", "$x");
+	var y = inst.get("y", "$y");
 	
 	var values = this._get_values();
 	
-	this.ctx.cse.vars[x] =  values.l + values.r;
+	this.ctx.cse.vars[y] =  values.l + values.r;
 	
 	this.ctx.cu = true;
 };
@@ -952,11 +1101,11 @@ Interpreter.prototype.inst_op_plus = function(inst) {
  */
 Interpreter.prototype.inst_op_minus = function(inst) {
 
-	var x = inst.get("x", "$x");
+	var y = inst.get("y", "$y");
 	
 	var values = this._get_values();
 	
-	this.ctx.cse.vars[x] =  values.l - values.r;
+	this.ctx.cse.vars[y] =  values.l - values.r;
 	
 	this.ctx.cu = true;
 };
@@ -967,11 +1116,11 @@ Interpreter.prototype.inst_op_minus = function(inst) {
  */
 Interpreter.prototype.inst_op_mult = function(inst) {
 
-	var x = inst.get("x", "$x");
+	var y = inst.get("y", "$y");
 	
 	var values = this._get_values();
 	
-	this.ctx.cse.vars[x] =  values.l * values.r;
+	this.ctx.cse.vars[y] =  values.l * values.r;
 	
 	this.ctx.cu = true;
 };
@@ -982,11 +1131,11 @@ Interpreter.prototype.inst_op_mult = function(inst) {
  */
 Interpreter.prototype.inst_op_div = function(inst) {
 
-	var x = inst.get("x", "$x");
+	var y = inst.get("y", "$y");
 	
 	var values = this._get_values();
 	
-	this.ctx.cse.vars[x] =  values.l / values.r;
+	this.ctx.cse.vars[y] =  values.l / values.r;
 	
 	this.ctx.cu = true;
 };

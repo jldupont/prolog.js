@@ -191,8 +191,11 @@ Utils.unify = function(t1, t2, on_bind) {
 	 *  Covers:
 	 *    null == null
 	 */
-	if (t1 == t2)
+	if (t1 == t2) {
+		//console.log("Unify: ",t1,t2);
 		return true;
+	}
+		
 	
 	var t1_is_var = t1 instanceof Var;
 	var t2_is_var = t2 instanceof Var;

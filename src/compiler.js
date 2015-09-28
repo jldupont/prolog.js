@@ -504,6 +504,16 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 	
 	if (exp == undefined)
 		return undefined;
+
+	//console.log("Process Goal: ", exp);
+
+	/*
+	 *  The `cut` operator is simple to compile
+	 *    but a bit more difficult to interpret ;)
+	 */
+	if (exp.name == 'cut') {
+		return [new Instruction('cut'), new Instruction("proceed")];
+	};
 	
 	
 	if (exp.attrs.primitive) {
@@ -603,24 +613,24 @@ Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 			
 			if (n instanceof Var) {
 				if (n.name[0] == "_")
-					results.push(new Instruction("put_void"));
+					throw new ErrorInvalidToken("Anon Var");
 				else
-					results.push(new Instruction("put_var", {p: n.name}));
+					results.push(new Instruction("push_var", {p: n.name}));
 			};
 
 			if (n instanceof Value) {
-				results.push(new Instruction("put_value", {x: n.name}));
+				results.push(new Instruction("push_value", {y: n.name}));
 			};
 			
 			if (n instanceof Token) {
 				if (n.name == 'number')
-					results.push(new Instruction("put_number", {p: n.value}));
+					results.push(new Instruction("push_number", {p: n.value}));
 				
 				if (n.name == 'term')
-					results.push(new Instruction("put_term", {p: n.value}));
+					throw new ErrorInvalidToken("term: "+JSON.stringify(n.value));
 				
 				if (n.name == 'nil')
-					results.push(new Instruction("put_nil"));
+					throw new ErrorInvalidToken("nil");
 			};
 			
 		};//for
@@ -630,7 +640,7 @@ Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 		if (ctx.n.attrs.boolean || !ctx.n.attrs.retvalue)
 			results.push(new Instruction(inst_name));
 		else
-			results.push(new Instruction(inst_name, {x: ctx.vc}));
+			results.push(new Instruction(inst_name, {y: ctx.vc}));
 		
 	});
 

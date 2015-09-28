@@ -236,7 +236,7 @@ it('ParserL3 - expression - 4 ', function(){
 	                	  'Functor(conj/2,'+
 	                	  		'Functor(conj/2,'+
 	                	  			'Functor(em/2,Var(X),Var(Y)),'+
-	                	  			'Token(term,!)),'+
+	                	  			'Functor(cut/0)),'+
 	                	  		'Functor(unif/2,Var(Y),Var(Z))))'	                
 	                ]];
 	

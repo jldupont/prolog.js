@@ -786,6 +786,32 @@ it('Interpreter - Disj - 1', function(){
 
 it('Interpreter - primitive - 1', function(){
 
+	/*
+			p/1  code ==>  [ { head: 
+			     [ get_struct  p/1, x(0),
+			       get_var     p("X"),
+			       jump        p("g0") ],
+			    g0: 
+			     [ prepare     ,
+			       push_var    p("X"),
+			       push_number p(1),
+			       op_unif     ,
+			       proceed      ],
+			    f: 'p',
+			    a: 1 } ]
+			
+			
+			 .q./0  code ==>  [ { g0: 
+			     [ allocate    ,
+			       put_struct  p/1, x(0),
+			       put_number  p(1),
+			       setup       ,
+			       call        ,
+			       maybe_retry ,
+			       deallocate  ,
+			       end          ] } ]
+	 */
+	
 	var rules = [
 	             "p(X):- X = 1."
 				
@@ -797,13 +823,13 @@ it('Interpreter - primitive - 1', function(){
 	                { "$cu": true }
 	                ];
 
-	Token.inspect_compact = true;
+	Token.inspect_compact = false;
 	Var.inspect_extended = true;
-	Var.inspect_compact = true;
+	Var.inspect_compact = false;
 	
-	test(rules, query, expected);
+	//test(rules, query, expected);
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
-	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
 	//test(rules, query, expected, { tracer: call_tracer });
 });
@@ -1220,16 +1246,81 @@ it('Interpreter - primitive - 12b', function(){
 it('Interpreter - cut - 1', function(){
 
 	var rules = [
-	             "p(X, Y) :- !, X>0, Y>0."
-				
+	             	"membercheck(X, [X|Xs]):- !."
+	               ,"membercheck(X, [Y|Xs]):- membercheck(X, Xs)."
 				];
 	
+	/*
+	membercheck/2  code ==>  [ 
+	{ head: 
+	     [ get_struct  membercheck/2, x(0),
+	       get_var     p("X"),
+	       get_var     x(1),
+	       get_struct  cons/2, x(1),
+	       unif_value  p("X"),
+	       unif_var    p("Xs"),
+	       jump        p("g0") ],
+	g0: [ 
+			cut          
+		],
+	    f: 'membercheck',
+	    a: 2 },
+	  { head: 
+	     [ get_struct  membercheck/2, x(0),
+	       get_var     p("X"),
+	       get_var     x(1),
+	       get_struct  cons/2, x(1),
+	       unif_var    p("Y"),
+	       unif_var    p("Xs"),
+	       jump        p("g0") ],
+	    g0: 
+	     [ allocate    ,
+	       put_struct  membercheck/2, x(0),
+	       put_var     p("X"),
+	       put_var     p("Xs"),
+	       setup       ,
+	       call        ,
+	       maybe_retry ,
+	       deallocate  ,
+	       proceed      ],
+	    f: 'membercheck',
+	    a: 2 } ]
+	
+	 */
 
-
-	var query = "p(9, 0).";
+	var query = "membercheck(4, [4,3,2,1]).";
 	
 	var expected = [
 	                { "$cu": true }
+	                ,{ "$cu": false }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+it('Interpreter - cut - 2', function(){
+
+	console.log("\n~~~~~~~~~~~~~ Interpreter - cut - 2\n");
+	
+	var rules = [
+	             	"max(X, Y, Z):- X > Y, !, X = Z."
+	             	,"max(X, Y, Y)."
+				];
+	
+
+	var query = "max(1,2,3).";
+	
+	var expected = [
+	                { "$cu": true }
+	                ,{ "$cu": false }
 	                ];
 
 	Token.inspect_compact = true;
@@ -1237,9 +1328,10 @@ it('Interpreter - cut - 1', function(){
 	Var.inspect_compact = true;
 	
 	//test(rules, query, expected);
-	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
-	test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
 	//test(rules, query, expected, { tracer: call_tracer });
 });
+
 

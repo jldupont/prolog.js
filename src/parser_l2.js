@@ -446,7 +446,7 @@ ParserL2.prototype.process = function(){
 		
 		if (token.name == 'term' && token.value == '!') {
 			var fcut = new Functor("cut");
-			
+			fcut.attrs.primitive = true;
 			fcut.original_token = token;
 			fcut.line = token.line;
 			fcut.col  = token.col;
