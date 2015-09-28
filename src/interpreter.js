@@ -214,8 +214,6 @@ Interpreter.prototype.backtrack = function() {
 		return true;
 	};
 		
-	console.log("... Handling cut point...");
-	
 	/*
 	 * We are a cut point ...
 	 */
@@ -225,7 +223,6 @@ Interpreter.prototype.backtrack = function() {
 		if (this.ctx.tse.qenv)
 			break;
 		
-		console.log("Unwinding ... :", this.ctx.tse.spos);
 		this._unwind_trail( this.ctx.tse.trail );
 		
 		var spos = this.ctx.tse.spos;
@@ -238,7 +235,6 @@ Interpreter.prototype.backtrack = function() {
 		this.stack.pop();
 		this.ctx.tse = this.stack[ this.stack.length-1 ];
 		this.ctx.cse = this.ctx.tse;
-		
 		
 	};
 
@@ -880,8 +876,6 @@ Interpreter.prototype.inst_cut = function() {
 
 	var cut_stack_position = this.ctx.cse.spos; 
 	
-	console.log("*** Placing cut point at: ", cut_stack_position);
-
 	this.ctx.tse.cut = cut_stack_position;
 	
 	// not sure this is necessary

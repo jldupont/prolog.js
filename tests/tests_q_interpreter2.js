@@ -827,9 +827,9 @@ it('Interpreter - primitive - 1', function(){
 	Var.inspect_extended = true;
 	Var.inspect_compact = false;
 	
-	//test(rules, query, expected);
+	test(rules, query, expected);
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
-	test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
 	//test(rules, query, expected, { tracer: call_tracer });
 });
@@ -1308,7 +1308,7 @@ it('Interpreter - cut - 1', function(){
 
 it('Interpreter - cut - 2', function(){
 
-	console.log("\n~~~~~~~~~~~~~ Interpreter - cut - 2\n");
+	//console.log("\n~~~~~~~~~~~~~ Interpreter - cut - 2\n");
 	
 	var rules = [
 	             	"max(X, Y, Z):- X > Y, !, X = Z."
@@ -1316,7 +1316,7 @@ it('Interpreter - cut - 2', function(){
 				];
 	
 
-	var query = "max(1,2,3).";
+	var query = "max(1,2,2).";
 	
 	var expected = [
 	                { "$cu": true }
@@ -1327,8 +1327,8 @@ it('Interpreter - cut - 2', function(){
 	Var.inspect_extended = true;
 	Var.inspect_compact = true;
 	
-	//test(rules, query, expected);
-	test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
 	//test(rules, query, expected, { tracer: call_tracer });
