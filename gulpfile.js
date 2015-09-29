@@ -207,7 +207,8 @@ gulp.task('clean', function (cb) {
 // Watch files for changes & reload
 gulp.task('serve', ['styles', 'elements', 'images'], function () {
   browserSync({
-    port: 5000,
+    port: process.env.PORT,
+    host: process.env.IP,
     notify: false,
     logPrefix: 'PSK',
     snippetOptions: {
@@ -224,6 +225,8 @@ gulp.task('serve', ['styles', 'elements', 'images'], function () {
     // https: true,
     server: {
       baseDir: ['.tmp', 'app'],
+      port: process.env.PORT,
+      host: process.env.IP,
       middleware: [ historyApiFallback() ],
       routes: {
         '/bower_components': 'bower_components'
@@ -241,7 +244,7 @@ gulp.task('serve', ['styles', 'elements', 'images'], function () {
 // Build and serve the output from the dist build
 gulp.task('serve:dist', ['default'], function () {
   browserSync({
-    port: 5001,
+    port: 8080,
     notify: false,
     logPrefix: 'PSK',
     snippetOptions: {
@@ -255,7 +258,7 @@ gulp.task('serve:dist', ['default'], function () {
     // Run as an https by uncommenting 'https: true'
     // Note: this uses an unsigned certificate which on first access
     //       will present a certificate warning in the browser.
-    // https: true,
+    https: true,
     server: 'dist',
     middleware: [ historyApiFallback() ]
   });
