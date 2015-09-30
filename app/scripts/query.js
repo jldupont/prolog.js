@@ -20,6 +20,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   // have resolved and content has been stamped to the page
   app.addEventListener('dom-change', function() {
   
+    /* global Quill */
+    var answers_view = new Quill('#answers', {
+      modules: {
+      }
+      ,theme: 'snow'
+      
+    });
+
+      answers_view.editor.disable();
 
   
   });//dom-change

@@ -95,10 +95,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <paper-icon-button id="paperToggle" icon="menu" paper-drawer-toggle></paper-icon-button>
           <span class="flex"></span>
 
-          <!-- Toolbar icons -->
-          <paper-icon-button icon="refresh"></paper-icon-button>
-          <paper-icon-button icon="search"></paper-icon-button>
-
           <!-- Application name -->
           <div class="middle middle-container center horizontal layout">
             <div class="app-name">Prolog.js</div>
@@ -114,21 +110,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               
               <paper-material elevation="1">
                 
-                <div class="quill-wrapper">
-
-                <quill-toolbar id="full-toolbar"></quill-toolbar>
-
-                <hr>
-                <div id='editor'>
-                  <div>Hello World -- http://www.google.ca/</div>
-                </div>
-
-              </paper-material>
-
-              <paper-material elevation="1">
-                <paper-input placeholder="Enter Your Query Here"></paper-input>
-              </paper-material>
+                <paper-tabs selected="{{selected}}" id="main_tabs">
+                  <paper-tab>Database</paper-tab>
+                  <paper-tab>Query</paper-tab>
+                </paper-tabs>
                 
+                <iron-pages selected="{{selected}}">
+                  <div>
+                    <div class="quill-wrapper">
+                      <quill-toolbar id="full-toolbar"></quill-toolbar>
+                      <hr>
+                      <div id='editor'>
+                        <div>Hello World -- http://www.google.ca/</div>
+                      </div>
+                  </div>
+                  </div>
+                  
+                  <div>
+                    <div class='quill-wrapper'>
+                      <div id='answers'>
+                        <div>Answers will appear <b>here</b></div>
+                      </div>
+                    </div>
+                    <paper-input placeholder="Enter Your Query Here"></paper-input>
+                  </div>
+                </iron-pages>
+
+              </paper-material>
+
             </section>
 
             <section data-route="contact">
