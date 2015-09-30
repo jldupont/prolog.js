@@ -44,7 +44,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <!-- build:css styles/main.css -->
   <link rel="stylesheet" href="styles/main.css">
-  <link rel="stylesheet" href="bower_components/quill/dist/quill.snow.css">
+  <link rel="stylesheet" href="bower_components/quill/dist/quill.snow.css"> 
   <!-- endbuild-->
 
   <!-- build:js bower_components/webcomponentsjs/webcomponents-lite.min.js -->
@@ -115,7 +115,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               <paper-material elevation="1">
                 
                 <div class="quill-wrapper">
-                  
+
                 <div id="full-toolbar" class="toolbar">
                 <span class="ql-format-group">
                 <select title="Font" class="ql-font">
@@ -232,18 +232,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <span title="Link" class="ql-format-button ql-link"></span>
                 </span>
                 </div>
+              </div>
+
+                <hr>
                 <div id='editor'>
                   <div>Hello World -- http://www.google.ca/</div>
                 </div>
-              </div>
+
               </paper-material>
 
+              <paper-material elevation="1">
+                <paper-input placeholder="Enter Your Query Here"></paper-input>
+              </paper-material>
+                
             </section>
 
             <section data-route="contact">
               <paper-material elevation="1">
                 <h2 class="page-title">Contact</h2>
-                <p>This is the contact section</p>
+                <p><iron-icon icon="icons:mail"></iron-icon> 
+                  <a href="mailto:prolog@jldupont.com?subject=Mail from Prolog.js project">Email Me</a>  
+                </p>
               </paper-material>
             </section>
 
@@ -276,6 +285,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script src="bower_components/quill/dist/quill.js"></script>
   <script src="scripts/app.js"></script>
   <script src="scripts/editor.js"></script>
+  <script src="scripts/query.js"></script>
   
   <!-- endbuild-->
   

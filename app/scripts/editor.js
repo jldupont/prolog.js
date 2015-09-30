@@ -30,9 +30,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ,theme: 'snow'
       
     });
-
-  
-  });
+    
+    
+  });//dom-change
 
   
   
