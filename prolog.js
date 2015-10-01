@@ -4,12 +4,14 @@
  /* global Lexer, ParserL1, ParserL2, ParserL3, Compiler */
  
  
- var Prolog = function() {}
+ var Prolog = {};
  
- /**
+  /**
   *  Compiles the input text to instructions
   *   for the Interpreter
   * 
+  * @return Object
+  * @throws
   */
   
  Prolog.compile = function(text) {
@@ -21,6 +23,27 @@
      var compiled = Prolog.compile_rules_and_facts(combined);
      
      return compiled;
+ };
+ 
+ /**
+  *  Compiles a query input text to
+  *   instructions for the interpreter
+  * 
+  *  There should only be 1 `body` expression
+  *   in the input text. No multi-line input
+  *   nor multi expressions.
+  * 
+  * @return Object
+  * @throws
+  */
+ Prolog.compile_query = function(text) {
+   
+    var parsed = Prolog.parse(text);
+ 
+    var c = new Compiler();
+    
+    return c.process_query(parsed[0][0]);
+     
  };
  
  /**

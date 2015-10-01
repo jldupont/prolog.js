@@ -13,6 +13,13 @@ module.exports = function (grunt) {
 
     	pkg: grunt.file.readJSON("package.json"),
     	
+    uglify: {
+        my_target: {
+          files: {
+            'prolog.min.js': ['prolog.js']
+          }
+        }
+      },    	
     	concat: {
     		options: {
     		      stripBanners: true,
@@ -62,7 +69,8 @@ module.exports = function (grunt) {
     
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-concat');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
     
     grunt.registerTask("test", ["mochaTest"]);
-    grunt.registerTask('default', ['test']);
+    grunt.registerTask('default', ['concat', 'uglify', 'test']);
 };
