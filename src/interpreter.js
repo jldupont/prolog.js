@@ -15,10 +15,9 @@
  * @param env   : Environment
  * @param stack : the processing stack i.e. where instructions are pushed and popped
  */
-function Interpreter(db, builtins, optional_stack) {
+function Interpreter(db, optional_stack) {
 
 	this.db  = db;
-	this.builtins = builtins;
 	this.stack = optional_stack || [];
 	
 	this.tracer = null;

@@ -7,16 +7,19 @@
  * 
  * @dependency:  visitor.js
  * 
+ * 
  **/
 
-
+/* global ErrorExpectingFunctor, ErrorRuleInQuestion, ErrorInvalidToken */
+/* global Functor, ErrorInvalidHead, Visitor, Visitor2, Visitor3 */
+/* global Instruction, Var, Token, Value */
 
 /**
  * Compiler
  * @constructor
  *
  */
-function Compiler() {};
+function Compiler() {}
 
 /**
  * Process a `rule` or `fact` expression
@@ -398,7 +401,7 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 			var dlabel = deref(rnode_label);
 			
 			result[dlabel].unshift(new Instruction('try_else', {p: rlabel}));
-		};
+		}
 
 		result[jlabel] = result[llabel];
 		
@@ -410,7 +413,7 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 		//  let's help the interpreter with an additional hint
 		if (jctx.root) {
 			result[rlabel].unshift(new Instruction("try_finally"));
-		};
+		}
 		
 		delete result[llabel];
 	};
@@ -423,8 +426,7 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 		var goal_id = jctx.goal_id;
 		var is_root = jctx.root;
 		
-		var inst, inst2;
-		
+
 		var label = type+goal_id;
 		var ctx = left_or_root;
 		
@@ -471,12 +473,12 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 			
 			conj_link(jctx, left_or_root, right_maybe);
 			
-		};
+		}
 		
 		if (type == 'disj') {
 
 			disj_link(jctx, left_or_root, right_maybe);
-		};
+		}
 		
 		
 	});// process
@@ -513,12 +515,12 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 	 */
 	if (exp.name == 'cut') {
 		return [new Instruction('cut'), new Instruction("proceed")];
-	};
+	}
 	
 	
 	if (exp.attrs.primitive) {
 		return this.process_primitive(exp, is_query, head_vars);
-	};
+	}
 	
 	
 	var v = new Visitor2(exp);
@@ -533,7 +535,7 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 		
 		if (ctx.root) {
 			struct_ctx.x = 0;
-		};
+		}
 		
 		results.push(new Instruction("put_struct", struct_ctx));
 		
@@ -549,11 +551,11 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 						results.push(new Instruction("put_var", {p: n.name}));
 					else 
 						results.push(new Instruction("unif_var", {p: n.name}));
-			};
+			}
 
 			if (n instanceof Value) {
 				results.push(new Instruction("put_value", {x: n.name}));
-			};
+			}
 			
 			if (n instanceof Token) {
 				if (n.name == 'number')
@@ -656,4 +658,3 @@ Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 if (typeof module!= 'undefined') {
 	module.exports.Compiler = Compiler;
 };
-

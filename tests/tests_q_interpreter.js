@@ -65,11 +65,10 @@ var prepare = function(rules_and_facts, query, tracer) {
 	//console.log(cquery);
 
 	var db = new Database(DbAccess);
-	var builtins = {};
-	
+
 	db.batch_insert_code(crules);
 	
-	var it = new Interpreter(db, builtins);
+	var it = new Interpreter(db);
 	
 	if (tracer)
 		it.set_tracer(tracer);
@@ -243,9 +242,7 @@ it('Interpreter - complex - 1', function(){
 		     ] }
 	 */
 	
-	var builtins = {};
-	
-	var it = new Interpreter(db, builtins);
+	var it = new Interpreter(db);
 	
 	//it.set_tracer(basic_tracer);
 	
@@ -328,9 +325,7 @@ it('Interpreter - complex - 2', function(){
 		     ] }
 	 */
 	
-	var builtins = {};
-	
-	var it = new Interpreter(db, builtins);
+	var it = new Interpreter(db);
 	
 	//it.set_tracer(tracer);
 	

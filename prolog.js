@@ -1,4 +1,87 @@
-/*! prolog.js - v0.0.1 - 2015-09-27 */
+/*! prolog.js - v0.0.1 - 2015-10-01 */
+
+/* global Op */
+ /* global Lexer, ParserL1, ParserL2, ParserL3, Compiler */
+ 
+ 
+ var Prolog = function() {}
+ 
+ /**
+  *  Compiles the input text to instructions
+  *   for the Interpreter
+  * 
+  */
+  
+ Prolog.compile = function(text) {
+     
+     var parsed = Prolog.parse(text);
+     
+     var combined = Prolog._combine(parsed);
+     
+     var compiled = Prolog.compile_rules_and_facts(combined);
+     
+     return compiled;
+ };
+ 
+ /**
+  *  There could have been multiple \n terminated
+  *   lines per input entry
+  */
+ Prolog._combine = function(list) {
+     
+     var result = [];
+     
+     for (var index = 0; index < list.length; index ++) {
+        var entries = list[index];
+        result = result.concat( entries );
+     }
+
+     return result;
+ };
+ 
+ 
+ Prolog.parse = function(text) {
+     
+	var l = new Lexer(text);
+	var tokens = l.process();
+
+	var t = new ParserL1(tokens);
+	var ttokens = t.process();
+	
+	var p = new ParserL2(ttokens);
+	
+	var result = p.process();
+	var terms = result.terms;
+	
+	var p3 = new ParserL3(terms, Op.ordered_list_by_precedence);
+	var r3 = p3.process();
+
+	return r3;
+     
+ };
+ 
+Prolog.compile_rules_and_facts = function(parsed_nodes) {
+
+	var c = new Compiler();
+
+    var results = [];
+	
+	for (var index = 0; index<parsed_nodes.length; index++) {
+		
+		var expression = parsed_nodes[index];
+		
+		var result = c.process_rule_or_fact(expression);
+		
+		results.push(result);
+	};
+	
+	return results;
+};
+
+
+if (typeof module!= 'undefined') {
+	module.exports.Prolog = Prolog;
+};
 
 /**
  *  Token
@@ -699,19 +782,6 @@ Value.prototype.inspect = function(){
 };
 
 
-Builtins = {};
-
-Builtins.db = {};
-
-/**
- * Define a builtin functor
- */
-Builtins.define = function(name, arity, functor){
-
-	var sig = name+"/"+arity;
-	Builtins.db[sig] = functor;
-};
-
 //============================================================ Instruction
 
 /**
@@ -901,8 +971,7 @@ if (typeof module!= 'undefined') {
 	module.exports.OpNode = OpNode;
 	module.exports.Result = Result;
 	module.exports.Instruction = Instruction;
-	module.exports.Builtins = Builtins;
-	
+
 	// Errors
 	module.exports.ErrorExpectingFunctor = ErrorExpectingFunctor;
 	module.exports.ErrorExpectingVariable = ErrorExpectingVariable; 
@@ -923,29 +992,16 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorExpectingListStart = ErrorExpectingListStart;
 	module.exports.ErrorExpectingListEnd = ErrorExpectingListEnd;
 };
-/**
- *  The builtin 'call' functor
- *  
- *  @param env: the environment containing the stack, the database and the registers
- *  @param return_var_name: the variable name to use for return
- *  @param functor_name: the actual target functor name
- *  @param args: the arguments for the functor call
- * 
- *  @return null
- */
-Builtins.define('call', 3, function(env, return_var_name, functor_name, args){
-	
-	
-	
-});
-
+/* global ErrorExpectingFunctor, ErrorRuleInQuestion, ErrorInvalidToken */
+/* global Functor, ErrorInvalidHead, Visitor, Visitor2, Visitor3 */
+/* global Instruction, Var, Token, Value */
 
 /**
  * Compiler
  * @constructor
  *
  */
-function Compiler() {};
+function Compiler() {}
 
 /**
  * Process a `rule` or `fact` expression
@@ -1327,7 +1383,7 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 			var dlabel = deref(rnode_label);
 			
 			result[dlabel].unshift(new Instruction('try_else', {p: rlabel}));
-		};
+		}
 
 		result[jlabel] = result[llabel];
 		
@@ -1339,7 +1395,7 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 		//  let's help the interpreter with an additional hint
 		if (jctx.root) {
 			result[rlabel].unshift(new Instruction("try_finally"));
-		};
+		}
 		
 		delete result[llabel];
 	};
@@ -1352,8 +1408,7 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 		var goal_id = jctx.goal_id;
 		var is_root = jctx.root;
 		
-		var inst, inst2;
-		
+
 		var label = type+goal_id;
 		var ctx = left_or_root;
 		
@@ -1400,12 +1455,12 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 			
 			conj_link(jctx, left_or_root, right_maybe);
 			
-		};
+		}
 		
 		if (type == 'disj') {
 
 			disj_link(jctx, left_or_root, right_maybe);
-		};
+		}
 		
 		
 	});// process
@@ -1442,12 +1497,12 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 	 */
 	if (exp.name == 'cut') {
 		return [new Instruction('cut'), new Instruction("proceed")];
-	};
+	}
 	
 	
 	if (exp.attrs.primitive) {
 		return this.process_primitive(exp, is_query, head_vars);
-	};
+	}
 	
 	
 	var v = new Visitor2(exp);
@@ -1462,7 +1517,7 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 		
 		if (ctx.root) {
 			struct_ctx.x = 0;
-		};
+		}
 		
 		results.push(new Instruction("put_struct", struct_ctx));
 		
@@ -1478,11 +1533,11 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 						results.push(new Instruction("put_var", {p: n.name}));
 					else 
 						results.push(new Instruction("unif_var", {p: n.name}));
-			};
+			}
 
 			if (n instanceof Value) {
 				results.push(new Instruction("put_value", {x: n.name}));
-			};
+			}
 			
 			if (n instanceof Token) {
 				if (n.name == 'number')
@@ -1585,7 +1640,6 @@ Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 if (typeof module!= 'undefined') {
 	module.exports.Compiler = Compiler;
 };
-
 
 /*
  *  Database
@@ -1824,10 +1878,9 @@ if (typeof module!= 'undefined') {
  * @param env   : Environment
  * @param stack : the processing stack i.e. where instructions are pushed and popped
  */
-function Interpreter(db, builtins, optional_stack) {
+function Interpreter(db, optional_stack) {
 
 	this.db  = db;
-	this.builtins = builtins;
 	this.stack = optional_stack || [];
 	
 	this.tracer = null;
@@ -4458,6 +4511,8 @@ ParserL3.prototype.process = function(){
 	return result;
 	
 };// process
+
+
 
 /**
  *  @return [terms]

@@ -705,19 +705,6 @@ Value.prototype.inspect = function(){
 };
 
 
-Builtins = {};
-
-Builtins.db = {};
-
-/**
- * Define a builtin functor
- */
-Builtins.define = function(name, arity, functor){
-
-	var sig = name+"/"+arity;
-	Builtins.db[sig] = functor;
-};
-
 //============================================================ Instruction
 
 /**
@@ -907,8 +894,7 @@ if (typeof module!= 'undefined') {
 	module.exports.OpNode = OpNode;
 	module.exports.Result = Result;
 	module.exports.Instruction = Instruction;
-	module.exports.Builtins = Builtins;
-	
+
 	// Errors
 	module.exports.ErrorExpectingFunctor = ErrorExpectingFunctor;
 	module.exports.ErrorExpectingVariable = ErrorExpectingVariable; 

@@ -10,6 +10,8 @@ var util   = require('util');
 
 var pr = require("../prolog.js");
 
+var Prolog = pr.Prolog;
+
 var Lexer = pr.Lexer;
 var Token = pr.Token;
 var OpNode = pr.OpNode;
@@ -195,11 +197,10 @@ var prepare = function(rules_and_facts, query, tracer, options) {
 	//console.log(cquery);
 
 	var db = new Database(DbAccess);
-	var builtins = {};
-	
+
 	db.batch_insert_code(crules);
 	
-	var it = new Interpreter(db, builtins);
+	var it = new Interpreter(db);
 	
 	var tr = function(where, it_ctx, data) {
 		
@@ -218,27 +219,7 @@ var prepare = function(rules_and_facts, query, tracer, options) {
 
 var compile_rules_and_facts = function(input_texts) {
 	
-	var parsed = [];
-	
-	for (var ti in input_texts) {
-		var t = input_texts[ti];
-		parsed.push(parser(t)[0]);
-	}
-	
-	var results = [];
-	
-	//console.log(parsed);
-	
-	for (var index = 0; index<parsed.length; index++) {
-		
-		var expression = parsed[index][0];
-		
-		var c = new Compiler();
-		
-		var result = c.process_rule_or_fact(expression);
-		
-		results.push(result);
-	};
+	var results = Prolog.compile(input_texts);
 	
 	return results;
 };
@@ -426,6 +407,8 @@ it('Interpreter - batch2 - complex - 1', function(){
 	                ];
 	
 	test(rules, query, expected);
+	//test(rules, query, expected, {dump_db: true});
+	//test(rules, query, expected, {tracer: advanced_tracer});
 });
 
 it('Interpreter - batch2 - complex - 2', function(){

@@ -22,4 +22,8 @@
     "test",
     "tests"
   ]
+  ,"dependencies": {
+    "should": "~7.1.0"
+    ,"requirejs": "~2.1.8"
+  }
 }
