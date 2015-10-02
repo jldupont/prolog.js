@@ -260,7 +260,7 @@ it('Lex - comment - trailing', function(){
 	             new Token('term', 'charlot'),
 	             new Token('parens_close'),
 	             new Token('period'),
-	             new Token('comment'),
+	             new Token('comment', " some comment"),
 	             ];
 	
 	var l = new Lexer(text);
@@ -502,23 +502,37 @@ it('Lex - expression - 1', function(){
 
 	should.equal(result, true);
 });
-/*
-it('Lex - expression - 2', function(){
 
-	var text = "test(X) :- X1 is X + 1, X1 > 0.";
+it('Lex - comment triple quote - 1', function(){
+
+	var text = '"""line1\n'
+				+'line2\n'
+				+'"""';
 	
-	var elist = [new Token('term', 'X'), 
-	             new Token('term', '+-'),
-	             new Token('term', 'Y'),
+	var elist = [new Token('comment', 'line1\nline2\n'), 
 	             ];
 	
 	var l = new Lexer(text);
 	var list = l.process();
 
-	//console.log(list);
-	
 	var result = Token.check_for_match(list, elist);
 
 	should.equal(result, true);
 });
-*/
+
+it('Lex - comment triple quote - 2', function(){
+
+	var text = '"""line1'
+				+'line2'
+				+'"""';
+	
+	var elist = [new Token('comment', 'line1line2'), 
+	             ];
+	
+	var l = new Lexer(text);
+	var list = l.process();
+
+	var result = Token.check_for_match(list, elist);
+
+	should.equal(result, true);
+});

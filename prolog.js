@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-10-01 */
+/*! prolog.js - v0.0.1 - 2015-10-02 */
 
 /* global Op */
  /* global Lexer, ParserL1, ParserL2, ParserL3, Compiler */
@@ -3643,6 +3643,8 @@ if (typeof module != 'undefined') {
 };
 
 
+/* global Token */
+
 /**
  *  Lexer
  *  @constructor
@@ -3661,7 +3663,12 @@ function Lexer (text) {
 	this.current_line = 0;
 	this.offset = 0;
 	
-	this._tokenRegexp = />=|=<|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\/|\-\+|[()\.,]|[\n]|./gm;
+	// Comment processing
+	this.comment_start_line = 0;
+	this.in_comment = false;
+	this.comment_chars = "";
+	
+	this._tokenRegexp = />=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\/|\-\+|[()\.,]|[\n]|./gm;
 };
 
 Lexer.prototype._handleNewline = function(){
@@ -3722,10 +3729,11 @@ Lexer.prototype.process = function() {
 	for (;;) {
 		t = this.next();
 		
-		if (t.name == 'null' | t.name == 'eof')
+		if (t && t.name == 'null' | t.name == 'eof')
 			break;
 		
-		list.push(t);
+		if (t !== undefined )
+			list.push(t);
 	};
 	
 	return list;
@@ -3767,6 +3775,10 @@ Lexer.is_number = function(maybe_number) {
 	return String(parseFloat(maybe_number)) == String(maybe_number); 
 };
 
+Lexer.prototype._close_comment = function() {
+	
+};
+
 /**
  *  Get the next token from the text
  *  
@@ -3781,12 +3793,40 @@ Lexer.prototype.next = function() {
 	
 	var maybe_raw_token = this.step();
 	
-	if (maybe_raw_token == null)
+	if (maybe_raw_token == null) {
 		return new Token('eof');
+	};
+		
 	
 	var raw_token = maybe_raw_token;
 	
 	var current_index = this._computeIndex( this.current_match.index );
+	
+	if (this.in_comment && raw_token != '"""') {
+		this.comment_chars += raw_token;
+		return undefined;
+	};
+	
+	if (raw_token == '"""') {
+		
+		if (this.in_comment) {
+			// end	
+			this.in_comment = false;
+			
+			return_token = new Token('comment', this.comment_chars);
+			return_token.col = 0;
+			return_token.line = this.comment_start_line;
+			return return_token;
+			
+		} else {
+			// start
+			this.in_comment = true;
+			this.comment_start_line = this.current_line;
+			this.comment_chars = "";
+		};
+		
+		return undefined;
+	};
 	
 	// If we are dealing with a comment,
 	//  skip till the end of the line
@@ -3798,7 +3838,17 @@ Lexer.prototype.next = function() {
 		
 		this.current_line = this.current_line + 1;
 		
-		while( this.step(Lexer.newline_as_null) != null);
+		var comment_chars = "";
+
+		for(;;) {
+			var char = this.step(Lexer.newline_as_null);
+			if (char == null)
+			break;
+			
+			comment_chars += char;
+		};
+
+		return_token.value = comment_chars;
 		return return_token;
 	};
 	
