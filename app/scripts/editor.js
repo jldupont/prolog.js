@@ -7,6 +7,8 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
+/* global Clipboard */
+
 (function(document) {
   'use strict';
 
@@ -20,15 +22,50 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   // have resolved and content has been stamped to the page
   app.addEventListener('dom-change', function() {
   
+    Quill.registerModule("clipboard", function(quill, options) {
+      
+      var ccb_id = "#"+options.toolbar_id+">.toolbar>.clip-copy";
+
+      /*
+      var editor_id = options.editor_id;
+      var editor_div_sel = "#"+editor_id + "> .ql-editor";
+      var editor_el = document.querySelector(editor_div_sel);
+      */
+      var target_id = options.target_id;
+      var target_el = document.querySelector("#"+target_id);
+      
+      var cb_el = new Clipboard(ccb_id, {
+        text: function(trigger) {
+          return target_el.innerHTML;
+        }
+      });
+      /*
+      cb_el.on("success", function(e) {
+        console.log(e);  
+      });*/
+      
+    });
+  
     /* global Quill */
-    var editor = new Quill('#editor', {
+    var ed = new Quill('#editor', {
       modules: {
         'toolbar': { container: '#full-toolbar' }
         ,'link-tooltip': true
         ,"image-tooltip" : true  
+        ,"clipboard": {
+          'toolbar_id': "full-toolbar"
+          ,"target_id": "editor-delta"
+        }
       }
       ,theme: 'snow'
       
+    });
+    
+    var el_delta = document.querySelector("#editor-delta");
+    
+    ed.on('text-change', function(delta, source){
+      var delta_in_json = JSON.stringify(ed.getContents());
+      el_delta.innerHTML = delta_in_json;
     });
     
     

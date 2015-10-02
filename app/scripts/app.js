@@ -23,7 +23,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var main_tabs = document.querySelector("#main_tabs");
     
     // Select the Code tab by default
-    main_tabs.selected = 1;
+    main_tabs.selected = 0;
     
   });
 

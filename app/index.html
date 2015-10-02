@@ -116,17 +116,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 </paper-tabs>
                 
                 <iron-pages selected="{{selected}}">
-                  <div>
+                  
+                  <div id="page-code">
                     <div class="quill-wrapper">
-                      <quill-toolbar id="full-toolbar"></quill-toolbar>
+                        <quill-toolbar id="full-toolbar"></quill-toolbar>  
+                        
+
                       <hr>
                       <div id='editor'>
                         <div>Hello World -- http://www.google.ca/</div>
                       </div>
-                  </div>
+                   </div>
+                   
+                   <div style="display:none" id="editor-delta"></div>
                   </div>
                   
-                  <div>
+                  <div id='page-query'>
                     <div class='quill-wrapper'>
                       <div id='answers'>
                         <div>Answers will appear <b>here</b></div>
@@ -176,9 +181,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <!-- build:js scripts/app.js -->
   <script src="bower_components/quill/dist/quill.js"></script>
+  <script src="bower_components/clipboard/dist/clipboard.min.js"></script>
+  
   <script src="scripts/app.js"></script>
   <script src="scripts/editor.js"></script>
   <script src="scripts/query.js"></script>
+  
   
   <!-- endbuild-->
   
