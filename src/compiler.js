@@ -614,9 +614,9 @@ Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 			var n = ctx.args[index];
 			
 			if (n instanceof Var) {
-				if (n.name[0] == "_")
-					throw new ErrorInvalidToken("Anon Var");
-				else
+				//if (n.name[0] == "_")
+				//	throw new ErrorInvalidToken("Anon Var");
+				//else
 					results.push(new Instruction("push_var", {p: n.name}));
 			};
 

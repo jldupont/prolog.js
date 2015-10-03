@@ -167,6 +167,10 @@ Lexer.prototype.next = function() {
 	
 	if (this.in_comment && raw_token != '"""') {
 		this.comment_chars += raw_token;
+		
+		if (raw_token == '\n')
+			this.current_line ++;
+		
 		return undefined;
 	};
 	
