@@ -526,3 +526,24 @@ it('ParserL2 - list - complex - 2', function(){
 	
 	process(text, expected);
 });
+
+it('ParserL2 - list - complex - 3', function(){
+
+/*
+	Var(HS), OpNode(`=`,700),
+  		cons( Token(functor,f),
+  				cons(Var(_),
+  					cons(Token(term,a),
+  						cons(Token(parens_close,null),
+  							cons(Token(functor,g),
+  								cons(Var(_),
+  									cons(Token(parens_close,null),
+  										Token(nil,null))))))))
+*/
+	var text = "HS = [f(_,a), g(_)].";
+	var expected = [
+					''
+	                 ];
+	
+	//process(text, expected);
+});

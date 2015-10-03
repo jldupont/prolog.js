@@ -4142,6 +4142,28 @@ ParserL2.preprocess_list = function(input, index) {
 
 ParserL2.nil = new Token('nil');
 
+
+ParserL2.prototype.next = function() {
+
+	var token = this.tokens[this.index] || null;
+	this.index = this.index + 1;
+	
+	return token;	
+};
+
+ParserL2.prototype.peek_next = function() {
+
+	var token = this.tokens[this.index] || null;
+	return token;	
+};
+
+ParserL2.prototype.regive = function() {
+
+	this.index --;
+};
+
+
+
 ParserL2.prototype.get_token = function() {
 	
 	/*
@@ -4161,9 +4183,8 @@ ParserL2.prototype.get_token = function() {
 		return token;
 	};
 	
-	var token = this.tokens[this.index] || null;
-	this.index = this.index + 1;
-	
+	var token = this.next();
+
 	return maybe_translate_var(token);
 };
 
@@ -4183,13 +4204,15 @@ ParserL2.process_list = function(input, index) {
 	var token_1 = input[index];
 	var token_1_name = token_1.name || null;
 	
+	index++;
+	
 	if (token_1_name == 'nil')
 		return { index: index, result: token_1};
 	
 	if (token_1_name != 'list:open')
 		throw new ErrorExpectingListStart("Expected the start of a list, got: "+JSON.stringify(input));
 	
-	index++;
+	
 	
 	/*
 	 *  Swap Token('var', X) ==> Var(X)
@@ -4311,7 +4334,9 @@ ParserL2.prototype.process = function(){
 		
 		if (token.name == 'list:open') {
 			
-			var lresult = ParserL2.process_list(this.tokens, this.index-1);
+			this.regive();
+			
+			var lresult = ParserL2.process_list(this.tokens, this.index);
 			this.index = lresult.index;
 			expression.push(lresult.result);
 			continue;
