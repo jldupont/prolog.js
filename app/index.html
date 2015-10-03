@@ -75,9 +75,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         <!-- Drawer Content -->
         <paper-menu class="list" attr-for-selected="data-route" selected="[[route]]">
+          
           <a data-route="home" href="/" on-click="onDataRouteClick">
             <iron-icon icon="home"></iron-icon>
             <span>Home</span>
+          </a>
+
+          <a on-click="load_example" data-file="examples/einstein.pl">
+            <iron-icon icon="icons:bookmark"></iron-icon>
+            <span>Einstein's Puzzle</span>
           </a>
 
           <a data-route="contact" href="/contact" on-click="onDataRouteClick">
@@ -184,6 +190,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script src="scripts/app.js"></script>
   <script src="scripts/editor.js"></script>
   <script src="scripts/query.js"></script>
+  <script src="scripts/compiler.js"></script>
   <script src="scripts/prolog.min.js"></script>
   
   <!-- endbuild-->

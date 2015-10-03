@@ -7,6 +7,8 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
+/* global mbus */
+
 (function(document) {
   'use strict';
 
@@ -14,6 +16,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   // and give it some initial binding values
   // Learn more about auto-binding templates at http://goo.gl/Dx1u2g
   var app = document.querySelector('#app');
+
+  var ajax = document.createElement("iron-ajax");
+  ajax.setAttribute("handle-as", "text");
+  
+  ajax.addEventListener('response', function(resp) {
+    
+    var text = resp.detail.xhr.responseText;
+    
+    mbus.post("file", {
+      file:  ajax.url
+      ,text: text
+    });
+  })
+
+  app.load_example = function(e) {
+    var filename = e.target.getAttribute("data-file");
+    ajax.setAttribute("url", filename);
+    ajax.generateRequest();
+  };
+  
+  
 
   // Listen for template bound event to know when bindings
   // have resolved and content has been stamped to the page

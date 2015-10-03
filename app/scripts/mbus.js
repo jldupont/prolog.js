@@ -25,7 +25,7 @@
     
     var subs = this.subs[entry.type] || [];
     subs.push(entry);
-    this.subs = subs;
+    this.subs[entry.type] = subs;
   };
   
   
@@ -43,13 +43,13 @@
     try {
       for (var index=0; index<sub_entries.length; index++) {
         var entry = sub_entries[index];
-        source = entry.source;
+        source = entry.subscriber;
         
         var cb = entry.cb;
         cb(msg, type);
       };
     } catch(e) {
-      console.error("Mbus: attempted to deliver '",type,"' from '",source,"' got:", e);
+      console.error("Mbus: attempted to deliver '",type,"' to '",source,"' got:", e);
     };
     
   };
