@@ -1,13 +1,3 @@
-"""
-Einstein's Puzzle
-
-Expecting:
-  
- ?- zebra(Who,HS).
- 
- HS = [h(yellow,norwegian,cats,water,dunhill),h(blue,dane,horse,tea,blend),h(red,brit,birds,milk,pallmall),h(green,german,zebra,coffee,prince),h(white,swede,dog,beer,bluemaster)]
- Who = german
-"""
 select([A|As],S):- select(A,S,S1),select(As,S1).
 select([],_). 
 
