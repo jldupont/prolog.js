@@ -112,9 +112,9 @@ Token.check_for_match = function(input_list, expected_list, also_index){
 };
 
 
-function Result(term_list, last_index) {
+function Result(term_list, last_token) {
 	this.terms = term_list;
-	this.index = last_index;
+	this.last_token = last_token;
 };
 
 

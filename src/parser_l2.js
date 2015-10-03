@@ -48,7 +48,7 @@ function ParserL2(token_list, list_index, maybe_context) {
 	
 	// the resulting terms list
 	//
-	this.result = [];
+	//this.result = [];
 	
 	this.tokens = token_list;
 	this.index = list_index || 0;
@@ -304,13 +304,34 @@ ParserL2.prototype._process_list = function(maybe_token){
 };
 
 
+ParserL2.prototype.process = function(){
+	
+	var res;
+	var expressions = [];
+	
+	for (;;) {
+		res = this._process();	
+		
+		if (res.terms.length > 0)
+			expressions.push( res.terms );
+		
+		if ((res.last_token == null) || (res.last_token instanceof Eos))
+			break;
+			
+	};
+	
+	return new Result(expressions, this.index);
+};
+
 
 /**
  * Process the token list
  *
  * @return Result
  */
-ParserL2.prototype.process = function(){
+ParserL2.prototype._process = function( ctx ){
+
+	ctx = ctx || {};
 
 	var expression = new Array();
 	var token = null;
@@ -321,8 +342,10 @@ ParserL2.prototype.process = function(){
 		// Pop a token from the input list
 		token = this.get_token();
 		
-		if (token == null || token instanceof Eos)
-			return this._handleEnd( expression );
+		if (token == null || token instanceof Eos) {
+			return new Result(expression, token);
+		}
+			//return this._handleEnd( expression, token );
 
 		// We must ensure that a list is transformed
 		//  in a cons/2 structure
@@ -353,7 +376,7 @@ ParserL2.prototype.process = function(){
 		
 		if (token.is_operator) {
 
-			if (this.context.diving_functor && token.name == 'op:conj')
+			if (ctx.diving_functor && token.name == 'op:conj')
 				continue;
 
 
@@ -397,9 +420,11 @@ ParserL2.prototype.process = function(){
 
 			// Were we 1 level down accumulating 
 			//  arguments for a functor ?
-			if (this.context.diving_functor)
-				return this._handleEnd( expression );
-			
+			if (ctx.diving_functor) {
+				return new Result(expression, token);	
+			};
+
+			// TODO ?????
 			continue;
 		};
 
@@ -419,19 +444,13 @@ ParserL2.prototype.process = function(){
 		
 		// Complete an expression, start the next
 		if (token.name == 'period') {
-			this.result.push( expression );
-			expression = new Array();
-			continue;
+			return new Result(expression, token);
 		};
 		
 		if (token.name == 'functor') {
 			
-			var result = this._handleFunctor();
-			var new_index = result.index;
-			
-			// adjust our index
-			this.index = new_index;
-			
+			var result = this._process({ diving_functor: true});
+
 			var functor_node = new Functor(token.value);
 			functor_node.args =  result.terms;
 			functor_node.original_token = token;
@@ -463,33 +482,6 @@ ParserL2.prototype.process = function(){
 	
 };// process
 
-/**
- *  Handles the tokens related to a functor 'call'
- *  
- *   @return Result
- */
-ParserL2.prototype._handleFunctor = function() {
-	
-	var parser_level_down = new ParserL2(this.tokens, 
-										this.index,
-										{diving_functor: true}
-										);
-	
-	return parser_level_down.process();
-};
-
-
-
-ParserL2.prototype._handleEnd = function(current_expression) {
-	
-	if (current_expression.length != 0)
-		this.result.push(current_expression);
-	
-	if (this.context.diving_functor)
-		return new Result(current_expression, this.index);
-
-	return new Result(this.result, this.index);
-};
 
 //
 // =========================================================== PRIVATE

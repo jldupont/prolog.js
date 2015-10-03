@@ -117,7 +117,7 @@ var process = function(text, expected) {
  *   to be transformed to an 'atom' since
  *   we have not stepped the process further along
  */
-it('ParserL2 - simple - no fact to rule', function(){
+it('ParserL2 - simple - no fact no rule', function(){
 	
 	var text = "love(charlot).\n";
 	var expected = [ 'Functor(love/1,Token(term,charlot))' ];
