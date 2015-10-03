@@ -44,14 +44,24 @@ var process_rule = function(input_text, expecteds, options) {
 		if (!expression)
 			break;
 
+		var result;
 		var c = new Compiler();
 		
 		//console.log("Expression: ", expression);
 
-		var result = c.process_rule(expression);
+		try {
+			result = c.process_rule_or_fact(expression);
+		} catch(e) {
+			console.error("Compilation Error: ", e);	
+			throw e;
+		};
+	
+		//console.log("result= ", result);
 		
 		results.push(result);
 	};
+	
+	
 	
 	if (options.show_compiled)
 		console.log("Code: ", results);
@@ -1333,7 +1343,7 @@ zebra(Owns, HS):- %// house: color,nation,pet,drink,smokes)
   member(  h(_,Owns,zebra,_,_),                              HS).
 */
 
-/*
+
 it('Compiler - complex - 10', function(){
 	
 	Instruction.inspect_compact = true;
@@ -1344,17 +1354,58 @@ it('Compiler - complex - 10', function(){
 				+'select([],_).';
 
 	
-	//Functor(rule/2,Functor(select/2,Functor(cons/2,Var(A),Var(As)),Var(S)),Functor(conj/2,Functor(select/3,Var(A),Var(S),Var(S1)),Functor(select/2,Var(As),Var(S1)))) ],
-    //   [ Functor(select/2,'Token(nil,null)',Var(_))
+	// [ [ Functor(rule/2,Functor(select/2,Functor(cons/2,Var(A),Var(As)),Var(S)),Functor(conj/2,Functor(select/3,Var(A),Var(S),Var(S1)),Functor(select/2,Var(As),Var(S1)))) ]
+    //   ,[ Functor(select/2,'Token(nil,null)',Var(_)) ]
+    // ]
 	
 	
 	
 	var expected = [
-		{
-		}
+			{ 
+				head: 
+	     [ 'get_struct  select/2, x(0)',
+	       'get_var     x(1)',
+	       'get_var     p("S")',
+	       'get_struct  cons/2, x(1)',
+	       'unif_var    p("A")',
+	       'unif_var    p("As")',
+	       'jump        p("g0")' ],
+	    g0: 
+	     [ 
+	     	'allocate'    ,
+	       'put_struct  select/3, x(0)',
+	       'put_var     p("A")',
+	       'put_var     p("S")',
+	       'unif_var    p("S1")',
+	       'setup'       ,
+	       'call'        ,
+	       'maybe_retry' ,
+	       'deallocate'  ,
+	       'maybe_fail'  ,
+	       'allocate'    ,
+	       'put_struct  select/2, x(0)',
+	       'put_var     p("As")',
+	       'unif_var    p("S1")',
+	       'setup'       ,
+	       'call'        ,
+	       'maybe_retry' ,
+	       'deallocate'  ,
+	       'proceed'
+	       ],
+	    f: 'select',
+	    a: 2 },
+	  { head: 
+	     [ 
+	     	'get_struct  select/2, x(0)',
+	       'unif_nil'    ,
+	       'get_var     p("_$67")',
+	       'proceed'     ,
+	       ],
+	    f: 'select',
+	    a: 2 }
+		
 	];
 	
-	process_rule(text, expected, {show_parsed: true, show_compiled: true, show_db: true});
-	//process_rule(text, expected);
+	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_db: true});
+	process_rule(text, expected);
 });
-*/

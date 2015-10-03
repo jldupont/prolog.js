@@ -42,12 +42,9 @@ it('ParserL1 - simple', function(){
 	var text = "love(mercedes).\n";
 	
 	var expected_list = [
-	                     //new Token('parens_open', null, 4),
 	                     new Token('functor', 'love', 0),
 	                     new Token('term', 'mercedes', 5),
 	                     new Token('parens_close', null, 13),
-	                     //new Token('op:rule', null, 0),
-	                     //new Token('term', 'true', 0),
 	                     new Token('period', null, 14),
 	                     new Token('newline', null, 15)
 	                     ];
@@ -60,12 +57,9 @@ it('ParserL1 - simple - no convert fact', function(){
 	var text = "love(mercedes).\n";
 	
 	var expected_list = [
-	                     //new Token('parens_open', null, 4),
 	                     new Token('functor', 'love', 0),
 	                     new Token('term', 'mercedes', 5),
 	                     new Token('parens_close', null, 13),
-	                     //new Token('op:rule', null, 0),
-	                     //new Token('term', 'true', 0),
 	                     new Token('period', null, 14),
 	                     new Token('newline', null, 15)
 	                     ];
@@ -79,12 +73,9 @@ it('ParserL1 - remove whitespaces', function(){
 	var text = " 	love(mercedes).	\n";
 	
 	var expected_list = [
-	                     //new Token('parens_open', null, 4),
 	                     new Token('functor', 'love', 0),
 	                     new Token('term', 'mercedes', 5),
 	                     new Token('parens_close', null, 13),
-	                     //new Token('op:rule', null, 0),
-	                     //new Token('term', 'true', 0),
 	                     new Token('period', null, 14),
 	                     new Token('newline', null, 15)
 	                     ];
@@ -98,7 +89,6 @@ it('ParserL1 - var - 1', function(){
 	var text = "X=Y.\n";
 
 	var expected_list = [
-	                     //new Token('parens_open', null, 4),
 	                     new Token('var',     'X'),
 	                     new Token('op:unif', '='),
 	                     new Token('var',     'Y'),
@@ -114,7 +104,6 @@ it('ParserL1 - var - 2', function(){
 	var text = "X+-Y";
 
 	var expected_list = [
-	                     //new Token('parens_open', null, 4),
 	                     new Token('var',  'X'),
 	                     new Token('term', '+-'),
 	                     new Token('var',  'Y'),

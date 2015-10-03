@@ -3899,6 +3899,9 @@ if (typeof module!= 'undefined') {
 };
 
 
+/* global Eos
+*/
+
 /**
  * ParserL1
  * 
@@ -4030,6 +4033,10 @@ ParserL1.prototype.process = function() {
 if (typeof module!= 'undefined') {
 	module.exports.ParserL1 = ParserL1;
 };
+
+/*  global OpNode, Token, Var, Functor, Eos, Result
+           ,ErrorExpectingListStart, ErrorExpectingListEnd
+ */
 
 /**
  *  Parser

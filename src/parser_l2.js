@@ -32,6 +32,10 @@
  *  @dependency: types.js
  */
 
+/*  global OpNode, Token, Var, Functor, Eos, Result
+           ,ErrorExpectingListStart, ErrorExpectingListEnd
+ */
+
 /**
  *  Parser
  *  

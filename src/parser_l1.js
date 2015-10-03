@@ -17,6 +17,9 @@
  *  @dependency: types.js
  */
 
+/* global Eos
+*/
+
 /**
  * ParserL1
  * 
