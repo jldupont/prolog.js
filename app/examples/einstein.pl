@@ -14,8 +14,8 @@ select([],_).
 left_of(A,B,C):- append(_,[A,B|_],C).  
 next_to(A,B,C):- left_of(A,B,C) ; left_of(B,A,C).
 
-
-zebra(Owns, HS):- %// house: color,nation,pet,drink,smokes)
+%// house: color,nation,pet,drink,smokes)
+zebra(Owns, HS):- 
   HS   = [ h(_,norwegian,_,_,_),    h(blue,_,_,_,_),   h(_,_,_,milk,_), _, _], 
   select([ h(red,brit,_,_,_),       h(_,swede,dog,_,_), 
            h(_,dane,_,tea,_),       h(_,german,_,_,prince)], HS),
