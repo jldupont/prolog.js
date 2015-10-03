@@ -4182,8 +4182,23 @@ ParserL2.prototype.get_token = function() {
 		};
 		return token;
 	};
+
+	// We are removing at this layer
+	//  because we might want to introduce directives
+	//  at parser layer 1
+	//
+	var token;
 	
-	var token = this.next();
+	for(;;) {
+		token = this.next();	
+		
+		if (!token)
+			break;
+		
+		if (token && (token.name != 'comment' && token.name != 'newline'))
+			break;
+	}
+	
 
 	return maybe_translate_var(token);
 };
@@ -4252,9 +4267,11 @@ ParserL2.prototype._process_list = function(maybe_token){
 	while (head && (head.name == 'op:conj'))
 		head = this.get_token();
 	
+	
 	if (!head || head.name == 'nil') {
 		return ParserL2.nil;
 	};
+
 
 	if (head.name == 'list:close') {
 		return ParserL2.nil;
@@ -4270,7 +4287,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 		cons.push_arg( value );
 	}
 	else {
-		cons.push_arg(head);
+		cons.push_arg( head );
 	}
 
 	var next_token = this.get_token();
@@ -4286,7 +4303,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 		return cons;
 	};
 	
-	var tail = this._process_list(next_token );
+	var tail = this._process_list( next_token );
 	cons.push_arg( tail );
 	
 	return cons;
@@ -4301,14 +4318,10 @@ ParserL2.prototype._process_list = function(maybe_token){
  */
 ParserL2.prototype.process = function(){
 
-	var expression = null;
+	var expression = new Array();
 	var token = null;
 	var token_next = null;
-	var toggle = false;
-	var depth = 0;
-	
-	expression = new Array();
-	
+
 	for (;;) {
 		
 		// Pop a token from the input list
@@ -4325,7 +4338,7 @@ ParserL2.prototype.process = function(){
 			
 			this.regive();
 			
-			var lresult = this.process_list(this.tokens, this.index);
+			var lresult = this.process_list();
 			expression.push(lresult);
 			continue;
 		};
@@ -4350,30 +4363,6 @@ ParserL2.prototype.process = function(){
 				continue;
 
 
-			// If we are in a functor / list definition,
-			//  we need to get rid of `op:conj` 
-			if (this.context.diving_list) {
-				
-				if (token.name == 'op:conj') {
-			
-					var result = this._handleList();
-					var new_index = result.index;
-					
-					this.index = new_index;
-					
-					var functor_node = new Functor('cons');
-					functor_node.args = result.terms[0];
-					functor_node.line = token.line;
-					functor_node.col  = token.col;
-					
-					expression.push( functor_node );
-					continue;			
-					
-				};
-				
-			};
-			
-			
 			// Look ahead 1 more token
 			//  in order to handle the `- -` etc. replacements
 			token_next = this.tokens[this.index] || null;
@@ -4387,6 +4376,8 @@ ParserL2.prototype.process = function(){
 					maybe_replacement_opnode.col  = token.col;
 					
 					expression.push( maybe_replacement_opnode );
+					
+					// Successful replacement ... consume
 					this.index = this.index + 1;
 					continue;
 				}
@@ -4405,16 +4396,6 @@ ParserL2.prototype.process = function(){
 		
 		
 		
-		// We are removing at this layer
-		//  because we might want to introduce directives
-		//  at parser layer 1
-		//
-		if (token.name == 'comment')
-			continue;
-		
-		if (token.name == 'newline')
-			continue;
-				
 		if (token.name == 'parens_close') {
 			
 			// we don't need to keep the parens
