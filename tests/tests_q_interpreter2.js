@@ -486,7 +486,7 @@ it('Interpreter - batch2 - complex - 2', function(){
 
 it('Interpreter - batch2 - program - 1', function(){
 	
-	this.timeout(5000);
+	this.timeout(7000);
 	
 	//console.log("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Interpreter - batch2 - program 1");
 	

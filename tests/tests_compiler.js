@@ -1349,6 +1349,8 @@ it('Compiler - complex - 10', function(){
 	Instruction.inspect_compact = true;
 	
 	var text = '"""Einstein Puzzle\n'
+	            +'HS = [h(yellow,norwegian,cats,water,dunhill),h(blue,dane,horse,tea,blend),h(red,brit,birds,milk,pallmall),h(green,german,zebra,coffee,prince),h(white,swede,dog,beer,bluemaster)]\n'
+				+'Who = german\n'
 				+'"""\n'
 				+'select([A|As],S):- select(A,S,S1),select(As,S1).'
 				+'select([],_).';
