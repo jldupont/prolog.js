@@ -31,7 +31,7 @@ function Lexer (text) {
 	this.in_comment = false;
 	this.comment_chars = "";
 	
-	this._tokenRegexp = />=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
+	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
 };
 
 Lexer.prototype._handleNewline = function(){

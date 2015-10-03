@@ -15,6 +15,39 @@ var Lexer = pr.Lexer;
 
 // ----------------------------------------------------------------- TESTS - parsing
 
+it('Lex - number - 1', function(){
+	
+	var l = new Lexer("66.66");
+	
+	var result = l.step();
+	
+	
+	should.equal(result, '66.66', "expecting '66.66', got: "+result);
+});
+
+it('Lex - number - 2', function(){
+	
+	var l = new Lexer("a 66.66");
+	
+	var result = l.step();
+	
+	should.equal(result, 'a', "expecting 'a', got: "+result);
+	
+	result = l.step();
+	result = l.step();
+	should.equal(result, '66.66', "expecting '66.66', got: "+result);
+});
+
+it('Lex - number - 3', function(){
+	
+	var l = new Lexer("66.66.\n");
+	
+	var result = l.step();
+	
+	should.equal(result, '66.66', "expecting '66.66', got: "+result);
+});
+
+
 it('Lex - simple fact', function(){
 
 	var l = new Lexer("love(julianne).");

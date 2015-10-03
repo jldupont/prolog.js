@@ -1333,6 +1333,7 @@ zebra(Owns, HS):- %// house: color,nation,pet,drink,smokes)
   member(  h(_,Owns,zebra,_,_),                              HS).
 */
 
+/*
 it('Compiler - complex - 10', function(){
 	
 	Instruction.inspect_compact = true;
@@ -1342,10 +1343,10 @@ it('Compiler - complex - 10', function(){
 				+'select([A|As],S):- select(A,S,S1),select(As,S1).'
 				+'select([],_).';
 
-	/*
-	Functor(rule/2,Functor(select/2,Functor(cons/2,Var(A),Var(As)),Var(S)),Functor(conj/2,Functor(select/3,Var(A),Var(S),Var(S1)),Functor(select/2,Var(As),Var(S1)))) ],
-  [ Functor(select/2,'Token(nil,null)',Var(_))
-		*/
+	
+	//Functor(rule/2,Functor(select/2,Functor(cons/2,Var(A),Var(As)),Var(S)),Functor(conj/2,Functor(select/3,Var(A),Var(S),Var(S1)),Functor(select/2,Var(As),Var(S1)))) ],
+    //   [ Functor(select/2,'Token(nil,null)',Var(_))
+	
 	
 	
 	var expected = [
@@ -1356,3 +1357,4 @@ it('Compiler - complex - 10', function(){
 	process_rule(text, expected, {show_parsed: true, show_compiled: true, show_db: true});
 	//process_rule(text, expected);
 });
+*/
