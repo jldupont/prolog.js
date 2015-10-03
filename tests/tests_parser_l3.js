@@ -390,3 +390,17 @@ it('ParserL3 - sub-expr - 2', function(){
 	
 	process(text, expected);
 });
+
+it('ParserL3 - rule + comment - 1', function(){
+	
+	Functor.inspect_compact_version = true;
+	
+	var text = "f(X) :-  %some comment\n"
+				+" g(X).\n";
+	
+	var expected = [[
+	                 'rule(f(Var(X)),g(Var(X)))'
+	               ]];
+	
+	process(text, expected);
+});

@@ -329,7 +329,7 @@ var dump_db = function(db){
 
 var dump_var = function(vars) {
 	
-	for (key in vars)
+	for (var key in vars)
 		console.log("\n\n", key, " = ", vars[key]);
 };
 
@@ -358,10 +358,6 @@ it('Interpreter - batch2 - simple - 1', function(){
 	var rules = [
 	             "f(666)."
 	             ];
-	
-	/*
-	 
-	 */
 	
 	var query = "f(A).";
 	

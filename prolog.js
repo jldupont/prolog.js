@@ -1,71 +1,38 @@
-/*! prolog.js - v0.0.1 - 2015-10-02 */
+/*! prolog.js - v0.0.1 - 2015-10-03 */
 
-/* global Op */
- /* global Lexer, ParserL1, ParserL2, ParserL3, Compiler */
+/* global Lexer, ParserL1, ParserL2, ParserL3 */
+/* global Op, Compiler
+*/
  
- 
- var Prolog = {};
- 
-  /**
-  *  Compiles the input text to instructions
-  *   for the Interpreter
-  * 
-  * @return Object
-  * @throws
-  */
-  
- Prolog.compile = function(text) {
-     
-     var parsed = Prolog.parse(text);
-     
-     var combined = Prolog._combine(parsed);
-     
-     var compiled = Prolog.compile_rules_and_facts(combined);
-     
-     return compiled;
- };
- 
- /**
-  *  Compiles a query input text to
-  *   instructions for the interpreter
-  * 
-  *  There should only be 1 `body` expression
-  *   in the input text. No multi-line input
-  *   nor multi expressions.
-  * 
-  * @return Object
-  * @throws
-  */
- Prolog.compile_query = function(text) {
-   
-    var parsed = Prolog.parse(text);
- 
-    var c = new Compiler();
+var Prolog = {};
+
+/*
+ *
+ */
+Prolog.compile = function(input_text) {
+
+    var tokens = Prolog.parse(input_text);
     
-    return c.process_query(parsed[0][0]);
-     
- };
- 
- /**
-  *  There could have been multiple \n terminated
-  *   lines per input entry
-  */
- Prolog._combine = function(list) {
-     
-     var result = [];
-     
-     for (var index = 0; index < list.length; index ++) {
-        var entries = list[index];
-        result = result.concat( entries );
-     }
+    var ctokens = Prolog._combine(tokens);
+    
+    var c = new Compiler();
 
-     return result;
- };
- 
- 
- Prolog.parse = function(text) {
-     
-	var l = new Lexer(text);
+    var result = [];
+
+    for (var index=0; index<ctokens.length; index++) {
+        var code = c.process_rule_or_fact(ctokens[index]);    
+        
+        result.push(code);
+    };
+    
+    return result;
+};
+
+
+
+Prolog.parse = function(input_text) {
+
+	var l = new Lexer(input_text);
 	var tokens = l.process();
 
 	var t = new ParserL1(tokens);
@@ -78,34 +45,34 @@
 	
 	var p3 = new ParserL3(terms, Op.ordered_list_by_precedence);
 	var r3 = p3.process();
-
+	
 	return r3;
-     
- };
- 
-Prolog.compile_rules_and_facts = function(parsed_nodes) {
-
-	var c = new Compiler();
-
-    var results = [];
-	
-	for (var index = 0; index<parsed_nodes.length; index++) {
-		
-		var expression = parsed_nodes[index];
-		
-		var result = c.process_rule_or_fact(expression);
-		
-		results.push(result);
-	};
-	
-	return results;
 };
 
+Prolog._combine = function(tokens_list) {
+    
+    var result = [];
+    
+    for (var index = 0; index<tokens_list.length; index++) {
+        var list = tokens_list[index];
+        
+        result = result.concat( list );
+    };
+    
+    return result;
+};
+
+/**
+ * Compiles a query
+ * 
+ */
+Prolog.compile_query = function(input_text) {
+    
+};
 
 if (typeof module!= 'undefined') {
 	module.exports.Prolog = Prolog;
 };
-
 /**
  *  Token
  *  
@@ -3668,7 +3635,7 @@ function Lexer (text) {
 	this.in_comment = false;
 	this.comment_chars = "";
 	
-	this._tokenRegexp = />=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\/|\-\+|[()\.,]|[\n]|./gm;
+	this._tokenRegexp = />=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
 };
 
 Lexer.prototype._handleNewline = function(){
@@ -3760,7 +3727,7 @@ Lexer.prototype.step = function(newline_as_null) {
 	if (this.current_match != null)
 		return this.current_match[0];
 	
-	if (this.current_match == '\n' && newline_as_null)
+	if (((this.current_match == '\n') || (this.current_match == '\r')) && newline_as_null)
 		return null;
 	
 	this.at_the_end = true;
@@ -3842,7 +3809,7 @@ Lexer.prototype.next = function() {
 
 		for(;;) {
 			var char = this.step(Lexer.newline_as_null);
-			if (char == null)
+			if (char == null || char == "\n" || char == '\r')
 			break;
 			
 			comment_chars += char;

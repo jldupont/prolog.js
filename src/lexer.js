@@ -31,7 +31,7 @@ function Lexer (text) {
 	this.in_comment = false;
 	this.comment_chars = "";
 	
-	this._tokenRegexp = />=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\/|\-\+|[()\.,]|[\n]|./gm;
+	this._tokenRegexp = />=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
 };
 
 Lexer.prototype._handleNewline = function(){
@@ -123,7 +123,7 @@ Lexer.prototype.step = function(newline_as_null) {
 	if (this.current_match != null)
 		return this.current_match[0];
 	
-	if (this.current_match == '\n' && newline_as_null)
+	if (((this.current_match == '\n') || (this.current_match == '\r')) && newline_as_null)
 		return null;
 	
 	this.at_the_end = true;
@@ -205,7 +205,7 @@ Lexer.prototype.next = function() {
 
 		for(;;) {
 			var char = this.step(Lexer.newline_as_null);
-			if (char == null)
+			if (char == null || char == "\n" || char == '\r')
 			break;
 			
 			comment_chars += char;

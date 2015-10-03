@@ -536,3 +536,35 @@ it('Lex - comment triple quote - 2', function(){
 
 	should.equal(result, true);
 });
+
+/*
+it('Lex - comment complex  - 1', function(){
+
+	var text = 'f(X):- %some comment\ng(X).';
+
+	var elist = [
+'Token(term,f)',
+  'Token(parens_open,null)',
+  'Token(term,X)',
+  'Token(parens_close,null)',
+  'Token(op:rule,:-)',
+  'Token(term, )',
+  'Token(comment,some comment)',
+  'Token(term,g)',
+  'Token(parens_open,null)',
+  'Token(term,X)',
+  'Token(parens_close,null)',
+  'Token(period,null)'
+
+	             ];
+	
+	var l = new Lexer(text);
+	var list = l.process();
+	
+	//console.log(list);
+
+	var result = Token.check_for_match(list, elist);
+
+	should.equal(result, true);
+});
+*/
