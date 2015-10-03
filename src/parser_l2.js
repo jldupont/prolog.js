@@ -188,23 +188,19 @@ ParserL2.prototype.get_token = function() {
  * 
  * @param input
  * @param index
- * @returns { index, result }
+ * @returns Object
  * 
  */
-ParserL2.process_list = function(input, index) {
+ParserL2.prototype.process_list = function() {
 	
-	index = index || 0;
-
-	var token_1 = input[index];
+	var token_1 = this.get_token();
 	var token_1_name = token_1.name || null;
 	
-	index++;
-	
 	if (token_1_name == 'nil')
-		return { index: index, result: token_1};
+		return token_1;
 	
 	if (token_1_name != 'list:open')
-		throw new ErrorExpectingListStart("Expected the start of a list, got: "+JSON.stringify(input));
+		throw new ErrorExpectingListStart("Expected the start of a list, got: "+JSON.stringify(token_1));
 	
 	
 	
@@ -222,14 +218,7 @@ ParserL2.process_list = function(input, index) {
 		return token;
 	};
 	
-	var output =  ParserL2._process_list(function(){
-		var token = input[index++];
-		return proc_token(token);
-	});
-
-	//var result = (output.name == 'nil' ? output: output.args[0]); 
-	
-	return {index: index, result: output };
+	return this._process_list();
 };
 
 
@@ -237,9 +226,9 @@ ParserL2.process_list = function(input, index) {
  *  Processed a list of terms to a cons/2 structure
  *  
  */
-ParserL2._process_list = function(get_token, maybe_token){
+ParserL2.prototype._process_list = function(maybe_token){
 
-	var head = maybe_token || get_token();
+	var head = maybe_token || this.get_token();
 	
 	
 	/*
@@ -255,7 +244,7 @@ ParserL2._process_list = function(get_token, maybe_token){
 
 	
 	while (head && (head.name == 'op:conj'))
-		head = get_token();
+		head = this.get_token();
 	
 	if (!head || head.name == 'nil') {
 		return ParserL2.nil;
@@ -271,27 +260,27 @@ ParserL2._process_list = function(get_token, maybe_token){
 	var cons = new Functor('cons');
 		
 	if (head.name == 'list:open') {
-		var value = ParserL2._process_list( get_token );
+		var value = this._process_list();
 		cons.push_arg( value );
 	}
 	else {
 		cons.push_arg(head);
 	}
 
-	var next_token = get_token();
+	var next_token = this.get_token();
 	
 	if (next_token.name == 'list:tail') {
-		next_token = get_token();
+		next_token = this.get_token();
 		cons.push_arg( next_token );
 		
-		next_token = get_token();
+		next_token = this.get_token();
 		if (next_token.name != 'list:close')
 			throw new ErrorExpectingListEnd("Expecting list end, got:" + JSON.stringify(next_token));
 		
 		return cons;
 	};
 	
-	var tail = ParserL2._process_list( get_token, next_token );
+	var tail = this._process_list(next_token );
 	cons.push_arg( tail );
 	
 	return cons;
@@ -330,9 +319,8 @@ ParserL2.prototype.process = function(){
 			
 			this.regive();
 			
-			var lresult = ParserL2.process_list(this.tokens, this.index);
-			this.index = lresult.index;
-			expression.push(lresult.result);
+			var lresult = this.process_list(this.tokens, this.index);
+			expression.push(lresult);
 			continue;
 		};
 		
