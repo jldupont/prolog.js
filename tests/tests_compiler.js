@@ -54,7 +54,7 @@ var process_rule = function(input_text, expecteds, options) {
 	};
 	
 	if (options.show_compiled)
-		console.log(results);
+		console.log("Code: ", results);
 	
 	//if (expecteds.length!=results.length)
 	//	throw new Error();
@@ -1307,4 +1307,52 @@ it('Compiler - sub-expression - 1', function(){
 	
 	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_parsed: true});
 	process_rule(text, expected);
+});
+
+
+/*
+"""Einstein's Puzzle
+"""
+select([A|As],S):- select(A,S,S1),select(As,S1).
+select([],_). 
+
+left_of(A,B,C):- append(_,[A,B|_],C).  
+next_to(A,B,C):- left_of(A,B,C) ; left_of(B,A,C).
+
+
+zebra(Owns, HS):- %// house: color,nation,pet,drink,smokes)
+  HS   = [ h(_,norwegian,_,_,_),    h(blue,_,_,_,_),   h(_,_,_,milk,_), _, _], 
+  select([ h(red,brit,_,_,_),       h(_,swede,dog,_,_), 
+           h(_,dane,_,tea,_),       h(_,german,_,_,prince)], HS),
+  select([ h(_,_,birds,_,pallmall), h(yellow,_,_,_,dunhill),
+           h(_,_,_,beer,bluemaster)],                        HS), 
+  left_of( h(green,_,_,coffee,_),   h(white,_,_,_,_),        HS),
+  next_to( h(_,_,_,_,dunhill),      h(_,_,horse,_,_),        HS),
+  next_to( h(_,_,_,_,blend),        h(_,_,cats, _,_),        HS),
+  next_to( h(_,_,_,_,blend),        h(_,_,_,water,_),        HS),
+  member(  h(_,Owns,zebra,_,_),                              HS).
+*/
+
+it('Compiler - complex - 10', function(){
+	
+	Instruction.inspect_compact = true;
+	
+	var text = '"""Einstein Puzzle\n'
+				+'"""\n'
+				+'select([A|As],S):- select(A,S,S1),select(As,S1).'
+				+'select([],_).';
+
+	/*
+	Functor(rule/2,Functor(select/2,Functor(cons/2,Var(A),Var(As)),Var(S)),Functor(conj/2,Functor(select/3,Var(A),Var(S),Var(S1)),Functor(select/2,Var(As),Var(S1)))) ],
+  [ Functor(select/2,'Token(nil,null)',Var(_))
+		*/
+	
+	
+	var expected = [
+		{
+		}
+	];
+	
+	process_rule(text, expected, {show_parsed: true, show_compiled: true, show_db: true});
+	//process_rule(text, expected);
 });
