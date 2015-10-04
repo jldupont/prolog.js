@@ -68,8 +68,8 @@ Lexer.token_map = {
 	
 	,'\n': function() { return new Token('newline') }
 	,'.':  function() { return new Token('period') }
-	,'(':  function() { return new Token('parens_open',  null, {is_operator: true}) }
-	,')':  function() { return new Token('parens_close', null, {is_operator: true}) }
+	,'(':  function() { return new Token('parens_open',  null) }
+	,')':  function() { return new Token('parens_close', null) }
 	
 	,'[':  function() { return new Token('list:open',  null) }
 	,']':  function() { return new Token('list:close', null) }

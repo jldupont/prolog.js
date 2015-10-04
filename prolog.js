@@ -3672,8 +3672,8 @@ Lexer.token_map = {
 	
 	,'\n': function() { return new Token('newline') }
 	,'.':  function() { return new Token('period') }
-	,'(':  function() { return new Token('parens_open',  null, {is_operator: true}) }
-	,')':  function() { return new Token('parens_close', null, {is_operator: true}) }
+	,'(':  function() { return new Token('parens_open',  null) }
+	,')':  function() { return new Token('parens_close', null) }
 	
 	,'[':  function() { return new Token('list:open',  null) }
 	,']':  function() { return new Token('list:close', null) }
@@ -4232,7 +4232,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 	 */
 
 	
-	while (head && (head.name == 'op:conj'))
+	while (head && (head.name == 'op:conj' || head.symbol == ","))
 		head = this.get_token();
 	
 	
@@ -4338,15 +4338,11 @@ ParserL2.prototype._process = function( ctx ){
 			continue;
 		};
 		
-		
-		if (token.is_operator) {
+		if (ctx.diving_functor)
+			if (token instanceof OpNode)
+				if (token.symbol == ",")
+					continue;
 
-			if (ctx.diving_functor && token.name == 'op:conj')
-				continue;
-				
-		}
-
-		
 		
 		if (token.name == 'parens_close') {
 			
@@ -4365,17 +4361,6 @@ ParserL2.prototype._process = function( ctx ){
 
 
 		
-		
-		// Should we be substituting an OpNode ?
-		//
-		if (token.is_operator) {
-			
-			var opn = new OpNode(token.value);
-			opn.line = token.line;
-			opn.col  = token.col;
-			expression.push( opn );
-			continue;
-		};
 		
 		// Complete an expression, start the next
 		if (token.name == 'period') {
@@ -4491,6 +4476,18 @@ ParserL2.prototype._preprocess = function() {
 			
 		}; // token is_operator
 		
+		// Should we be substituting an OpNode ?
+		//
+		if (token.is_operator) {
+			
+			var opn = new OpNode(token.value);
+			opn.line = token.line;
+			opn.col  = token.col;
+			this.ptokens.push(opn);
+			continue;
+		};
+		
+
 		
 		this.ptokens.push(token);
 
