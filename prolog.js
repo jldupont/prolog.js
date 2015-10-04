@@ -4274,6 +4274,11 @@ ParserL2.prototype._process_list = function(maybe_token){
 		cons.push_arg( value );
 	}
 	else {
+		
+		if (head.name=='functor') {
+			this.regive()
+			head = this._process({ diving_functor: true })
+		}
 		cons.push_arg( head );
 	}
 
@@ -4282,6 +4287,13 @@ ParserL2.prototype._process_list = function(maybe_token){
 	if (next_token.name == 'list:tail') {
 		
 		next_token = this.get_token();
+		
+		if (next_token.name == 'functor') {
+			this.regive()
+			next_token = this._process({ diving_functor: true })
+		}
+
+
 		cons.push_arg( next_token );
 		
 		next_token = this.get_token();

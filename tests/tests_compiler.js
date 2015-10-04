@@ -1343,7 +1343,7 @@ zebra(Owns, HS):- %// house: color,nation,pet,drink,smokes)
   member(  h(_,Owns,zebra,_,_),                              HS).
 */
 
-/*
+
 it('Compiler - complex - 10', function(){
 	
 	Instruction.inspect_compact = true;
@@ -1363,52 +1363,49 @@ it('Compiler - complex - 10', function(){
 	
 	
 	var expected = [
-			{ 
-				head: 
-	     [ 'get_struct  select/2, x(0)',
-	       'get_var     x(1)',
-	       'get_var     p("S")',
-	       'get_struct  cons/2, x(1)',
-	       'unif_var    p("A")',
-	       'unif_var    p("As")',
-	       'jump        p("g0")' ],
-	    g0: 
-	     [ 
-	     	'allocate'    ,
-	       'put_struct  select/3, x(0)',
-	       'put_var     p("A")',
-	       'put_var     p("S")',
-	       'unif_var    p("S1")',
-	       'setup'       ,
-	       'call'        ,
-	       'maybe_retry' ,
-	       'deallocate'  ,
-	       'maybe_fail'  ,
-	       'allocate'    ,
-	       'put_struct  select/2, x(0)',
-	       'put_var     p("As")',
-	       'unif_var    p("S1")',
-	       'setup'       ,
-	       'call'        ,
-	       'maybe_retry' ,
-	       'deallocate'  ,
-	       'proceed'
-	       ],
-	    f: 'select',
-	    a: 2 },
-	  { head: 
-	     [ 
-	     	'get_struct  select/2, x(0)',
-	       'unif_nil'    ,
-	       'get_var     p("_$67")',
-	       'proceed'     ,
-	       ],
-	    f: 'select',
-	    a: 2 }
-		
+		{ 
+			head: 
+     [ 'get_struct  select/2, x(0)',
+       'get_var     x(1)',
+       'get_var     p("S")',
+       'get_struct  cons/2, x(1)',
+       'unif_var    p("A")',
+       'unif_var    p("As")',
+       'jump        p("g0")' 
+       ],
+    g0: 
+     [ 'allocate'    ,
+       'put_struct  select/3, x(0)',
+       'put_var     p("A")',
+       'put_var     p("S")',
+       'unif_var    p("S1")',
+       'setup'       ,
+       'call'        ,
+       'maybe_retry' ,
+       'deallocate'  ,
+       'maybe_fail'  ,
+       'allocate'    ,
+       'put_struct  select/2, x(0)',
+       'put_var     p("As")',
+       'unif_var    p("S1")',
+       'setup'       ,
+       'call'        ,
+       'maybe_retry' ,
+       'deallocate'  ,
+       'proceed'      
+       ],
+    f: 'select',
+    a: 2 },
+  { head: 
+     [ 'get_struct  select/2, x(0)',
+       'unif_nil'    ,
+       'get_var     p("_$174")',
+       'proceed'
+        ],
+    f: 'select',
+    a: 2 }
 	];
 	
 	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_db: true});
 	process_rule(text, expected);
 });
-*/
