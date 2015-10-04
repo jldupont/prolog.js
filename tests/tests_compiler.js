@@ -15,6 +15,7 @@ var Token = pr.Token;
 var OpNode = pr.OpNode;
 var Functor = pr.Functor;
 var Op = pr.Op;
+var Var = pr.Var;
 
 var ParserL1 = pr.ParserL1;
 var ParserL2 = pr.ParserL2;
@@ -1359,6 +1360,7 @@ zebra(Owns, HS):- %// house: color,nation,pet,drink,smokes)
 it('Compiler - complex - 10', function(){
 	
 	Instruction.inspect_compact = true;
+	Var.inspect_compact = true;
 	
 	var text = '"""Einstein Puzzle\n'
 	            +'HS = [h(yellow,norwegian,cats,water,dunhill),h(blue,dane,horse,tea,blend),h(red,brit,birds,milk,pallmall),h(green,german,zebra,coffee,prince),h(white,swede,dog,beer,bluemaster)]\n'
@@ -1411,7 +1413,7 @@ it('Compiler - complex - 10', function(){
   { head: 
      [ 'get_struct  select/2, x(0)',
        'unif_nil'    ,
-       'get_var     p("_$174")',
+       'get_var     p("_$177")',
        'proceed'
         ],
     f: 'select',
@@ -1434,7 +1436,14 @@ it('Compiler - complex - 11', function(){
 				+'\n';
 	
 	
-	
+	/*
+	[ [ rule( f(_),
+			  unif(_,cons( h(_,Token(term,norwegian),_,_,_),
+			  				cons( h(Token(term,blue),_,_,_,_),
+			  					cons( h(_,_,_,Token(term,milk),_),
+			  						cons(_, 
+			  							cons(_, Token(nil,null)))))))) ] ]
+	*/
 
 	
 	
