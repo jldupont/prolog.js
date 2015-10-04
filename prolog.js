@@ -949,7 +949,15 @@ function ErrorInvalidToken(msg) {
 };
 ErrorInvalidToken.prototype = Error.prototype;
 
-ErrorInvalidToken
+function ErrorUnexpectedParensClose(msg) {
+	this.message = msg;
+};
+ErrorUnexpectedParensClose.prototype = Error.prototype;
+
+function ErrorUnexpectedPeriod(msg) {
+	this.message = msg;
+}
+ErrorUnexpectedPeriod.prototype = Error.prototype;
 
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
@@ -981,6 +989,8 @@ if (typeof module!= 'undefined') {
 	
 	module.exports.ErrorExpectingListStart = ErrorExpectingListStart;
 	module.exports.ErrorExpectingListEnd = ErrorExpectingListEnd;
+	module.exports.ErrorUnexpectedParensClose = ErrorUnexpectedParensClose;
+	module.exports.ErrorUnexpectedPeriod = ErrorUnexpectedPeriod;
 };
 /* global ErrorExpectingFunctor, ErrorRuleInQuestion, ErrorInvalidToken */
 /* global Functor, ErrorInvalidHead, Visitor, Visitor2, Visitor3 */
@@ -4040,6 +4050,7 @@ if (typeof module!= 'undefined') {
 
 /*  global OpNode, Token, Var, Functor, Eos, Result
            ,ErrorExpectingListStart, ErrorExpectingListEnd
+           ,ErrorUnexpectedParensClose, ErrorUnexpectedPeriod
  */
 
 /**
@@ -4261,6 +4272,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 	var next_token = this.get_token();
 	
 	if (next_token.name == 'list:tail') {
+		
 		next_token = this.get_token();
 		cons.push_arg( next_token );
 		
@@ -4323,12 +4335,10 @@ ParserL2.prototype._process = function( ctx ){
 		if (token == null || token instanceof Eos) {
 			return new Result(expression, token);
 		}
-			//return this._handleEnd( expression, token );
 
 		// We must ensure that a list is transformed
 		//  in a cons/2 structure
 		//
-		
 		if (token.name == 'list:open') {
 			
 			this.regive();
@@ -4338,6 +4348,8 @@ ParserL2.prototype._process = function( ctx ){
 			continue;
 		};
 		
+		// Only if we are inside a Functor
+		//  definition can we safely discard the conj.
 		if (ctx.diving_functor)
 			if (token instanceof OpNode)
 				if (token.symbol == ",")
@@ -4355,21 +4367,22 @@ ParserL2.prototype._process = function( ctx ){
 				return new Result(expression, token);	
 			};
 
-			// TODO ?????
-			continue;
+			throw new ErrorUnexpectedParensClose();
 		};
 
 
-		
-		
 		// Complete an expression, start the next
 		if (token.name == 'period') {
+			
+			if (ctx.diving_functor)
+				throw new ErrorUnexpectedPeriod();
+				
 			return new Result(expression, token);
 		};
 		
 		if (token.name == 'functor') {
 			
-			var result = this._process({ diving_functor: true});
+			var result = this._process({ diving_functor: true });
 
 			var functor_node = new Functor(token.value);
 			functor_node.args =  result.terms;

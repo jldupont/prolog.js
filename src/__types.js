@@ -882,7 +882,15 @@ function ErrorInvalidToken(msg) {
 };
 ErrorInvalidToken.prototype = Error.prototype;
 
-ErrorInvalidToken
+function ErrorUnexpectedParensClose(msg) {
+	this.message = msg;
+};
+ErrorUnexpectedParensClose.prototype = Error.prototype;
+
+function ErrorUnexpectedPeriod(msg) {
+	this.message = msg;
+}
+ErrorUnexpectedPeriod.prototype = Error.prototype;
 
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
@@ -914,4 +922,6 @@ if (typeof module!= 'undefined') {
 	
 	module.exports.ErrorExpectingListStart = ErrorExpectingListStart;
 	module.exports.ErrorExpectingListEnd = ErrorExpectingListEnd;
+	module.exports.ErrorUnexpectedParensClose = ErrorUnexpectedParensClose;
+	module.exports.ErrorUnexpectedPeriod = ErrorUnexpectedPeriod;
 };
