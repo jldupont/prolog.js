@@ -892,6 +892,12 @@ function ErrorUnexpectedPeriod(msg) {
 }
 ErrorUnexpectedPeriod.prototype = Error.prototype;
 
+function ErrorUnexpectedEnd(msg) {
+	this.message = msg;
+}
+ErrorUnexpectedEnd.prototype = Error.prototype;
+
+
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
 	module.exports.Eos = Eos;
@@ -924,4 +930,5 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorExpectingListEnd = ErrorExpectingListEnd;
 	module.exports.ErrorUnexpectedParensClose = ErrorUnexpectedParensClose;
 	module.exports.ErrorUnexpectedPeriod = ErrorUnexpectedPeriod;
+	module.exports.ErrorUnexpectedEnd = ErrorUnexpectedEnd;
 };

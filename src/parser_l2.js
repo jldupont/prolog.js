@@ -35,6 +35,7 @@
 /*  global OpNode, Token, Var, Functor, Eos, Result
            ,ErrorExpectingListStart, ErrorExpectingListEnd
            ,ErrorUnexpectedParensClose, ErrorUnexpectedPeriod
+           ,ErrorUnexpectedEnd
  */
 
 /**
@@ -317,8 +318,19 @@ ParserL2.prototype._process = function( ctx ){
 		token = this.get_token();
 		
 		if (token == null || token instanceof Eos) {
+			
+			if (ctx.diving_functor)
+				throw new ErrorUnexpectedEnd();
+			
 			return new Result(expression, token);
 		}
+
+		// A list is handled
+		//  through proper 'list:open'
+		//
+		if (token.name == 'list:close')
+			throw new ErrorExpectingListEnd();
+			
 
 		// We must ensure that a list is transformed
 		//  in a cons/2 structure

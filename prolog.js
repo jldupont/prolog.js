@@ -959,6 +959,12 @@ function ErrorUnexpectedPeriod(msg) {
 }
 ErrorUnexpectedPeriod.prototype = Error.prototype;
 
+function ErrorUnexpectedEnd(msg) {
+	this.message = msg;
+}
+ErrorUnexpectedEnd.prototype = Error.prototype;
+
+
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
 	module.exports.Eos = Eos;
@@ -991,6 +997,7 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorExpectingListEnd = ErrorExpectingListEnd;
 	module.exports.ErrorUnexpectedParensClose = ErrorUnexpectedParensClose;
 	module.exports.ErrorUnexpectedPeriod = ErrorUnexpectedPeriod;
+	module.exports.ErrorUnexpectedEnd = ErrorUnexpectedEnd;
 };
 /* global ErrorExpectingFunctor, ErrorRuleInQuestion, ErrorInvalidToken */
 /* global Functor, ErrorInvalidHead, Visitor, Visitor2, Visitor3 */
@@ -4051,6 +4058,7 @@ if (typeof module!= 'undefined') {
 /*  global OpNode, Token, Var, Functor, Eos, Result
            ,ErrorExpectingListStart, ErrorExpectingListEnd
            ,ErrorUnexpectedParensClose, ErrorUnexpectedPeriod
+           ,ErrorUnexpectedEnd
  */
 
 /**
@@ -4333,8 +4341,19 @@ ParserL2.prototype._process = function( ctx ){
 		token = this.get_token();
 		
 		if (token == null || token instanceof Eos) {
+			
+			if (ctx.diving_functor)
+				throw new ErrorUnexpectedEnd();
+			
 			return new Result(expression, token);
 		}
+
+		// A list is handled
+		//  through proper 'list:open'
+		//
+		if (token.name == 'list:close')
+			throw new ErrorExpectingListEnd();
+			
 
 		// We must ensure that a list is transformed
 		//  in a cons/2 structure
