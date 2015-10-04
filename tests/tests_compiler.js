@@ -90,10 +90,22 @@ var setup = function(text) {
 	var t = new ParserL1(tokens);
 	var ttokens = t.process();
 	
+	//console.log(ttokens);
+	
 	var p = new ParserL2(ttokens);
 	
-	var result = p.process();
-	var terms = result.terms;
+	var result, terms;
+	
+	try {
+		result = p.process();
+		terms = result.terms;
+	} catch (e) {
+		console.error(e);
+		console.log(e.classname);
+		throw e;
+	}
+	
+	//console.log(terms);
 	
 	var p3 = new ParserL3(terms, Op.ordered_list_by_precedence);
 	var r3 = p3.process();
@@ -1408,4 +1420,28 @@ it('Compiler - complex - 10', function(){
 	
 	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_db: true});
 	process_rule(text, expected);
+});
+
+it('Compiler - complex - 11', function(){
+	
+	Instruction.inspect_compact = true;
+	
+	var text = '"""Einstein Puzzle\n'
+	            +'HS = [h(yellow,norwegian,cats,water,dunhill),h(blue,dane,horse,tea,blend),h(red,brit,birds,milk,pallmall),h(green,german,zebra,coffee,prince),h(white,swede,dog,beer,bluemaster)]\n'
+				+'Who = german\n'
+				+'"""\n'
+				+'f(HS) :- HS  = [ h(_,norwegian,_,_,_),    h(blue,_,_,_,_),   h(_,_,_,milk,_), _, _].'
+				+'\n';
+	
+	
+	
+
+	
+	
+	var expected = [
+		{ }
+	];
+	
+	process_rule(text, expected, {show_parsed: true, show_compiled: true, show_db: true});
+	//process_rule(text, expected);
 });

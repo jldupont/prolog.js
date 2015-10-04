@@ -851,6 +851,7 @@ Instruction.prototype.inspect = function(){
 // ============================================================ Errors
 
 function ErrorExpectingFunctor(msg, _args) {
+	this.classname = 'ErrorExpectingFunctor';
 	this.message = msg;
 	this.args = _args;
 };
@@ -858,6 +859,7 @@ ErrorExpectingFunctor.prototype = Error.prototype;
 
 
 function ErrorExpectingVariable(msg, _args) {
+	this.classname = 'ErrorExpectingVariable';
 	this.message = msg;
 	this.args = _args;
 };
@@ -865,18 +867,21 @@ ErrorExpectingVariable.prototype = Error.prototype;
 
 
 function ErrorFunctorNotFound(msg, _args) {
+	this.classname = 'ErrorFunctorNotFound';
 	this.message = msg;
 	this.args = _args;
 };
 ErrorFunctorNotFound.prototype = Error.prototype;
 
 function ErrorFunctorClauseNotFound(msg, _args) {
+	this.classname = 'ErrorFunctorClauseNotFound';
 	this.message = msg;
 	this.args = _args;
 };
 ErrorFunctorClauseNotFound.prototype = Error.prototype;
 
 function ErrorFunctorCodeNotFound(msg, _args) {
+	this.classname = 'ErrorFunctorCodeNotFound';
 	this.message = msg;
 	this.args = _args;
 };
@@ -884,85 +889,107 @@ ErrorFunctorCodeNotFound.prototype = Error.prototype;
 
 
 function ErrorExpectingGoal(msg) {
+	this.classname = 'ErrorExpectingGoal';
 	this.message = msg;
 };
 ErrorExpectingGoal.prototype = Error.prototype;
 
 function ErrorInvalidHead(msg) {
+	this.classname = 'ErrorInvalidHead';
 	this.message = msg;
 };
 ErrorInvalidHead.prototype = Error.prototype;
 
 function ErrorRuleInQuestion(msg) {
+	this.classname = 'ErrorRuleInQuestion';
 	this.message = msg;
 };
 ErrorRuleInQuestion.prototype = Error.prototype;
 
 function ErrorNoMoreInstruction(msg) {
+	this.classname = 'ErrorNoMoreInstruction';
 	this.message = msg;
 };
 ErrorNoMoreInstruction.prototype = Error.prototype;
 
 function ErrorInvalidInstruction(msg) {
+	this.classname = 'ErrorInvalidInstruction';
 	this.message = msg;
 };
 ErrorInvalidInstruction.prototype = Error.prototype;
 
 function ErrorInternal(msg) {
+	this.classname = 'ErrorInternal';
 	this.message = msg;
 };
 ErrorInternal.prototype = Error.prototype;
 
 function ErrorInvalidValue(msg) {
+	this.classname = 'ErrorInvalidValue';
 	this.message = msg;
 };
 ErrorInvalidValue.prototype = Error.prototype;
 
 function ErrorAlreadyBound(msg) {
+	this.classname = 'ErrorAlreadyBound';
 	this.message = msg;
 };
 ErrorAlreadyBound.prototype = Error.prototype;
 
 function ErrorNotBound(msg) {
+	this.classname = 'ErrorNotBound';
 	this.message = msg;
 };
 ErrorNotBound.prototype = Error.prototype;
 
 function ErrorExpectingListStart(msg) {
+	this.classname = 'ErrorExpectingListStart';
 	this.message = msg;
 };
 ErrorExpectingListStart.prototype = Error.prototype;
 
 function ErrorExpectingListEnd(msg) {
+	this.classname = 'ErrorExpectingListEnd';
 	this.message = msg;
 };
 ErrorExpectingListEnd.prototype = Error.prototype;
 
 function ErrorSyntax(msg, type) {
+	this.classname = 'ErrorSyntax';
 	this.message = msg;
 	this.type = type;
 };
 ErrorSyntax.prototype = Error.prototype;
 
 function ErrorInvalidToken(msg) {
+	this.classname = 'ErrorInvalidToken';
 	this.message = msg;
 };
 ErrorInvalidToken.prototype = Error.prototype;
 
 function ErrorUnexpectedParensClose(msg) {
+	this.classname = 'ErrorUnexpectedParensClose';
 	this.message = msg;
 };
 ErrorUnexpectedParensClose.prototype = Error.prototype;
 
 function ErrorUnexpectedPeriod(msg) {
+	this.classname = 'ErrorUnexpectedPeriod';
 	this.message = msg;
 }
 ErrorUnexpectedPeriod.prototype = Error.prototype;
 
 function ErrorUnexpectedEnd(msg) {
+	this.classname = 'ErrorUnexpectedEnd';
 	this.message = msg;
 }
 ErrorUnexpectedEnd.prototype = Error.prototype;
+
+function ErrorUnexpectedListEnd(msg) {
+	this.classname = 'ErrorUnexpectedListEnd';
+	this.message = msg;
+}
+ErrorUnexpectedListEnd.prototype = Error.prototype;
 
 
 if (typeof module!= 'undefined') {
@@ -995,6 +1022,7 @@ if (typeof module!= 'undefined') {
 	
 	module.exports.ErrorExpectingListStart = ErrorExpectingListStart;
 	module.exports.ErrorExpectingListEnd = ErrorExpectingListEnd;
+	module.exports.ErrorUnexpectedListEnd = ErrorUnexpectedListEnd;
 	module.exports.ErrorUnexpectedParensClose = ErrorUnexpectedParensClose;
 	module.exports.ErrorUnexpectedPeriod = ErrorUnexpectedPeriod;
 	module.exports.ErrorUnexpectedEnd = ErrorUnexpectedEnd;
@@ -4058,7 +4086,7 @@ if (typeof module!= 'undefined') {
 /*  global OpNode, Token, Var, Functor, Eos, Result
            ,ErrorExpectingListStart, ErrorExpectingListEnd
            ,ErrorUnexpectedParensClose, ErrorUnexpectedPeriod
-           ,ErrorUnexpectedEnd
+           ,ErrorUnexpectedEnd, ErrorUnexpectedListEnd
  */
 
 /**
@@ -4069,7 +4097,9 @@ if (typeof module!= 'undefined') {
  *  @param token_list: the token_list
  *  @param list_index: the index to start from in the token_list
  */
-function ParserL2(token_list) {
+function ParserL2(token_list, options) {
+	
+	this.options = options || {};
 	
 	this.tokens = token_list;
 	this.index = 0;
@@ -4238,6 +4268,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 
 	var head = maybe_token || this.get_token();
 	
+	console.log("_process_list: ", head);
 	
 	/*
 	 *  Cases:
@@ -4343,6 +4374,8 @@ ParserL2.prototype._process = function( ctx ){
 
 	ctx = ctx || {};
 
+	console.log("_process: ", ctx);
+
 	var expression = new Array();
 	var token = null;
 	var token_next = null;
@@ -4351,6 +4384,8 @@ ParserL2.prototype._process = function( ctx ){
 		
 		// Pop a token from the input list
 		token = this.get_token();
+		
+		console.log("Token: ", token);
 		
 		if (token == null || token instanceof Eos) {
 			
@@ -4364,7 +4399,7 @@ ParserL2.prototype._process = function( ctx ){
 		//  through proper 'list:open'
 		//
 		if (token.name == 'list:close')
-			throw new ErrorExpectingListEnd();
+			throw new ErrorUnexpectedListEnd();
 			
 
 		// We must ensure that a list is transformed

@@ -35,7 +35,7 @@
 /*  global OpNode, Token, Var, Functor, Eos, Result
            ,ErrorExpectingListStart, ErrorExpectingListEnd
            ,ErrorUnexpectedParensClose, ErrorUnexpectedPeriod
-           ,ErrorUnexpectedEnd
+           ,ErrorUnexpectedEnd, ErrorUnexpectedListEnd
  */
 
 /**
@@ -46,7 +46,9 @@
  *  @param token_list: the token_list
  *  @param list_index: the index to start from in the token_list
  */
-function ParserL2(token_list) {
+function ParserL2(token_list, options) {
+	
+	this.options = options || {};
 	
 	this.tokens = token_list;
 	this.index = 0;
@@ -215,6 +217,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 
 	var head = maybe_token || this.get_token();
 	
+	console.log("_process_list: ", head);
 	
 	/*
 	 *  Cases:
@@ -320,6 +323,8 @@ ParserL2.prototype._process = function( ctx ){
 
 	ctx = ctx || {};
 
+	console.log("_process: ", ctx);
+
 	var expression = new Array();
 	var token = null;
 	var token_next = null;
@@ -328,6 +333,8 @@ ParserL2.prototype._process = function( ctx ){
 		
 		// Pop a token from the input list
 		token = this.get_token();
+		
+		console.log("Token: ", token);
 		
 		if (token == null || token instanceof Eos) {
 			
@@ -341,7 +348,7 @@ ParserL2.prototype._process = function( ctx ){
 		//  through proper 'list:open'
 		//
 		if (token.name == 'list:close')
-			throw new ErrorExpectingListEnd();
+			throw new ErrorUnexpectedListEnd();
 			
 
 		// We must ensure that a list is transformed

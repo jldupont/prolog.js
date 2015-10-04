@@ -43,7 +43,7 @@ var process_list = function(text, expected) {
 };
 
 
-var setup = function(text, convert_fact) {
+var setup = function(text, options) {
 
 	Functor.inspect_short_version = false;
 	
@@ -53,12 +53,20 @@ var setup = function(text, convert_fact) {
 	var l = new Lexer(text);
 	var tokens = l.process();
 
-	var t = new ParserL1(tokens, {convert_fact: convert_fact});
+	var t = new ParserL1(tokens);
 	var ttokens = t.process();
 	
-	//console.log(ttokens);
+	if (options.show_parsedl1)
+		console.log("Parsed L1: ", ttokens);
 	
-	var p = new ParserL2(ttokens);
+	var p;
+	
+	try {
+		p = new ParserL2(ttokens);
+	} catch(e) {
+		if (this.options.parserl2_dump)
+			console.log(this.tokens);
+	}
 	
 	var result = p.process();
 		
@@ -103,8 +111,18 @@ var compare = function(input, expected) {
 	return true;
 };
 
-var process = function(text, expected) {
-	var exp = setup(text);
+var process = function(text, expected, options) {
+	
+	options = options || {};
+	
+	var exp;
+	
+	try {
+		exp = setup(text, options);
+	} catch(e) {
+		console.error(e);
+		throw e;
+	}
 	
 	var result = compare(exp, expected);
 	
@@ -546,5 +564,5 @@ it('ParserL2 - list - complex - 3', function(){
 					''
 	                 ];
 	
-	//process(text, expected);
+	process(text, expected, {show_parsedl1: true, parserl2_dump: true});
 });
