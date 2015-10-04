@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-10-03 */
+/*! prolog.js - v0.0.1 - 2015-10-04 */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
 /* global Op, Compiler
@@ -4050,16 +4050,10 @@ if (typeof module!= 'undefined') {
  *  @param token_list: the token_list
  *  @param list_index: the index to start from in the token_list
  */
-function ParserL2(token_list, list_index, maybe_context) {
-	
-	// the resulting terms list
-	//
-	//this.result = [];
+function ParserL2(token_list) {
 	
 	this.tokens = token_list;
-	this.index = list_index || 0;
-	
-	this.context = maybe_context || {};
+	this.index = 0;
 };
 
 /**
@@ -4142,6 +4136,11 @@ ParserL2.preprocess_list = function(input, index) {
 
 ParserL2.nil = new Token('nil');
 
+ParserL2.prototype.replace_previous_token = function(new_token) {
+
+	this.tokens[this.index-1] = new_token;
+	
+};
 
 ParserL2.prototype.next = function() {
 
@@ -4166,23 +4165,6 @@ ParserL2.prototype.regive = function() {
 
 ParserL2.prototype.get_token = function() {
 	
-	/*
-	 *  Swap Token('var', X) ==> Var(X)
-	 */
-	var maybe_translate_var = function(token) {
-		
-		if (token == null)
-			return null;
-		
-		if (token.name == 'var') {
-			var v = new Var(token.value);
-			v.col = token.col;
-			v.line = token.line;
-			return v;
-		};
-		return token;
-	};
-
 	// We are removing at this layer
 	//  because we might want to introduce directives
 	//  at parser layer 1
@@ -4200,7 +4182,7 @@ ParserL2.prototype.get_token = function() {
 	}
 	
 
-	return maybe_translate_var(token);
+	return token;
 };
 
 /**
@@ -4222,22 +4204,6 @@ ParserL2.prototype.process_list = function() {
 	
 	if (token_1_name != 'list:open')
 		throw new ErrorExpectingListStart("Expected the start of a list, got: "+JSON.stringify(token_1));
-	
-	
-	
-	/*
-	 *  Swap Token('var', X) ==> Var(X)
-	 */
-	var proc_token = function(token) {
-		
-		if (token && token.name == 'var') {
-			var v = new Var(token.value);
-			v.col = token.col;
-			v.line = token.line;
-			return v;
-		};
-		return token;
-	};
 	
 	return this._process_list();
 };
@@ -4312,6 +4278,10 @@ ParserL2.prototype._process_list = function(maybe_token){
 
 ParserL2.prototype.process = function(){
 	
+	this._preprocess();
+	
+	this.index = 0;
+	
 	var res;
 	var expressions = [];
 	
@@ -4367,19 +4337,6 @@ ParserL2.prototype._process = function( ctx ){
 		};
 		
 		
-		// Handle the case `(exp...)`
-		//
-		
-		if (token.name == 'parens_open') {
-			token.name = 'functor';
-			token.value = 'expr';
-			token.prec = 0;
-			token.is_operator = false;
-			token.attrs= token.attrs || {};
-			token.attrs.primitive = true;
-		};
-
-		
 		if (token.is_operator) {
 
 			if (ctx.diving_functor && token.name == 'op:conj')
@@ -4407,16 +4364,6 @@ ParserL2.prototype._process = function( ctx ){
 			};
 			
 		}; // token is_operator
-		
-		
-		if (token.value == "+-" || token.value == "-+") {
-			var opn = new OpNode("-", 500);
-			opn.line = token.line;
-			opn.col  = token.col;
-			expression.push( opn );
-			continue;
-		};
-		
 		
 		
 		if (token.name == 'parens_close') {
@@ -4467,17 +4414,6 @@ ParserL2.prototype._process = function( ctx ){
 			continue;
 		};
 		
-		if (token.name == 'term' && token.value == '!') {
-			var fcut = new Functor("cut");
-			fcut.attrs.primitive = true;
-			fcut.original_token = token;
-			fcut.line = token.line;
-			fcut.col  = token.col;
-			expression.push( fcut );
-			continue;
-		};
-		
-		
 		// default is to build the expression 
 		//
 		expression.push( token );
@@ -4488,6 +4424,70 @@ ParserL2.prototype._process = function( ctx ){
 	
 };// process
 
+/**
+ * Perform the first substitution level
+ */
+ParserL2.prototype._preprocess = function() {
+
+	var token;
+	
+	for (;;) {
+		token = this.get_token();
+
+		if (token == null)
+			break;
+			
+		if (token instanceof Eos)
+			break;
+				
+		if (token.name == 'var') {
+			var v = new Var(token.value);
+			v.col = token.col;
+			v.line = token.line;
+			this.replace_previous_token(v);
+			continue;
+		};
+
+		
+				// Handle the case `(exp...)`
+		//
+		
+		if (token.name == 'parens_open') {
+			token.name = 'functor';
+			token.value = 'expr';
+			token.prec = 0;
+			token.is_operator = false;
+			token.attrs= token.attrs || {};
+			token.attrs.primitive = true;
+			continue;
+		};
+
+		
+		if (token.name == 'term' && token.value == '!') {
+			var fcut = new Functor("cut");
+			fcut.attrs.primitive = true;
+			fcut.original_token = token;
+			fcut.line = token.line;
+			fcut.col  = token.col;
+			this.replace_previous_token(fcut);
+			continue;
+		};
+
+		if (token.value == "+-" || token.value == "-+") {
+			var opn = new OpNode("-", 500);
+			opn.line = token.line;
+			opn.col  = token.col;
+			this.replace_previous_token(opn);
+			continue;
+		};
+		
+		
+		
+
+		
+	};
+	
+};
 
 //
 // =========================================================== PRIVATE
