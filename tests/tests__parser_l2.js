@@ -561,8 +561,11 @@ it('ParserL2 - list - complex - 3', function(){
 */
 	var text = "HS = [f(_,a), g(_)].";
 	var expected = [
-					''
+					'Var(HS)'
+  					,'OpNode(`=`,700)'
+  					,'cons(f(Var(_),Token(term,a)),cons(g(Var(_)),Token(nil,null)))'
 	                 ];
 	
-	process(text, expected, {show_parsedl1: true, parserl2_dump: true});
+	//process(text, expected, {show_parsedl1: true, parserl2_dump: true});
+	process(text, expected);
 });

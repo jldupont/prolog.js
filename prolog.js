@@ -4268,7 +4268,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 
 	var head = maybe_token || this.get_token();
 	
-	console.log("_process_list: ", head);
+	//console.log("_process_list: ", head);
 	
 	/*
 	 *  Cases:
@@ -4296,7 +4296,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 	};
 
 	
-	
+	var res;
 	
 	var cons = new Functor('cons');
 		
@@ -4308,7 +4308,8 @@ ParserL2.prototype._process_list = function(maybe_token){
 		
 		if (head.name=='functor') {
 			this.regive()
-			head = this._process({ diving_functor: true })
+			res = this._process({ process_functor: true })
+			head = res.terms;
 		}
 		cons.push_arg( head );
 	}
@@ -4321,7 +4322,8 @@ ParserL2.prototype._process_list = function(maybe_token){
 		
 		if (next_token.name == 'functor') {
 			this.regive()
-			next_token = this._process({ diving_functor: true })
+			res = this._process({ process_functor: true })
+			next_token = res.terms;
 		}
 
 
@@ -4374,7 +4376,7 @@ ParserL2.prototype._process = function( ctx ){
 
 	ctx = ctx || {};
 
-	console.log("_process: ", ctx);
+	//console.log("_process: ", ctx);
 
 	var expression = new Array();
 	var token = null;
@@ -4385,7 +4387,7 @@ ParserL2.prototype._process = function( ctx ){
 		// Pop a token from the input list
 		token = this.get_token();
 		
-		console.log("Token: ", token);
+		//console.log("Token: ", token);
 		
 		if (token == null || token instanceof Eos) {
 			
@@ -4430,6 +4432,7 @@ ParserL2.prototype._process = function( ctx ){
 			// Were we 1 level down accumulating 
 			//  arguments for a functor ?
 			if (ctx.diving_functor) {
+				//console.log("_process: exiting...");
 				return new Result(expression, token);	
 			};
 
@@ -4455,6 +4458,10 @@ ParserL2.prototype._process = function( ctx ){
 			functor_node.original_token = token;
 			functor_node.line = token.line;
 			functor_node.col  = token.col;
+			
+			if (ctx.process_functor) {
+				return new Result(functor_node, token);
+			}
 			
 			expression.push( functor_node );
 			continue;
