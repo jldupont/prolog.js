@@ -340,28 +340,6 @@ ParserL2.prototype._process = function( ctx ){
 				
 		}
 
-		if (token.is_operator) {
-			// Look ahead 1 more token
-			//  in order to handle the `- -` etc. replacements
-			token_next = this.tokens[this.index] || null;
-						
-			if (token_next && token_next.is_operator) {
-				
-				var maybe_replacement_opnode = ParserL2.compute_ops_replacement(token, token_next);
-				if (maybe_replacement_opnode != null) {
-					
-					maybe_replacement_opnode.line = token.line;
-					maybe_replacement_opnode.col  = token.col;
-					
-					expression.push( maybe_replacement_opnode );
-					
-					// Successful replacement ... consume
-					this.index = this.index + 1;
-					continue;
-				}
-			};
-			
-		}; // token is_operator
 		
 		
 		if (token.name == 'parens_close') {
@@ -427,7 +405,7 @@ ParserL2.prototype._process = function( ctx ){
  */
 ParserL2.prototype._preprocess = function() {
 
-	var token;
+	var token, token_next;
 	
 	for (;;) {
 		token = this.get_token();
@@ -482,6 +460,30 @@ ParserL2.prototype._preprocess = function() {
 			this.ptokens.push(opn);
 			continue;
 		};
+
+
+		if (token.is_operator) {
+			// Look ahead 1 more token
+			//  in order to handle the `- -` etc. replacements
+			token_next = this.tokens[this.index] || null;
+						
+			if (token_next && token_next.is_operator) {
+				
+				var maybe_replacement_opnode = ParserL2.compute_ops_replacement(token, token_next);
+				if (maybe_replacement_opnode != null) {
+					
+					maybe_replacement_opnode.line = token.line;
+					maybe_replacement_opnode.col  = token.col;
+					
+					this.ptokens.push( maybe_replacement_opnode );
+					
+					// Successful replacement ... consume
+					this.index = this.index + 1;
+					continue;
+				}
+			};
+			
+		}; // token is_operator
 		
 		
 		this.ptokens.push(token);
