@@ -4054,6 +4054,8 @@ function ParserL2(token_list) {
 	
 	this.tokens = token_list;
 	this.index = 0;
+	
+	this.ptokens = [];
 };
 
 /**
@@ -4279,8 +4281,8 @@ ParserL2.prototype._process_list = function(maybe_token){
 ParserL2.prototype.process = function(){
 	
 	this._preprocess();
-	
 	this.index = 0;
+	this.tokens = this.ptokens;
 	
 	var res;
 	var expressions = [];
@@ -4446,7 +4448,8 @@ ParserL2.prototype._preprocess = function() {
 			var v = new Var(token.value);
 			v.col = token.col;
 			v.line = token.line;
-			this.replace_previous_token(v);
+			//this.replace_previous_token(v);
+			this.ptokens.push(v);
 			continue;
 		};
 
@@ -4461,6 +4464,7 @@ ParserL2.prototype._preprocess = function() {
 			token.is_operator = false;
 			token.attrs= token.attrs || {};
 			token.attrs.primitive = true;
+			this.ptokens.push(token);
 			continue;
 		};
 
@@ -4471,7 +4475,8 @@ ParserL2.prototype._preprocess = function() {
 			fcut.original_token = token;
 			fcut.line = token.line;
 			fcut.col  = token.col;
-			this.replace_previous_token(fcut);
+			//this.replace_previous_token(fcut);
+			this.ptokens.push(fcut);
 			continue;
 		};
 
@@ -4479,12 +4484,13 @@ ParserL2.prototype._preprocess = function() {
 			var opn = new OpNode("-", 500);
 			opn.line = token.line;
 			opn.col  = token.col;
-			this.replace_previous_token(opn);
+			//this.replace_previous_token(opn);
+			this.ptokens.push(opn);
 			continue;
 		};
 		
 		
-		
+		this.ptokens.push(token);
 
 		
 	};
