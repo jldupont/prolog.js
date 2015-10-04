@@ -4341,8 +4341,10 @@ ParserL2.prototype._process = function( ctx ){
 
 			if (ctx.diving_functor && token.name == 'op:conj')
 				continue;
+				
+		}
 
-
+		if (token.is_operator) {
 			// Look ahead 1 more token
 			//  in order to handle the `- -` etc. replacements
 			token_next = this.tokens[this.index] || null;
