@@ -8,7 +8,7 @@
 
 /* global ErrorInvalidInstruction, ErrorNoMoreInstruction
 			,ErrorFunctorNotFound, ErrorFunctorClauseNotFound
-			,ErrorFunctorCodeNotFound
+			,ErrorFunctorCodeNotFound,ErrorExpectingVariable
 			, Var
 			, Utils
 */
@@ -587,6 +587,14 @@ Interpreter.prototype.inst_setup = function() {
  * 
  */
 Interpreter.prototype.inst_bcall = function(inst) {
+
+
+	//  Make the jump in the target environment
+	//
+	this.ctx.cse = this.ctx.tse;
+	
+	// We got this far... so everything is good
+	this.ctx.cu = true;
 	
 	var x0 = this.ctx.tse.vars['$x0'];
 
@@ -791,17 +799,6 @@ Interpreter.prototype.inst_deallocate = function() {
 
 Interpreter.prototype._deallocate = function(){
 	
-	this.stack.pop();
-	
-	// tse goes back to top of stack
-	this.ctx.tse = this.stack[ this.stack.length-1 ];
-};
-
-Interpreter.prototype.inst_fdeallocate = function(){
-
-	if (!this.ctx.cu)
-		this._unwind_trail( this.ctx.tse.trail );
-
 	this.stack.pop();
 	
 	// tse goes back to top of stack
@@ -1528,7 +1525,7 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	//
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
-	//console.log("unif_var: ", value_or_var);
+	console.log("unif_var: ", pv, value_or_var);
 	
 	var that = this;
 	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1) {

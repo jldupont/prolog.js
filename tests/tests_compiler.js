@@ -1253,8 +1253,10 @@ it('Compiler - expression - 2', function(){
      			'put_struct  unif/2, x(0)',
 			     'put_var     p("X")',
 			     'put_number  p(666)',
+			     'setup',
 			     'bcall'       ,
-			     'fdeallocate'  ,
+			     'maybe_retry',
+			     'deallocate'  ,
 			     'proceed'      
 			     ],
 			  g0: 
@@ -1403,7 +1405,7 @@ it('Compiler - complex - 10', function(){
        'allocate'    ,
        'put_struct  select/2, x(0)',
        'put_var     p("As")',
-       'unif_var    p("S1")',
+       'put_var     p("S1")',
        'setup'       ,
        'call'        ,
        'maybe_retry' ,
@@ -1422,8 +1424,8 @@ it('Compiler - complex - 10', function(){
     a: 2 }
 	];
 	
-	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_db: true});
-	process_rule(text, expected);
+	process_rule(text, expected, {show_parsed: true, show_compiled: true, show_db: true});
+	//process_rule(text, expected);
 });
 
 it('Compiler - complex - 11', function(){
@@ -1496,8 +1498,10 @@ it('Compiler - complex - 11', function(){
 	     'put_struct  unif/2, x(0)',
 	     'put_var     p("HS")',
 	     'put_value   x(8)',
+	     'setup',
 	     'bcall       ',
-	     'fdeallocate'  ,
+	     'maybe_retry',
+	     'deallocate'  ,
 	     'proceed'
 	     ]
 		}

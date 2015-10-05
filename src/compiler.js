@@ -280,6 +280,7 @@ Compiler.prototype.process_query = function(exp) {
  */
 Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 	
+	var vars = head_vars;
 	var map = {};
 	var result = {};
 	var merges = {};
@@ -436,7 +437,7 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 		if (type == 'root') {
 			label = 'g0';
 			
-			result[label] = that.process_goal( ctx.n, is_query, head_vars );
+			result[label] = that.process_goal( ctx.n, is_query, vars );
 			return;
 		}
 		
@@ -448,8 +449,8 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 		 *     type:  conj | disj
 		 */
 		
-		var lcode = that.process_goal(left_or_root.n, is_query, head_vars);
-		var rcode = that.process_goal(right_maybe.n, is_query, head_vars);
+		var lcode = that.process_goal(left_or_root.n, is_query, vars);
+		var rcode = that.process_goal(right_maybe.n, is_query, vars);
 
 		
 		// CAUTION: lcode/rcode *may* be undefined
@@ -500,9 +501,9 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
  *   the rest of the expression is treated as a structure.
  *   
  */
-Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
+Compiler.prototype.process_goal = function(exp, is_query, vars) {
 	
-	head_vars = head_vars || {};
+	vars = vars || {};
 	
 	if (exp == undefined)
 		return undefined;
@@ -519,7 +520,7 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 	
 	
 	if (exp.attrs.primitive) {
-		return this.process_primitive(exp, is_query, head_vars);
+		return this.process_primitive(exp, is_query, vars);
 	}
 	
 	
@@ -547,10 +548,13 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 				if (n.name[0] == "_")
 					results.push(new Instruction("put_void"));
 				else
-					if (head_vars[n.name] || is_query)
+					if (vars[n.name] || is_query) {
 						results.push(new Instruction("put_var", {p: n.name}));
-					else 
+					}
+					else {
 						results.push(new Instruction("unif_var", {p: n.name}));
+						vars[n.name] = true;
+					}
 			}
 
 			if (n instanceof Value) {
@@ -575,9 +579,10 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 		if (ctx.root) {
 			
 			if (ctx.n.attrs.builtin) {
-				//results.push(new Instruction('setup'));
+				results.push(new Instruction('setup'));
 				results.push(new Instruction('bcall'));
-				results.push(new Instruction('fdeallocate'));
+				results.push(new Instruction('maybe_retry'));
+				results.push(new Instruction('deallocate'));
 			} else {
 				results.push(new Instruction('setup'));
 				results.push(new Instruction('call'));
@@ -598,7 +603,7 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 	return results;
 };
 
-Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
+Compiler.prototype.process_primitive = function(exp, is_query, vars) {
 
 	
 	var v = new Visitor2(exp);
@@ -625,6 +630,7 @@ Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 			
 			if (n instanceof Var) {
 				results.push(new Instruction("push_var", {p: n.name}));
+				vars[n.name] = true;
 			}
 
 			if (n instanceof Value) {
