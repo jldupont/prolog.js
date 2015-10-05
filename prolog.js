@@ -1914,6 +1914,11 @@ if (typeof module!= 'undefined') {
 };
 
 
+/* global ErrorInvalidInstruction, ErrorNoMoreInstruction
+			,ErrorFunctorNotFound, ErrorFunctorClauseNotFound
+			,ErrorFunctorCodeNotFound,
+*/
+
 /**
  * Interpreter
  * @constructor
@@ -2044,7 +2049,7 @@ Interpreter.prototype.set_question = function(question_code){
 	 *   The definitions contained herein
 	 *    apply to all environment stack frames.
 	 */
-	qenv = {
+	var qenv = {
 
 		qenv: true
 
@@ -2474,8 +2479,36 @@ Interpreter.prototype.inst_setup = function() {
 	
 	// Initialize the clause index
 	//
-	this.ctx.tse.p.ci = 0; //this.ctx.tse.p.ci || 0;
+	this.ctx.tse.p.ci = 0; 
 	this.ctx.tse.p.ct = 0;
+};
+
+/**
+ *   Instruction "bcall"
+ * 
+ *   Calling builtin functors
+ * 
+ *   x0 contains the functor recognized
+ *      as builtin.
+ * 
+ */
+Interpreter.prototype.inst_bcall = function(inst) {
+	
+	var bname = this.ctx.tse.vars['$x0'].name;
+	
+	var bfunc = this["builtin_"+bname];
+	if (!bfunc)
+		throw new ErrorFunctorNotFound(bname);
+		
+	bfunc(inst);
+	
+};
+
+Interpreter.prototype.builtin_unif = function(inst) {
+	
+	console.log("--- BUILTIN: unif");
+	
+	
 };
 
 
