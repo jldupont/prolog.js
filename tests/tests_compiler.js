@@ -1249,10 +1249,13 @@ it('Compiler - expression - 2', function(){
 			  g4: 
 			   [ 
 			     'try_finally' ,
-			     'prepare'     ,
-			     'push_var    p("X")',
-			     'push_number p(666)',
-			     'op_unif'     ,
+			     'allocate'    ,
+     			'put_struct  unif/2, x(0)',
+			     'put_var     p("X")',
+			     'put_number  p(666)',
+			     'setup'       ,
+			     'bcall'       ,
+			     'deallocate'  ,
 			     'proceed'      
 			     ],
 			  g0: 
@@ -1448,9 +1451,60 @@ it('Compiler - complex - 11', function(){
 	
 	
 	var expected = [
-		{ }
+		{ 
+	head: 
+	   [ 
+	   	'get_struct  f/1, x(0)',
+	     'get_var     p("HS")',
+	     'jump        p("g0")'
+	     ],
+	  g0: 
+	   [ 
+	   	'allocate    ',
+	     'put_struct  h/5, x(1)',
+	     'put_void    ',
+	     'put_term    p("norwegian")',
+	     'put_void    ',
+	     'put_void    ',
+	     'put_void    ',
+	     'put_struct  h/5, x(2)',
+	     'put_term    p("blue")',
+	     'put_void    ',
+	     'put_void    ',
+	     'put_void    ',
+	     'put_void    ',
+	     'put_struct  h/5, x(3)',
+	     'put_void    ',
+	     'put_void    ',
+	     'put_void    ',
+	     'put_term    p("milk")',
+	     'put_void    ',
+	     'put_struct  cons/2, x(4)',
+	     'put_void    ',
+	     'put_nil     ',
+	     'put_struct  cons/2, x(5)',
+	     'put_void    ',
+	     'put_value   x(4)',
+	     'put_struct  cons/2, x(6)',
+	     'put_value   x(3)',
+	     'put_value   x(5)',
+	     'put_struct  cons/2, x(7)',
+	     'put_value   x(2)',
+	     'put_value   x(6)',
+	     'put_struct  cons/2, x(8)',
+	     'put_value   x(1)',
+	     'put_value   x(7)',
+	     'put_struct  unif/2, x(0)',
+	     'put_var     p("HS")',
+	     'put_value   x(8)',
+	     'setup       ',
+	     'bcall       ',
+	     'deallocate'  ,
+	     'proceed'
+	     ]
+		}
 	];
 	
-	process_rule(text, expected, {show_parsed: true, show_compiled: true, show_db: true});
-	//process_rule(text, expected);
+	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_db: true});
+	process_rule(text, expected);
 });

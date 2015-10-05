@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-10-04 */
+/*! prolog.js - v0.0.1 - 2015-10-05 */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
 /* global Op, Compiler
@@ -247,7 +247,7 @@ Op._list = [
 	    new Op("rule",    ':-', 1200, 'xfx')
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
-	   ,new Op("unif",    '=',   700, 'xfx', {primitive: true, boolean: true})
+	   ,new Op("unif",    '=',   700, 'xfx', {builtin:   true, boolean: true})
 	   ,new Op("em",      '=<',  700, 'xfx', {primitive: true, boolean: true})
 	   ,new Op("ge",      '>=',  700, 'xfx', {primitive: true, boolean: true})
 	   ,new Op("lt",      '<',   700, 'xfx', {primitive: true, boolean: true})
@@ -1591,10 +1591,17 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 		//
 		if (ctx.root) {
 			
-			results.push(new Instruction('setup'));
-			results.push(new Instruction('call'));
-			results.push(new Instruction('maybe_retry'));
-			results.push(new Instruction('deallocate'));
+			if (ctx.n.attrs.builtin) {
+				results.push(new Instruction('setup'));
+				results.push(new Instruction('bcall'));
+				results.push(new Instruction('deallocate'));
+			} else {
+				results.push(new Instruction('setup'));
+				results.push(new Instruction('call'));
+				results.push(new Instruction('maybe_retry'));
+				results.push(new Instruction('deallocate'));
+			}
+			
 			
 			if (is_query)
 				results.push(new Instruction('end'));
@@ -1617,6 +1624,7 @@ Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 
 	v.process(function(ctx){
 
+		//console.log("*** ctx:  ",ctx);
 		
 		var op_name = ctx.n.name;
 		
@@ -1630,29 +1638,30 @@ Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 			
 			var n = ctx.args[index];
 			
+			//console.log("+++ n: ", n);
+			
 			if (n instanceof Var) {
-				//if (n.name[0] == "_")
-				//	throw new ErrorInvalidToken("Anon Var");
-				//else
-					results.push(new Instruction("push_var", {p: n.name}));
-			};
+				results.push(new Instruction("push_var", {p: n.name}));
+			}
 
 			if (n instanceof Value) {
 				results.push(new Instruction("push_value", {y: n.name}));
-			};
+			}
 			
 			if (n instanceof Token) {
 				if (n.name == 'number')
 					results.push(new Instruction("push_number", {p: n.value}));
 				
 				if (n.name == 'term')
+					//results.push(new Instruction("push_term", {p:n.value}));
 					throw new ErrorInvalidToken("term: "+JSON.stringify(n.value));
 				
 				if (n.name == 'nil')
+					//results.push(new Instruction("push_nil"));
 					throw new ErrorInvalidToken("nil");
-			};
+			}
 			
-		};//for
+		}//for
 		
 		var inst_name = "op_"+op_name;
 		
@@ -2465,8 +2474,8 @@ Interpreter.prototype.inst_setup = function() {
 	
 	// Initialize the clause index
 	//
-	this.ctx.tse.p.ci = this.ctx.tse.p.ci || 0;
-	
+	this.ctx.tse.p.ci = 0; //this.ctx.tse.p.ci || 0;
+	this.ctx.tse.p.ct = 0;
 };
 
 

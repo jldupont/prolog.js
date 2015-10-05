@@ -412,6 +412,7 @@ it('Interpreter - batch2 - complex - 2', function(){
 	//console.log("\n\n\n ~~~~~~~~~~~~~~~ Interpreter - batch2 - complex - 2");
 	
 	Functor.inspect_compact_version = true;
+	Var.inspect_compact = false;
 	Var.inspect_extended = false;
 	
 	/*
@@ -768,30 +769,33 @@ it('Interpreter - Disj - 1', function(){
 it('Interpreter - primitive - 1', function(){
 
 	/*
-			p/1  code ==>  [ { head: 
-			     [ get_struct  p/1, x(0),
-			       get_var     p("X"),
-			       jump        p("g0") ],
-			    g0: 
-			     [ prepare     ,
-			       push_var    p("X"),
-			       push_number p(1),
-			       op_unif     ,
-			       proceed      ],
-			    f: 'p',
-			    a: 1 } ]
-			
-			
-			 .q./0  code ==>  [ { g0: 
-			     [ allocate    ,
-			       put_struct  p/1, x(0),
-			       put_number  p(1),
-			       setup       ,
-			       call        ,
-			       maybe_retry ,
-			       deallocate  ,
-			       end          ] } ]
-	 */
+		p/1  code ==>  [ { head: 
+		     [ get_struct  p/1, x(0),
+		       get_var     p("X"),
+		       jump        p("g0") ],
+		    g0: 
+		     [ allocate    ,
+		       put_struct  unif/2, x(0),
+		       put_var     p("X"),
+		       put_number  p(1),
+		       setup       ,
+		       bcall       ,
+		       deallocate  ,
+		       proceed      ],
+		    f: 'p',
+		    a: 1 } ]
+		
+		
+		 .q./0  code ==>  [ { g0: 
+		     [ allocate    ,
+		       put_struct  p/1, x(0),
+		       put_number  p(1),
+		       setup       ,
+		       call        ,
+		       maybe_retry ,
+		       deallocate  ,
+		       end          ] } ]
+       */
 	
 	var rules = [
 	             "p(X):- X = 1."
@@ -808,8 +812,8 @@ it('Interpreter - primitive - 1', function(){
 	Var.inspect_extended = true;
 	Var.inspect_compact = false;
 	
-	test(rules, query, expected);
-	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected);
+	test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
 	//test(rules, query, expected, { tracer: call_tracer });

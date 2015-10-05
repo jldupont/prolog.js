@@ -574,10 +574,17 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 		//
 		if (ctx.root) {
 			
-			results.push(new Instruction('setup'));
-			results.push(new Instruction('call'));
-			results.push(new Instruction('maybe_retry'));
-			results.push(new Instruction('deallocate'));
+			if (ctx.n.attrs.builtin) {
+				results.push(new Instruction('setup'));
+				results.push(new Instruction('bcall'));
+				results.push(new Instruction('deallocate'));
+			} else {
+				results.push(new Instruction('setup'));
+				results.push(new Instruction('call'));
+				results.push(new Instruction('maybe_retry'));
+				results.push(new Instruction('deallocate'));
+			}
+			
 			
 			if (is_query)
 				results.push(new Instruction('end'));
@@ -600,6 +607,7 @@ Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 
 	v.process(function(ctx){
 
+		//console.log("*** ctx:  ",ctx);
 		
 		var op_name = ctx.n.name;
 		
@@ -613,29 +621,30 @@ Compiler.prototype.process_primitive = function(exp, is_query, head_vars) {
 			
 			var n = ctx.args[index];
 			
+			//console.log("+++ n: ", n);
+			
 			if (n instanceof Var) {
-				//if (n.name[0] == "_")
-				//	throw new ErrorInvalidToken("Anon Var");
-				//else
-					results.push(new Instruction("push_var", {p: n.name}));
-			};
+				results.push(new Instruction("push_var", {p: n.name}));
+			}
 
 			if (n instanceof Value) {
 				results.push(new Instruction("push_value", {y: n.name}));
-			};
+			}
 			
 			if (n instanceof Token) {
 				if (n.name == 'number')
 					results.push(new Instruction("push_number", {p: n.value}));
 				
 				if (n.name == 'term')
+					//results.push(new Instruction("push_term", {p:n.value}));
 					throw new ErrorInvalidToken("term: "+JSON.stringify(n.value));
 				
 				if (n.name == 'nil')
+					//results.push(new Instruction("push_nil"));
 					throw new ErrorInvalidToken("nil");
-			};
+			}
 			
-		};//for
+		}//for
 		
 		var inst_name = "op_"+op_name;
 		

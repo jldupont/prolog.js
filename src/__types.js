@@ -180,7 +180,7 @@ Op._list = [
 	    new Op("rule",    ':-', 1200, 'xfx')
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
-	   ,new Op("unif",    '=',   700, 'xfx', {primitive: true, boolean: true})
+	   ,new Op("unif",    '=',   700, 'xfx', {builtin:   true, boolean: true})
 	   ,new Op("em",      '=<',  700, 'xfx', {primitive: true, boolean: true})
 	   ,new Op("ge",      '>=',  700, 'xfx', {primitive: true, boolean: true})
 	   ,new Op("lt",      '<',   700, 'xfx', {primitive: true, boolean: true})

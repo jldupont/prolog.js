@@ -567,8 +567,8 @@ Interpreter.prototype.inst_setup = function() {
 	
 	// Initialize the clause index
 	//
-	this.ctx.tse.p.ci = this.ctx.tse.p.ci || 0;
-	
+	this.ctx.tse.p.ci = 0; //this.ctx.tse.p.ci || 0;
+	this.ctx.tse.p.ct = 0;
 };
 
 
