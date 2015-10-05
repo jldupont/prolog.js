@@ -8,7 +8,9 @@
 
 /* global ErrorInvalidInstruction, ErrorNoMoreInstruction
 			,ErrorFunctorNotFound, ErrorFunctorClauseNotFound
-			,ErrorFunctorCodeNotFound,
+			,ErrorFunctorCodeNotFound
+			, Var
+			, Utils
 */
 
 /**
@@ -27,7 +29,7 @@ function Interpreter(db, optional_stack) {
 	this.tracer = null;
 	this.reached_end_question = false;
 	
-};
+}
 
 Interpreter.prototype.get_stack = function(){
 	return this.stack;
@@ -586,20 +588,42 @@ Interpreter.prototype.inst_setup = function() {
  */
 Interpreter.prototype.inst_bcall = function(inst) {
 	
-	var bname = this.ctx.tse.vars['$x0'].name;
+	//  Make the jump in the target environment
+	//
+	this.ctx.cse = this.ctx.tse;
+
+	var x0 = this.ctx.tse.vars['$x0'];
+
+	this.ctx.tse.vars = {};
+	this.ctx.tse.vars['$x0'] = x0;
+	
+	var bname = x0.name;
 	
 	var bfunc = this["builtin_"+bname];
 	if (!bfunc)
 		throw new ErrorFunctorNotFound(bname);
 		
-	bfunc(inst);
+	bfunc.apply(this, [x0]);
 	
 };
 
-Interpreter.prototype.builtin_unif = function(inst) {
+Interpreter.prototype.builtin_unif = function(x0) {
 	
-	console.log("--- BUILTIN: unif");
+	//console.log("--- BUILTIN: unif: ", x0);
 	
+	var left  = x0.args[0];
+	var right = x0.args[1];
+	
+	console.log("--- BUILTIN: Unif: ", left, right);
+	
+	var that = this;
+	this.ctx.cu = Utils.unify(left, right, function(t1) {
+			
+			// we are in the `head` and thus we accumulate the trail
+			//  in the current environment context
+			//
+			that.maybe_add_to_trail(that.ctx.cse.trail, t1);
+		});
 	
 };
 

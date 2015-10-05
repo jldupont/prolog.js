@@ -846,6 +846,8 @@ it('Interpreter - primitive - 2', function(){
 
 it('Interpreter - primitive - 3', function(){
 
+	console.log("\n Interpreter - primitive - 3 \n");
+
 	var rules = [
 	             "p(X):- X1 is 1, X1 = X."
 				
@@ -862,8 +864,8 @@ it('Interpreter - primitive - 3', function(){
 	Var.inspect_extended = true;
 	Var.inspect_compact = true;
 	
-	test(rules, query, expected);
-	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected);
+	test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
 	//test(rules, query, expected, { tracer: call_tracer });
