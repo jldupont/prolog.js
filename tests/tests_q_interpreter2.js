@@ -812,8 +812,8 @@ it('Interpreter - primitive - 1', function(){
 	Var.inspect_extended = true;
 	Var.inspect_compact = false;
 	
-	//test(rules, query, expected);
-	test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
 	//test(rules, query, expected, { tracer: call_tracer });
