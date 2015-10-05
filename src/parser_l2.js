@@ -136,11 +136,6 @@ ParserL2.preprocess_list = function(input, index) {
 
 ParserL2.nil = new Token('nil');
 
-ParserL2.prototype.replace_previous_token = function(new_token) {
-
-	this.tokens[this.index-1] = new_token;
-	
-};
 
 ParserL2.prototype.next = function() {
 
@@ -150,11 +145,6 @@ ParserL2.prototype.next = function() {
 	return token;	
 };
 
-ParserL2.prototype.peek_next = function() {
-
-	var token = this.tokens[this.index] || null;
-	return token;	
-};
 
 ParserL2.prototype.regive = function() {
 
@@ -203,7 +193,7 @@ ParserL2.prototype.process_list = function() {
 		return token_1;
 	
 	if (token_1_name != 'list:open')
-		throw new ErrorExpectingListStart("Expected the start of a list, got: "+JSON.stringify(token_1));
+		throw new ErrorExpectingListStart("Expected the start of a list, got: "+JSON.stringify(token_1), token_1);
 	
 	return this._process_list();
 };
@@ -280,7 +270,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 		
 		next_token = this.get_token();
 		if (next_token.name != 'list:close')
-			throw new ErrorExpectingListEnd("Expecting list end, got:" + JSON.stringify(next_token));
+			throw new ErrorExpectingListEnd("Expecting list end, got:" + JSON.stringify(next_token), next_token);
 		
 		return cons;
 	};
@@ -336,12 +326,10 @@ ParserL2.prototype._process = function( ctx ){
 		// Pop a token from the input list
 		token = this.get_token();
 		
-		//console.log("Token: ", token);
-		
 		if (token == null || token instanceof Eos) {
 			
 			if (ctx.diving_functor)
-				throw new ErrorUnexpectedEnd();
+				throw new ErrorUnexpectedEnd("Within a Functor definition", token);
 			
 			return new Result(expression, token);
 		}
@@ -350,7 +338,7 @@ ParserL2.prototype._process = function( ctx ){
 		//  through proper 'list:open'
 		//
 		if (token.name == 'list:close')
-			throw new ErrorUnexpectedListEnd();
+			throw new ErrorUnexpectedListEnd("Close list within corresponding Open list", token);
 			
 
 		// We must ensure that a list is transformed
@@ -385,7 +373,7 @@ ParserL2.prototype._process = function( ctx ){
 				return new Result(expression, token);	
 			};
 
-			throw new ErrorUnexpectedParensClose();
+			throw new ErrorUnexpectedParensClose("Parens close without corresponding parens open", token);
 		};
 
 
@@ -393,7 +381,7 @@ ParserL2.prototype._process = function( ctx ){
 		if (token.name == 'period') {
 			
 			if (ctx.diving_functor)
-				throw new ErrorUnexpectedPeriod();
+				throw new ErrorUnexpectedPeriod("Unexpected period within Functor definition", token);
 				
 			return new Result(expression, token);
 		};

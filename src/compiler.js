@@ -39,7 +39,7 @@ function Compiler() {}
 Compiler.prototype.process_rule_or_fact = function(exp) {
 	
 	if (!(exp instanceof Functor))
-		throw new ErrorExpectingFunctor("Expecting Functor, got: "+JSON.stringify(exp));
+		throw new ErrorExpectingFunctor("Expecting Functor, got: "+JSON.stringify(exp), exp);
 	
 	if (exp.name == 'rule')
 		return this.process_rule(exp);
@@ -113,13 +113,13 @@ Compiler.prototype.process_rule = function(exp) {
 Compiler.prototype.process_head = function(exp, with_body) {
 	
 	if (!(exp instanceof Functor))
-		throw new ErrorExpectingFunctor();
+		throw new ErrorExpectingFunctor("Expecting Functor", exp);
 	
 	// Of course we can't be seeing conjunctions or disjunctions
 	//  in the head of a rule.
 	//
 	if (exp.name == 'conj' || (exp.name == 'disj'))
-		throw new ErrorInvalidHead();
+		throw new ErrorInvalidHead("Unexpected conjunction or disjunction within Functor head", exp);
 	
 	var v = new Visitor(exp);
 	
@@ -252,10 +252,10 @@ Compiler.prototype.process_head = function(exp, with_body) {
 Compiler.prototype.process_query = function(exp) {
 	
 	if (!(exp instanceof Functor))
-		throw new ErrorExpectingFunctor();
+		throw new ErrorExpectingFunctor("Expecting Functor", exp);
 	
 	if (exp.name == 'rule')
-		throw new ErrorRuleInQuestion();
+		throw new ErrorRuleInQuestion("Unexpected rule definition in query", exp);
 	
 	var is_query = true;
 	return this.process_body(exp, is_query);
@@ -643,11 +643,11 @@ Compiler.prototype.process_primitive = function(exp, is_query, vars) {
 				
 				if (n.name == 'term')
 					//results.push(new Instruction("push_term", {p:n.value}));
-					throw new ErrorInvalidToken("term: "+JSON.stringify(n.value));
+					throw new ErrorInvalidToken("term: "+JSON.stringify(n.value), n);
 				
 				if (n.name == 'nil')
 					//results.push(new Instruction("push_nil"));
-					throw new ErrorInvalidToken("nil");
+					throw new ErrorInvalidToken("nil", n);
 			}
 			
 		}//for

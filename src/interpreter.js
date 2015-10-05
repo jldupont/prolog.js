@@ -9,7 +9,8 @@
 /* global ErrorInvalidInstruction, ErrorNoMoreInstruction
 			,ErrorFunctorNotFound, ErrorFunctorClauseNotFound
 			,ErrorFunctorCodeNotFound,ErrorExpectingVariable
-			, Var, Token
+			, ErrorErrorNotBound, ErrorInvalidToken, ErrorInternal
+			, Var, Token, Functor
 			, Utils
 */
 
@@ -275,7 +276,7 @@ Interpreter.prototype.step = function() {
 	
 	var fnc = this[fnc_name];
 	if (!fnc)
-		throw new ErrorInvalidInstruction(inst.opcode);
+		throw new ErrorInvalidInstruction(inst.opcode, inst);
 
 	if (this.tracer) {
 		this.tracer('before_inst', this, inst);
@@ -314,7 +315,7 @@ Interpreter.prototype.fetch_next_instruction = function(){
 	
 	// A jump should have occurred in the code anyways
 	//
-	throw new ErrorNoMoreInstruction("No More Instruction");
+	throw new ErrorNoMoreInstruction("No More Instruction", inst);
 };
 
 /**
@@ -331,31 +332,29 @@ Interpreter.prototype.fetch_next_instruction = function(){
  */
 Interpreter.prototype._get_code = function(functor_name, arity, clause_index) {
 	
-	//console.log(">>> GET CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index);
-	
 	var result = {};
 	
 	var clauses;
-	var clauses_count;
-	
+
 	try {
 		clauses = this.db.get_code(functor_name, arity);
 		result.ct = clauses.length;
 	} catch(e) {
-		throw new ErrorFunctorNotFound("Functor not found: "+functor_name+"/"+arity);
+		var fname = functor_name+"/"+arity;
+		throw new ErrorFunctorNotFound("Functor not found: "+fname, fname);
 	};
 	
 	if (clause_index >= result.ct) {
-		throw new ErrorFunctorClauseNotFound("Functor clause not found: "+functor_name+"/"+arity);
+		var fname = functor_name+"/"+arity;
+		throw new ErrorFunctorClauseNotFound("Functor clause not found: "+fname, fname);
 	};
 	
 	result.cc = clauses[clause_index];
 	
-	if (!result.cc)
-		return ErrorFunctorCodeNotFound("Functor clause code not found: "+functor_name+"/"+arity);
-	
-	//console.log(">>> GOT CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index, " CODE: ", result);
-	//console.log(">>> GOT CODE: ", functor_name+"/"+arity, clause_index, " clause: ",clause_index);
+	if (!result.cc) {
+		var fname = functor_name+"/"+arity;
+		return ErrorFunctorCodeNotFound("Functor clause code not found: "+fname, fname);
+	}
 	
 	return result;
 	
@@ -605,7 +604,7 @@ Interpreter.prototype.inst_bcall = function(inst) {
 	
 	var bfunc = this["builtin_"+bname];
 	if (!bfunc)
-		throw new ErrorFunctorNotFound(bname);
+		throw new ErrorFunctorNotFound(bname, bname);
 		
 	bfunc.apply(this, [x0]);
 	
@@ -986,7 +985,7 @@ Interpreter.prototype._get_value = function(token) {
 	if (token instanceof Var) {
 		var dvar = token.deref();
 		if (!dvar.is_bound())
-			throw new ErrorErrorNotBound("Expecting bound variable for: "+token.name);
+			throw new ErrorErrorNotBound("Expecting bound variable for: "+token.name, token);
 		
 		// not the prettiest solution I know
 		token = dvar.get_value();
@@ -1000,7 +999,7 @@ Interpreter.prototype._get_value = function(token) {
 		if (token.name == 'number')
 			return token.value;
 	
-	throw new ErrorInvalidToken("Invalid Token: Got: "+JSON.stringify(token));
+	throw new ErrorInvalidToken("Invalid Token: Got: "+JSON.stringify(token), token);
 };
 
 /**
@@ -1089,7 +1088,7 @@ Interpreter.prototype._exit = function() {
  *   $x0.arg[1] ==> rvalue
  *   
  */
-Interpreter.prototype.inst_op_is = function(_inst) {
+Interpreter.prototype.inst_op_is = function(inst) {
 
 	var y0 = this.ctx.cse.vars["$y0"];
 	
@@ -1098,7 +1097,7 @@ Interpreter.prototype.inst_op_is = function(_inst) {
 	var rval = y0.args[1];
 
 	if (!(lvar instanceof Var))
-		throw new ErrorExpectingVariable("Expecting a variable as lvalue of `is`, got: "+JSON.stringify(lvar));
+		throw new ErrorExpectingVariable("Expecting a variable as lvalue of `is`, got: "+JSON.stringify(lvar), inst);
 	
 	// lvar is not supposed to be bound yet!
 	//
@@ -1622,7 +1621,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 		 *  this means something is terribly wrong,
 		 *  probably a bug in the compiler.
 		 */
-		throw new ErrorInternal("Attempting to 'get_struct' again on same argument: " + x);
+		throw new ErrorInternal("Attempting to 'get_struct' again on same argument: " + x, inst);
 	};
 	
 	var fname  = inst.get('f');
