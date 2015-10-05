@@ -1923,7 +1923,7 @@ if (typeof module!= 'undefined') {
 /* global ErrorInvalidInstruction, ErrorNoMoreInstruction
 			,ErrorFunctorNotFound, ErrorFunctorClauseNotFound
 			,ErrorFunctorCodeNotFound,ErrorExpectingVariable
-			, Var
+			, Var, Token
 			, Utils
 */
 
@@ -2532,7 +2532,9 @@ Interpreter.prototype.builtin_unif = function(x0) {
 	var left  = x0.args[0];
 	var right = x0.args[1];
 	
-	console.log("--- BUILTIN: Unif: ", left, right);
+	//console.log("--- BUILTIN: typeof left:  ", typeof left.value);
+	//console.log("--- BUILTIN: typeof right: ", typeof right.value);
+	//console.log("--- BUILTIN: Unif: ", JSON.stringify(left), JSON.stringify(right));
 	
 	var that = this;
 	this.ctx.cu = Utils.unify(left, right, function(t1) {
@@ -2543,6 +2545,8 @@ Interpreter.prototype.builtin_unif = function(x0) {
 			that.maybe_add_to_trail(that.ctx.cse.trail, t1);
 		});
 	
+	//console.log("---- BCALL result: ", typeof this.ctx.cu);
+	//console.log("---- BCALL result: ", this.ctx.cu);
 };
 
 
@@ -3438,8 +3442,6 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	// Get from the structure being worked on
 	//
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
-	
-	console.log("unif_var: ", pv, value_or_var);
 	
 	var that = this;
 	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1) {
@@ -4884,6 +4886,10 @@ if (typeof module!= 'undefined') {
 	module.exports.ParserL3 = ParserL3;
 };
 
+/*
+  global Var, Token, Functor
+*/
+
 function Utils() {};
 
 /**
@@ -5060,7 +5066,7 @@ Utils.unify = function(t1, t2, on_bind) {
 	*/
 	
 	//console.log("\n");
-	//console.log("++++ Utils.Unify: t1 = ",t1);
+	//console.log("++++ Utils.Unify: t1,t2 : ",t1, t2);
 	//console.log("++++ Utils.Unify: t2 = ",t2);
 	
 	/*
@@ -5068,7 +5074,7 @@ Utils.unify = function(t1, t2, on_bind) {
 	 *    null == null
 	 */
 	if (t1 == t2) {
-		//console.log("Unify: ",t1,t2);
+		//console.log("Unify t1==t2 : ",t1,t2);
 		return true;
 	}
 		
@@ -5146,11 +5152,22 @@ Utils.unify = function(t1, t2, on_bind) {
 		return true;
 	};
 	
-	if (t1 instanceof Token && t2 instanceof Token) {
-		return t1.value == t2.value;
-	};
+	//if (t1 instanceof Token && t2 instanceof Token) {
+	//	return t1.value == t2.value;
+	//};
 	
-	return false;
+	var t1val, t2val;
+	if (t1 instanceof Token)
+		t1val = t1.value;
+	else 
+		t1val = t1;
+		
+	if (t2 instanceof Token)
+		t2val = t2.value;
+	else
+		t2val = t2;
+	
+	return t1val == t2val;
 }; // unify
 
 Utils.pad = function(string, width, what_char) {

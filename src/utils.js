@@ -8,6 +8,10 @@
  * 
  **/
 
+/*
+  global Var, Token, Functor
+*/
+
 function Utils() {};
 
 /**
@@ -184,7 +188,7 @@ Utils.unify = function(t1, t2, on_bind) {
 	*/
 	
 	//console.log("\n");
-	//console.log("++++ Utils.Unify: t1 = ",t1);
+	//console.log("++++ Utils.Unify: t1,t2 : ",t1, t2);
 	//console.log("++++ Utils.Unify: t2 = ",t2);
 	
 	/*
@@ -192,7 +196,7 @@ Utils.unify = function(t1, t2, on_bind) {
 	 *    null == null
 	 */
 	if (t1 == t2) {
-		//console.log("Unify: ",t1,t2);
+		//console.log("Unify t1==t2 : ",t1,t2);
 		return true;
 	}
 		
@@ -270,11 +274,22 @@ Utils.unify = function(t1, t2, on_bind) {
 		return true;
 	};
 	
-	if (t1 instanceof Token && t2 instanceof Token) {
-		return t1.value == t2.value;
-	};
+	//if (t1 instanceof Token && t2 instanceof Token) {
+	//	return t1.value == t2.value;
+	//};
 	
-	return false;
+	var t1val, t2val;
+	if (t1 instanceof Token)
+		t1val = t1.value;
+	else 
+		t1val = t1;
+		
+	if (t2 instanceof Token)
+		t2val = t2.value;
+	else
+		t2val = t2;
+	
+	return t1val == t2val;
 }; // unify
 
 Utils.pad = function(string, width, what_char) {

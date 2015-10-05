@@ -1417,15 +1417,15 @@ it('Compiler - complex - 10', function(){
   { head: 
      [ 'get_struct  select/2, x(0)',
        'unif_nil'    ,
-       'get_var     p("_$177")',
+       'get_var     p("_$181")',
        'proceed'
         ],
     f: 'select',
     a: 2 }
 	];
 	
-	process_rule(text, expected, {show_parsed: true, show_compiled: true, show_db: true});
-	//process_rule(text, expected);
+	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_db: true});
+	process_rule(text, expected);
 });
 
 it('Compiler - complex - 11', function(){

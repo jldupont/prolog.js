@@ -113,6 +113,47 @@ it('Utils - Unify - number 1', function(){
 	
 });
 
+it('Utils - Unify - number 2', function(){
+
+	var result = Utils.unify(new Var("X", 1), 1);
+	
+	should.ok(result);
+	
+});
+
+it('Utils - Unify - number 3', function(){
+
+	var result = Utils.unify(1, new Var("X", 1));
+	
+	should.ok(result);
+	
+});
+
+it('Utils - Unify - number 4', function(){
+
+	var result = Utils.unify(new Token('number',1), new Var("X", 1));
+	
+	should.ok(result);
+	
+});
+
+
+it('Utils - Unify - number 5', function(){
+
+	var result = Utils.unify(new Var("X", 1),new Token('number',1) );
+	
+	should.ok(result);
+	
+});
+
+it('Utils - Unify - number 6', function(){
+
+	var result = Utils.unify(new Token('number',1), new Token("number", 1));
+	
+	should.ok(result);
+	
+});
+
 
 it('Utils - Unify - var 1', function(){
 

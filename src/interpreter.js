@@ -9,7 +9,7 @@
 /* global ErrorInvalidInstruction, ErrorNoMoreInstruction
 			,ErrorFunctorNotFound, ErrorFunctorClauseNotFound
 			,ErrorFunctorCodeNotFound,ErrorExpectingVariable
-			, Var
+			, Var, Token
 			, Utils
 */
 
@@ -618,7 +618,9 @@ Interpreter.prototype.builtin_unif = function(x0) {
 	var left  = x0.args[0];
 	var right = x0.args[1];
 	
-	console.log("--- BUILTIN: Unif: ", left, right);
+	//console.log("--- BUILTIN: typeof left:  ", typeof left.value);
+	//console.log("--- BUILTIN: typeof right: ", typeof right.value);
+	//console.log("--- BUILTIN: Unif: ", JSON.stringify(left), JSON.stringify(right));
 	
 	var that = this;
 	this.ctx.cu = Utils.unify(left, right, function(t1) {
@@ -629,6 +631,8 @@ Interpreter.prototype.builtin_unif = function(x0) {
 			that.maybe_add_to_trail(that.ctx.cse.trail, t1);
 		});
 	
+	//console.log("---- BCALL result: ", typeof this.ctx.cu);
+	//console.log("---- BCALL result: ", this.ctx.cu);
 };
 
 
@@ -1524,8 +1528,6 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	// Get from the structure being worked on
 	//
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
-	
-	console.log("unif_var: ", pv, value_or_var);
 	
 	var that = this;
 	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1) {
