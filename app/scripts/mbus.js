@@ -19,6 +19,10 @@
   };
 
   /*  Subscription
+  *
+  *   type
+  *   source
+  *   cb
   */
   
   Mbus.prototype.sub = function(entry) {

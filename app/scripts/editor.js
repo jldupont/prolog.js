@@ -7,7 +7,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-/* global Clipboard */
+/* global Clipboard, mbus */
 
 (function(document) {
   'use strict';
@@ -54,6 +54,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
       ,theme: 'snow'
       
+    });
+    
+    function clear() {
+      var l = ed.getLength();
+      ed.deleteText(0, l);
+    };
+    
+    mbus.sub({
+      type: 'file'
+      ,subscriber: 'editor'
+      ,cb: function(msg) {
+        clear();
+        //console.log(msg);
+        ed.setText(msg.text);
+      }
     });
     
     // TODO remove for release

@@ -20,7 +20,10 @@
       
       var code = Prolog.compile(text);
       
-      console.log(code);
+      mbus.post('code',{
+        code:  code
+        ,file: file
+      });
       
     }
   });
