@@ -11,6 +11,9 @@
  *  @dependency: types.js
  */
 
+/* global Functor, OpNode, Op
+*/
+
 /**
  *  Parser
  *  

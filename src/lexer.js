@@ -138,9 +138,6 @@ Lexer.is_number = function(maybe_number) {
 	return String(parseFloat(maybe_number)) == String(maybe_number); 
 };
 
-Lexer.prototype._close_comment = function() {
-	
-};
 
 /**
  *  Get the next token from the text
@@ -165,6 +162,8 @@ Lexer.prototype.next = function() {
 	
 	var current_index = this._computeIndex( this.current_match.index );
 	
+	/*  Accumulate comment chars
+	*/
 	if (this.in_comment && raw_token != '"""') {
 		this.comment_chars += raw_token;
 		
@@ -174,6 +173,8 @@ Lexer.prototype.next = function() {
 		return undefined;
 	};
 	
+	/*  Start accumulating comment chars
+	*/
 	if (raw_token == '"""') {
 		
 		if (this.in_comment) {

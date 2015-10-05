@@ -387,7 +387,10 @@ OpNode.create_from_name = function(name) {
 	if (!op)
 		throw new Error("OpNode.create_from_name: expecting a valid 'name', got: "+name);
 	
-	return new OpNode(op.symbol, op.prec);
+	var opn = new OpNode(op.symbol, op.prec);
+	opn.line = op.line;
+	opn.col  = op.col;
+	return opn;
 };
 
 

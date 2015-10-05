@@ -66,15 +66,23 @@ function ParserL2(token_list, options) {
  */
 ParserL2.compute_ops_replacement = function(token_n, token_n1){
 
+	var opn;
+
 	if (token_n.value == '-') {
 		
 		// not the same thing as `--`
 		if (token_n1.value == '-') {
-			return new OpNode('+', 500);
+			opn = new OpNode('+', 500);
+			opn.line = token_n1.line;
+			opn.col  = token_n1.col;
+			return opn;
 		};
 		
 		if (token_n1.value == '+') {
-			return new OpNode('-', 500);
+			opn = new OpNode('-', 500);
+			opn.line = token_n1.line;
+			opn.col  = token_n1.col;
+			return opn;
 		};
 	};
 
@@ -82,11 +90,17 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 		
 		// not the same thing as `++`
 		if (token_n1.value == '+') {
-			return new OpNode('+', 500);
+			opn = new OpNode('+', 500);
+			opn.line = token_n1.line;
+			opn.col  = token_n1.col;
+			return opn;
 		};
 		
 		if (token_n1.value == '-') {
-			return new OpNode('-', 500);
+			opn = new OpNode('-', 500);
+			opn.line = token_n1.line;
+			opn.col  = token_n1.col;
+			return opn;
 		};
 	};
 	
@@ -220,18 +234,24 @@ ParserL2.prototype._process_list = function(maybe_token){
 	 *  * list:tail
 	 */
 
+	function gen_nil(token) {
+		var nil = new Token('nil');
+		nil.line = token ? token.line: null;
+		nil.col  = token ? token.col : null;
+		return nil;
+	}
 	
 	while (head && (head.name == 'op:conj' || head.symbol == ","))
 		head = this.get_token();
 	
 	
 	if (!head || head.name == 'nil') {
-		return ParserL2.nil;
+		return gen_nil(head);
 	};
 
 
 	if (head.name == 'list:close') {
-		return ParserL2.nil;
+		return gen_nil(head);
 	};
 
 	
@@ -434,15 +454,13 @@ ParserL2.prototype._preprocess = function() {
 			var v = new Var(token.value);
 			v.col = token.col;
 			v.line = token.line;
-			//this.replace_previous_token(v);
 			this.ptokens.push(v);
 			continue;
 		};
 
 		
-				// Handle the case `(exp...)`
+		// Handle the case `(exp...)`
 		//
-		
 		if (token.name == 'parens_open') {
 			token.name = 'functor';
 			token.value = 'expr';
@@ -461,7 +479,6 @@ ParserL2.prototype._preprocess = function() {
 			fcut.original_token = token;
 			fcut.line = token.line;
 			fcut.col  = token.col;
-			//this.replace_previous_token(fcut);
 			this.ptokens.push(fcut);
 			continue;
 		};
@@ -470,7 +487,6 @@ ParserL2.prototype._preprocess = function() {
 			var opn = new OpNode("-", 500);
 			opn.line = token.line;
 			opn.col  = token.col;
-			//this.replace_previous_token(opn);
 			this.ptokens.push(opn);
 			continue;
 		};
