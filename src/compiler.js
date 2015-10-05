@@ -575,9 +575,9 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 		if (ctx.root) {
 			
 			if (ctx.n.attrs.builtin) {
-				results.push(new Instruction('setup'));
+				//results.push(new Instruction('setup'));
 				results.push(new Instruction('bcall'));
-				results.push(new Instruction('deallocate'));
+				results.push(new Instruction('fdeallocate'));
 			} else {
 				results.push(new Instruction('setup'));
 				results.push(new Instruction('call'));

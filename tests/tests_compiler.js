@@ -1253,9 +1253,8 @@ it('Compiler - expression - 2', function(){
      			'put_struct  unif/2, x(0)',
 			     'put_var     p("X")',
 			     'put_number  p(666)',
-			     'setup'       ,
 			     'bcall'       ,
-			     'deallocate'  ,
+			     'fdeallocate'  ,
 			     'proceed'      
 			     ],
 			  g0: 
@@ -1497,9 +1496,8 @@ it('Compiler - complex - 11', function(){
 	     'put_struct  unif/2, x(0)',
 	     'put_var     p("HS")',
 	     'put_value   x(8)',
-	     'setup       ',
 	     'bcall       ',
-	     'deallocate'  ,
+	     'fdeallocate'  ,
 	     'proceed'
 	     ]
 		}

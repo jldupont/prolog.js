@@ -1592,9 +1592,9 @@ Compiler.prototype.process_goal = function(exp, is_query, head_vars) {
 		if (ctx.root) {
 			
 			if (ctx.n.attrs.builtin) {
-				results.push(new Instruction('setup'));
+				//results.push(new Instruction('setup'));
 				results.push(new Instruction('bcall'));
-				results.push(new Instruction('deallocate'));
+				results.push(new Instruction('fdeallocate'));
 			} else {
 				results.push(new Instruction('setup'));
 				results.push(new Instruction('call'));
@@ -2496,10 +2496,6 @@ Interpreter.prototype.inst_setup = function() {
  */
 Interpreter.prototype.inst_bcall = function(inst) {
 	
-	//  Make the jump in the target environment
-	//
-	this.ctx.cse = this.ctx.tse;
-
 	var x0 = this.ctx.tse.vars['$x0'];
 
 	this.ctx.tse.vars = {};
@@ -2703,6 +2699,17 @@ Interpreter.prototype.inst_deallocate = function() {
 
 Interpreter.prototype._deallocate = function(){
 	
+	this.stack.pop();
+	
+	// tse goes back to top of stack
+	this.ctx.tse = this.stack[ this.stack.length-1 ];
+};
+
+Interpreter.prototype.inst_fdeallocate = function(){
+
+	if (!this.ctx.cu)
+		this._unwind_trail( this.ctx.tse.trail );
+
 	this.stack.pop();
 	
 	// tse goes back to top of stack
