@@ -21,7 +21,7 @@ Debouncer.prototype.report_event = function() {
         return;
         
     this.in_process = true;
-    
+
     var that = this;
     setTimeout(function(){
         

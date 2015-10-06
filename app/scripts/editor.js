@@ -84,10 +84,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         console.log("Text Change !");
     });
     
+    //console.log(typeof dber.report_event);
+    
     ed.on("text-change", function() {
-      
-      dber.report_event();      
-      
+      dber.report_event();
     });
     
     // TODO remove for release
