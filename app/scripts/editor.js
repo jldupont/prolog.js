@@ -7,7 +7,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-/* global Clipboard, mbus */
+/* global Clipboard, mbus, Debouncer */
 
 (function(document) {
   'use strict';
@@ -59,7 +59,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     function clear() {
       var l = ed.getLength();
       ed.deleteText(0, l);
-    };
+    }
     
     mbus.sub({
       type: 'file'
@@ -77,6 +77,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ,text: text
         });
       }
+    });
+    
+    var dber = new Debouncer(1000, {source: 'editor-text-change'}, function(){
+        
+        console.log("Text Change !");
+    });
+    
+    ed.on("text-change", function() {
+      
+      dber.report_event();      
+      
     });
     
     // TODO remove for release
