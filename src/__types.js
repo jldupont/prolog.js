@@ -439,18 +439,21 @@ function Functor(name, maybe_arguments_list) {
 	// from the lexer
 	this.line = 0;
 	this.col  = 0;
-	
-	// remove the first parameter of the constructor
-	if (arguments.length > 1)
-		this.args = Array.prototype.splice.call(arguments, 1);
-	else
-		this.args = [];
 
 	// Used in the context of the interpreter
 	// ======================================
 	// Target Arity
 	this.arity = null;
 	
+	// remove the first parameter of the constructor
+	if (arguments.length > 1) {
+		this.args = Array.prototype.splice.call(arguments, 1);
+		this.arity = this.args.length;
+	}
+		
+	else
+		this.args = [];
+
 };
 
 Functor.prototype.get_arity = function() {
@@ -539,7 +542,13 @@ Functor.prototype.get_arg = function(index) {
 	return this.args[index];
 };
 
-
+Functor.compare = function(f1, f2) {
+	if (f1.name == f2.name)
+		if (f1.arity == f2.arity)
+			return true;
+			
+	return false;
+}
 
 /**
  *  Var constructor
@@ -824,7 +833,7 @@ ParseSummary.prototype.inspect = function() {
 	}
 	
 	if ((this.maybe_token_list).inspect)
-		return ( this.maybe_token_list ).inspect();
+		return "ParseSummary: " + ( this.maybe_token_list ).inspect();
 
 	return JSON.stringify( this.maybe_token_list );
 	
