@@ -795,6 +795,41 @@ Instruction.prototype.inspect = function(){
 	return result;
 };
 
+// ============================================================ Summary
+
+function ParseSummary(maybe_error, maybe_token_list) {
+	this.maybe_error = maybe_error;
+	this.maybe_token_list = maybe_token_list;
+}
+
+ParseSummary.prototype.inspect = function() {
+	
+	if (this.maybe_error) {
+		return "Error: "+this.maybe_error.classname;
+	}
+	
+	if (this.maybe_token_list instanceof Array) {
+		var result = "[";
+		
+		for (var index=0; index<this.maybe_token_list.length; index++) {
+			var value = this.maybe_token_list[index];
+			
+			if (index>0)
+				result += ",";
+				
+			result += (value.inspect ? value.inspect() : JSON.stringify(value));
+		}
+		
+		return result + ']';
+	}
+	
+	if ((this.maybe_token_list).inspect)
+		return ( this.maybe_token_list ).inspect();
+
+	return JSON.stringify( this.maybe_token_list );
+	
+};
+
 // ============================================================ Errors
 
 /*
@@ -969,6 +1004,8 @@ if (typeof module!= 'undefined') {
 	module.exports.OpNode = OpNode;
 	module.exports.Result = Result;
 	module.exports.Instruction = Instruction;
+	
+	module.exports.ParseSummary = ParseSummary;
 
 	// Errors
 	module.exports.ErrorExpectingFunctor = ErrorExpectingFunctor;
