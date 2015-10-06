@@ -122,7 +122,7 @@ var process = function(text, expected, options) {
 	try {
 		exp = setup(text, options);
 	} catch(e) {
-		console.error(e);
+		//console.error(e);
 		throw e;
 	}
 	
