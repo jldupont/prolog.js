@@ -61,27 +61,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ed.deleteText(0, l);
     }
     
+    var current_file;
+    
     mbus.sub({
       type: 'file'
       ,subscriber: 'editor'
       ,cb: function(msg) {
+        
         clear();
-        //console.log(msg);
+        
+        current_file = msg.file;
+        
         var delta_object = JSON.parse(msg.text);
         ed.setContents(delta_object);
         
-        var text = ed.getText();
-        
-        mbus.post('file-text', {
-          file:  msg.file
-          ,text: text
-        });
       }
     });
     
     var dber = new Debouncer(1000, {source: 'editor-text-change'}, function(){
         
-        console.log("Text Change !");
+        //console.log("Text Change !");
+        
+        var text = ed.getText();
+        
+        mbus.post('file-text', {
+          file:  current_file
+          ,text: text
+        });
+
     });
     
     //console.log(typeof dber.report_event);
