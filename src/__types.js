@@ -839,6 +839,8 @@ ParseSummary.prototype.inspect = function() {
 	
 };
 
+function InComment() {};
+
 // ============================================================ Errors
 
 /*
@@ -1006,6 +1008,7 @@ ErrorUnexpectedListEnd.prototype = Error.prototype;
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
 	module.exports.Eos = Eos;
+	module.exports.InComment = InComment;
 	module.exports.Functor = Functor;
 	module.exports.Op = Op;
 	module.exports.Var = Var;

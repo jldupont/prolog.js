@@ -547,6 +547,8 @@ it('Lex - comment triple quote - 1', function(){
 	
 	var l = new Lexer(text);
 	var list = l.process();
+	
+	//console.log(list);
 
 	var result = Token.check_for_match(list, elist);
 

@@ -64,25 +64,35 @@ Prolog.parse_per_sentence = function(input_text) {
 	var l = new Lexer(input_text);
 	var sentences = l.process_per_sentence();
     
+    //console.log("Sentences: ", sentences);
+    
     var p1, p2, p3;
     var p1t, p2t, p3t;
     
     for (var index = 0; index<sentences.length; index++) {
         var sentence = sentences[index];
      
+        //console.log("Sentence: ", sentence);
+     
         try {   
             p1  = new ParserL1(sentence);
             p1t = p1.process();
             
+            //console.log("Parser L1: ", p1t);
+            
             p2  = new ParserL2(p1t);
             p2t = p2.process().terms;
+            
+            //console.log("ParserL2: ", p2t);
             
             p3  = new ParserL3(p2t, Op.ordered_list_by_precedence);
             p3t = p3.process();
             
+            //console.log(p3t);
+            
             // we should only get 1 root Functor per sentence
             
-            result.push( new ParseSummary(null, p3t[0][0]) );
+            result.push( new ParseSummary(null, p3t[0]) );
             
         } catch(e) {
             result.push(new ParseSummary(e));
@@ -951,6 +961,8 @@ ParseSummary.prototype.inspect = function() {
 	
 };
 
+function InComment() {};
+
 // ============================================================ Errors
 
 /*
@@ -1118,6 +1130,7 @@ ErrorUnexpectedListEnd.prototype = Error.prototype;
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
 	module.exports.Eos = Eos;
+	module.exports.InComment = InComment;
 	module.exports.Functor = Functor;
 	module.exports.Op = Op;
 	module.exports.Var = Var;
@@ -3857,7 +3870,7 @@ if (typeof module != 'undefined') {
 };
 
 
-/* global Token, Eos
+/* global Token, Eos, InComment
 */
 
 /**
@@ -3944,6 +3957,9 @@ Lexer.prototype.process = function() {
 	for (;;) {
 		t = this.next();
 		
+		if (t instanceof InComment)
+			continue;
+		
 		if (t && t.name == 'null' | t.name == 'eof')
 			break;
 		
@@ -3954,6 +3970,8 @@ Lexer.prototype.process = function() {
 	return list;
 };
 
+Lexer.InComment = new InComment();
+
 Lexer.prototype.process_per_sentence = function() {
 	
 	var result = [];
@@ -3963,6 +3981,9 @@ Lexer.prototype.process_per_sentence = function() {
 	for (;;) {
 		
 		t = this.next();
+		
+		if (t instanceof InComment)
+			continue;
 
 		if ( t == null || t.name == 'eof') {
 			if (current.length > 0)
@@ -4005,9 +4026,6 @@ Lexer.prototype.step = function(newline_as_null) {
 	
 	if (this.current_match != null)
 		return this.current_match[0];
-	
-	if (((this.current_match == '\n') || (this.current_match == '\r')) && newline_as_null)
-		return null;
 	
 	this.at_the_end = true;
 	return null;
@@ -4053,7 +4071,7 @@ Lexer.prototype.next = function() {
 		if (raw_token == '\n')
 			this.current_line ++;
 		
-		return undefined;
+		return Lexer.InComment;
 	};
 	
 	/*  Start accumulating comment chars
@@ -4076,7 +4094,7 @@ Lexer.prototype.next = function() {
 			this.comment_chars = "";
 		};
 		
-		return undefined;
+		return Lexer.InComment;
 	};
 	
 	// If we are dealing with a comment,
@@ -4187,9 +4205,16 @@ ParserL1.prototype.next = function() {
 	if (this.reached_end)
 		return new Eos();
 	
-	var head = this.list.shift() || null;
-	if (head == null)
+	var head;
+	
+	do {
+		head = this.list.shift();
+	} while (head === null);
+	
+	if (head === undefined)
 		return new Eos();
+		
+		
 		
 	// Check for whitespaces and remove
 	//

@@ -6,7 +6,7 @@
  *  @dependency: types.js
  */
 
-/* global Token, Eos
+/* global Token, Eos, InComment
 */
 
 /**
@@ -93,6 +93,9 @@ Lexer.prototype.process = function() {
 	for (;;) {
 		t = this.next();
 		
+		if (t instanceof InComment)
+			continue;
+		
 		if (t && t.name == 'null' | t.name == 'eof')
 			break;
 		
@@ -103,6 +106,8 @@ Lexer.prototype.process = function() {
 	return list;
 };
 
+Lexer.InComment = new InComment();
+
 Lexer.prototype.process_per_sentence = function() {
 	
 	var result = [];
@@ -112,6 +117,9 @@ Lexer.prototype.process_per_sentence = function() {
 	for (;;) {
 		
 		t = this.next();
+		
+		if (t instanceof InComment)
+			continue;
 
 		if ( t == null || t.name == 'eof') {
 			if (current.length > 0)
@@ -154,9 +162,6 @@ Lexer.prototype.step = function(newline_as_null) {
 	
 	if (this.current_match != null)
 		return this.current_match[0];
-	
-	if (((this.current_match == '\n') || (this.current_match == '\r')) && newline_as_null)
-		return null;
 	
 	this.at_the_end = true;
 	return null;
@@ -202,7 +207,7 @@ Lexer.prototype.next = function() {
 		if (raw_token == '\n')
 			this.current_line ++;
 		
-		return undefined;
+		return Lexer.InComment;
 	};
 	
 	/*  Start accumulating comment chars
@@ -225,7 +230,7 @@ Lexer.prototype.next = function() {
 			this.comment_chars = "";
 		};
 		
-		return undefined;
+		return Lexer.InComment;
 	};
 	
 	// If we are dealing with a comment,

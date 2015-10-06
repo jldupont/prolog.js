@@ -32,9 +32,7 @@ var setup = function(text) {
 	//Functor.inspect_compact_version = false;
 	Functor.inspect_short_version = false;
 
-	var result = Prolog.parse_per_sentence(text);
-	
-	return result;
+	return Prolog.parse_per_sentence(text);
 };
 
 var dump_result = function(result) {
@@ -102,6 +100,20 @@ it('Main - simple - 1', function() {
 		,new ParseSummary(null, new Functor('f', 2))
 	], {show_parsed : false });	
 });
+
+it('Main - simple - 2', function() {
+	
+	//console.log("\n---- Main - simple - 2\n\n");
+	
+	var text =  '"""comment"""\n'
+				+'f(1). f(2).';
+
+	test(text, [
+		 new ParseSummary(null, new Functor('f', 1))
+		,new ParseSummary(null, new Functor('f', 2))
+	], {show_parsed : false });	
+});
+
 
 it('Main - error - 1', function() {
 	

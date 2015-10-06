@@ -49,9 +49,16 @@ ParserL1.prototype.next = function() {
 	if (this.reached_end)
 		return new Eos();
 	
-	var head = this.list.shift() || null;
-	if (head == null)
+	var head;
+	
+	do {
+		head = this.list.shift();
+	} while (head === null);
+	
+	if (head === undefined)
 		return new Eos();
+		
+		
 		
 	// Check for whitespaces and remove
 	//
