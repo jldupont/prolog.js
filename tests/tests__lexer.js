@@ -601,3 +601,46 @@ it('Lex - comment complex  - 1', function(){
 	should.equal(result, true);
 });
 */
+it('Lexer - process sentence - 1', function() {
+	
+	var text =   'f(1).\n'
+				+'f(2).\n'
+				;
+	
+	var elist = [
+					 [ new Token('term', 'f'), new Token('parens_open'), new Token('number',1), new Token('parens_close')]
+					,[ new Token('term', 'f'), new Token('parens_open'), new Token('number',2), new Token('parens_close')]
+		
+	             ];
+	
+	var l = new Lexer(text);
+	var list = l.process_per_sentence();
+	
+	var result = Token.check_for_match(list, elist);
+
+	should.equal(result, true);
+
+	
+})
+
+it('Lexer - process sentence - 2', function() {
+	
+	var text =   'f(1).'
+				+'f(2).'
+				;
+	
+	var elist = [
+					 [ new Token('term', 'f'), new Token('parens_open'), new Token('number',1), new Token('parens_close')]
+					,[ new Token('term', 'f'), new Token('parens_open'), new Token('number',2), new Token('parens_close')]
+		
+	             ];
+	
+	var l = new Lexer(text);
+	var list = l.process_per_sentence();
+	
+	var result = Token.check_for_match(list, elist);
+
+	should.equal(result, true);
+
+	
+})

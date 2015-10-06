@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-10-05 */
+/*! prolog.js - v0.0.1 - 2015-10-06 */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
 /* global Op, Compiler
@@ -148,6 +148,17 @@ Token.equal = function(t1, t2) {
 Token.check_for_match = function(input_list, expected_list, also_index){
 	
 	also_index = also_index || false;
+	
+	if (input_list instanceof Array && input_list[0] instanceof Array) {
+		
+		for (var index=0; index<input_list.length ;index++) {
+			if (!Token.check_for_match(input_list[index], expected_list[index]))
+				return false;
+		}
+		
+		return true;
+	}
+	
 	
 	if (input_list.length != expected_list.length) {
 		//console.log("match: list not same length");
@@ -3755,7 +3766,8 @@ if (typeof module != 'undefined') {
 };
 
 
-/* global Token */
+/* global Token, Eos
+*/
 
 /**
  *  Lexer
@@ -3781,7 +3793,7 @@ function Lexer (text) {
 	this.comment_chars = "";
 	
 	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
-};
+}
 
 Lexer.prototype._handleNewline = function(){
 	this.offset = this._tokenRegexp.lastIndex;
@@ -3849,6 +3861,37 @@ Lexer.prototype.process = function() {
 	};
 	
 	return list;
+};
+
+Lexer.prototype.process_per_sentence = function() {
+	
+	var result = [];
+	var current = [];
+	var t;
+	
+	for (;;) {
+		
+		t = this.next();
+
+		if ( t == null || t.name == 'eof') {
+			if (current.length > 0)
+				result.push(current);
+			break;
+		}
+		
+		if (t.name == 'newline')
+			continue;
+		
+		if (t.name == 'period') {
+			result.push(current);
+			current = [];
+			continue;
+		}
+		
+		current.push( t );
+	}
+	
+	return result;
 };
 
 /**

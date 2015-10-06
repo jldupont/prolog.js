@@ -82,6 +82,17 @@ Token.check_for_match = function(input_list, expected_list, also_index){
 	
 	also_index = also_index || false;
 	
+	if (input_list instanceof Array && input_list[0] instanceof Array) {
+		
+		for (var index=0; index<input_list.length ;index++) {
+			if (!Token.check_for_match(input_list[index], expected_list[index]))
+				return false;
+		}
+		
+		return true;
+	}
+	
+	
 	if (input_list.length != expected_list.length) {
 		//console.log("match: list not same length");
 		return false;

@@ -6,7 +6,8 @@
  *  @dependency: types.js
  */
 
-/* global Token */
+/* global Token, Eos
+*/
 
 /**
  *  Lexer
@@ -32,7 +33,7 @@ function Lexer (text) {
 	this.comment_chars = "";
 	
 	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
-};
+}
 
 Lexer.prototype._handleNewline = function(){
 	this.offset = this._tokenRegexp.lastIndex;
@@ -100,6 +101,37 @@ Lexer.prototype.process = function() {
 	};
 	
 	return list;
+};
+
+Lexer.prototype.process_per_sentence = function() {
+	
+	var result = [];
+	var current = [];
+	var t;
+	
+	for (;;) {
+		
+		t = this.next();
+
+		if ( t == null || t.name == 'eof') {
+			if (current.length > 0)
+				result.push(current);
+			break;
+		}
+		
+		if (t.name == 'newline')
+			continue;
+		
+		if (t.name == 'period') {
+			result.push(current);
+			current = [];
+			continue;
+		}
+		
+		current.push( t );
+	}
+	
+	return result;
 };
 
 /**
