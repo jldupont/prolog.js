@@ -16,6 +16,9 @@
   function Mbus() {
     
     this.subs = {};
+    this.queue = [];
+    
+    this.in_post = false;
   };
 
   /*  Subscription
@@ -35,15 +38,40 @@
   
   Mbus.prototype.post = function(type, msg) {
     
-    var sub_entries = this.subs[type];
+    this.queue.push({ type:type, msg: msg });
     
-    if (!sub_entries) {
-      console.log("Mbus: no subscribers for: ", type);
+    if (this.in_post) {
       return;
+    }
+    
+    this.in_post = true;
+        
+    for (;;) {
+      var entry = this.queue.pop();
+      if (!entry)
+        break;
+        
+      var t = entry.type;
+      var m = entry.msg;
+
+      var sub_entries = this.subs[t];
+      
+      if (!sub_entries) {
+        console.log("Mbus: no subscribers for: ", t);
+        continue;
+      };
+      
+      this._publish(sub_entries, t, m);
+      
     };
+
+    this.in_post = false;
     
+  }; //post
+  
+  Mbus.prototype._publish = function(sub_entries, type, msg) {
+
     var source;
-    
     try {
       for (var index=0; index<sub_entries.length; index++) {
         var entry = sub_entries[index];
@@ -54,6 +82,7 @@
       };
     } catch(e) {
       console.error("Mbus: attempted to deliver '",type,"' to '",source,"' got:", e);
+      console.log("Mbus Msg: ", msg);
     };
     
   };

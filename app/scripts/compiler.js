@@ -11,7 +11,7 @@
 (function(document) {
 
   mbus.sub({
-     type: 'file'
+     type: 'file-text'
     ,subscriber: "compiler"
     ,cb: function(msg) {
       

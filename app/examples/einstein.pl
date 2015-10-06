@@ -8,6 +8,11 @@ Expecting:
  HS = [h(yellow,norwegian,cats,water,dunhill),h(blue,dane,horse,tea,blend),h(red,brit,birds,milk,pallmall),h(green,german,zebra,coffee,prince),h(white,swede,dog,beer,bluemaster)]
  Who = german
 """
+
+select(X, [X|Tail], Tail).
+select(Elem, [Head|Tail], [Head|Rest]) :-
+   select(Elem, Tail, Rest).
+   
 select([A|As],S):- select(A,S,S1),select(As,S1).
 select([],_). 
 

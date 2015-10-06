@@ -67,7 +67,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ,cb: function(msg) {
         clear();
         //console.log(msg);
-        ed.setText(msg.text);
+        var delta_object = JSON.parse(msg.text);
+        ed.setContents(delta_object);
+        
+        var text = ed.getText();
+        
+        mbus.post('file-text', {
+          file:  msg.file
+          ,text: text
+        });
       }
     });
     
