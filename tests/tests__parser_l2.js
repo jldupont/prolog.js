@@ -17,6 +17,8 @@ var Functor = pr.Functor;
 var ParserL1 = pr.ParserL1;
 var OpNode = pr.OpNode;
 
+var ErrorUnexpectedEnd = pr.ErrorUnexpectedEnd;
+
 
 var preprocess_list = function(text, expected) {
 	var tokens = setup_l1(text);
@@ -568,4 +570,17 @@ it('ParserL2 - list - complex - 3', function(){
 	
 	//process(text, expected, {show_parsedl1: true, parserl2_dump: true});
 	process(text, expected);
+});
+
+it('ParserL2 - error - 1', function(){
+
+	var text = "[1,2.";
+	var expected = [
+	                 ];
+	
+	//process(text, expected, {show_parsedl1: true, parserl2_dump: true});
+	should.throws(function() {
+		process(text, expected);
+	}
+	,ErrorUnexpectedEnd);
 });

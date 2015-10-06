@@ -166,3 +166,15 @@ it('ParserL1 - expression - 1', function(){
 	//process(text, expected_list, {show_parsed: true});
 	process(text, expected_list);
 });
+
+/*  THIS DOES NOT BLOW UP AT THIS POINT - IT IS NORMAL
+it('ParserL1 - error - 1', function(){
+
+	var text = "[1,2.";
+
+	var expected_list = [
+	                     ];
+	
+	process(text, expected_list, {show_parsed: true});
+});
+*/

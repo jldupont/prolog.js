@@ -4524,9 +4524,15 @@ ParserL2.prototype._process_list = function(maybe_token){
 
 	var next_token = this.get_token();
 	
+	if (next_token == null)
+		throw new ErrorUnexpectedEnd("Unexpected end in list definition");
+	
 	if (next_token.name == 'list:tail') {
 		
 		next_token = this.get_token();
+
+	if (next_token == null)
+		throw new ErrorUnexpectedEnd("Unexpected end in list definition");
 		
 		if (next_token.name == 'functor') {
 			this.regive()
@@ -4538,6 +4544,10 @@ ParserL2.prototype._process_list = function(maybe_token){
 		cons.push_arg( next_token );
 		
 		next_token = this.get_token();
+		
+		if (next_token == null)
+			throw new ErrorUnexpectedEnd("Unexpected end in list definition");
+
 		if (next_token.name != 'list:close')
 			throw new ErrorExpectingListEnd("Expecting list end, got:" + JSON.stringify(next_token), next_token);
 		

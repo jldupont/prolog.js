@@ -40,9 +40,22 @@ var dump_result = function(result) {
 
 it('Main - simple - 1', function() {
 	
-	console.log("---- Main - simple - 1\n\n");
+	console.log("\n---- Main - simple - 1\n\n");
 	
 	var text = 'f(1). f(2).';
+	
+	var result = setup(text);
+	
+	dump_result(result);
+	
+	should.ok(true, false);
+});
+
+it('Main - error - 1', function() {
+	
+	console.log("\n---- Main - error - 1\n\n");
+	
+	var text = 'f(1. [1,2.';
 	
 	var result = setup(text);
 	
