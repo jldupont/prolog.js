@@ -275,15 +275,18 @@ ParserL2.prototype._process_list = function(maybe_token){
 
 	var next_token = this.get_token();
 	
+	// I know, misleading variable name
+	var previous_token = next_token;
+	
 	if (next_token == null)
-		throw new ErrorUnexpectedEnd("Unexpected end in list definition");
+		throw new ErrorUnexpectedEnd("Unexpected end in list definition", head);
 	
 	if (next_token.name == 'list:tail') {
 		
 		next_token = this.get_token();
 
 	if (next_token == null)
-		throw new ErrorUnexpectedEnd("Unexpected end in list definition");
+		throw new ErrorUnexpectedEnd("Unexpected end in list definition", previous_token);
 		
 		if (next_token.name == 'functor') {
 			this.regive()
@@ -291,13 +294,14 @@ ParserL2.prototype._process_list = function(maybe_token){
 			next_token = res.terms;
 		}
 
-
+		previous_token = next_token;
+		
 		cons.push_arg( next_token );
 		
 		next_token = this.get_token();
 		
 		if (next_token == null)
-			throw new ErrorUnexpectedEnd("Unexpected end in list definition");
+			throw new ErrorUnexpectedEnd("Unexpected end in list definition", previous_token);
 
 		if (next_token.name != 'list:close')
 			throw new ErrorExpectingListEnd("Expecting list end, got:" + JSON.stringify(next_token), next_token);
@@ -349,7 +353,7 @@ ParserL2.prototype._process = function( ctx ){
 
 	var expression = new Array();
 	var token = null;
-	var token_next = null;
+	var token_previous = null;
 
 	for (;;) {
 		
@@ -359,11 +363,14 @@ ParserL2.prototype._process = function( ctx ){
 		if (token == null || token instanceof Eos) {
 			
 			if (ctx.diving_functor)
-				throw new ErrorUnexpectedEnd("Within a Functor definition", token);
+				throw new ErrorUnexpectedEnd("Within a Functor definition", token_previous);
 			
 			return new Result(expression, token);
 		}
 
+		token_previous = token;
+		
+		
 		// A list is handled
 		//  through proper 'list:open'
 		//
