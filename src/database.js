@@ -78,6 +78,17 @@ Database.prototype.batch_insert_code = function(codes) {
 
 };
 
+/** 
+ *  Verifies if the specified Functor exists in this database
+ * 
+ *  @return Boolean
+ */
+Database.prototype.exists = function(functor, arity) {
+
+	var functor_signature = this.al.compute_signature([functor, arity]);
+	return this.db[functor_signature] !== undefined;
+};
+
 Database.prototype.insert_code = function(functor, arity, code) {
 	
 	var functor_signature = this.al.compute_signature([functor, arity]);

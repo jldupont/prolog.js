@@ -22,10 +22,10 @@
  * @param env   : Environment
  * @param stack : the processing stack i.e. where instructions are pushed and popped
  */
-function Interpreter(db, optional_stack) {
+function Interpreter(db, db_builtins) {
 
 	this.db  = db;
-	this.stack = optional_stack || [];
+	this.db_builtins = db_builtins || {};
 	
 	this.tracer = null;
 	this.reached_end_question = false;
@@ -321,6 +321,22 @@ Interpreter.prototype.fetch_next_instruction = function(){
 /**
  *  Get Functor code
  * 
+ *  Checks the 'user' database first
+ *   and second the 'builtin' database.
+ */
+ Interpreter.prototype._get_code = function(functor_name, arity, clause_index) { 
+ 	
+ 	if (this.db.exists(functor_name, arity)) {
+ 		return this.__get_code(this.db, functor_name, arity, clause_index);
+ 	}
+ 	
+ 	return this.__get_code(this.db_builtins, functor_name, arity, clause_index);
+ };
+
+
+/**
+ *  Get Functor code
+ * 
  * @param ctx.f  : functor_name
  * @param ctx.a  : arity
  * @param ctx.ci : clause_index
@@ -330,14 +346,14 @@ Interpreter.prototype.fetch_next_instruction = function(){
  * 
  * @return ctx with additionally { cc: code, ct: clauses_count }
  */
-Interpreter.prototype._get_code = function(functor_name, arity, clause_index) {
+Interpreter.prototype.__get_code = function(db, functor_name, arity, clause_index) {
 	
 	var result = {};
 	
 	var clauses;
 
 	try {
-		clauses = this.db.get_code(functor_name, arity);
+		clauses = db.get_code(functor_name, arity);
 		result.ct = clauses.length;
 	} catch(e) {
 		var fname = functor_name+"/"+arity;
