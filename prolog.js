@@ -119,8 +119,8 @@ Prolog.parse_per_sentence = function(input_text) {
             //console.log(p3t);
             
             // we should only get 1 root Functor per sentence
-            
-            result.push( new ParseSummary(null, p3t[0]) );
+            if (p3t[0])
+                result.push( new ParseSummary(null, p3t[0]) );
             
         } catch(e) {
             result.push(new ParseSummary(e));
