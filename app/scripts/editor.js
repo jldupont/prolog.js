@@ -113,8 +113,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     // TODO remove for release
     window.editor = ed;
     
-    var errors_previously = false;
-    
     function markup_errors(error_list) {
       clear_background();
       
@@ -125,6 +123,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     }
     
+    /**
+     *  We don't want to be reflowing the editor contents
+     */
+    var errors = [ ];
+
+     
     mbus.sub({
       type: 'error-locations'
       ,subscriber: 'editor'
@@ -132,19 +136,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         
         console.log("Error Locs: ", locs);
         
-        if (errors_previously) {
-          if (locs.length == 0) {
-            clear_background();
-            errors_previously = false;
-            return;
-          }
-        } else {
-          if (locs.length == 0)
-            return;
-        }
-        //console.log("Errors: ", msg);
+        var are_errors = locs.length > 0;
         
-        markup_errors(locs);
+        if (are_errors) {
+          errors = locs;
+          clear_background();
+          markup_errors(locs);
+          return;
+        }
+        
+        var were_errors = errors.length > 0;
+        
+        if (were_errors) {
+          errors = [ ];
+          clear_background();
+          return;
+        }
+
       }
     });
     
