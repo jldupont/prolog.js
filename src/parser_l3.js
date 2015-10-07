@@ -27,7 +27,7 @@ function ParserL3(expressions, operators_list, maybe_context) {
 	
 	this.op_list = operators_list;
 	this.expressions = expressions;
-};
+}
 
 /**
  * Process the expression list
@@ -56,9 +56,9 @@ ParserL3.prototype.process = function(){
 			//console.log("ParserL3.process: ", r);
 			
 			result[index] = r;
-		};
+		}
 		
-	};// ops
+	} // ops
 	
 	return result;
 	
@@ -92,7 +92,7 @@ ParserL3.process_expression = function(opcode, expression){
 		if (current_count_of_opnodes_processed == 0)
 			break;
 		
-	}; //for;;
+	} //for;;
 	
 	return result;
 	
@@ -125,12 +125,12 @@ ParserL3._process_expression = function(opcode, expression){
 			var exp_from_args = node.args;
 			var fresult = ParserL3.process_expression(opcode, exp_from_args);
 			node.args = fresult; 
-		};
+		}
 		
 		if (!(node instanceof OpNode)) {
 			result.push(node);
 			continue;
-		};
+		}
 			
 		
 		// Is it the sort of operator we are
@@ -139,7 +139,7 @@ ParserL3._process_expression = function(opcode, expression){
 		if (opcode.symbol != node.symbol) {
 			result.push(node);
 			continue;
-		};
+		}
 
 		
 		// gather 'node left' and 'node right'
@@ -157,7 +157,7 @@ ParserL3._process_expression = function(opcode, expression){
 		if (iresult == null) {
 			result.push(node);
 			continue;
-		};
+		}
 			
 		processed_nodes++;
 
@@ -168,7 +168,7 @@ ParserL3._process_expression = function(opcode, expression){
 		
 		node_index++;			
 
-	}; // expression	
+	} // expression	
 	
 	return [result, processed_nodes];
 };
@@ -195,7 +195,7 @@ ParserL3._process_one = function(opcode, node_left, node_center, node_right) {
 	
 	if (!compat) {
 		return null;
-	};
+	}
 
 	// We have compatibility and thus
 	//  substitute for a Functor
@@ -206,6 +206,7 @@ ParserL3._process_one = function(opcode, node_left, node_center, node_right) {
 	var functor = new Functor(opcode.name);
 	functor.col = node_center.col;
 	functor.line = node_center.line;
+	functor.offset = node_center.offset;
 	functor.attrs = opcode.attrs;
 	
 	var is_unary = Op.is_unary(opcode.type); 
@@ -214,7 +215,7 @@ ParserL3._process_one = function(opcode, node_left, node_center, node_right) {
 		functor.args = [node_right];
 	} else {
 		functor.args = [node_left, node_right];
-	};
+	}
 
 	return { is_unary: is_unary, result: functor };
 };
@@ -228,4 +229,4 @@ ParserL3._process_one = function(opcode, node_left, node_center, node_right) {
 
 if (typeof module!= 'undefined') {
 	module.exports.ParserL3 = ParserL3;
-};
+}

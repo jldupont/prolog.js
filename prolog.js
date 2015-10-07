@@ -195,6 +195,7 @@ function Token(name, maybe_value, maybe_attrs) {
 	// Position in input stream
 	this.line = maybe_attrs.line || 0;
 	this.col  = maybe_attrs.col || 0;
+	this.offset = maybe_attrs.offset || 0;
 	
 	this.is_primitive = maybe_attrs.is_primitive || false;
 	this.is_operator =  maybe_attrs.is_operator || false;
@@ -307,6 +308,7 @@ function Op(name, symbol, precedence, type, attrs) {
 	// from the lexer
 	this.line = 0;
 	this.col  = 0;
+	this.offset = 0;
 }
 
 Op.prototype.inspect = function() {
@@ -611,6 +613,7 @@ function Functor(name, maybe_arguments_list) {
 	// from the lexer
 	this.line = 0;
 	this.col  = 0;
+	this.offset = 0;
 
 	// Used in the context of the interpreter
 	// ======================================
@@ -743,6 +746,7 @@ function Var(name) {
 	this.name = name;
 	this.col = null;
 	this.line = null;
+	this.offset = 0;
 	
 	this.value = null;
 	
@@ -4047,8 +4051,8 @@ Lexer.token_map = {
 	,'=':  function() { return new Token('op:unif', '=',  {is_operator: true}) }
 	,'<':  function() { return new Token('op:lt',   '<',  {is_operator: true}) }
 	,'>':  function() { return new Token('op:gt',   '>',  {is_operator: true}) }
-	,'=<': function() { return new Token('op:em',   '=<',  {is_operator: true}) }
-	,'>=': function() { return new Token('op:ge',   '>=',  {is_operator: true}) }
+	,'=<': function() { return new Token('op:em',   '=<', {is_operator: true}) }
+	,'>=': function() { return new Token('op:ge',   '>=', {is_operator: true}) }
 	,'-':  function() { return new Token('op:minus', '-', {is_operator: true}) }
 	,'+':  function() { return new Token('op:plus',  '+', {is_operator: true}) }
 	,'*':  function() { return new Token('op:mult',  '*', {is_operator: true}) }
@@ -4208,6 +4212,7 @@ Lexer.prototype.next = function() {
 			return_token = new Token('comment', this.comment_chars);
 			return_token.col = 0;
 			return_token.line = this.comment_start_line;
+			return_token.offset = this.offset;
 			return return_token;
 			
 		} else {
@@ -4227,6 +4232,7 @@ Lexer.prototype.next = function() {
 		return_token = new Token('comment', null);
 		return_token.col  = current_index;
 		return_token.line = this.current_line;
+		return_token.offset = this.offset;
 		
 		this.current_line = this.current_line + 1;
 		
@@ -4251,6 +4257,7 @@ Lexer.prototype.next = function() {
 		return_token.is_primitive = true;
 		return_token.col = current_index;
 		return_token.line = this.current_line;
+		return_token.offset = this.offset;
 		return return_token;
 	}
 	
@@ -4267,6 +4274,7 @@ Lexer.prototype.next = function() {
 				return_token.is_primitive = true;
 				return_token.col = current_index;
 				return_token.line = this.current_line;
+				return_token.offset = this.offset;
 				return return_token;
 			} 
 			string = string + t;
@@ -4283,6 +4291,7 @@ Lexer.prototype.next = function() {
 	return_token = fn(maybe_raw_token);	
 	return_token.col = current_index;
 	return_token.line = this.current_line;
+	return_token.offset = this.offset;
 	
 	if (return_token.name == 'newline')
 		this._handleNewline();
@@ -4481,6 +4490,7 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 			opn = new OpNode('+', 500);
 			opn.line = token_n1.line;
 			opn.col  = token_n1.col;
+			opn.offset = token_n1.offset;
 			return opn;
 		};
 		
@@ -4488,6 +4498,7 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 			opn = new OpNode('-', 500);
 			opn.line = token_n1.line;
 			opn.col  = token_n1.col;
+			opn.offset = token_n1.offset;
 			return opn;
 		};
 	};
@@ -4499,6 +4510,7 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 			opn = new OpNode('+', 500);
 			opn.line = token_n1.line;
 			opn.col  = token_n1.col;
+			opn.offset = token_n1.offset;
 			return opn;
 		};
 		
@@ -4506,6 +4518,7 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 			opn = new OpNode('-', 500);
 			opn.line = token_n1.line;
 			opn.col  = token_n1.col;
+			opn.offset = token_n1.offset;
 			return opn;
 		};
 	};
@@ -4838,6 +4851,7 @@ ParserL2.prototype._process = function( ctx ){
 			functor_node.original_token = token;
 			functor_node.line = token.line;
 			functor_node.col  = token.col;
+			functor_node.offset = token.offset;
 			
 			if (ctx.process_functor) {
 				return new Result(functor_node, token);
@@ -4877,6 +4891,7 @@ ParserL2.prototype._preprocess = function() {
 			var v = new Var(token.value);
 			v.col = token.col;
 			v.line = token.line;
+			v.offset = token.offset;
 			this.ptokens.push(v);
 			continue;
 		};
@@ -4902,6 +4917,7 @@ ParserL2.prototype._preprocess = function() {
 			fcut.original_token = token;
 			fcut.line = token.line;
 			fcut.col  = token.col;
+			fcut.offset = token.offset;
 			this.ptokens.push(fcut);
 			continue;
 		};
@@ -4910,6 +4926,7 @@ ParserL2.prototype._preprocess = function() {
 			var opn = new OpNode("-", 500);
 			opn.line = token.line;
 			opn.col  = token.col;
+			opn.offset = token.offset;
 			this.ptokens.push(opn);
 			continue;
 		};
@@ -4945,6 +4962,7 @@ ParserL2.prototype._preprocess = function() {
 			var opn = new OpNode(token.value);
 			opn.line = token.line;
 			opn.col  = token.col;
+			opn.offset = token.offset;
 			this.ptokens.push(opn);
 			continue;
 		};
@@ -4984,7 +5002,7 @@ function ParserL3(expressions, operators_list, maybe_context) {
 	
 	this.op_list = operators_list;
 	this.expressions = expressions;
-};
+}
 
 /**
  * Process the expression list
@@ -5013,9 +5031,9 @@ ParserL3.prototype.process = function(){
 			//console.log("ParserL3.process: ", r);
 			
 			result[index] = r;
-		};
+		}
 		
-	};// ops
+	} // ops
 	
 	return result;
 	
@@ -5049,7 +5067,7 @@ ParserL3.process_expression = function(opcode, expression){
 		if (current_count_of_opnodes_processed == 0)
 			break;
 		
-	}; //for;;
+	} //for;;
 	
 	return result;
 	
@@ -5082,12 +5100,12 @@ ParserL3._process_expression = function(opcode, expression){
 			var exp_from_args = node.args;
 			var fresult = ParserL3.process_expression(opcode, exp_from_args);
 			node.args = fresult; 
-		};
+		}
 		
 		if (!(node instanceof OpNode)) {
 			result.push(node);
 			continue;
-		};
+		}
 			
 		
 		// Is it the sort of operator we are
@@ -5096,7 +5114,7 @@ ParserL3._process_expression = function(opcode, expression){
 		if (opcode.symbol != node.symbol) {
 			result.push(node);
 			continue;
-		};
+		}
 
 		
 		// gather 'node left' and 'node right'
@@ -5114,7 +5132,7 @@ ParserL3._process_expression = function(opcode, expression){
 		if (iresult == null) {
 			result.push(node);
 			continue;
-		};
+		}
 			
 		processed_nodes++;
 
@@ -5125,7 +5143,7 @@ ParserL3._process_expression = function(opcode, expression){
 		
 		node_index++;			
 
-	}; // expression	
+	} // expression	
 	
 	return [result, processed_nodes];
 };
@@ -5152,7 +5170,7 @@ ParserL3._process_one = function(opcode, node_left, node_center, node_right) {
 	
 	if (!compat) {
 		return null;
-	};
+	}
 
 	// We have compatibility and thus
 	//  substitute for a Functor
@@ -5163,6 +5181,7 @@ ParserL3._process_one = function(opcode, node_left, node_center, node_right) {
 	var functor = new Functor(opcode.name);
 	functor.col = node_center.col;
 	functor.line = node_center.line;
+	functor.offset = node_center.offset;
 	functor.attrs = opcode.attrs;
 	
 	var is_unary = Op.is_unary(opcode.type); 
@@ -5171,7 +5190,7 @@ ParserL3._process_one = function(opcode, node_left, node_center, node_right) {
 		functor.args = [node_right];
 	} else {
 		functor.args = [node_left, node_right];
-	};
+	}
 
 	return { is_unary: is_unary, result: functor };
 };
@@ -5185,7 +5204,7 @@ ParserL3._process_one = function(opcode, node_left, node_center, node_right) {
 
 if (typeof module!= 'undefined') {
 	module.exports.ParserL3 = ParserL3;
-};
+}
 
 /*
   global Var, Token, Functor

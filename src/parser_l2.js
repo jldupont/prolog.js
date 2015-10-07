@@ -75,6 +75,7 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 			opn = new OpNode('+', 500);
 			opn.line = token_n1.line;
 			opn.col  = token_n1.col;
+			opn.offset = token_n1.offset;
 			return opn;
 		};
 		
@@ -82,6 +83,7 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 			opn = new OpNode('-', 500);
 			opn.line = token_n1.line;
 			opn.col  = token_n1.col;
+			opn.offset = token_n1.offset;
 			return opn;
 		};
 	};
@@ -93,6 +95,7 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 			opn = new OpNode('+', 500);
 			opn.line = token_n1.line;
 			opn.col  = token_n1.col;
+			opn.offset = token_n1.offset;
 			return opn;
 		};
 		
@@ -100,6 +103,7 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 			opn = new OpNode('-', 500);
 			opn.line = token_n1.line;
 			opn.col  = token_n1.col;
+			opn.offset = token_n1.offset;
 			return opn;
 		};
 	};
@@ -432,6 +436,7 @@ ParserL2.prototype._process = function( ctx ){
 			functor_node.original_token = token;
 			functor_node.line = token.line;
 			functor_node.col  = token.col;
+			functor_node.offset = token.offset;
 			
 			if (ctx.process_functor) {
 				return new Result(functor_node, token);
@@ -471,6 +476,7 @@ ParserL2.prototype._preprocess = function() {
 			var v = new Var(token.value);
 			v.col = token.col;
 			v.line = token.line;
+			v.offset = token.offset;
 			this.ptokens.push(v);
 			continue;
 		};
@@ -496,6 +502,7 @@ ParserL2.prototype._preprocess = function() {
 			fcut.original_token = token;
 			fcut.line = token.line;
 			fcut.col  = token.col;
+			fcut.offset = token.offset;
 			this.ptokens.push(fcut);
 			continue;
 		};
@@ -504,6 +511,7 @@ ParserL2.prototype._preprocess = function() {
 			var opn = new OpNode("-", 500);
 			opn.line = token.line;
 			opn.col  = token.col;
+			opn.offset = token.offset;
 			this.ptokens.push(opn);
 			continue;
 		};
@@ -539,6 +547,7 @@ ParserL2.prototype._preprocess = function() {
 			var opn = new OpNode(token.value);
 			opn.line = token.line;
 			opn.col  = token.col;
+			opn.offset = token.offset;
 			this.ptokens.push(opn);
 			continue;
 		};

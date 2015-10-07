@@ -31,6 +31,7 @@ function Token(name, maybe_value, maybe_attrs) {
 	// Position in input stream
 	this.line = maybe_attrs.line || 0;
 	this.col  = maybe_attrs.col || 0;
+	this.offset = maybe_attrs.offset || 0;
 	
 	this.is_primitive = maybe_attrs.is_primitive || false;
 	this.is_operator =  maybe_attrs.is_operator || false;
@@ -143,6 +144,7 @@ function Op(name, symbol, precedence, type, attrs) {
 	// from the lexer
 	this.line = 0;
 	this.col  = 0;
+	this.offset = 0;
 }
 
 Op.prototype.inspect = function() {
@@ -447,6 +449,7 @@ function Functor(name, maybe_arguments_list) {
 	// from the lexer
 	this.line = 0;
 	this.col  = 0;
+	this.offset = 0;
 
 	// Used in the context of the interpreter
 	// ======================================
@@ -579,6 +582,7 @@ function Var(name) {
 	this.name = name;
 	this.col = null;
 	this.line = null;
+	this.offset = 0;
 	
 	this.value = null;
 	
