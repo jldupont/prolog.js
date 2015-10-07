@@ -35,7 +35,7 @@ function Token(name, maybe_value, maybe_attrs) {
 	this.is_primitive = maybe_attrs.is_primitive || false;
 	this.is_operator =  maybe_attrs.is_operator || false;
 	
-};
+}
 
 Token.inspect_quoted = false;
 Token.inspect_compact = false;
@@ -117,7 +117,7 @@ Token.check_for_match = function(input_list, expected_list, also_index){
 			}
 				
 				
-	};
+	}
 	
 	return true;
 };
@@ -126,7 +126,7 @@ Token.check_for_match = function(input_list, expected_list, also_index){
 function Result(term_list, last_token) {
 	this.terms = term_list;
 	this.last_token = last_token;
-};
+}
 
 
 /**
@@ -143,7 +143,7 @@ function Op(name, symbol, precedence, type, attrs) {
 	// from the lexer
 	this.line = 0;
 	this.col  = 0;
-};
+}
 
 Op.prototype.inspect = function() {
 	return "Op("+this.name+")";
@@ -236,7 +236,7 @@ Op.has_ambiguous_precedence = function(symbol) {
 		Op.ordered_list_by_precedence.push(o);
 		Op.map_by_name [ o.name ] = o;
 		Op.map_by_symbol[ o.symbol ] = o;
-	};
+	}
 	
 	Op.ordered_list_by_precedence.sort(function(a, b){
 		return (a.prec - b.prec);
@@ -291,7 +291,7 @@ Op.__classify = function(node_left, node_center, node_right){
 				if (node_left.prec < pc)
 					result += "x";
 		
-	} catch(e) {}; // we anyhow need to report ``
+	} catch(e) {} // we anyhow need to report ``
 	
 	result += 'f';
 	
@@ -301,7 +301,7 @@ Op.__classify = function(node_left, node_center, node_right){
 				result += 'y';
 			else if (node_right.prec < pc)
 				result += 'x';
-	} catch(e) {};
+	} catch(e) {}
 
 	return result;
 };
@@ -382,8 +382,8 @@ function OpNode(symbol, maybe_precedence) {
 		} catch(e) {
 			throw new Error("Can't find `" + symbol +"` in Op.map_by_symbol");
 		}
-	};
-};
+	}
+}
 
 OpNode.prototype.inspect = function(){
 	return "OpNode(`"+this.symbol+"`,"+this.prec+")";
@@ -405,15 +405,23 @@ OpNode.create_from_name = function(name) {
 };
 
 
+// During the tokenisation of a comment stream
+function InComment() {}
 
 // End of stream
-function Eos () {};
+function Eos () {}
 
 Eos.prototype.inspect = function () {
 	return "Eos";
 };
 
-function Nothing () {};
+function Code(code) {
+	this.code = code || {};
+}
+
+Code.prototype.inspect = function(){
+	return "Code("+this.code.f+"/"+this.code.arity+")";
+};
 
 /**
  *  Functor
@@ -434,7 +442,7 @@ function Functor(name, maybe_arguments_list) {
 		primitive: false
 		,boolean: false
 		,retvalue: false
-	}
+	};
 	
 	// from the lexer
 	this.line = 0;
@@ -454,7 +462,7 @@ function Functor(name, maybe_arguments_list) {
 	else
 		this.args = [];
 
-};
+}
 
 Functor.prototype.get_arity = function() {
 	return this.arity || this.args.length;
@@ -470,12 +478,13 @@ Functor.inspect_quoted = false;
 
 Functor.prototype.inspect = function(){
 	
+	var fargs;
 	var result = "";
 	
 	var arity = this.arity || this.args.length;
 	
 	if (Functor.inspect_compact_version) {
-		var fargs = this.format_args(this.args);
+		fargs = this.format_args(this.args);
 		result = this.name+"("+fargs+")";
 		
 	} else {
@@ -483,7 +492,7 @@ Functor.prototype.inspect = function(){
 		if (Functor.inspect_short_version)
 			result = "Functor("+this.name+"/"+arity+")";
 		else {
-			var fargs = this.format_args(this.args);
+			fargs = this.format_args(this.args);
 			
 			if (arity>0)
 				result = "Functor("+this.name+"/"+arity+","+fargs+")";
@@ -491,7 +500,7 @@ Functor.prototype.inspect = function(){
 				result = "Functor("+this.name+"/"+arity+")";
 		}
 		
-	}; 
+	}
 	
 	
 	if (Functor.inspect_quoted)
@@ -515,7 +524,7 @@ Functor.prototype.format_args = function (input) {
 			result += ']';
 		} else 
 			result = this.format_arg(result, arg);
-	};
+	}
 	
 	return result;
 };
@@ -548,7 +557,7 @@ Functor.compare = function(f1, f2) {
 			return true;
 			
 	return false;
-}
+};
 
 /**
  *  Var constructor
@@ -579,7 +588,7 @@ function Var(name) {
 		this.name = this.name+"$"+this.id;
 	
 	//console.log(".............. CREATED: ", name, this.name, this.is_anon);
-};
+}
 
 Var.counter = 0;
 Var.inspect_extended = false;
@@ -610,9 +619,9 @@ Var.prototype.inspect = function(depth){
 				return "Var("+name+", "+value+"){"+this.id+"}";
 			else
 				return "Var("+name+", "+value+")";
-		};
+		}
 		
-	};
+	}
 		
 	if (Var.inspect_compact) {
 		return "_"; 
@@ -693,27 +702,26 @@ Var.prototype.deref = function(check){
 Var.prototype.safe_bind = function(to, on_bind) {
 	
 	var dvar, tvar;
-	var to_is_var = to instanceof Var;
-	
-	var dvar = this.deref(to);
+
+	dvar = this.deref(to);
 	if (dvar == null) {
 		console.log("!!!!!!!!!! CYCLE AVERTED! ", this);
 		return;
-	};
+	}
 	
 	if (to instanceof Var) {
 		tvar = to.deref(this);
 		if (tvar == null) {
 			console.log("!!!!!!!!!!! CYCLE AVERTED!", to);
 			return;
-		};
+		}
 	} else
 		tvar = to;
 	
 	if (dvar == tvar) {
 		console.log("!!!!!!!!!!! CYCLE AVERTED!", to);
 		return;
-	};
+	}
 
 	dvar.bind(tvar, on_bind);
 };
@@ -721,7 +729,7 @@ Var.prototype.safe_bind = function(to, on_bind) {
 
 function Value(name) {
 	this.name = name;
-};
+}
 
 Value.prototype.inspect = function(){
 	return "Value("+this.name+")";
@@ -742,7 +750,7 @@ Value.prototype.inspect = function(){
 function Instruction(opcode, ctx) {
 	this.opcode = opcode;
 	this.ctx = ctx || null;
-};
+}
 
 Instruction.inspect_compact = false;
 Instruction.inspect_quoted = false;
@@ -793,7 +801,7 @@ Instruction.prototype.inspect = function(){
 			result += params[i] + "("+ JSON.stringify(this.ctx[params[i]])+")";
 			inserted= true;
 		}
-	};
+	}
 	
 	if (!Instruction.inspect_compact)
 		result += " )";
@@ -839,7 +847,7 @@ ParseSummary.prototype.inspect = function() {
 	
 };
 
-function InComment() {};
+
 
 // ============================================================ Errors
 
@@ -857,7 +865,7 @@ function ErrorExpectingFunctor(msg, token) {
 	this.classname = 'ErrorExpectingFunctor';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorExpectingFunctor.prototype = Error.prototype;
 
 
@@ -865,7 +873,7 @@ function ErrorExpectingVariable(msg, token) {
 	this.classname = 'ErrorExpectingVariable';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorExpectingVariable.prototype = Error.prototype;
 
 
@@ -873,21 +881,21 @@ function ErrorFunctorNotFound(msg, token) {
 	this.classname = 'ErrorFunctorNotFound';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorFunctorNotFound.prototype = Error.prototype;
 
 function ErrorFunctorClauseNotFound(msg, token) {
 	this.classname = 'ErrorFunctorClauseNotFound';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorFunctorClauseNotFound.prototype = Error.prototype;
 
 function ErrorFunctorCodeNotFound(msg, token) {
 	this.classname = 'ErrorFunctorCodeNotFound';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorFunctorCodeNotFound.prototype = Error.prototype;
 
 
@@ -895,77 +903,77 @@ function ErrorExpectingGoal(msg, token) {
 	this.classname = 'ErrorExpectingGoal';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorExpectingGoal.prototype = Error.prototype;
 
 function ErrorInvalidHead(msg, token) {
 	this.classname = 'ErrorInvalidHead';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorInvalidHead.prototype = Error.prototype;
 
 function ErrorRuleInQuestion(msg, token) {
 	this.classname = 'ErrorRuleInQuestion';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorRuleInQuestion.prototype = Error.prototype;
 
 function ErrorNoMoreInstruction(msg, token) {
 	this.classname = 'ErrorNoMoreInstruction';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorNoMoreInstruction.prototype = Error.prototype;
 
 function ErrorInvalidInstruction(msg, token) {
 	this.classname = 'ErrorInvalidInstruction';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorInvalidInstruction.prototype = Error.prototype;
 
 function ErrorInternal(msg, token) {
 	this.classname = 'ErrorInternal';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorInternal.prototype = Error.prototype;
 
 function ErrorInvalidValue(msg, token) {
 	this.classname = 'ErrorInvalidValue';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorInvalidValue.prototype = Error.prototype;
 
 function ErrorAlreadyBound(msg, token) {
 	this.classname = 'ErrorAlreadyBound';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorAlreadyBound.prototype = Error.prototype;
 
 function ErrorNotBound(msg, token) {
 	this.classname = 'ErrorNotBound';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorNotBound.prototype = Error.prototype;
 
 function ErrorExpectingListStart(msg, token) {
 	this.classname = 'ErrorExpectingListStart';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorExpectingListStart.prototype = Error.prototype;
 
 function ErrorExpectingListEnd(msg, token) {
 	this.classname = 'ErrorExpectingListEnd';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorExpectingListEnd.prototype = Error.prototype;
 
 
@@ -973,14 +981,14 @@ function ErrorInvalidToken(msg, token) {
 	this.classname = 'ErrorInvalidToken';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorInvalidToken.prototype = Error.prototype;
 
 function ErrorUnexpectedParensClose(msg, token) {
 	this.classname = 'ErrorUnexpectedParensClose';
 	this.message = msg;
 	this.token = token;
-};
+}
 ErrorUnexpectedParensClose.prototype = Error.prototype;
 
 function ErrorUnexpectedPeriod(msg, token) {
@@ -1014,8 +1022,8 @@ ErrorAttemptToRedefineBuiltin.prototype = Error.prototype;
 
 
 if (typeof module!= 'undefined') {
-	module.exports.Nothing = Nothing;
 	module.exports.Eos = Eos;
+	module.exports.Code = Code;
 	module.exports.InComment = InComment;
 	module.exports.Functor = Functor;
 	module.exports.Op = Op;
@@ -1052,4 +1060,4 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorUnexpectedEnd = ErrorUnexpectedEnd;
 	
 	module.exports.ErrorAttemptToRedefineBuiltin = ErrorAttemptToRedefineBuiltin;
-};
+}

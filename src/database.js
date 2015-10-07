@@ -22,6 +22,10 @@
 function Database(access_layer) {
 	this.db = {};
 	this.al = access_layer;
+}
+
+Database.prototype.clear = function() {
+	this.db = {};
 };
 
 /**
@@ -77,7 +81,7 @@ Database.prototype.batch_insert_code = function(codes) {
 		var a = code_object.a;
 		
 		this.insert_code(f, a, code_object);
-	};
+	}
 
 };
 
@@ -176,4 +180,3 @@ if (typeof module!= 'undefined') {
 	module.exports.Database = Database;
 	module.exports.DatabaseManager = DatabaseManager;
 }
-

@@ -156,9 +156,9 @@ Compiler.prototype.process_head = function(exp, with_body) {
 				result.push(new Instruction("get_struct", {f: ctx.n.name, a:ctx.n.args.length, x:ctx.v}));
 				return;
 				
-			};
+			}
 			
-		};
+		}
 		
 		/*
 		 *   Cases:
@@ -176,35 +176,35 @@ Compiler.prototype.process_head = function(exp, with_body) {
 			
 			if (first_time && at_root) {
 				result.push(new Instruction("get_var", {p:ctx.n.name}));
-			};
+			}
 			
 			if (first_time && !at_root) {
 				if (ctx.n.name[0] == "_")
 					result.push(new Instruction("unif_void"));
 				else
 					result.push(new Instruction("unif_var", {p:ctx.n.name}));
-			};
+			}
 			
 			if (!first_time && at_root) {
 				result.push(new Instruction("get_value", {p:ctx.n.name}));
-			};
+			}
 			
 			if (!first_time && !at_root) {
 				result.push(new Instruction("unif_value", {p:ctx.n.name}));
-			};
+			}
 
 			// not the first time anymore...
 			vars[ctx.n.name] = true;
 						
 			return;			
-		};
+		}
 		
 		if (ctx.n instanceof Token) {
 			
 			if (ctx.n.name == 'nil') {
 				result.push(new Instruction('unif_nil'));
 				return;
-			};
+			}
 			
 			if (ctx.n.name == 'term') {
 				
@@ -213,7 +213,7 @@ Compiler.prototype.process_head = function(exp, with_body) {
 				else
 					result.push(new Instruction('unify_term', { p: ctx.n.value }));
 				return;
-			};
+			}
 				
 			if (ctx.n.name == 'number') {
 				if (ctx.root_param)
@@ -221,9 +221,9 @@ Compiler.prototype.process_head = function(exp, with_body) {
 				else
 					result.push(new Instruction('unify_number', { p: ctx.n.value }));
 				return;
-			};
+			}
 			
-		};// If Token
+		}// If Token
 		
 	});//callback
 	
@@ -276,7 +276,9 @@ Compiler.prototype.process_query = function(exp) {
  *  'proceed' goes on each branch of disjunctions
  *  but only goes on the right-hand side of conjunctions.
  *   
- *   @raise
+ *  @return Object
+ * 
+ *  @raise ErrorInvalidToken
  */
 Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 	
@@ -570,9 +572,9 @@ Compiler.prototype.process_goal = function(exp, is_query, vars) {
 				
 				if (n.name == 'nil')
 					results.push(new Instruction("put_nil"));
-			};
+			}
 			
-		};//for
+		}//for
 		
 		// Only root functor gets a CALL
 		//
@@ -595,7 +597,7 @@ Compiler.prototype.process_goal = function(exp, is_query, vars) {
 				results.push(new Instruction('end'));
 			else
 				results.push(new Instruction('proceed'));
-		};
+		}
 			
 		
 	});
@@ -672,4 +674,4 @@ Compiler.prototype.process_primitive = function(exp, is_query, vars) {
 
 if (typeof module!= 'undefined') {
 	module.exports.Compiler = Compiler;
-};
+}

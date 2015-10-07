@@ -5,7 +5,7 @@
  */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
-/* global Op, Compiler
+/* global Op, Compiler, Code
           ,ParseSummary
 */
  
@@ -28,7 +28,7 @@ Prolog.compile = function(input_text) {
         var code = c.process_rule_or_fact(ctokens[index]);    
         
         result.push(code);
-    };
+    }
     
     return result;
 };
@@ -52,6 +52,34 @@ Prolog.parse = function(input_text) {
 	var r3 = p3.process();
 	
 	return r3;
+};
+
+/**
+ *  Compiles a list of sentences
+ * 
+ *  @return [Code | Error]
+ */
+Prolog.compile_per_sentence = function(parsed_sentences) {
+    
+    var result=[];
+    var c = new Compiler();
+    var code_object;
+    
+    for (var index=0; index<parsed_sentences.length; index++) {
+        
+        var parsed_sentence = parsed_sentences[index];
+        
+        try {
+            code_object = c.process_rule_or_fact(parsed_sentence);
+            result.push( new Code(code_object) );
+        } catch(e) {
+            result.push(e);
+        }
+        
+        result.push();
+    }
+    
+    return result;
 };
 
 /**
@@ -116,7 +144,7 @@ Prolog._combine = function(tokens_list) {
         var list = tokens_list[index];
         
         result = result.concat( list );
-    };
+    }
     
     return result;
 };
@@ -124,9 +152,23 @@ Prolog._combine = function(tokens_list) {
 /**
  * Compiles a query
  * 
+ * @return Code | Error
  */
-Prolog.compile_query = function(input_text) {
+Prolog.compile_query = function(parsed_sentence) {
     
+    var result, code;
+    
+    var c = new Compiler();
+    
+    try {
+        code = c.process_query(parsed_sentence);
+        
+        result.push( new Code(code) );
+    } catch(e) {
+        result.push( e );
+    }
+    
+    return result;
 };
 
 if (typeof module!= 'undefined') {
