@@ -110,6 +110,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     // TODO remove for release
     window.editor = ed;
     
+    var errors_previously = false;
     
     function markup_errors(error_list) {
       clear_background();
@@ -124,11 +125,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     mbus.sub({
       type: 'error-locations'
       ,subscriber: 'editor'
-      ,cb : function(msg) {
+      ,cb : function(locs) {
         
+        if (errors_previously)
+          if (locs.length == 0) {
+            clear_background();
+            errors_previously = false;
+            return;
+          }
         //console.log("Errors: ", msg);
         
-        markup_errors(msg);
+        markup_errors(locs);
       }
     });
     
