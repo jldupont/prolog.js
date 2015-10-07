@@ -18,13 +18,21 @@
       var text = msg.text;
       var file = msg.file;
       
-      var code = Prolog.compile(text);
+      var parsed_sentences = Prolog.parse_per_sentence(text);
       
-      mbus.post('code',{
-        code:  code
+      mbus.post('parsed',{
+        sentences:  parsed_sentences
         ,file: file
       });
       
+    }
+  });
+
+  mbus.sub({
+    type: 'parsed'
+    ,subscriber: 'compiler'
+    ,cb: function(msg) {
+        console.log(msg);
     }
   });
 

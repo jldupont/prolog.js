@@ -12,18 +12,22 @@ var Debouncer = function(timeout, ctx, cb) {
     this.ctx = ctx;
     
     this.in_process = false;
+    this.current_timer = null;
 };
 
 Debouncer.prototype.report_event = function() {
     
     // We are already debouncing an event
-    if (this.in_process)
-        return;
+    if (this.in_process) {
+        if (this.current_timer)
+            clearTimeout(this.current_timer);
+    }
+        
         
     this.in_process = true;
 
     var that = this;
-    setTimeout(function(){
+    this.current_timer = setTimeout(function(){
         
         try {
             that.cb(that.ctx);
