@@ -103,7 +103,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     
     //console.log(typeof dber.report_event);
     
-    ed.on("text-change", function(_, source) {
+    ed.on("text-change", function(_delta, source) {
+      
+      //console.log("Delta: ", delta);
+      
       dber.report_event({ source: source });
     });
     
@@ -127,15 +130,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ,subscriber: 'editor'
       ,cb : function(locs) {
         
-        if (errors_previously)
+        console.log("Error Locs: ", locs);
+        
+        if (errors_previously) {
           if (locs.length == 0) {
             clear_background();
             errors_previously = false;
             return;
           }
+        } else {
+          if (locs.length == 0)
+            return;
+        }
         //console.log("Errors: ", msg);
         
         markup_errors(locs);
+      }
+    });
+    
+    
+    mbus.sub({
+      type: 'compilation-errors'
+      ,subscriber: 'editor'
+      ,cb: function(msg) {
+        console.log("Compilation Errors: ", msg.errors);
       }
     });
     
