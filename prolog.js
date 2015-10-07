@@ -1126,6 +1126,14 @@ function ErrorUnexpectedListEnd(msg, token) {
 }
 ErrorUnexpectedListEnd.prototype = Error.prototype;
 
+function ErrorAttemptToRedefineBuiltin(msg, functor, arity) {
+	this.classname = 'ErrorAttemptToRedefineBuiltin';
+	this.message = msg;
+	this.functor = functor;
+	this.arity = arity;
+}
+ErrorAttemptToRedefineBuiltin.prototype = Error.prototype;
+
 
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
@@ -1164,6 +1172,8 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorUnexpectedParensClose = ErrorUnexpectedParensClose;
 	module.exports.ErrorUnexpectedPeriod = ErrorUnexpectedPeriod;
 	module.exports.ErrorUnexpectedEnd = ErrorUnexpectedEnd;
+	
+	module.exports.ErrorAttemptToRedefineBuiltin = ErrorAttemptToRedefineBuiltin;
 };
 /* global ErrorExpectingFunctor, ErrorRuleInQuestion, ErrorInvalidToken */
 /* global Functor, ErrorInvalidHead, Visitor, Visitor2, Visitor3 */
@@ -1829,6 +1839,9 @@ if (typeof module!= 'undefined') {
 	module.exports.Compiler = Compiler;
 };
 
+/* global ErrorAttemptToRedefineBuiltin
+*/
+
 /*
  *  Database
  * 
@@ -1955,9 +1968,42 @@ Database.prototype.lookup_functor = function(functor_signature){
 	return this.db[functor_signature] || null;
 };
 
+
+// =============================================================== MANAGER
+
+function DatabaseManager(db_builtins, db_user) {
+	this.db_builtins = db_builtins;
+	this.db_user = db_user;
+}
+
+/**
+ *  Insert code in the Builtin database
+ */
+DatabaseManager.prototype.builtin_insert_code = function(functor, arity, code) {
+	
+	this.db_builtins.insert_code(functor, arity, code);
+};
+
+/**
+ *  Insert code, if possible, in the User database
+ * 
+ *  If the Functor/Arity is already defined in the
+ *   Builtin database, reject with
+ */
+DatabaseManager.prototype.user_insert_code = function(functor, arity, code) {
+	
+	if (this.db_builtins.exists(functor, arity))
+		throw new ErrorAttemptToRedefineBuiltin("Attempt to redefine Functor", functor, arity);
+		
+	this.db_user.insert_code(functor, arity, code);
+	
+};
+
+
 if (typeof module!= 'undefined') {
 	module.exports.Database = Database;
-};
+	module.exports.DatabaseManager = DatabaseManager;
+}
 
 
 /*
@@ -2116,9 +2162,6 @@ Interpreter.prototype.set_tracer = function(tracer) {
  */
 Interpreter.prototype.set_question = function(question_code){
 	
-	//if (!(question instanceof Functor))
-	//	throw new ErrorExpectingFunctor("Expecting functor, got: "+JSON.stringify(question));
-
 	// Enter the `question` in the database
 	//  as to only have 1 location to work on from
 	if (!(question_code instanceof Array))

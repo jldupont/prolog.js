@@ -11,6 +11,9 @@
  * 
  **/
 
+/* global ErrorAttemptToRedefineBuiltin
+*/
+
 /*
  *  Database
  * 
@@ -137,7 +140,40 @@ Database.prototype.lookup_functor = function(functor_signature){
 	return this.db[functor_signature] || null;
 };
 
+
+// =============================================================== MANAGER
+
+function DatabaseManager(db_builtins, db_user) {
+	this.db_builtins = db_builtins;
+	this.db_user = db_user;
+}
+
+/**
+ *  Insert code in the Builtin database
+ */
+DatabaseManager.prototype.builtin_insert_code = function(functor, arity, code) {
+	
+	this.db_builtins.insert_code(functor, arity, code);
+};
+
+/**
+ *  Insert code, if possible, in the User database
+ * 
+ *  If the Functor/Arity is already defined in the
+ *   Builtin database, reject with
+ */
+DatabaseManager.prototype.user_insert_code = function(functor, arity, code) {
+	
+	if (this.db_builtins.exists(functor, arity))
+		throw new ErrorAttemptToRedefineBuiltin("Attempt to redefine Functor", functor, arity);
+		
+	this.db_user.insert_code(functor, arity, code);
+	
+};
+
+
 if (typeof module!= 'undefined') {
 	module.exports.Database = Database;
-};
+	module.exports.DatabaseManager = DatabaseManager;
+}
 

@@ -1004,6 +1004,14 @@ function ErrorUnexpectedListEnd(msg, token) {
 }
 ErrorUnexpectedListEnd.prototype = Error.prototype;
 
+function ErrorAttemptToRedefineBuiltin(msg, functor, arity) {
+	this.classname = 'ErrorAttemptToRedefineBuiltin';
+	this.message = msg;
+	this.functor = functor;
+	this.arity = arity;
+}
+ErrorAttemptToRedefineBuiltin.prototype = Error.prototype;
+
 
 if (typeof module!= 'undefined') {
 	module.exports.Nothing = Nothing;
@@ -1042,4 +1050,6 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorUnexpectedParensClose = ErrorUnexpectedParensClose;
 	module.exports.ErrorUnexpectedPeriod = ErrorUnexpectedPeriod;
 	module.exports.ErrorUnexpectedEnd = ErrorUnexpectedEnd;
+	
+	module.exports.ErrorAttemptToRedefineBuiltin = ErrorAttemptToRedefineBuiltin;
 };

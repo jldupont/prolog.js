@@ -53,9 +53,6 @@ Interpreter.prototype.set_tracer = function(tracer) {
  */
 Interpreter.prototype.set_question = function(question_code){
 	
-	//if (!(question instanceof Functor))
-	//	throw new ErrorExpectingFunctor("Expecting functor, got: "+JSON.stringify(question));
-
 	// Enter the `question` in the database
 	//  as to only have 1 location to work on from
 	if (!(question_code instanceof Array))
