@@ -242,6 +242,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 		var nil = new Token('nil');
 		nil.line = token ? token.line: null;
 		nil.col  = token ? token.col : null;
+		nil.offset = token ? token.offset: null;
 		return nil;
 	}
 	
@@ -284,7 +285,9 @@ ParserL2.prototype._process_list = function(maybe_token){
 	
 	if (next_token == null)
 		throw new ErrorUnexpectedEnd("Unexpected end in list definition", head);
-	
+
+	previous_token = next_token;
+
 	if (next_token.name == 'list:tail') {
 		
 		next_token = this.get_token();
@@ -293,13 +296,11 @@ ParserL2.prototype._process_list = function(maybe_token){
 		throw new ErrorUnexpectedEnd("Unexpected end in list definition", previous_token);
 		
 		if (next_token.name == 'functor') {
-			this.regive()
-			res = this._process({ process_functor: true })
+			this.regive();
+			res = this._process({ process_functor: true });
 			next_token = res.terms;
 		}
 
-		previous_token = next_token;
-		
 		cons.push_arg( next_token );
 		
 		next_token = this.get_token();
@@ -311,7 +312,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 			throw new ErrorExpectingListEnd("Expecting list end, got:" + JSON.stringify(next_token), next_token);
 		
 		return cons;
-	};
+	}
 	
 	var tail = this._process_list( next_token );
 	cons.push_arg( tail );
