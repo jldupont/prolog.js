@@ -3995,7 +3995,7 @@ if (typeof module != 'undefined') {
 }
 
 
-/* global Token, Eos, InComment
+/* global Token, InComment
 */
 
 /**
@@ -4064,8 +4064,6 @@ Lexer.token_map = {
 	,'[':  function() { return new Token('list:open',  null) }
 	,']':  function() { return new Token('list:close', null) }
 };
-
-Lexer.newline_as_null = true;
 
 /**
  * Retrieves all tokens from the stream.
@@ -4138,7 +4136,7 @@ Lexer.prototype.process_per_sentence = function() {
  *  
  *  @return Token | null 
  */
-Lexer.prototype.step = function(newline_as_null) {
+Lexer.prototype.step = function() {
 
 	// we reached the end already,
 	//  prevent restart
@@ -4181,7 +4179,7 @@ Lexer.prototype.next = function() {
 	
 	if (maybe_raw_token == null) {
 		return new Token('eof');
-	};
+	}
 		
 	
 	var raw_token = maybe_raw_token;
@@ -4217,10 +4215,10 @@ Lexer.prototype.next = function() {
 			this.in_comment = true;
 			this.comment_start_line = this.current_line;
 			this.comment_chars = "";
-		};
+		}
 		
 		return Lexer.InComment;
-	};
+	}
 	
 	// If we are dealing with a comment,
 	//  skip till the end of the line
@@ -4237,14 +4235,14 @@ Lexer.prototype.next = function() {
 		for(;;) {
 			var char = this.step(Lexer.newline_as_null);
 			if (char == null || char == "\n" || char == '\r')
-			break;
+				break;
 			
 			comment_chars += char;
-		};
+		}
 
 		return_token.value = comment_chars;
 		return return_token;
-	};
+	}
 	
 	// are we dealing with a number ?
 	if (Lexer.is_number(raw_token)) {
@@ -4254,7 +4252,7 @@ Lexer.prototype.next = function() {
 		return_token.col = current_index;
 		return_token.line = this.current_line;
 		return return_token;
-	};
+	}
 	
 	// are we dealing with a string ?
 	//
@@ -4272,13 +4270,13 @@ Lexer.prototype.next = function() {
 				return return_token;
 			} 
 			string = string + t;
-		}; 
+		}
 		
-	};
+	}
 
 	function generate_new_term(value) {
 		return new Token('term', value);
-	};
+	}
 	
 	var fn = Lexer.token_map[maybe_raw_token] || generate_new_term; 
 	
@@ -4296,7 +4294,7 @@ Lexer.prototype.next = function() {
 if (typeof module!= 'undefined') {
 	module.exports.Lexer = Lexer;
 	module.exports.Token = Token;
-};
+}
 
 /* global Eos
 */
