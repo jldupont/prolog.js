@@ -56,6 +56,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       
     });
     
+    function clear_background() {
+      var l = ed.getLength();
+      ed.formatText(0, l, 'background', 'rgb(255,255,255)');
+    }
+    
     function clear() {
       var l = ed.getLength();
       ed.deleteText(0, l);
@@ -78,27 +83,55 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     });
     
-    var dber = new Debouncer(1000, {source: 'editor-text-change'}, function(){
+    var dber = new Debouncer(1000, {source: 'editor-text-change'}, function(_, ctx){
         
-        //console.log("Text Change !");
+        // Let's avoid recursion...
+        if (ctx.source == 'parser')
+          return;
+          
+        //console.log("Text Change !  source= ", ctx.source);
         
         var text = ed.getText();
         
         mbus.post('file-text', {
           file:  current_file
           ,text: text
+          ,ctx: ctx
         });
 
     });
     
     //console.log(typeof dber.report_event);
     
-    ed.on("text-change", function() {
-      dber.report_event();
+    ed.on("text-change", function(_, source) {
+      dber.report_event({ source: source });
     });
     
     // TODO remove for release
     window.editor = ed;
+    
+    
+    function markup_errors(error_list) {
+      clear_background();
+      
+      for (var index=0; index<error_list.length; index++) {
+        var loc = error_list[index];
+        
+        ed.formatText(loc, loc+1, 'background', 'rgb(240, 6, 6)', 'parser');
+      }
+    }
+    
+    mbus.sub({
+      type: 'error-locations'
+      ,subscriber: 'editor'
+      ,cb : function(msg) {
+        
+        //console.log("Errors: ", msg);
+        
+        markup_errors(msg);
+      }
+    });
+    
     
   });//dom-change
 

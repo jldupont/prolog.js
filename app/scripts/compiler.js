@@ -28,11 +28,24 @@
     }
   });
 
+  function compute_error_locations(parserSummaryList) {
+    var locs = [];
+    
+    for (var index=0; index < parserSummaryList.length; index++) {
+      var entry = parserSummaryList[index];
+      if (entry && (entry.maybe_error != null))
+        locs.push( entry.maybe_error.token.offset);
+    }
+    
+    return locs;
+  }
+
   mbus.sub({
     type: 'parsed'
     ,subscriber: 'compiler'
     ,cb: function(msg) {
-        console.log(msg);
+        var locs = compute_error_locations(msg.sentences);
+        mbus.post('error-locations', locs);
     }
   });
 

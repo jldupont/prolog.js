@@ -15,7 +15,7 @@ var Debouncer = function(timeout, ctx, cb) {
     this.current_timer = null;
 };
 
-Debouncer.prototype.report_event = function() {
+Debouncer.prototype.report_event = function(ctx) {
     
     // We are already debouncing an event
     if (this.in_process) {
@@ -30,7 +30,7 @@ Debouncer.prototype.report_event = function() {
     this.current_timer = setTimeout(function(){
         
         try {
-            that.cb(that.ctx);
+            that.cb(that.ctx, ctx);
         } catch(e) {
             console.error("Debouncer: ctx(",that.ctx,") error= ",e);
         }
