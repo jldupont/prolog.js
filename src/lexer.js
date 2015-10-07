@@ -27,6 +27,8 @@ function Lexer (text) {
 	this.current_line = 0;
 	this.offset = 0;
 	
+	this.offset_in_text = 0;
+	
 	// Comment processing
 	this.comment_start_line = 0;
 	this.in_comment = false;
@@ -157,6 +159,7 @@ Lexer.prototype.step = function() {
 	// note that regex.exec keeps a context
 	//  in the regex variable itself 
 	this.current_match = this._tokenRegexp.exec(this.text);
+	this.offset_in_text = this._tokenRegexp.lastIndex;
 	
 	if (this.current_match != null)
 		return this.current_match[0];
@@ -192,7 +195,6 @@ Lexer.prototype.next = function() {
 		return new Token('eof');
 	}
 		
-	
 	var raw_token = maybe_raw_token;
 	
 	var current_index = this._computeIndex( this.current_match.index );
@@ -219,7 +221,7 @@ Lexer.prototype.next = function() {
 			return_token = new Token('comment', this.comment_chars);
 			return_token.col = 0;
 			return_token.line = this.comment_start_line;
-			return_token.offset = this.offset;
+			return_token.offset = this.offset_in_text;
 			return return_token;
 			
 		} else {
@@ -239,7 +241,7 @@ Lexer.prototype.next = function() {
 		return_token = new Token('comment', null);
 		return_token.col  = current_index;
 		return_token.line = this.current_line;
-		return_token.offset = this.offset;
+		return_token.offset = this.offset_in_text;
 		
 		this.current_line = this.current_line + 1;
 		
@@ -264,7 +266,7 @@ Lexer.prototype.next = function() {
 		return_token.is_primitive = true;
 		return_token.col = current_index;
 		return_token.line = this.current_line;
-		return_token.offset = this.offset;
+		return_token.offset = this.offset_in_text;
 		return return_token;
 	}
 	
@@ -281,7 +283,7 @@ Lexer.prototype.next = function() {
 				return_token.is_primitive = true;
 				return_token.col = current_index;
 				return_token.line = this.current_line;
-				return_token.offset = this.offset;
+				return_token.offset = this.offset_in_text;
 				return return_token;
 			} 
 			string = string + t;
@@ -298,7 +300,7 @@ Lexer.prototype.next = function() {
 	return_token = fn(maybe_raw_token);	
 	return_token.col = current_index;
 	return_token.line = this.current_line;
-	return_token.offset = this.offset;
+	return_token.offset = this.offset_in_text;
 	
 	if (return_token.name == 'newline')
 		this._handleNewline();

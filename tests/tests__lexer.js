@@ -646,3 +646,27 @@ it('Lexer - process sentence - 2', function() {
 
 	
 })
+/*
+it('Lexer - offset - 1', function() {
+	
+	Token.inspect_compact = false;
+	
+	var text =   'f(X).'
+				;
+	
+	var elist = [
+					[ ]
+	             ];
+	
+	var l = new Lexer(text);
+	var list = l.process_per_sentence();
+	
+	console.log(list[0][2].offset);
+	
+	var result = Token.check_for_match(list, elist);
+
+	should.equal(result, true);
+
+	
+})
+*/
