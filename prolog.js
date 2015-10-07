@@ -2281,7 +2281,7 @@ Interpreter.prototype.backtrack = function() {
 		this._restore_continuation( this.ctx.tse.cp );
 		this._execute();
 		return true;
-	};
+	}
 		
 	/*
 	 * We are a cut point ...
@@ -2305,7 +2305,7 @@ Interpreter.prototype.backtrack = function() {
 		this.ctx.tse = this.stack[ this.stack.length-1 ];
 		this.ctx.cse = this.ctx.tse;
 		
-	};
+	}
 
 	// We are at the top of the stack
 	if (this.ctx.tse.qenv)
@@ -2348,7 +2348,7 @@ Interpreter.prototype.step = function() {
 	} else {
 		// Execute the instruction
 		this[fnc_name].apply(this, [inst]);	
-	};
+	}
 	
 	return this.ctx.end;
 	
@@ -2412,26 +2412,26 @@ Interpreter.prototype.fetch_next_instruction = function(){
 Interpreter.prototype.__get_code = function(db, functor_name, arity, clause_index) {
 	
 	var result = {};
-	
+	var fname;
 	var clauses;
 
 	try {
 		clauses = db.get_code(functor_name, arity);
 		result.ct = clauses.length;
 	} catch(e) {
-		var fname = functor_name+"/"+arity;
+		fname = functor_name+"/"+arity;
 		throw new ErrorFunctorNotFound("Functor not found: "+fname, fname);
-	};
+	}
 	
 	if (clause_index >= result.ct) {
-		var fname = functor_name+"/"+arity;
+		fname = functor_name+"/"+arity;
 		throw new ErrorFunctorClauseNotFound("Functor clause not found: "+fname, fname);
-	};
+	}
 	
 	result.cc = clauses[clause_index];
 	
 	if (!result.cc) {
-		var fname = functor_name+"/"+arity;
+		fname = functor_name+"/"+arity;
 		return ErrorFunctorCodeNotFound("Functor clause code not found: "+fname, fname);
 	}
 	
@@ -2475,7 +2475,7 @@ Interpreter.prototype._execute = function( ctx ){
 		
 		this.ctx.p.f  = ctx.f;
 		this.ctx.p.a  = ctx.a;
-		this.ctx.p.ci = ctx.ci
+		this.ctx.p.ci = ctx.ci;
 		this.ctx.p.i = 0;
 
 		this.ctx.cc   = result.cc;
@@ -2562,7 +2562,7 @@ Interpreter.prototype.maybe_add_to_trail = function(which_trail, what_var) {
 	if (dvar.is_bound())
 		return;
 	
-	var vtrail_name = dvar.name
+	var vtrail_name = dvar.name;
 	which_trail[vtrail_name] = dvar;
 	
 	//console.log("| TRAILED: ", dvar.name, dvar.id);
@@ -2601,7 +2601,7 @@ Interpreter.prototype._unwind_trail = function(which) {
 		trail_var.unbind();
 		
 		//console.log("> TRAIL UNBOUND: ", trail_var.name);
-	};
+	}
 	
 	// Next time around, we might have a different clause
 	//  with different variables ... so do some cleanup!
@@ -2738,7 +2738,7 @@ Interpreter.prototype.inst_call = function(inst) {
 	this.ctx.tse.vars['$x0'] = x0;
 	
 	// I know it's pessimistic
-	this.ctx.cu = false
+	this.ctx.cu = false;
 	
 	// Get ready for `head` related instructions
 	this.ctx.cs = null;
@@ -2825,7 +2825,7 @@ Interpreter.prototype.inst_maybe_retry = function() {
 			`jump` by manipulating `i` directly.
 		*/
 		this.ctx.p.i -= 2;
-	};
+	}
 
 	// ELSE:  the following `deallocate` will get rid of the
 	//        environment from the stack
@@ -2916,7 +2916,7 @@ Interpreter.prototype.inst_maybe_fail = function() {
 		this.ctx.cse.te = null;
 		
 		return;
-	};
+	}
 	
 	this.backtrack();
 };
@@ -2981,7 +2981,7 @@ Interpreter.prototype.inst_proceed = function() {
 		this._restore_continuation( this.ctx.cse.cp );
 		this._execute();
 		return;
-	};
+	}
 	
 	// A disjunction is available?
 	//
@@ -2993,7 +2993,7 @@ Interpreter.prototype.inst_proceed = function() {
 		this.ctx.cse.te = null;
 		
 		return;
-	};
+	}
 	
 	
 	this.backtrack();
@@ -3068,7 +3068,7 @@ Interpreter.prototype._get_value = function(token) {
 		
 		// not the prettiest solution I know
 		token = dvar.get_value();
-	};
+	}
 		
 	
 	if (Utils.isNumeric(token))
@@ -3153,7 +3153,7 @@ Interpreter.prototype._exit = function() {
 		this.ctx.cse.te = null;
 		
 		return;
-	};
+	}
 	
 	this.backtrack();
 };
@@ -3200,9 +3200,9 @@ Interpreter.prototype._get_values = function() {
 		lval = l.deref().get_value();
 	else
 		if (Utils.isNumeric(l))
-			lval = l
+			lval = l;
 		else
-			lval = l.value
+			lval = l.value;
 	
 	if (r instanceof Var )
 		rval = r.deref().get_value();
@@ -3498,7 +3498,7 @@ Interpreter.prototype.inst_unif_value = function(inst) {
 		this.ctx.cs.push_arg( pv );
 		this.ctx.cu = true;
 		return;
-	};
+	}
 	
 	
 	var from_current_structure = this.ctx.cs.get_arg( this.ctx.csi++ );
@@ -3532,7 +3532,7 @@ Interpreter.prototype.inst_unif_void = function() {
 		var vvar = new Var("_");
 		this._add_to_trail( this.ctx.cse.trail, vvar);
 		this.ctx.cs.push_arg( vvar );
-	};
+	}
 	
 };
 
@@ -3545,7 +3545,7 @@ Interpreter.prototype.inst_unif_nil = function() {
 		this.ctx.cs.push_arg( new Token('nil') );
 		this.ctx.cu = true;
 		return;
-	};
+	}
 
 	var cell = this.ctx.cs.get_arg( this.ctx.csi++ );
 	this.ctx.cu = Utils.unify(cell, new Token('nil') );
@@ -3577,7 +3577,7 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 
 	if (!v) {
 		v = inst.get('x', "$x");
-	};
+	}
 	
 	var pv = this.ctx.cse.vars[v];
 
@@ -3587,7 +3587,7 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 	if (!pv) {
 		pv = new Var(v);
 		this.ctx.cse.vars[pv.name] = pv;
-	};
+	}
 	
 	
 	
@@ -3600,7 +3600,7 @@ Interpreter.prototype.inst_unif_var = function(inst) {
 		this.ctx.cs.push_arg( pv );
 		this.ctx.cu = true;
 		return;
-	};
+	}
 	
 	
 	// Get from the structure being worked on
@@ -3701,7 +3701,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 		 *  probably a bug in the compiler.
 		 */
 		throw new ErrorInternal("Attempting to 'get_struct' again on same argument: " + x, inst);
-	};
+	}
 	
 	var fname  = inst.get('f');
 	var farity = inst.get('a');
@@ -3745,7 +3745,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 		}
 		
 		
-	};
+	}
 	
 	// We can only be in 'r' mode pass this point
 	//
@@ -3760,7 +3760,7 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 		 */
 		node = dvar.get_value();
 		
-	};
+	}
 	
 	/*
 	 *  We have a proper structure
@@ -3770,16 +3770,16 @@ Interpreter.prototype.inst_get_struct = function(inst) {
 		
 		if (node.get_name() != fname) {
 			return this.backtrack();	
-		};
+		}
 
 		if (node.get_arity() != +farity ) {
 			return this.backtrack();
-		};
+		}
 		
 		this.ctx.cs = node;
 		this.ctx.cu = true;
 		return;
-	};
+	}
 
 	
 	
@@ -3828,7 +3828,7 @@ Interpreter.prototype._get_x = function(inst, type) {
 		this.ctx.cs.push_arg( new Token(type, p) );
 		this.ctx.cu = true;
 		return;
-	};
+	}
 	
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
@@ -3848,18 +3848,18 @@ Interpreter.prototype._get_x = function(inst, type) {
 		if (value_or_var.name == type) {
 			this.ctx.cu = ( value_or_var.value == p );
 			return;
-		};
+		}
 		
 		// FAIL
 		return;
-	};
+	}
 	
 	//  Could this really be happening ???
 	//
 	if (value_or_var == p) {
 		this.ctx.cu = true;
 		return;
-	};
+	}
 	
 	//  We can't have something like a Functor here!
 	//
@@ -3879,7 +3879,7 @@ Interpreter.prototype._get_x = function(inst, type) {
 		//
 		this.ctx.cu = (dvar.get_value() == p);
 		return;
-	};
+	}
 	
 	// Case (A)
 	//
@@ -3894,7 +3894,7 @@ Interpreter.prototype._get_x = function(inst, type) {
 
 if (typeof module != 'undefined') {
 	module.exports.Interpreter = Interpreter;
-};
+}
 
 
 /* global Token, Eos, InComment
