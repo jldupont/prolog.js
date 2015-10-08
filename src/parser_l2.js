@@ -226,8 +226,6 @@ ParserL2.prototype._process_list = function(maybe_token){
 
 	var head = maybe_token || this.get_token();
 	
-	//console.log("_process_list: ", head);
-	
 	/*
 	 *  Cases:
 	 *  * Constant, Functor, Var, nil  ==> OK, proper head 
@@ -264,6 +262,9 @@ ParserL2.prototype._process_list = function(maybe_token){
 	var res;
 	
 	var cons = new Functor('cons');
+	cons.line = head.line;
+	cons.col  = head.col;
+	cons.offset = head.offset;
 		
 	if (head.name == 'list:open') {
 		var value = this._process_list();

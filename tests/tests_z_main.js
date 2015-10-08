@@ -27,10 +27,12 @@ var setup = function(text) {
 	return Prolog.parse_per_sentence(text);
 };
 
+/*
 var dump_result = function(result) {
 	for (var index=0; index<result.length; index++)
 		console.log( util.inspect( result[index] ) );
 };
+*/
 
 function _test(text, expected, options) {
 
@@ -65,7 +67,7 @@ function _test(text, expected, options) {
 		
 		//console.log(res.maybe_error.classname, expect.maybe_error.classname);	
 			
-				
+			//console.log(JSON.stringify(res.maybe_error));
 			return res.maybe_error.classname == expect.maybe_error.classname;
 		}
 		
@@ -74,12 +76,12 @@ function _test(text, expected, options) {
 			
 	}	
 	return true;
-};
+}
 
 function test(text, expected, options) {
 	
 	should.ok( _test(text, expected, options) );
-};
+}
 
 it('Main - simple - 1', function() {
 	
@@ -134,9 +136,13 @@ it('Main - error - 3', function() {
 	
 	//console.log("\n---- Main - error - 1\n\n");
 	
-	var text = '[1,2] [3,4]';
+	var text =  'f(a).\n'
+				+'f(b).\n'
+				+'[1,2] [3,4]';
 	
 	test(text, [
-		 new ParseSummary(new ErrorSyntax())
+		 new ParseSummary(null, new Functor('f', 'a'))
+		,new ParseSummary(null, new Functor('f', 'b'))
+		,new ParseSummary(new ErrorSyntax())
 	], {show_parsed: false});	
 });
