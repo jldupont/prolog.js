@@ -124,6 +124,9 @@ Prolog.parse_per_sentence = function(input_text, is_query) {
             
             p3  = new ParserL3(p2t, Op.ordered_list_by_precedence);
             p3t = p3.process();
+
+            if (!p3t || !p3t[0])
+                continue;
             
             var root_functor = p3t[0][0];
             
