@@ -54,18 +54,29 @@ Prolog.parse = function(input_text) {
 /**
  *  Compiles a list of sentences
  *  
- * 
+ *  @param parsed_sentences: [ sentence ] | [ ParseSummary ]
  *  @return [Code | Error]
  */
 Prolog.compile_per_sentence = function(parsed_sentences) {
     
+    if (parsed_sentences.is_error)
+        throw new Error("Attempt to compile erroneous sentences");
+    
+    
     var result=[];
     var c = new Compiler();
     var code_object;
+    var parsed_sentence;
+    var sentences = parsed_sentences.sentences || parsed_sentences; 
     
-    for (var index=0; index<parsed_sentences.length; index++) {
-        
-        var parsed_sentence = parsed_sentences[index];
+    for (var index=0; index<sentences.length; index++) {
+            
+        parsed_sentence = sentences[index];
+         
+        if (parsed_sentence instanceof ParseSummary)
+            parsed_sentence = parsed_sentence.maybe_token_list;
+            
+        //console.log("Attempting compilation: ", parsed_sentence);
         
         try {
             code_object = c.process_rule_or_fact(parsed_sentence);
@@ -96,7 +107,13 @@ Prolog.parse_per_sentence = function(input_text, is_query) {
 
     is_query = is_query || false;
 
-    var result = [];
+    var result = { 
+                    // ParseSummary items
+                    sentences: [ ], 
+                    
+                    // Is there at least 1 error in ParseSummary entries?
+                    is_error: false
+    };
 
 	var l = new Lexer(input_text);
 	var sentences = l.process_per_sentence();
@@ -145,11 +162,12 @@ Prolog.parse_per_sentence = function(input_text, is_query) {
             
             // we should only get 1 root Functor per sentence
             if (root_functor)
-                result.push( new ParseSummary(null, root_functor) );
+                result.sentences.push( new ParseSummary(null, root_functor) );
                 
             
         } catch(e) {
-            result.push(new ParseSummary(e));
+            result.sentences.push(new ParseSummary(e));
+            result.is_error = true;
         }   
         
     }

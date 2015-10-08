@@ -5,7 +5,7 @@
  */
 
 var should = require('should');
-var util   = require('util');
+//var util   = require('util');
 
 var pr = require("../prolog.js");
 
@@ -44,13 +44,13 @@ function _test(text, expected, options) {
 	if (options.show_parsed)
 		console.log("-- Parsed: ", parsed_result);
 
-	if (parsed_result.length != expected.length)
+	if (parsed_result.sentences.length != expected.length)
 		return false;
 
 	for (var index=0; index<expected.length; index++) {
 		
 		var expect = expected[index];
-		var res    = parsed_result[index];
+		var res    = parsed_result.sentences[index];
 
 		//console.log("Res  ", res);
 		//console.log("Expect ",expect);
@@ -83,6 +83,22 @@ function test(text, expected, options) {
 	
 	should.ok( _test(text, expected, options) );
 }
+
+function test_compile(text, expected, options) {
+	
+	options = options || {};
+
+	var parsed_result = setup(text);
+
+	if (options.show_parsed)
+		console.log("-- Parsed: ", parsed_result);
+	
+	var result = Prolog.compile_per_sentence(parsed_result);
+	
+	console.log(result);
+}
+
+// --------------------------------------------------------------- TESTS
 
 it('Main - simple - 1', function() {
 	
@@ -158,3 +174,16 @@ it('Main - error - 4', function() {
 		new ParseSummary(new ErrorInvalidFact())
 	], {show_parsed: false});	
 });
+
+/*
+it('Main - error - 5', function() {
+	
+	//console.log("\n---- Main - error - 5\n\n");
+	
+	var text =  'x is 2.';
+	
+	test_compile(text, [
+		new ParseSummary(new ErrorInvalidFact())
+	], {show_parsed: true});	
+});
+*/
