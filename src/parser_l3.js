@@ -125,7 +125,7 @@ ParserL3.check_syntax = function(expressions_list) {
 	//  because all expressions should amount to having
 	//  a root conj or disj.
 		if (expression.length > 1)
-			throw new ErrorSyntax("Expecting only 1 root Functor", expression[1]);
+			throw new ErrorSyntax("Expecting only 1 root Functor", expression[0]);
 	}
 };
 
