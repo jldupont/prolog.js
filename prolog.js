@@ -3,6 +3,7 @@
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
 /* global Op, Compiler, Code
           ,ParseSummary
+          ,ErrorRuleInQuestion, ErrorInvalidFact
 */
  
 var Prolog = {};
@@ -52,6 +53,7 @@ Prolog.parse = function(input_text) {
 
 /**
  *  Compiles a list of sentences
+ *  
  * 
  *  @return [Code | Error]
  */
@@ -82,10 +84,17 @@ Prolog.compile_per_sentence = function(parsed_sentences) {
  *   Parse sentence by sentence
  *    and return a per-sentence summary of errors, if any.
  * 
- *   @return [ ParseSummary ]
+ *  @param is_query: true --> indicates the parsing should assume
+ *                            the input text constitutes a query
+ *
+ *  A query cannot take the form of a 'rule' and can only be 1 expression.
+ * 
+ *  @return [ ParseSummary ]
  * 
  */ 
-Prolog.parse_per_sentence = function(input_text) {
+Prolog.parse_per_sentence = function(input_text, is_query) {
+
+    is_query = is_query || false;
 
     var result = [];
 
@@ -116,11 +125,25 @@ Prolog.parse_per_sentence = function(input_text) {
             p3  = new ParserL3(p2t, Op.ordered_list_by_precedence);
             p3t = p3.process();
             
-            //console.log(p3t);
+            var root_functor = p3t[0][0];
+            
+            if (!root_functor)
+                continue;
+
+            if (is_query)
+                if (root_functor.name == 'rule')
+                    throw new ErrorRuleInQuestion("Rule in Query", root_functor);
+            
+            //console.log(root_functor.name);
+            
+            if (root_functor.name != 'rule')
+                if (root_functor.name == 'conj' || root_functor.name == 'disj')
+                    throw new ErrorInvalidFact("Can not include conj or disj", root_functor);
             
             // we should only get 1 root Functor per sentence
-            if (p3t[0])
-                result.push( new ParseSummary(null, p3t[0]) );
+            if (root_functor)
+                result.push( new ParseSummary(null, root_functor) );
+                
             
         } catch(e) {
             result.push(new ParseSummary(e));
@@ -1027,6 +1050,13 @@ function ErrorSyntax(msg, token) {
 }
 ErrorSyntax.prototype = Error.prototype;
 
+function ErrorInvalidFact(msg, token) {
+	this.classname = 'ErrorInvalidFact';
+	this.message = msg;
+	this.token = token;
+}
+ErrorInvalidFact.prototype = Error.prototype;
+
 
 function ErrorExpectingFunctor(msg, token) {
 	this.classname = 'ErrorExpectingFunctor';
@@ -1204,6 +1234,7 @@ if (typeof module!= 'undefined') {
 
 	// Errors
 	module.exports.ErrorSyntax = ErrorSyntax;
+	module.exports.ErrorInvalidFact = ErrorInvalidFact;
 	module.exports.ErrorExpectingFunctor = ErrorExpectingFunctor;
 	module.exports.ErrorExpectingVariable = ErrorExpectingVariable; 
 	module.exports.ErrorInvalidHead = ErrorInvalidHead;

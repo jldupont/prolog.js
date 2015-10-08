@@ -18,6 +18,7 @@ var ParseSummary = pr.ParseSummary;
 
 var ErrorUnexpectedEnd = pr.ErrorUnexpectedEnd;
 var ErrorSyntax = pr.ErrorSyntax;
+var ErrorInvalidFact = pr.ErrorInvalidFact;
 
 var setup = function(text) {
 
@@ -123,7 +124,7 @@ it('Main - error - 1', function() {
 
 it('Main - error - 2', function() {
 	
-	//console.log("\n---- Main - error - 1\n\n");
+	//console.log("\n---- Main - error - 3\n\n");
 	
 	var text = 'f(1) (f2).';
 	
@@ -134,7 +135,7 @@ it('Main - error - 2', function() {
 
 it('Main - error - 3', function() {
 	
-	//console.log("\n---- Main - error - 1\n\n");
+	//console.log("\n---- Main - error - 3\n\n");
 	
 	var text =  'f(a).\n'
 				+'f(b).\n'
@@ -144,5 +145,16 @@ it('Main - error - 3', function() {
 		 new ParseSummary(null, new Functor('f', 'a'))
 		,new ParseSummary(null, new Functor('f', 'b'))
 		,new ParseSummary(new ErrorSyntax())
+	], {show_parsed: false});	
+});
+
+it('Main - error - 4', function() {
+	
+	//console.log("\n---- Main - error - 4\n\n");
+	
+	var text =  'f(a), f(b).\n';
+	
+	test(text, [
+		new ParseSummary(new ErrorInvalidFact())
 	], {show_parsed: false});	
 });

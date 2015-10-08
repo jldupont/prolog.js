@@ -863,6 +863,13 @@ function ErrorSyntax(msg, token) {
 }
 ErrorSyntax.prototype = Error.prototype;
 
+function ErrorInvalidFact(msg, token) {
+	this.classname = 'ErrorInvalidFact';
+	this.message = msg;
+	this.token = token;
+}
+ErrorInvalidFact.prototype = Error.prototype;
+
 
 function ErrorExpectingFunctor(msg, token) {
 	this.classname = 'ErrorExpectingFunctor';
@@ -1040,6 +1047,7 @@ if (typeof module!= 'undefined') {
 
 	// Errors
 	module.exports.ErrorSyntax = ErrorSyntax;
+	module.exports.ErrorInvalidFact = ErrorInvalidFact;
 	module.exports.ErrorExpectingFunctor = ErrorExpectingFunctor;
 	module.exports.ErrorExpectingVariable = ErrorExpectingVariable; 
 	module.exports.ErrorInvalidHead = ErrorInvalidHead;
