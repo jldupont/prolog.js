@@ -36,6 +36,7 @@
            ,ErrorExpectingListStart, ErrorExpectingListEnd
            ,ErrorUnexpectedParensClose, ErrorUnexpectedPeriod
            ,ErrorUnexpectedEnd, ErrorUnexpectedListEnd
+           , ErrorSyntax
  */
 
 /**
@@ -54,7 +55,7 @@ function ParserL2(token_list, options) {
 	this.index = 0;
 	
 	this.ptokens = [];
-};
+}
 
 /**
  * Compute replacement for adjacent `-` & `+` tokens 
@@ -77,7 +78,7 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 			opn.col  = token_n1.col;
 			opn.offset = token_n1.offset;
 			return opn;
-		};
+		}
 		
 		if (token_n1.value == '+') {
 			opn = new OpNode('-', 500);
@@ -85,8 +86,8 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 			opn.col  = token_n1.col;
 			opn.offset = token_n1.offset;
 			return opn;
-		};
-	};
+		}
+	}
 
 	if (token_n.value == '+') {
 		
@@ -97,7 +98,7 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 			opn.col  = token_n1.col;
 			opn.offset = token_n1.offset;
 			return opn;
-		};
+		}
 		
 		if (token_n1.value == '-') {
 			opn = new OpNode('-', 500);
@@ -105,8 +106,8 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 			opn.col  = token_n1.col;
 			opn.offset = token_n1.offset;
 			return opn;
-		};
-	};
+		}
+	}
 	
 	return null;
 };
@@ -133,7 +134,7 @@ ParserL2.preprocess_list = function(input, index) {
 			depth++;
 			result.push(token);
 			continue;
-		};
+		}
 		
 		if (token.name == 'list:close') {
 			depth--;
@@ -141,13 +142,13 @@ ParserL2.preprocess_list = function(input, index) {
 			if (depth == 0)
 				break;
 			continue;
-		};
+		}
 		
 		if (token.name == 'op:conj')
 			continue;
 			
 		result.push(token);
-	};
+	}
 	
 	return result;
 };
@@ -185,7 +186,7 @@ ParserL2.prototype.get_token = function() {
 		if (!token)
 			break;
 		
-		if (token && (token.name != 'comment' && token.name != 'newline'))
+		if (token.name != 'comment' && token.name != 'newline')
 			break;
 	}
 	
@@ -252,12 +253,12 @@ ParserL2.prototype._process_list = function(maybe_token){
 	
 	if (!head || head.name == 'nil') {
 		return gen_nil(head);
-	};
+	}
 
 
 	if (head.name == 'list:close') {
 		return gen_nil(head);
-	};
+	}
 
 	
 	var res;
@@ -271,8 +272,8 @@ ParserL2.prototype._process_list = function(maybe_token){
 	else {
 		
 		if (head.name=='functor') {
-			this.regive()
-			res = this._process({ process_functor: true })
+			this.regive();
+			res = this._process({ process_functor: true });
 			head = res.terms;
 		}
 		cons.push_arg( head );
@@ -339,7 +340,7 @@ ParserL2.prototype.process = function(){
 		if ((res.last_token == null) || (res.last_token instanceof Eos))
 			break;
 			
-	};
+	}
 	
 	return new Result(expressions, this.index);
 };

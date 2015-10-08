@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-10-07 */
+/*! prolog.js - v0.0.1 - 2015-10-08 */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
 /* global Op, Compiler, Code
@@ -1019,14 +1019,13 @@ ParseSummary.prototype.inspect = function() {
 
 // ============================================================ Errors
 
-/*
-function ErrorSyntax(msg, type) {
+
+function ErrorSyntax(msg, token) {
 	this.classname = 'ErrorSyntax';
 	this.message = msg;
-	this.type = type;
-};
+	this.token = token;
+}
 ErrorSyntax.prototype = Error.prototype;
-*/
 
 
 function ErrorExpectingFunctor(msg, token) {
@@ -1204,6 +1203,7 @@ if (typeof module!= 'undefined') {
 	module.exports.ParseSummary = ParseSummary;
 
 	// Errors
+	module.exports.ErrorSyntax = ErrorSyntax;
 	module.exports.ErrorExpectingFunctor = ErrorExpectingFunctor;
 	module.exports.ErrorExpectingVariable = ErrorExpectingVariable; 
 	module.exports.ErrorInvalidHead = ErrorInvalidHead;
@@ -4453,6 +4453,7 @@ if (typeof module!= 'undefined') {
            ,ErrorExpectingListStart, ErrorExpectingListEnd
            ,ErrorUnexpectedParensClose, ErrorUnexpectedPeriod
            ,ErrorUnexpectedEnd, ErrorUnexpectedListEnd
+           , ErrorSyntax
  */
 
 /**
@@ -4471,7 +4472,7 @@ function ParserL2(token_list, options) {
 	this.index = 0;
 	
 	this.ptokens = [];
-};
+}
 
 /**
  * Compute replacement for adjacent `-` & `+` tokens 
@@ -4494,7 +4495,7 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 			opn.col  = token_n1.col;
 			opn.offset = token_n1.offset;
 			return opn;
-		};
+		}
 		
 		if (token_n1.value == '+') {
 			opn = new OpNode('-', 500);
@@ -4502,8 +4503,8 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 			opn.col  = token_n1.col;
 			opn.offset = token_n1.offset;
 			return opn;
-		};
-	};
+		}
+	}
 
 	if (token_n.value == '+') {
 		
@@ -4514,7 +4515,7 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 			opn.col  = token_n1.col;
 			opn.offset = token_n1.offset;
 			return opn;
-		};
+		}
 		
 		if (token_n1.value == '-') {
 			opn = new OpNode('-', 500);
@@ -4522,8 +4523,8 @@ ParserL2.compute_ops_replacement = function(token_n, token_n1){
 			opn.col  = token_n1.col;
 			opn.offset = token_n1.offset;
 			return opn;
-		};
-	};
+		}
+	}
 	
 	return null;
 };
@@ -4550,7 +4551,7 @@ ParserL2.preprocess_list = function(input, index) {
 			depth++;
 			result.push(token);
 			continue;
-		};
+		}
 		
 		if (token.name == 'list:close') {
 			depth--;
@@ -4558,13 +4559,13 @@ ParserL2.preprocess_list = function(input, index) {
 			if (depth == 0)
 				break;
 			continue;
-		};
+		}
 		
 		if (token.name == 'op:conj')
 			continue;
 			
 		result.push(token);
-	};
+	}
 	
 	return result;
 };
@@ -4602,7 +4603,7 @@ ParserL2.prototype.get_token = function() {
 		if (!token)
 			break;
 		
-		if (token && (token.name != 'comment' && token.name != 'newline'))
+		if (token.name != 'comment' && token.name != 'newline')
 			break;
 	}
 	
@@ -4669,12 +4670,12 @@ ParserL2.prototype._process_list = function(maybe_token){
 	
 	if (!head || head.name == 'nil') {
 		return gen_nil(head);
-	};
+	}
 
 
 	if (head.name == 'list:close') {
 		return gen_nil(head);
-	};
+	}
 
 	
 	var res;
@@ -4688,8 +4689,8 @@ ParserL2.prototype._process_list = function(maybe_token){
 	else {
 		
 		if (head.name=='functor') {
-			this.regive()
-			res = this._process({ process_functor: true })
+			this.regive();
+			res = this._process({ process_functor: true });
 			head = res.terms;
 		}
 		cons.push_arg( head );
@@ -4756,7 +4757,7 @@ ParserL2.prototype.process = function(){
 		if ((res.last_token == null) || (res.last_token instanceof Eos))
 			break;
 			
-	};
+	}
 	
 	return new Result(expressions, this.index);
 };
@@ -4990,6 +4991,7 @@ if (typeof module!= 'undefined') {
 };
 
 /* global Functor, OpNode, Op
+			,ErrorSyntax
 */
 
 /**
@@ -5038,6 +5040,8 @@ ParserL3.prototype.process = function(){
 		
 	} // ops
 	
+	ParserL3.check_syntax( result );
+	
 	return result;
 	
 };// process
@@ -5072,9 +5076,39 @@ ParserL3.process_expression = function(opcode, expression){
 		
 	} //for;;
 	
+	
+	
 	return result;
 	
 };
+
+/**
+ *  Check syntax for common errors :
+ * 
+ *  Functor Functor   --> missing conj or disj between Functors
+ *  [ ... ]  [ ... ]  --> same with lists but lists are transformed to cons/2 functors
+ *                         so it is just as the first case
+ *
+ *  
+ * 
+ * @throws ErrorSyntax
+ */
+ParserL3.check_syntax = function(expressions_list) {
+	
+	//console.log(expression);
+	
+	for (var index=0; index < expressions_list.length; index++) {
+		var expression = expressions_list[index];
+		
+	// there should only be 1 root Functor
+	//  because all expressions should amount to having
+	//  a root conj or disj.
+		if (expression.length > 1)
+			throw new ErrorSyntax("Expecting only 1 root Functor", expression[1]);
+	}
+};
+
+
 
 
 ParserL3._process_expression = function(opcode, expression){

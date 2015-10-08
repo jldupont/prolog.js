@@ -5,20 +5,22 @@
  */
 
 var should = require('should');
-var assert = require('assert');
+//var assert = require('assert');
 var util   = require('util');
 
 var pr = require("../prolog.js");
 
 var Lexer = pr.Lexer;
-var Token = pr.Token;
-var OpNode = pr.OpNode;
+//var Token = pr.Token;
+//var OpNode = pr.OpNode;
 var Functor = pr.Functor;
 var Op = pr.Op;
 
 var ParserL1 = pr.ParserL1;
 var ParserL2 = pr.ParserL2;
 var ParserL3 = pr.ParserL3;
+
+var ErrorSyntax =pr.ErrorSyntax;
 
 
 var setup = function(text) {
@@ -403,4 +405,19 @@ it('ParserL3 - rule + comment - 1', function(){
 	               ]];
 	
 	process(text, expected);
+});
+
+it('ParserL3 - invalid - 1', function(){
+	
+	Functor.inspect_compact_version = true;
+	
+	var text = "f(1) f(2)";
+	
+	var expected = [[
+	               ]];
+	
+	should.throws(function(){
+		process(text, expected);	
+	}, ErrorSyntax);
+	
 });

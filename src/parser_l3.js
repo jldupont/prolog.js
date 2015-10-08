@@ -12,6 +12,7 @@
  */
 
 /* global Functor, OpNode, Op
+			,ErrorSyntax
 */
 
 /**
@@ -60,6 +61,8 @@ ParserL3.prototype.process = function(){
 		
 	} // ops
 	
+	ParserL3.check_syntax( result );
+	
 	return result;
 	
 };// process
@@ -94,9 +97,39 @@ ParserL3.process_expression = function(opcode, expression){
 		
 	} //for;;
 	
+	
+	
 	return result;
 	
 };
+
+/**
+ *  Check syntax for common errors :
+ * 
+ *  Functor Functor   --> missing conj or disj between Functors
+ *  [ ... ]  [ ... ]  --> same with lists but lists are transformed to cons/2 functors
+ *                         so it is just as the first case
+ *
+ *  
+ * 
+ * @throws ErrorSyntax
+ */
+ParserL3.check_syntax = function(expressions_list) {
+	
+	//console.log(expression);
+	
+	for (var index=0; index < expressions_list.length; index++) {
+		var expression = expressions_list[index];
+		
+	// there should only be 1 root Functor
+	//  because all expressions should amount to having
+	//  a root conj or disj.
+		if (expression.length > 1)
+			throw new ErrorSyntax("Expecting only 1 root Functor", expression[1]);
+	}
+};
+
+
 
 
 ParserL3._process_expression = function(opcode, expression){

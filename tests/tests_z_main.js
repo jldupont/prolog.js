@@ -5,27 +5,19 @@
  */
 
 var should = require('should');
-var assert = require('assert');
 var util   = require('util');
 
 var pr = require("../prolog.js");
 
-var Lexer = pr.Lexer;
-var Token = pr.Token;
-var OpNode = pr.OpNode;
 var Functor = pr.Functor;
-var Op = pr.Op;
 var Utils = pr.Utils;
 
-var ParserL1 = pr.ParserL1;
-var ParserL2 = pr.ParserL2;
-var ParserL3 = pr.ParserL3;
 
 var Prolog = pr.Prolog;
 var ParseSummary = pr.ParseSummary;
 
 var ErrorUnexpectedEnd = pr.ErrorUnexpectedEnd;
-
+var ErrorSyntax = pr.ErrorSyntax;
 
 var setup = function(text) {
 
@@ -124,5 +116,27 @@ it('Main - error - 1', function() {
 	test(text, [
 		 new ParseSummary(new ErrorUnexpectedEnd())
 		,new ParseSummary(new ErrorUnexpectedEnd())
+	], {show_parsed: false});	
+});
+
+it('Main - error - 2', function() {
+	
+	//console.log("\n---- Main - error - 1\n\n");
+	
+	var text = 'f(1) (f2).';
+	
+	test(text, [
+		 new ParseSummary(new ErrorSyntax())
+	], {show_parsed: false});	
+});
+
+it('Main - error - 3', function() {
+	
+	//console.log("\n---- Main - error - 1\n\n");
+	
+	var text = '[1,2] [3,4]';
+	
+	test(text, [
+		 new ParseSummary(new ErrorSyntax())
 	], {show_parsed: false});	
 });

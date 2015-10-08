@@ -5,7 +5,7 @@
  */
 
 var should = require('should');
-var assert = require('assert');
+//var assert = require('assert');
 var util   = require('util');
 
 var pr = require("../prolog.js");
@@ -15,7 +15,7 @@ var ParserL2 = pr.ParserL2;
 var Token = pr.Token;
 var Functor = pr.Functor;
 var ParserL1 = pr.ParserL1;
-var OpNode = pr.OpNode;
+//var OpNode = pr.OpNode;
 
 var ErrorUnexpectedEnd = pr.ErrorUnexpectedEnd;
 
@@ -47,6 +47,8 @@ var process_list = function(text, expected) {
 
 var setup = function(text, options) {
 
+	options = options || {};
+
 	Functor.inspect_short_version = false;
 	
 	Functor.inspect_quoted = false;
@@ -61,16 +63,17 @@ var setup = function(text, options) {
 	if (options.show_parsedl1)
 		console.log("Parsed L1: ", ttokens);
 	
-	var p;
+	var p, result;
 	
 	try {
 		p = new ParserL2(ttokens);
+		result = p.process();
 	} catch(e) {
-		if (this.options.parserl2_dump)
-			console.log(this.tokens);
+		if (options.parserl2_dump)
+			console.log(result);
 	}
 	
-	var result = p.process();
+	
 		
 	var exp0 = result.terms[0];
 	
@@ -192,6 +195,7 @@ it('ParserL2 - operator replacement - 1', function(){
 	var text = "X +- Y";
 	var expected = [ 'Var(X)', 'OpNode(`-`,500)', 'Var(Y)' ];
 	
+	//process(text, expected, {show_parsedl1: true, parserl2_dump: true});
 	process(text, expected);
 });
 

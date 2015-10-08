@@ -855,14 +855,13 @@ ParseSummary.prototype.inspect = function() {
 
 // ============================================================ Errors
 
-/*
-function ErrorSyntax(msg, type) {
+
+function ErrorSyntax(msg, token) {
 	this.classname = 'ErrorSyntax';
 	this.message = msg;
-	this.type = type;
-};
+	this.token = token;
+}
 ErrorSyntax.prototype = Error.prototype;
-*/
 
 
 function ErrorExpectingFunctor(msg, token) {
@@ -1040,6 +1039,7 @@ if (typeof module!= 'undefined') {
 	module.exports.ParseSummary = ParseSummary;
 
 	// Errors
+	module.exports.ErrorSyntax = ErrorSyntax;
 	module.exports.ErrorExpectingFunctor = ErrorExpectingFunctor;
 	module.exports.ErrorExpectingVariable = ErrorExpectingVariable; 
 	module.exports.ErrorInvalidHead = ErrorInvalidHead;
