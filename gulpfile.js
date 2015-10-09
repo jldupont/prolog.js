@@ -25,6 +25,8 @@ var historyApiFallback = require('connect-history-api-fallback');
 var packageJson = require('./package.json');
 var crypto = require('crypto');
 var polybuild = require('polybuild');
+var debug = require('gulp-debug');
+var header = require('gulp-header');
 
 var AUTOPREFIXER_BROWSERS = [
   'ie >= 10',
@@ -206,7 +208,7 @@ gulp.task('clean', function (cb) {
 });
 
 // Watch files for changes & reload
-gulp.task('serve', ['styles', 'elements', 'images'], function () {
+gulp.task('serve', ['styles', 'elements', 'images', 'es6'], function () {
   browserSync({
     port: process.env.PORT,
     host: process.env.IP,
@@ -239,7 +241,16 @@ gulp.task('serve', ['styles', 'elements', 'images'], function () {
   gulp.watch(['app/styles/**/*.css'], ['styles', reload]);
   gulp.watch(['app/elements/**/*.css'], ['elements', reload]);
   gulp.watch(['app/{scripts,elements}/**/{*.js,*.html}'], ['jshint']);
+  gulp.watch(['app/es6/**/*.js'], ['es6', 'jshint']);
   gulp.watch(['app/images/**/*'], reload);
+});
+
+gulp.task('es6', function () {
+    return gulp.src('app/es6/**/*.js')
+        .pipe(debug({title: 'babel es6:'}))
+        .pipe(babel())
+        .pipe(header("// File transpiled by Babel - do not edit\n"))
+        .pipe(gulp.dest('app/scripts'));
 });
 
 // Build and serve the output from the dist build
