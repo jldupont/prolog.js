@@ -64,9 +64,9 @@ ParserL1.prototype.next = function() {
 	//
 	if (head.name == 'term') {
 		var value_without_whitespaces = (head.value || "").replace(/\s/g, '');
-		if (value_without_whitespaces.length == 0)
+		if (value_without_whitespaces.length === 0)
 			return null;
-	};
+	}
 		
 	var head_plus_one = this.list.shift() || null;
 	

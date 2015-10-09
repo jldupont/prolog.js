@@ -2431,7 +2431,7 @@ Interpreter.prototype.backtrack = function() {
 	 */	
 	var maybe_cut_spos = this.ctx.tse.cut;
 	
-	if (maybe_cut_spos == undefined ) {
+	if (maybe_cut_spos === undefined ) {
 		this._restore_continuation( this.ctx.tse.cp );
 		this._execute();
 		return true;
@@ -4017,7 +4017,7 @@ Interpreter.prototype._get_x = function(inst, type) {
 	
 	//  We can't have something like a Functor here!
 	//
-	if ((!value_or_var instanceof Var)) {
+	if (!(value_or_var instanceof Var)) {
 		return; // fail
 	}
 	
@@ -4406,9 +4406,9 @@ ParserL1.prototype.next = function() {
 	//
 	if (head.name == 'term') {
 		var value_without_whitespaces = (head.value || "").replace(/\s/g, '');
-		if (value_without_whitespaces.length == 0)
+		if (value_without_whitespaces.length === 0)
 			return null;
-	};
+	}
 		
 	var head_plus_one = this.list.shift() || null;
 	
@@ -4608,7 +4608,7 @@ ParserL2.preprocess_list = function(input, index) {
 		if (token.name == 'list:close') {
 			depth--;
 			result.push(token);
-			if (depth == 0)
+			if (depth === 0)
 				break;
 			continue;
 		}
@@ -5124,7 +5124,7 @@ ParserL3.process_expression = function(opcode, expression){
 		
 		// we didn't make any progress... bail out
 		//
-		if (current_count_of_opnodes_processed == 0)
+		if (current_count_of_opnodes_processed === 0)
 			break;
 		
 	} //for;;
@@ -5594,7 +5594,7 @@ if (typeof module!= 'undefined') {
 }
 
 /*
-global Functor, ErrorExpectingFunctor
+global Functor, ErrorExpectingFunctor, Value
 */
 
 /**
@@ -5707,9 +5707,9 @@ Visitor.prototype.__process_depth = function(node){
 				this.cb({ n: n, i: index, root_param: bnode.is_root });
 			}
 			
-		}; // for args
+		} // for args
 		
-	}; // for stack
+	} // for stack
 
 	return result;
 };
@@ -5719,7 +5719,7 @@ Visitor.prototype.__process_depth = function(node){
 function Visitor2(exp) {
 	this.exp = exp;
 	this.cb = null;
-};
+}
 
 /**
  * Visitor targeted at the processing of individual goals
@@ -5767,9 +5767,9 @@ Visitor2.prototype._process = function(node, variable_counter) {
 			
 		} else {
 			args.push(bnode);
-		};
+		}
 		
-	};// for args
+	}// for args
 	
 	this.cb({ n: node, args: args, vc: variable_counter, root: node.root });
 	
@@ -5791,7 +5791,7 @@ Visitor2.prototype._process = function(node, variable_counter) {
 function Visitor3(exp) {
 	this.exp = exp;
 	this.cb = null;
-};
+}
 
 Visitor3.prototype.process = function(callback) {
 	this.cb = callback;

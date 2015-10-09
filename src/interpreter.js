@@ -211,7 +211,7 @@ Interpreter.prototype.backtrack = function() {
 	 */	
 	var maybe_cut_spos = this.ctx.tse.cut;
 	
-	if (maybe_cut_spos == undefined ) {
+	if (maybe_cut_spos === undefined ) {
 		this._restore_continuation( this.ctx.tse.cp );
 		this._execute();
 		return true;
@@ -1797,7 +1797,7 @@ Interpreter.prototype._get_x = function(inst, type) {
 	
 	//  We can't have something like a Functor here!
 	//
-	if ((!value_or_var instanceof Var)) {
+	if (!(value_or_var instanceof Var)) {
 		return; // fail
 	}
 	

@@ -139,7 +139,7 @@ ParserL2.preprocess_list = function(input, index) {
 		if (token.name == 'list:close') {
 			depth--;
 			result.push(token);
-			if (depth == 0)
+			if (depth === 0)
 				break;
 			continue;
 		}

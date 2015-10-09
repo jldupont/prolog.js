@@ -92,7 +92,7 @@ ParserL3.process_expression = function(opcode, expression){
 		
 		// we didn't make any progress... bail out
 		//
-		if (current_count_of_opnodes_processed == 0)
+		if (current_count_of_opnodes_processed === 0)
 			break;
 		
 	} //for;;

@@ -6,7 +6,7 @@
  **/
 
 /*
-global Functor, ErrorExpectingFunctor
+global Functor, ErrorExpectingFunctor, Value
 */
 
 /**
@@ -119,9 +119,9 @@ Visitor.prototype.__process_depth = function(node){
 				this.cb({ n: n, i: index, root_param: bnode.is_root });
 			}
 			
-		}; // for args
+		} // for args
 		
-	}; // for stack
+	} // for stack
 
 	return result;
 };
@@ -131,7 +131,7 @@ Visitor.prototype.__process_depth = function(node){
 function Visitor2(exp) {
 	this.exp = exp;
 	this.cb = null;
-};
+}
 
 /**
  * Visitor targeted at the processing of individual goals
@@ -179,9 +179,9 @@ Visitor2.prototype._process = function(node, variable_counter) {
 			
 		} else {
 			args.push(bnode);
-		};
+		}
 		
-	};// for args
+	}// for args
 	
 	this.cb({ n: node, args: args, vc: variable_counter, root: node.root });
 	
@@ -203,7 +203,7 @@ Visitor2.prototype._process = function(node, variable_counter) {
 function Visitor3(exp) {
 	this.exp = exp;
 	this.cb = null;
-};
+}
 
 Visitor3.prototype.process = function(callback) {
 	this.cb = callback;
