@@ -28,7 +28,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       file:  ajax.url
       ,text: text
     });
-  })
+    
+  });
 
   app.load_example = function(e) {
     var filename = e.target.getAttribute("data-file");

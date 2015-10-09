@@ -19,7 +19,7 @@
     this.queue = [];
     
     this.in_post = false;
-  };
+  }
 
   /*  Subscription
   *
@@ -59,11 +59,11 @@
       if (!sub_entries) {
         console.log("Mbus: no subscribers for: ", t);
         continue;
-      };
+      }
       
       this._publish(sub_entries, t, m);
       
-    };
+    }
 
     this.in_post = false;
     
@@ -79,11 +79,12 @@
         
         var cb = entry.cb;
         cb(msg, type);
-      };
+      }
+      
     } catch(e) {
       console.error("Mbus: attempted to deliver '",type,"' to '",source,"' got:", e);
       console.log("Mbus Msg: ", msg);
-    };
+    }
     
   };
   

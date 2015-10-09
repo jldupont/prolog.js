@@ -33,7 +33,7 @@
     
     for (var index=0; index < parserSummaryList.length; index++) {
       var entry = parserSummaryList[index];
-      if (entry && (entry.maybe_error != null))
+      if (entry && (entry.maybe_error !== null))
         locs.push( entry.maybe_error.token.offset);
     }
     
@@ -71,7 +71,7 @@
         var locs = compute_error_locations(msg.sentences);
         mbus.post('error-locations', locs);
         
-        if (locs.length == 0)
+        if (locs.length === 0)
           mbus.post('parsed-ok', {
              file: msg.file
             ,sentences: extract_parsed_sentences( msg.sentences )
@@ -89,7 +89,7 @@
       
       var maybe_errors = extract_compilation_errors( result );
       
-      if (maybe_errors.length == 0) {
+      if (maybe_errors.length === 0) {
         mbus.post('code', {
            file: msg.file
           ,sentences: msg.sentences
