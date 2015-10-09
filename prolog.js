@@ -291,9 +291,11 @@ Token.check_for_match = function(input_list, expected_list, also_index){
 	
 	also_index = also_index || false;
 	
+	var index;
+	
 	if (input_list instanceof Array && input_list[0] instanceof Array) {
 		
-		for (var index=0; index<input_list.length ;index++) {
+		for (index=0; index<input_list.length ;index++) {
 			if (!Token.check_for_match(input_list[index], expected_list[index]))
 				return false;
 		}
@@ -308,7 +310,7 @@ Token.check_for_match = function(input_list, expected_list, also_index){
 	}
 		
 	
-	for (var index in input_list) {
+	for (index in input_list) {
 		
 		var input_token = input_list[index];
 		var expected_token = expected_list[index] || new Token('null');
@@ -867,7 +869,7 @@ Var.prototype.is_bound = function(){
 };
 
 Var.prototype.unbind = function(){
-	return this.value = null;
+	this.value = null;
 };
 
 Var.prototype.get_value = function() {
@@ -1005,7 +1007,7 @@ Instruction.prototype.inspect = function(){
 	
 	for (var i=0, inserted=false;i<params.length;i++) {
 		
-		if (this.ctx[params[i]] != undefined ) {
+		if (this.ctx[params[i]] !== undefined ) {
 			
 			if (inserted || (this.ctx.f && !inserted))
 				result += ", ";
@@ -1342,7 +1344,7 @@ Compiler.prototype.process_rule = function(exp) {
 	var with_body = true;
 	var not_query = false;
 	
-	result['head'] = this.process_head(head, with_body);
+	result.head = this.process_head(head, with_body);
 	
 	var head_vars = result.head.vars;
 
@@ -1442,7 +1444,7 @@ Compiler.prototype.process_head = function(exp, with_body) {
 		 */
 		if (ctx.n instanceof Var) {
 			
-			var first_time = (vars[ctx.n.name] == undefined);
+			var first_time = (vars[ctx.n.name] === undefined);
 			var at_root = ctx.root_param;
 			
 			if (first_time && at_root) {
@@ -2112,7 +2114,7 @@ DatabaseManager.prototype.user_insert_code = function(functor, arity, code) {
 };
 
 
-if (typeof module!= 'undefined') {
+if (typeof module != 'undefined') {
 	module.exports.Database = Database;
 	module.exports.DatabaseManager = DatabaseManager;
 }
@@ -4827,7 +4829,7 @@ ParserL2.prototype._process = function( ctx ){
 
 	//console.log("_process: ", ctx);
 
-	var expression = new Array();
+	var expression = [];
 	var token = null;
 	var token_previous = null;
 

@@ -83,9 +83,11 @@ Token.check_for_match = function(input_list, expected_list, also_index){
 	
 	also_index = also_index || false;
 	
+	var index;
+	
 	if (input_list instanceof Array && input_list[0] instanceof Array) {
 		
-		for (var index=0; index<input_list.length ;index++) {
+		for (index=0; index<input_list.length ;index++) {
 			if (!Token.check_for_match(input_list[index], expected_list[index]))
 				return false;
 		}
@@ -100,7 +102,7 @@ Token.check_for_match = function(input_list, expected_list, also_index){
 	}
 		
 	
-	for (var index in input_list) {
+	for (index in input_list) {
 		
 		var input_token = input_list[index];
 		var expected_token = expected_list[index] || new Token('null');
@@ -659,7 +661,7 @@ Var.prototype.is_bound = function(){
 };
 
 Var.prototype.unbind = function(){
-	return this.value = null;
+	this.value = null;
 };
 
 Var.prototype.get_value = function() {
@@ -797,7 +799,7 @@ Instruction.prototype.inspect = function(){
 	
 	for (var i=0, inserted=false;i<params.length;i++) {
 		
-		if (this.ctx[params[i]] != undefined ) {
+		if (this.ctx[params[i]] !== undefined ) {
 			
 			if (inserted || (this.ctx.f && !inserted))
 				result += ", ";

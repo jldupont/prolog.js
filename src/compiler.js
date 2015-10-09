@@ -71,7 +71,7 @@ Compiler.prototype.process_rule = function(exp) {
 	var with_body = true;
 	var not_query = false;
 	
-	result['head'] = this.process_head(head, with_body);
+	result.head = this.process_head(head, with_body);
 	
 	var head_vars = result.head.vars;
 
@@ -171,7 +171,7 @@ Compiler.prototype.process_head = function(exp, with_body) {
 		 */
 		if (ctx.n instanceof Var) {
 			
-			var first_time = (vars[ctx.n.name] == undefined);
+			var first_time = (vars[ctx.n.name] === undefined);
 			var at_root = ctx.root_param;
 			
 			if (first_time && at_root) {

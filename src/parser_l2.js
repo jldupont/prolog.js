@@ -358,7 +358,7 @@ ParserL2.prototype._process = function( ctx ){
 
 	//console.log("_process: ", ctx);
 
-	var expression = new Array();
+	var expression = [];
 	var token = null;
 	var token_previous = null;
 

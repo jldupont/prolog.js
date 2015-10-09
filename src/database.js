@@ -176,7 +176,7 @@ DatabaseManager.prototype.user_insert_code = function(functor, arity, code) {
 };
 
 
-if (typeof module!= 'undefined') {
+if (typeof module != 'undefined') {
 	module.exports.Database = Database;
 	module.exports.DatabaseManager = DatabaseManager;
 }
