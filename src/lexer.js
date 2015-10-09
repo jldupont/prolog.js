@@ -96,7 +96,7 @@ Lexer.prototype.process = function() {
 		if (t instanceof InComment)
 			continue;
 		
-		if (t && t.name == 'null' | t.name == 'eof')
+		if (t && t.name === null || t.name == 'eof')
 			break;
 		
 		if (t !== undefined )
@@ -121,7 +121,7 @@ Lexer.prototype.process_per_sentence = function() {
 		if (t instanceof InComment)
 			continue;
 
-		if ( t == null || t.name == 'eof') {
+		if ( t === null || t.name == 'eof') {
 			if (current.length > 0)
 				result.push(current);
 			break;
@@ -191,7 +191,7 @@ Lexer.prototype.next = function() {
 	
 	var maybe_raw_token = this.step();
 	
-	if (maybe_raw_token == null) {
+	if (maybe_raw_token === null) {
 		return new Token('eof');
 	}
 		
@@ -249,7 +249,7 @@ Lexer.prototype.next = function() {
 
 		for(;;) {
 			var char = this.step(Lexer.newline_as_null);
-			if (char == null || char == "\n" || char == '\r')
+			if (char === null || char == "\n" || char == '\r')
 				break;
 			
 			comment_chars += char;
@@ -278,7 +278,7 @@ Lexer.prototype.next = function() {
 		
 		for (;;) {
 			t = this.step();
-			if (this.is_quote(t) | t == '\n' | t == null) {
+			if (this.is_quote(t) | t == '\n' | t === null) {
 				return_token = new Token('string', string);
 				return_token.is_primitive = true;
 				return_token.col = current_index;

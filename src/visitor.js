@@ -5,6 +5,10 @@
  * @author jldupont
  **/
 
+/*
+global Functor, ErrorExpectingFunctor
+*/
+
 /**
  * ParserL4
  * 
@@ -15,7 +19,7 @@
 function Visitor(exp) {
 	this.exp = exp;
 	this.cb = null;
-};
+}
 
 /**
  * Process the expression, depth-first
@@ -26,7 +30,7 @@ function Visitor(exp) {
 Visitor.prototype.process = function(callback_function) {
 	
 	if (!(this.exp.args))
-		throw new Error("Expecting a rooted tree, got: "+JSON.stringify(exp));
+		throw new Error("Expecting a rooted tree, got: "+JSON.stringify(this.exp));
 	
 	this.cb = callback_function;
 	
@@ -208,7 +212,7 @@ Visitor3.prototype.process = function(callback) {
 
 Visitor3.prototype._process = function(node, vc) {
 
-	var is_root = vc == undefined;
+	var is_root = vc === undefined;
 	vc = vc || 0;
 	
 	// that should happen
@@ -230,7 +234,7 @@ Visitor3.prototype._process = function(node, vc) {
 			return this.cb({type: 'root', vc:vc }, { n: node }, null);
 		
 		return { vc: vc, n: node, is_junction: false };
-	};
+	}
 		
 	var left  = node.args[0];
 	var right = node.args[1];
@@ -260,8 +264,8 @@ Visitor3.prototype._process = function(node, vc) {
 	if (lctx.is_junction)
 		delete lctx.n;
 	
-	delete lctx.is_junction
-	delete rctx.is_junction
+	delete lctx.is_junction;
+	delete rctx.is_junction;
 
 	
 	this.cb({type: node.name, vc:vc, root: is_root}, lctx, rctx);
@@ -276,5 +280,4 @@ if (typeof module!= 'undefined') {
 	module.exports.Visitor = Visitor;
 	module.exports.Visitor2 = Visitor2;
 	module.exports.Visitor3 = Visitor3;
-};
-
+}

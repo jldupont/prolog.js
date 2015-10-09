@@ -187,7 +187,7 @@ ParserL3._process_expression = function(opcode, expression){
 		
 		var iresult = this._process_one(opcode, node_left, node, node_right);
 
-		if (iresult == null) {
+		if (iresult === null) {
 			result.push(node);
 			continue;
 		}

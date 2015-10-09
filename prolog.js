@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-10-08 */
+/*! prolog.js - v0.0.1 - 2015-10-09 */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
 /* global Op, Compiler, Code
@@ -211,9 +211,9 @@ Prolog.compile_query = function(parsed_sentence) {
     return result;
 };
 
-if (typeof module!= 'undefined') {
+if (typeof module != 'undefined') {
 	module.exports.Prolog = Prolog;
-};
+}
 /**
  *  Token
  *  
@@ -535,12 +535,12 @@ Op.is_unary = function(type) {
  */
 Op.is_compatible_subtype = function(input_st, expected_st) {
 
-	if (expected_st == null)
-		if (input_st !=null)
+	if (expected_st === null)
+		if (input_st !==null)
 			return false;
 	
-	if (input_st == null)
-		if (expected_st != null)
+	if (input_st === null)
+		if (expected_st !== null)
 			return false;
 	
 	if (input_st == 'y')
@@ -584,7 +584,7 @@ function OpNode(symbol, maybe_precedence) {
 	this.prec   = maybe_precedence || null;
 	
 	// attempt to look-up precedence
-	if (this.prec == null) {
+	if (this.prec === null) {
 		var result = Op.has_ambiguous_precedence(symbol); 
 		try {
 			if (result === false)
@@ -849,10 +849,10 @@ Var.prototype.bind = function(value, on_bind) {
 	if (this == value)
 		throw new Error("Attempt to create cycle ...");
 	
-	if (value == null)
+	if (value === null)
 		throw new ErrorInvalidValue("Var("+this.name+"), attempted to bind 'null'");
 	
-	if (this.value != null)
+	if (this.value !== null)
 		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
 	
 	if (on_bind) {
@@ -863,7 +863,7 @@ Var.prototype.bind = function(value, on_bind) {
 };
 
 Var.prototype.is_bound = function(){
-	return this.value != null;
+	return this.value !== null;
 };
 
 Var.prototype.unbind = function(){
@@ -872,7 +872,7 @@ Var.prototype.unbind = function(){
 
 Var.prototype.get_value = function() {
 
-	if (this.value == null)
+	if (this.value === null)
 		throw new ErrorNotBound("Not Bound: Var("+this.name+")");
 
 	return this.value;
@@ -916,14 +916,14 @@ Var.prototype.safe_bind = function(to, on_bind) {
 	var dvar, tvar;
 
 	dvar = this.deref(to);
-	if (dvar == null) {
+	if (dvar === null) {
 		console.log("!!!!!!!!!! CYCLE AVERTED! ", this);
 		return;
 	}
 	
 	if (to instanceof Var) {
 		tvar = to.deref(this);
-		if (tvar == null) {
+		if (tvar === null) {
 			console.log("!!!!!!!!!!! CYCLE AVERTED!", to);
 			return;
 		}
@@ -994,7 +994,7 @@ Instruction.prototype.inspect = function(){
 		
 	result += this.opcode + (Array(13 - this.opcode.length).join(" "));
 	
-	if (this.ctx == null)
+	if (this.ctx === null)
 		return result;
 	
 	if (!Instruction.inspect_compact)
@@ -1778,7 +1778,7 @@ Compiler.prototype.process_goal = function(exp, is_query, vars) {
 	
 	vars = vars || {};
 	
-	if (exp == undefined)
+	if (exp === undefined)
 		return undefined;
 
 	//console.log("Process Goal: ", exp);
@@ -4141,7 +4141,7 @@ Lexer.prototype.process = function() {
 		if (t instanceof InComment)
 			continue;
 		
-		if (t && t.name == 'null' | t.name == 'eof')
+		if (t && t.name === null || t.name == 'eof')
 			break;
 		
 		if (t !== undefined )
@@ -4166,7 +4166,7 @@ Lexer.prototype.process_per_sentence = function() {
 		if (t instanceof InComment)
 			continue;
 
-		if ( t == null || t.name == 'eof') {
+		if ( t === null || t.name == 'eof') {
 			if (current.length > 0)
 				result.push(current);
 			break;
@@ -4236,7 +4236,7 @@ Lexer.prototype.next = function() {
 	
 	var maybe_raw_token = this.step();
 	
-	if (maybe_raw_token == null) {
+	if (maybe_raw_token === null) {
 		return new Token('eof');
 	}
 		
@@ -4294,7 +4294,7 @@ Lexer.prototype.next = function() {
 
 		for(;;) {
 			var char = this.step(Lexer.newline_as_null);
-			if (char == null || char == "\n" || char == '\r')
+			if (char === null || char == "\n" || char == '\r')
 				break;
 			
 			comment_chars += char;
@@ -4323,7 +4323,7 @@ Lexer.prototype.next = function() {
 		
 		for (;;) {
 			t = this.step();
-			if (this.is_quote(t) | t == '\n' | t == null) {
+			if (this.is_quote(t) | t == '\n' | t === null) {
 				return_token = new Token('string', string);
 				return_token.is_primitive = true;
 				return_token.col = current_index;
@@ -4379,7 +4379,7 @@ function ParserL1(token_list, options) {
 	this.reached_end = false;
 	this.options = options || default_options;
 	
-};
+}
 
 /**
  *  Processes the token list 1 by 1
@@ -4414,9 +4414,9 @@ ParserL1.prototype.next = function() {
 	
 	// Maybe it's the end of the stream ...
 	//
-	if (head_plus_one == null) {
+	if (head_plus_one === null) {
 		this.reached_end = true;
-	};
+	}
 
 	if (head_plus_one && head_plus_one.name == 'list:close') {
 		if (head.name == 'list:open') {
@@ -4427,8 +4427,8 @@ ParserL1.prototype.next = function() {
 			//
 			head.name = 'nil';
 			return [head];
-		};
-	};
+		}
+	}
 	
 	
 	if (head_plus_one && head_plus_one.name == 'parens_open') {
@@ -4440,8 +4440,8 @@ ParserL1.prototype.next = function() {
 			//
 			head.name = 'functor';
 			return [head];
-		};
-	};
+		}
+	}
 	
 	// We must unshift the token
 	//  as not to loose the state-machine's context
@@ -4449,7 +4449,7 @@ ParserL1.prototype.next = function() {
 	this.list.unshift(head_plus_one);
 
 	// check for variables
-	if (head.name == 'term' && head.value != null) {
+	if (head.name == 'term' && head.value !== null) {
 		var first_character = ""+head.value[0];
 		
 		if (first_character.toUpperCase() == first_character && ParserL1.isLetter(first_character))
@@ -4458,10 +4458,10 @@ ParserL1.prototype.next = function() {
 		if (first_character=='_' && head.value.length == 1) {
 			head.name = 'var';
 			head.value = '_';
-		};
+		}
 			
 		
-	};
+	}
 		
 		
 	return [head];
@@ -4492,14 +4492,14 @@ ParserL1.prototype.process = function() {
 			break;
 		
 		Array.prototype.push.apply(result, maybe_token);
-	};
+	}
 
 	return result;
 };
 
 if (typeof module!= 'undefined') {
 	module.exports.ParserL1 = ParserL1;
-};
+}
 
 /*  global OpNode, Token, Var, Functor, Eos, Result
            ,ErrorExpectingListStart, ErrorExpectingListEnd
@@ -4754,7 +4754,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 	// I know, misleading variable name
 	var previous_token = next_token;
 	
-	if (next_token == null)
+	if (next_token === null)
 		throw new ErrorUnexpectedEnd("Unexpected end in list definition", head);
 
 	previous_token = next_token;
@@ -4763,7 +4763,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 		
 		next_token = this.get_token();
 
-	if (next_token == null)
+	if (next_token === null)
 		throw new ErrorUnexpectedEnd("Unexpected end in list definition", previous_token);
 		
 		if (next_token.name == 'functor') {
@@ -4776,7 +4776,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 		
 		next_token = this.get_token();
 		
-		if (next_token == null)
+		if (next_token === null)
 			throw new ErrorUnexpectedEnd("Unexpected end in list definition", previous_token);
 
 		if (next_token.name != 'list:close')
@@ -4807,7 +4807,7 @@ ParserL2.prototype.process = function(){
 		if (res.terms.length > 0)
 			expressions.push( res.terms );
 		
-		if ((res.last_token == null) || (res.last_token instanceof Eos))
+		if ((res.last_token === null) || (res.last_token instanceof Eos))
 			break;
 			
 	}
@@ -4836,7 +4836,7 @@ ParserL2.prototype._process = function( ctx ){
 		// Pop a token from the input list
 		token = this.get_token();
 		
-		if (token == null || token instanceof Eos) {
+		if (token === null || token instanceof Eos) {
 			
 			if (ctx.diving_functor)
 				throw new ErrorUnexpectedEnd("Within a Functor definition", token_previous);
@@ -4864,7 +4864,7 @@ ParserL2.prototype._process = function( ctx ){
 			var lresult = this.process_list();
 			expression.push(lresult);
 			continue;
-		};
+		}
 		
 		// Only if we are inside a Functor
 		//  definition can we safely discard the conj.
@@ -4884,10 +4884,10 @@ ParserL2.prototype._process = function( ctx ){
 			if (ctx.diving_functor) {
 				//console.log("_process: exiting...");
 				return new Result(expression, token);	
-			};
+			}
 
 			throw new ErrorUnexpectedParensClose("Parens close without corresponding parens open", token);
-		};
+		}
 
 
 		// Complete an expression, start the next
@@ -4897,7 +4897,7 @@ ParserL2.prototype._process = function( ctx ){
 				throw new ErrorUnexpectedPeriod("Unexpected period within Functor definition", token);
 				
 			return new Result(expression, token);
-		};
+		}
 		
 		if (token.name == 'functor') {
 			
@@ -4916,13 +4916,13 @@ ParserL2.prototype._process = function( ctx ){
 			
 			expression.push( functor_node );
 			continue;
-		};
+		}
 		
 		// default is to build the expression 
 		//
 		expression.push( token );
 		
-	}; // for
+	} // for
 	
 	// WE SHOULDN'T GET DOWN HERE
 	
@@ -4933,12 +4933,12 @@ ParserL2.prototype._process = function( ctx ){
  */
 ParserL2.prototype._preprocess = function() {
 
-	var token, token_next;
+	var token, token_next, opn;
 	
 	for (;;) {
 		token = this.get_token();
 
-		if (token == null)
+		if (token === null)
 			break;
 			
 		if (token instanceof Eos)
@@ -4951,7 +4951,7 @@ ParserL2.prototype._preprocess = function() {
 			v.offset = token.offset;
 			this.ptokens.push(v);
 			continue;
-		};
+		}
 
 		
 		// Handle the case `(exp...)`
@@ -4965,7 +4965,7 @@ ParserL2.prototype._preprocess = function() {
 			token.attrs.primitive = true;
 			this.ptokens.push(token);
 			continue;
-		};
+		}
 
 		
 		if (token.name == 'term' && token.value == '!') {
@@ -4977,16 +4977,16 @@ ParserL2.prototype._preprocess = function() {
 			fcut.offset = token.offset;
 			this.ptokens.push(fcut);
 			continue;
-		};
+		}
 
 		if (token.value == "+-" || token.value == "-+") {
-			var opn = new OpNode("-", 500);
+			opn = new OpNode("-", 500);
 			opn.line = token.line;
 			opn.col  = token.col;
 			opn.offset = token.offset;
 			this.ptokens.push(opn);
 			continue;
-		};
+		}
 
 
 		if (token.is_operator) {
@@ -4997,7 +4997,7 @@ ParserL2.prototype._preprocess = function() {
 			if (token_next && token_next.is_operator) {
 				
 				var maybe_replacement_opnode = ParserL2.compute_ops_replacement(token, token_next);
-				if (maybe_replacement_opnode != null) {
+				if (maybe_replacement_opnode !== null) {
 					
 					maybe_replacement_opnode.line = token.line;
 					maybe_replacement_opnode.col  = token.col;
@@ -5008,28 +5008,28 @@ ParserL2.prototype._preprocess = function() {
 					this.index = this.index + 1;
 					continue;
 				}
-			};
+			}
 			
-		}; // token is_operator
+		} // token is_operator
 		
 		// Should we be substituting an OpNode ?
 		//
 		if (token.is_operator) {
 			
-			var opn = new OpNode(token.value);
+			opn = new OpNode(token.value);
 			opn.line = token.line;
 			opn.col  = token.col;
 			opn.offset = token.offset;
 			this.ptokens.push(opn);
 			continue;
-		};
+		}
 		
 
 		
 		this.ptokens.push(token);
 
 		
-	};
+	}
 	
 };
 
@@ -5041,7 +5041,7 @@ ParserL2.prototype._preprocess = function() {
 
 if (typeof module!= 'undefined') {
 	module.exports.ParserL2 = ParserL2;
-};
+}
 
 /* global Functor, OpNode, Op
 			,ErrorSyntax
@@ -5219,7 +5219,7 @@ ParserL3._process_expression = function(opcode, expression){
 		
 		var iresult = this._process_one(opcode, node_left, node, node_right);
 
-		if (iresult == null) {
+		if (iresult === null) {
 			result.push(node);
 			continue;
 		}
@@ -5496,57 +5496,57 @@ Utils.unify = function(t1, t2, on_bind) {
 	
 	if (t1_is_var && t2_is_var) {
 
-		var t1d = t1.deref(t2);
-		var t2d = t2.deref(t1);
+		t1d = t1.deref(t2);
+		t2d = t2.deref(t1);
 		
 		// Check for cycle...
-		if (t1d == null || t2d == null){
+		if (t1d === null || t2d === null){
 			//console.log("CYCLE AVERTED!");
 			return true;
 		}
 		
 		if (t1d.is_bound() && t2d.is_bound()) {
 			return Utils.unify( t1d.get_value(), t2d.get_value(), on_bind ); 
-		};
+		}
 		
 		if (t1d.is_bound()) {
 			t2.safe_bind(t1, on_bind);
 			return true;
-		};
+		}
 		
 		if (t2d.is_bound()) {
 			t1.safe_bind(t2, on_bind);
 			return true;
-		};
+		}
 		
 		// Both unbound
 		// ============
 		
 		t1d.bind(t2, on_bind);
 		return true;
-	};
+	}
 	
 	if (t1_is_var) {
 		t1d = t1d || t1.deref();
 		
 		if (t1d.is_bound()) {
 			return Utils.unify(t1d.get_value(), t2, on_bind);
-		};
+		}
 		
 		t1d.bind(t2, on_bind);
 		return true;
-	};
+	}
 	
 	if (t2_is_var) {
 		t2d = t2d || t2.deref();
 		
 		if (t2d.is_bound()) {
 			return Utils.unify(t2d.get_value(), t1, on_bind);
-		};
+		}
 
 		t2d.bind(t1, on_bind);
 		return true;
-	};
+	}
 	
 
 	
@@ -5560,7 +5560,7 @@ Utils.unify = function(t1, t2, on_bind) {
 				return false;
 		
 		return true;
-	};
+	}
 	
 	//if (t1 instanceof Token && t2 instanceof Token) {
 	//	return t1.value == t2.value;
@@ -5587,12 +5587,15 @@ Utils.pad = function(string, width, what_char) {
 
 Utils.isNumeric = function(n) {
 	return !isNaN(parseFloat(n)) && isFinite(n);
-}
+};
 
 if (typeof module!= 'undefined') {
 	module.exports.Utils = Utils;
-};
+}
 
+/*
+global Functor, ErrorExpectingFunctor
+*/
 
 /**
  * ParserL4
@@ -5604,7 +5607,7 @@ if (typeof module!= 'undefined') {
 function Visitor(exp) {
 	this.exp = exp;
 	this.cb = null;
-};
+}
 
 /**
  * Process the expression, depth-first
@@ -5615,7 +5618,7 @@ function Visitor(exp) {
 Visitor.prototype.process = function(callback_function) {
 	
 	if (!(this.exp.args))
-		throw new Error("Expecting a rooted tree, got: "+JSON.stringify(exp));
+		throw new Error("Expecting a rooted tree, got: "+JSON.stringify(this.exp));
 	
 	this.cb = callback_function;
 	
@@ -5797,7 +5800,7 @@ Visitor3.prototype.process = function(callback) {
 
 Visitor3.prototype._process = function(node, vc) {
 
-	var is_root = vc == undefined;
+	var is_root = vc === undefined;
 	vc = vc || 0;
 	
 	// that should happen
@@ -5819,7 +5822,7 @@ Visitor3.prototype._process = function(node, vc) {
 			return this.cb({type: 'root', vc:vc }, { n: node }, null);
 		
 		return { vc: vc, n: node, is_junction: false };
-	};
+	}
 		
 	var left  = node.args[0];
 	var right = node.args[1];
@@ -5849,8 +5852,8 @@ Visitor3.prototype._process = function(node, vc) {
 	if (lctx.is_junction)
 		delete lctx.n;
 	
-	delete lctx.is_junction
-	delete rctx.is_junction
+	delete lctx.is_junction;
+	delete rctx.is_junction;
 
 	
 	this.cb({type: node.name, vc:vc, root: is_root}, lctx, rctx);
@@ -5865,5 +5868,4 @@ if (typeof module!= 'undefined') {
 	module.exports.Visitor = Visitor;
 	module.exports.Visitor2 = Visitor2;
 	module.exports.Visitor3 = Visitor3;
-};
-
+}

@@ -327,12 +327,12 @@ Op.is_unary = function(type) {
  */
 Op.is_compatible_subtype = function(input_st, expected_st) {
 
-	if (expected_st == null)
-		if (input_st !=null)
+	if (expected_st === null)
+		if (input_st !==null)
 			return false;
 	
-	if (input_st == null)
-		if (expected_st != null)
+	if (input_st === null)
+		if (expected_st !== null)
 			return false;
 	
 	if (input_st == 'y')
@@ -376,7 +376,7 @@ function OpNode(symbol, maybe_precedence) {
 	this.prec   = maybe_precedence || null;
 	
 	// attempt to look-up precedence
-	if (this.prec == null) {
+	if (this.prec === null) {
 		var result = Op.has_ambiguous_precedence(symbol); 
 		try {
 			if (result === false)
@@ -641,10 +641,10 @@ Var.prototype.bind = function(value, on_bind) {
 	if (this == value)
 		throw new Error("Attempt to create cycle ...");
 	
-	if (value == null)
+	if (value === null)
 		throw new ErrorInvalidValue("Var("+this.name+"), attempted to bind 'null'");
 	
-	if (this.value != null)
+	if (this.value !== null)
 		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
 	
 	if (on_bind) {
@@ -655,7 +655,7 @@ Var.prototype.bind = function(value, on_bind) {
 };
 
 Var.prototype.is_bound = function(){
-	return this.value != null;
+	return this.value !== null;
 };
 
 Var.prototype.unbind = function(){
@@ -664,7 +664,7 @@ Var.prototype.unbind = function(){
 
 Var.prototype.get_value = function() {
 
-	if (this.value == null)
+	if (this.value === null)
 		throw new ErrorNotBound("Not Bound: Var("+this.name+")");
 
 	return this.value;
@@ -708,14 +708,14 @@ Var.prototype.safe_bind = function(to, on_bind) {
 	var dvar, tvar;
 
 	dvar = this.deref(to);
-	if (dvar == null) {
+	if (dvar === null) {
 		console.log("!!!!!!!!!! CYCLE AVERTED! ", this);
 		return;
 	}
 	
 	if (to instanceof Var) {
 		tvar = to.deref(this);
-		if (tvar == null) {
+		if (tvar === null) {
 			console.log("!!!!!!!!!!! CYCLE AVERTED!", to);
 			return;
 		}
@@ -786,7 +786,7 @@ Instruction.prototype.inspect = function(){
 		
 	result += this.opcode + (Array(13 - this.opcode.length).join(" "));
 	
-	if (this.ctx == null)
+	if (this.ctx === null)
 		return result;
 	
 	if (!Instruction.inspect_compact)

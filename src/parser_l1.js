@@ -37,7 +37,7 @@ function ParserL1(token_list, options) {
 	this.reached_end = false;
 	this.options = options || default_options;
 	
-};
+}
 
 /**
  *  Processes the token list 1 by 1
@@ -72,9 +72,9 @@ ParserL1.prototype.next = function() {
 	
 	// Maybe it's the end of the stream ...
 	//
-	if (head_plus_one == null) {
+	if (head_plus_one === null) {
 		this.reached_end = true;
-	};
+	}
 
 	if (head_plus_one && head_plus_one.name == 'list:close') {
 		if (head.name == 'list:open') {
@@ -85,8 +85,8 @@ ParserL1.prototype.next = function() {
 			//
 			head.name = 'nil';
 			return [head];
-		};
-	};
+		}
+	}
 	
 	
 	if (head_plus_one && head_plus_one.name == 'parens_open') {
@@ -98,8 +98,8 @@ ParserL1.prototype.next = function() {
 			//
 			head.name = 'functor';
 			return [head];
-		};
-	};
+		}
+	}
 	
 	// We must unshift the token
 	//  as not to loose the state-machine's context
@@ -107,7 +107,7 @@ ParserL1.prototype.next = function() {
 	this.list.unshift(head_plus_one);
 
 	// check for variables
-	if (head.name == 'term' && head.value != null) {
+	if (head.name == 'term' && head.value !== null) {
 		var first_character = ""+head.value[0];
 		
 		if (first_character.toUpperCase() == first_character && ParserL1.isLetter(first_character))
@@ -116,10 +116,10 @@ ParserL1.prototype.next = function() {
 		if (first_character=='_' && head.value.length == 1) {
 			head.name = 'var';
 			head.value = '_';
-		};
+		}
 			
 		
-	};
+	}
 		
 		
 	return [head];
@@ -150,11 +150,11 @@ ParserL1.prototype.process = function() {
 			break;
 		
 		Array.prototype.push.apply(result, maybe_token);
-	};
+	}
 
 	return result;
 };
 
 if (typeof module!= 'undefined') {
 	module.exports.ParserL1 = ParserL1;
-};
+}

@@ -215,6 +215,6 @@ Prolog.compile_query = function(parsed_sentence) {
     return result;
 };
 
-if (typeof module!= 'undefined') {
+if (typeof module != 'undefined') {
 	module.exports.Prolog = Prolog;
-};
+}

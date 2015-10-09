@@ -208,57 +208,57 @@ Utils.unify = function(t1, t2, on_bind) {
 	
 	if (t1_is_var && t2_is_var) {
 
-		var t1d = t1.deref(t2);
-		var t2d = t2.deref(t1);
+		t1d = t1.deref(t2);
+		t2d = t2.deref(t1);
 		
 		// Check for cycle...
-		if (t1d == null || t2d == null){
+		if (t1d === null || t2d === null){
 			//console.log("CYCLE AVERTED!");
 			return true;
 		}
 		
 		if (t1d.is_bound() && t2d.is_bound()) {
 			return Utils.unify( t1d.get_value(), t2d.get_value(), on_bind ); 
-		};
+		}
 		
 		if (t1d.is_bound()) {
 			t2.safe_bind(t1, on_bind);
 			return true;
-		};
+		}
 		
 		if (t2d.is_bound()) {
 			t1.safe_bind(t2, on_bind);
 			return true;
-		};
+		}
 		
 		// Both unbound
 		// ============
 		
 		t1d.bind(t2, on_bind);
 		return true;
-	};
+	}
 	
 	if (t1_is_var) {
 		t1d = t1d || t1.deref();
 		
 		if (t1d.is_bound()) {
 			return Utils.unify(t1d.get_value(), t2, on_bind);
-		};
+		}
 		
 		t1d.bind(t2, on_bind);
 		return true;
-	};
+	}
 	
 	if (t2_is_var) {
 		t2d = t2d || t2.deref();
 		
 		if (t2d.is_bound()) {
 			return Utils.unify(t2d.get_value(), t1, on_bind);
-		};
+		}
 
 		t2d.bind(t1, on_bind);
 		return true;
-	};
+	}
 	
 
 	
@@ -272,7 +272,7 @@ Utils.unify = function(t1, t2, on_bind) {
 				return false;
 		
 		return true;
-	};
+	}
 	
 	//if (t1 instanceof Token && t2 instanceof Token) {
 	//	return t1.value == t2.value;
@@ -299,9 +299,8 @@ Utils.pad = function(string, width, what_char) {
 
 Utils.isNumeric = function(n) {
 	return !isNaN(parseFloat(n)) && isFinite(n);
-}
+};
 
 if (typeof module!= 'undefined') {
 	module.exports.Utils = Utils;
-};
-
+}

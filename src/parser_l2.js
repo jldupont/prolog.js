@@ -285,7 +285,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 	// I know, misleading variable name
 	var previous_token = next_token;
 	
-	if (next_token == null)
+	if (next_token === null)
 		throw new ErrorUnexpectedEnd("Unexpected end in list definition", head);
 
 	previous_token = next_token;
@@ -294,7 +294,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 		
 		next_token = this.get_token();
 
-	if (next_token == null)
+	if (next_token === null)
 		throw new ErrorUnexpectedEnd("Unexpected end in list definition", previous_token);
 		
 		if (next_token.name == 'functor') {
@@ -307,7 +307,7 @@ ParserL2.prototype._process_list = function(maybe_token){
 		
 		next_token = this.get_token();
 		
-		if (next_token == null)
+		if (next_token === null)
 			throw new ErrorUnexpectedEnd("Unexpected end in list definition", previous_token);
 
 		if (next_token.name != 'list:close')
@@ -338,7 +338,7 @@ ParserL2.prototype.process = function(){
 		if (res.terms.length > 0)
 			expressions.push( res.terms );
 		
-		if ((res.last_token == null) || (res.last_token instanceof Eos))
+		if ((res.last_token === null) || (res.last_token instanceof Eos))
 			break;
 			
 	}
@@ -367,7 +367,7 @@ ParserL2.prototype._process = function( ctx ){
 		// Pop a token from the input list
 		token = this.get_token();
 		
-		if (token == null || token instanceof Eos) {
+		if (token === null || token instanceof Eos) {
 			
 			if (ctx.diving_functor)
 				throw new ErrorUnexpectedEnd("Within a Functor definition", token_previous);
@@ -395,7 +395,7 @@ ParserL2.prototype._process = function( ctx ){
 			var lresult = this.process_list();
 			expression.push(lresult);
 			continue;
-		};
+		}
 		
 		// Only if we are inside a Functor
 		//  definition can we safely discard the conj.
@@ -415,10 +415,10 @@ ParserL2.prototype._process = function( ctx ){
 			if (ctx.diving_functor) {
 				//console.log("_process: exiting...");
 				return new Result(expression, token);	
-			};
+			}
 
 			throw new ErrorUnexpectedParensClose("Parens close without corresponding parens open", token);
-		};
+		}
 
 
 		// Complete an expression, start the next
@@ -428,7 +428,7 @@ ParserL2.prototype._process = function( ctx ){
 				throw new ErrorUnexpectedPeriod("Unexpected period within Functor definition", token);
 				
 			return new Result(expression, token);
-		};
+		}
 		
 		if (token.name == 'functor') {
 			
@@ -447,13 +447,13 @@ ParserL2.prototype._process = function( ctx ){
 			
 			expression.push( functor_node );
 			continue;
-		};
+		}
 		
 		// default is to build the expression 
 		//
 		expression.push( token );
 		
-	}; // for
+	} // for
 	
 	// WE SHOULDN'T GET DOWN HERE
 	
@@ -464,12 +464,12 @@ ParserL2.prototype._process = function( ctx ){
  */
 ParserL2.prototype._preprocess = function() {
 
-	var token, token_next;
+	var token, token_next, opn;
 	
 	for (;;) {
 		token = this.get_token();
 
-		if (token == null)
+		if (token === null)
 			break;
 			
 		if (token instanceof Eos)
@@ -482,7 +482,7 @@ ParserL2.prototype._preprocess = function() {
 			v.offset = token.offset;
 			this.ptokens.push(v);
 			continue;
-		};
+		}
 
 		
 		// Handle the case `(exp...)`
@@ -496,7 +496,7 @@ ParserL2.prototype._preprocess = function() {
 			token.attrs.primitive = true;
 			this.ptokens.push(token);
 			continue;
-		};
+		}
 
 		
 		if (token.name == 'term' && token.value == '!') {
@@ -508,16 +508,16 @@ ParserL2.prototype._preprocess = function() {
 			fcut.offset = token.offset;
 			this.ptokens.push(fcut);
 			continue;
-		};
+		}
 
 		if (token.value == "+-" || token.value == "-+") {
-			var opn = new OpNode("-", 500);
+			opn = new OpNode("-", 500);
 			opn.line = token.line;
 			opn.col  = token.col;
 			opn.offset = token.offset;
 			this.ptokens.push(opn);
 			continue;
-		};
+		}
 
 
 		if (token.is_operator) {
@@ -528,7 +528,7 @@ ParserL2.prototype._preprocess = function() {
 			if (token_next && token_next.is_operator) {
 				
 				var maybe_replacement_opnode = ParserL2.compute_ops_replacement(token, token_next);
-				if (maybe_replacement_opnode != null) {
+				if (maybe_replacement_opnode !== null) {
 					
 					maybe_replacement_opnode.line = token.line;
 					maybe_replacement_opnode.col  = token.col;
@@ -539,28 +539,28 @@ ParserL2.prototype._preprocess = function() {
 					this.index = this.index + 1;
 					continue;
 				}
-			};
+			}
 			
-		}; // token is_operator
+		} // token is_operator
 		
 		// Should we be substituting an OpNode ?
 		//
 		if (token.is_operator) {
 			
-			var opn = new OpNode(token.value);
+			opn = new OpNode(token.value);
 			opn.line = token.line;
 			opn.col  = token.col;
 			opn.offset = token.offset;
 			this.ptokens.push(opn);
 			continue;
-		};
+		}
 		
 
 		
 		this.ptokens.push(token);
 
 		
-	};
+	}
 	
 };
 
@@ -572,4 +572,4 @@ ParserL2.prototype._preprocess = function() {
 
 if (typeof module!= 'undefined') {
 	module.exports.ParserL2 = ParserL2;
-};
+}

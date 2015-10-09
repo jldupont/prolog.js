@@ -507,7 +507,7 @@ Compiler.prototype.process_goal = function(exp, is_query, vars) {
 	
 	vars = vars || {};
 	
-	if (exp == undefined)
+	if (exp === undefined)
 		return undefined;
 
 	//console.log("Process Goal: ", exp);
