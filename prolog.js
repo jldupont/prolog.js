@@ -480,7 +480,7 @@ Op.classify_triplet = function (node_left, node_center, node_right) {
 	if (!(node_center instanceof OpNode))
 		throw Error("Expecting an OpNode from node_center: " + JSON.stringify( node_center));
 
-	if (node_center.prec == null)
+	if (node_center.prec === null)
 		throw Error("Expecting a valid OpNode for node_center: "+JSON.stringify( node_center ));
 	
 	return Op.__classify(node_left, node_center, node_right);
@@ -986,7 +986,7 @@ Instruction.prototype.get_parameter_name = function(){
 
 Instruction.prototype.inspect = function(){
 	
-	const params = [ 'p', 'x', 'y' ];
+	var params = [ 'p', 'x', 'y' ];
 	var result = ""; 
 	
 	if (this.ctx && this.ctx.l)
@@ -1353,8 +1353,8 @@ Compiler.prototype.process_rule = function(exp) {
 	for (var label in body_code)
 		result[label] = body_code[label];
 	
-	result['f'] = head.name;
-	result['a'] = head.args.length;
+	result.f = head.name;
+	result.a = head.args.length;
 	
 	// clean-up
 	delete result.head.vars;
@@ -2828,10 +2828,10 @@ Interpreter.prototype.inst_bcall = function(inst) {
 	// We got this far... so everything is good
 	this.ctx.cu = true;
 	
-	var x0 = this.ctx.tse.vars['$x0'];
+	var x0 = this.ctx.tse.vars.$x0;
 
 	this.ctx.tse.vars = {};
-	this.ctx.tse.vars['$x0'] = x0;
+	this.ctx.tse.vars.$x0 = x0;
 	
 	var bname = x0.name;
 	
@@ -2887,9 +2887,9 @@ Interpreter.prototype.inst_call = function(inst) {
 	 *  to get rid of these or else the target
 	 *  functor might unify with values it shouldn't.
 	 */
-	var x0 = this.ctx.tse.vars['$x0'];
+	var x0 = this.ctx.tse.vars.$x0;
 	this.ctx.tse.vars = {};
-	this.ctx.tse.vars['$x0'] = x0;
+	this.ctx.tse.vars.$x0 = x0;
 	
 	// I know it's pessimistic
 	this.ctx.cu = false;
@@ -3188,7 +3188,7 @@ Interpreter.prototype.inst_cut = function() {
  */
 Interpreter.prototype.inst_prepare = function(_inst) {
 
-	this.ctx.cse.vars["$y0"] = new Functor('$op');
+	this.ctx.cse.vars.$y0 = new Functor('$op');
 	this.ctx.cu = true;
 };
 
@@ -3201,7 +3201,7 @@ Interpreter.prototype.inst_push_var = function(inst) {
 
 	var vname = inst.get("p");
 	
-	var struct = this.ctx.cse.vars['$y0'];
+	var struct = this.ctx.cse.vars.$y0;
 
 	// Do we have a local variable already setup?
 	var local_var = this.ctx.cse.vars[vname];
@@ -3244,7 +3244,7 @@ Interpreter.prototype._get_value = function(token) {
 Interpreter.prototype.inst_push_value = function(inst) {
 	
 	var vname = inst.get("y", "$y");
-	var struct = this.ctx.cse.vars["$y0"];
+	var struct = this.ctx.cse.vars.$y0;
 	
 	var yvar = this.ctx.cse.vars[vname];
 	var value = this._get_value(yvar);
@@ -3263,7 +3263,7 @@ Interpreter.prototype.inst_push_number = function(inst) {
 	
 	var p = inst.get("p");
 	
-	var struct = this.ctx.cse.vars["$y0"];
+	var struct = this.ctx.cse.vars.$y0;
 	struct.push_arg(p);
 };
 
@@ -3278,7 +3278,7 @@ Interpreter.prototype.inst_push_number = function(inst) {
  */
 Interpreter.prototype.inst_op_unif = function(_inst) {
 
-	var y0 = this.ctx.cse.vars["$y0"];
+	var y0 = this.ctx.cse.vars.$y0;
 	
 	var vy0 = this._get_value(y0.args[0]);
 	var vy1 = this._get_value(y0.args[1]);
@@ -3323,7 +3323,7 @@ Interpreter.prototype._exit = function() {
  */
 Interpreter.prototype.inst_op_is = function(inst) {
 
-	var y0 = this.ctx.cse.vars["$y0"];
+	var y0 = this.ctx.cse.vars.$y0;
 	
 	// Expecting a variable for lvalue
 	var lvar = y0.args[0];
@@ -3342,7 +3342,7 @@ Interpreter.prototype.inst_op_is = function(inst) {
 
 Interpreter.prototype._get_values = function() {
 
-	var y0 = this.ctx.cse.vars["$y0"];
+	var y0 = this.ctx.cse.vars.$y0;
 	
 	// Expecting variables or values
 	var l = y0.args[0];
@@ -4099,28 +4099,28 @@ Lexer.token_map = {
 	// The operators should match with the ones supported
 	//  downstream in the parsers
 	// --------------------------------------------------
-	':-':  function() { return new Token('op:rule', ':-', {is_operator: true}) }
-	,',':  function() { return new Token('op:conj', ',',  {is_operator: true}) }
-	,';':  function() { return new Token('op:disj', ';',  {is_operator: true}) }
-	,'=':  function() { return new Token('op:unif', '=',  {is_operator: true}) }
-	,'<':  function() { return new Token('op:lt',   '<',  {is_operator: true}) }
-	,'>':  function() { return new Token('op:gt',   '>',  {is_operator: true}) }
-	,'=<': function() { return new Token('op:em',   '=<', {is_operator: true}) }
-	,'>=': function() { return new Token('op:ge',   '>=', {is_operator: true}) }
-	,'-':  function() { return new Token('op:minus', '-', {is_operator: true}) }
-	,'+':  function() { return new Token('op:plus',  '+', {is_operator: true}) }
-	,'*':  function() { return new Token('op:mult',  '*', {is_operator: true}) }
-	,'/':  function() { return new Token('op:div',   '/', {is_operator: true}) }
-	,'is': function() { return new Token('op:is',    'is',{is_operator: true}) }
-	,'|':  function() { return new Token('list:tail','|'  ) }
+	':-':  function() { return new Token('op:rule', ':-', {is_operator: true}); }
+	,',':  function() { return new Token('op:conj', ',',  {is_operator: true}); }
+	,';':  function() { return new Token('op:disj', ';',  {is_operator: true}); }
+	,'=':  function() { return new Token('op:unif', '=',  {is_operator: true}); }
+	,'<':  function() { return new Token('op:lt',   '<',  {is_operator: true}); }
+	,'>':  function() { return new Token('op:gt',   '>',  {is_operator: true}); }
+	,'=<': function() { return new Token('op:em',   '=<', {is_operator: true}); }
+	,'>=': function() { return new Token('op:ge',   '>=', {is_operator: true}); }
+	,'-':  function() { return new Token('op:minus', '-', {is_operator: true}); }
+	,'+':  function() { return new Token('op:plus',  '+', {is_operator: true}); }
+	,'*':  function() { return new Token('op:mult',  '*', {is_operator: true}); }
+	,'/':  function() { return new Token('op:div',   '/', {is_operator: true}); }
+	,'is': function() { return new Token('op:is',    'is',{is_operator: true}); }
+	,'|':  function() { return new Token('list:tail','|'  ); }
 	
-	,'\n': function() { return new Token('newline') }
-	,'.':  function() { return new Token('period') }
-	,'(':  function() { return new Token('parens_open',  null) }
-	,')':  function() { return new Token('parens_close', null) }
+	,'\n': function() { return new Token('newline'); }
+	,'.':  function() { return new Token('period'); }
+	,'(':  function() { return new Token('parens_open',  null); }
+	,')':  function() { return new Token('parens_close', null); }
 	
-	,'[':  function() { return new Token('list:open',  null) }
-	,']':  function() { return new Token('list:close', null) }
+	,'[':  function() { return new Token('list:open',  null); }
+	,']':  function() { return new Token('list:close', null); }
 };
 
 /**
@@ -4206,7 +4206,7 @@ Lexer.prototype.step = function() {
 	this.current_match = this._tokenRegexp.exec(this.text);
 	this.offset_in_text = this._tokenRegexp.lastIndex;
 	
-	if (this.current_match != null)
+	if (this.current_match !== null)
 		return this.current_match[0];
 	
 	this.at_the_end = true;
@@ -4485,7 +4485,7 @@ ParserL1.prototype.process = function() {
 	for (;;) {
 		var maybe_token = this.next();
 
-		if (maybe_token == null)
+		if (maybe_token === null)
 			continue;
 		
 		if (maybe_token instanceof Eos)

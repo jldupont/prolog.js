@@ -82,8 +82,8 @@ Compiler.prototype.process_rule = function(exp) {
 	for (var label in body_code)
 		result[label] = body_code[label];
 	
-	result['f'] = head.name;
-	result['a'] = head.args.length;
+	result.f = head.name;
+	result.a = head.args.length;
 	
 	// clean-up
 	delete result.head.vars;

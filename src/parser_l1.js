@@ -143,7 +143,7 @@ ParserL1.prototype.process = function() {
 	for (;;) {
 		var maybe_token = this.next();
 
-		if (maybe_token == null)
+		if (maybe_token === null)
 			continue;
 		
 		if (maybe_token instanceof Eos)

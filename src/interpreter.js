@@ -608,10 +608,10 @@ Interpreter.prototype.inst_bcall = function(inst) {
 	// We got this far... so everything is good
 	this.ctx.cu = true;
 	
-	var x0 = this.ctx.tse.vars['$x0'];
+	var x0 = this.ctx.tse.vars.$x0;
 
 	this.ctx.tse.vars = {};
-	this.ctx.tse.vars['$x0'] = x0;
+	this.ctx.tse.vars.$x0 = x0;
 	
 	var bname = x0.name;
 	
@@ -667,9 +667,9 @@ Interpreter.prototype.inst_call = function(inst) {
 	 *  to get rid of these or else the target
 	 *  functor might unify with values it shouldn't.
 	 */
-	var x0 = this.ctx.tse.vars['$x0'];
+	var x0 = this.ctx.tse.vars.$x0;
 	this.ctx.tse.vars = {};
-	this.ctx.tse.vars['$x0'] = x0;
+	this.ctx.tse.vars.$x0 = x0;
 	
 	// I know it's pessimistic
 	this.ctx.cu = false;
@@ -968,7 +968,7 @@ Interpreter.prototype.inst_cut = function() {
  */
 Interpreter.prototype.inst_prepare = function(_inst) {
 
-	this.ctx.cse.vars["$y0"] = new Functor('$op');
+	this.ctx.cse.vars.$y0 = new Functor('$op');
 	this.ctx.cu = true;
 };
 
@@ -981,7 +981,7 @@ Interpreter.prototype.inst_push_var = function(inst) {
 
 	var vname = inst.get("p");
 	
-	var struct = this.ctx.cse.vars['$y0'];
+	var struct = this.ctx.cse.vars.$y0;
 
 	// Do we have a local variable already setup?
 	var local_var = this.ctx.cse.vars[vname];
@@ -1024,7 +1024,7 @@ Interpreter.prototype._get_value = function(token) {
 Interpreter.prototype.inst_push_value = function(inst) {
 	
 	var vname = inst.get("y", "$y");
-	var struct = this.ctx.cse.vars["$y0"];
+	var struct = this.ctx.cse.vars.$y0;
 	
 	var yvar = this.ctx.cse.vars[vname];
 	var value = this._get_value(yvar);
@@ -1043,7 +1043,7 @@ Interpreter.prototype.inst_push_number = function(inst) {
 	
 	var p = inst.get("p");
 	
-	var struct = this.ctx.cse.vars["$y0"];
+	var struct = this.ctx.cse.vars.$y0;
 	struct.push_arg(p);
 };
 
@@ -1058,7 +1058,7 @@ Interpreter.prototype.inst_push_number = function(inst) {
  */
 Interpreter.prototype.inst_op_unif = function(_inst) {
 
-	var y0 = this.ctx.cse.vars["$y0"];
+	var y0 = this.ctx.cse.vars.$y0;
 	
 	var vy0 = this._get_value(y0.args[0]);
 	var vy1 = this._get_value(y0.args[1]);
@@ -1103,7 +1103,7 @@ Interpreter.prototype._exit = function() {
  */
 Interpreter.prototype.inst_op_is = function(inst) {
 
-	var y0 = this.ctx.cse.vars["$y0"];
+	var y0 = this.ctx.cse.vars.$y0;
 	
 	// Expecting a variable for lvalue
 	var lvar = y0.args[0];
@@ -1122,7 +1122,7 @@ Interpreter.prototype.inst_op_is = function(inst) {
 
 Interpreter.prototype._get_values = function() {
 
-	var y0 = this.ctx.cse.vars["$y0"];
+	var y0 = this.ctx.cse.vars.$y0;
 	
 	// Expecting variables or values
 	var l = y0.args[0];

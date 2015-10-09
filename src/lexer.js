@@ -54,28 +54,28 @@ Lexer.token_map = {
 	// The operators should match with the ones supported
 	//  downstream in the parsers
 	// --------------------------------------------------
-	':-':  function() { return new Token('op:rule', ':-', {is_operator: true}) }
-	,',':  function() { return new Token('op:conj', ',',  {is_operator: true}) }
-	,';':  function() { return new Token('op:disj', ';',  {is_operator: true}) }
-	,'=':  function() { return new Token('op:unif', '=',  {is_operator: true}) }
-	,'<':  function() { return new Token('op:lt',   '<',  {is_operator: true}) }
-	,'>':  function() { return new Token('op:gt',   '>',  {is_operator: true}) }
-	,'=<': function() { return new Token('op:em',   '=<', {is_operator: true}) }
-	,'>=': function() { return new Token('op:ge',   '>=', {is_operator: true}) }
-	,'-':  function() { return new Token('op:minus', '-', {is_operator: true}) }
-	,'+':  function() { return new Token('op:plus',  '+', {is_operator: true}) }
-	,'*':  function() { return new Token('op:mult',  '*', {is_operator: true}) }
-	,'/':  function() { return new Token('op:div',   '/', {is_operator: true}) }
-	,'is': function() { return new Token('op:is',    'is',{is_operator: true}) }
-	,'|':  function() { return new Token('list:tail','|'  ) }
+	':-':  function() { return new Token('op:rule', ':-', {is_operator: true}); }
+	,',':  function() { return new Token('op:conj', ',',  {is_operator: true}); }
+	,';':  function() { return new Token('op:disj', ';',  {is_operator: true}); }
+	,'=':  function() { return new Token('op:unif', '=',  {is_operator: true}); }
+	,'<':  function() { return new Token('op:lt',   '<',  {is_operator: true}); }
+	,'>':  function() { return new Token('op:gt',   '>',  {is_operator: true}); }
+	,'=<': function() { return new Token('op:em',   '=<', {is_operator: true}); }
+	,'>=': function() { return new Token('op:ge',   '>=', {is_operator: true}); }
+	,'-':  function() { return new Token('op:minus', '-', {is_operator: true}); }
+	,'+':  function() { return new Token('op:plus',  '+', {is_operator: true}); }
+	,'*':  function() { return new Token('op:mult',  '*', {is_operator: true}); }
+	,'/':  function() { return new Token('op:div',   '/', {is_operator: true}); }
+	,'is': function() { return new Token('op:is',    'is',{is_operator: true}); }
+	,'|':  function() { return new Token('list:tail','|'  ); }
 	
-	,'\n': function() { return new Token('newline') }
-	,'.':  function() { return new Token('period') }
-	,'(':  function() { return new Token('parens_open',  null) }
-	,')':  function() { return new Token('parens_close', null) }
+	,'\n': function() { return new Token('newline'); }
+	,'.':  function() { return new Token('period'); }
+	,'(':  function() { return new Token('parens_open',  null); }
+	,')':  function() { return new Token('parens_close', null); }
 	
-	,'[':  function() { return new Token('list:open',  null) }
-	,']':  function() { return new Token('list:close', null) }
+	,'[':  function() { return new Token('list:open',  null); }
+	,']':  function() { return new Token('list:close', null); }
 };
 
 /**
@@ -161,7 +161,7 @@ Lexer.prototype.step = function() {
 	this.current_match = this._tokenRegexp.exec(this.text);
 	this.offset_in_text = this._tokenRegexp.lastIndex;
 	
-	if (this.current_match != null)
+	if (this.current_match !== null)
 		return this.current_match[0];
 	
 	this.at_the_end = true;

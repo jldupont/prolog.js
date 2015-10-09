@@ -272,7 +272,7 @@ Op.classify_triplet = function (node_left, node_center, node_right) {
 	if (!(node_center instanceof OpNode))
 		throw Error("Expecting an OpNode from node_center: " + JSON.stringify( node_center));
 
-	if (node_center.prec == null)
+	if (node_center.prec === null)
 		throw Error("Expecting a valid OpNode for node_center: "+JSON.stringify( node_center ));
 	
 	return Op.__classify(node_left, node_center, node_right);
@@ -778,7 +778,7 @@ Instruction.prototype.get_parameter_name = function(){
 
 Instruction.prototype.inspect = function(){
 	
-	const params = [ 'p', 'x', 'y' ];
+	var params = [ 'p', 'x', 'y' ];
 	var result = ""; 
 	
 	if (this.ctx && this.ctx.l)
