@@ -8,6 +8,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 /* global Clipboard, mbus, Debouncer */
+/* global Quill */
 
 (function(document) {
   'use strict';
@@ -41,7 +42,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       
     });
   
-    /* global Quill */
+  
+  window._ftest = function(e) {
+      console.log("Test!  ", e);
+      
+      //e.preventDefault();
+      //e.stopPropagation();
+      
+      return false;
+  };
+  
+  /*  Make some adjustements to quill's linktooltip module
+   *
+   *  
+   *
+   */
+  Quill.modules['link-tooltip'].DEFAULTS.template = '<span class="title">Visit URL:&nbsp;</span>'
+      +'<a href="#" class="url" href="about:blank" onclick="return _ftest(event);"></a>'
+      +'<input class="input" type="text">'
+      +'<span>&nbsp;&#45;&nbsp;</span>'
+      +'<a href="javascript:;" class="change">Change</a>'
+      +'<a href="javascript:;" class="remove">Remove</a>'
+      +'<a href="javascript:;" class="done">Done</a>';
+  
+  
+  Quill.modules['link-tooltip'].prototype._normalizeURL = function(url) {return url; };
+  
+  
     ed = new Quill('#editor', {
       modules: {
         'toolbar': { container: '#full-toolbar' }
@@ -55,7 +82,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ,theme: 'snow'
       
     });
-    
+  
+
     function clear_background() {
       var l = ed.getLength();
       ed.formatText(0, l, 'background', 'rgb(255,255,255)');

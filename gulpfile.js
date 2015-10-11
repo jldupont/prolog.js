@@ -27,6 +27,7 @@ var crypto = require('crypto');
 var polybuild = require('polybuild');
 var debug = require('gulp-debug');
 var header = require('gulp-header');
+var concat = require('gulp-concat');
 
 var AUTOPREFIXER_BROWSERS = [
   'ie >= 10',
@@ -52,6 +53,15 @@ var styleTask = function (stylesPath, srcs) {
     .pipe($.size({title: stylesPath}));
 };
 
+
+gulp.task('worker', function() {
+  return gulp.src(['app/scripts/worker/*.js', 'app/scripts/prolog.js'])
+    .pipe(debug({title: 'worker:'}))
+    .pipe(concat('worker.js'))
+    .pipe(gulp.dest('app/scripts/'));
+});
+
+
 // Compile and automatically prefix stylesheets
 gulp.task('styles', function () {
   return styleTask('styles', ['**/*.css']);
@@ -66,8 +76,8 @@ gulp.task('jshint', function () {
   return gulp.src([
       'app/scripts/**/*.js',
       'app/elements/**/*.js',
-      'app/elements/**/*.html',
-      'gulpfile.js'
+      'app/elements/**/*.html'
+      ,'gulpfile.js'
     ])
     .pipe(reload({stream: true, once: true}))
     .pipe($.jshint.extract()) // Extract JS from .html files
@@ -208,7 +218,7 @@ gulp.task('clean', function (cb) {
 });
 
 // Watch files for changes & reload
-gulp.task('serve', ['styles', 'elements', 'images', 'es6'], function () {
+gulp.task('serve', ['styles', 'elements', 'images', 'worker', 'es6'], function () {
   browserSync({
     port: process.env.PORT,
     host: process.env.IP,
@@ -240,16 +250,17 @@ gulp.task('serve', ['styles', 'elements', 'images', 'es6'], function () {
   gulp.watch(['app/**/*.html'], reload);
   gulp.watch(['app/styles/**/*.css'], ['styles', reload]);
   gulp.watch(['app/elements/**/*.css'], ['elements', reload]);
-  gulp.watch(['app/{scripts,elements}/**/{*.js,*.html}'], ['jshint']);
+  gulp.watch(['app/{scripts,elements}/**/{*.js,*.html}'], ['worker', 'jshint']);
   gulp.watch(['app/es6/**/*.js'], ['es6', 'jshint']);
   gulp.watch(['app/images/**/*'], reload);
+  gulp.watch(['gulpfile.js'], reload);
 });
 
 gulp.task('es6', function () {
     return gulp.src('app/es6/**/*.js')
         .pipe(debug({title: 'babel es6:'}))
+        .pipe(header('// File transpiled by Babel - do not edit'+'\n\n'))
         .pipe(babel())
-        .pipe(header("// File transpiled by Babel - do not edit\n"))
         .pipe(gulp.dest('app/scripts'));
 });
 
@@ -281,7 +292,7 @@ gulp.task('default', ['clean'], function (cb) {
   // Uncomment 'cache-config' after 'rename-index' if you are going to use service workers.
   runSequence(
     ['copy', 'styles'],
-    'elements',
+    'elements', 'worker', 'es6',
     ['jshint', 'images', 'fonts', 'html'],
     'vulcanize','rename-index', // 'cache-config',
     cb);

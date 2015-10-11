@@ -8,3 +8,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 importScripts('bower_components/platinum-sw/service-worker.js');
+importScripts('scripts/prolog.js');
+
+//console.log("sw import.js: ",self);
+
+/* global self
+*/
+
+self.onmessage = function(msg) {
+    console.log("Service Worker: ",msg);
+};
+
+
+
+function sendmsg(msg) {
+
+    self.clients.matchAll().then(function(clients) {
+      clients.forEach(function(client) {
+        console.log(client);
+        client.postMessage(msg);
+      });
+    });
+    
+};

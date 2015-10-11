@@ -12,10 +12,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 (function(document) {
   'use strict';
 
+
+
+  var worker = new Worker("scripts/worker.js");
+  //console.log(worker);
+
+  worker.addEventListener("message", function(msg) {
+    console.log("App, msg: ", msg);
+  });
+
+  window.wpr = worker;
+
   // Grab a reference to our auto-binding template
   // and give it some initial binding values
   // Learn more about auto-binding templates at http://goo.gl/Dx1u2g
   var app = document.querySelector('#app');
+
 
   var ajax = document.createElement("iron-ajax");
   ajax.setAttribute("handle-as", "text");
@@ -55,9 +67,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app.displayInstalledToast = function() {
     // Check to make sure caching is actually enabled—it won't be in the dev environment.
-    if (!document.querySelector('platinum-sw-cache').disabled) {
-      document.querySelector('#caching-complete').show();
-    }
   };
 
 
@@ -73,13 +82,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   addEventListener('paper-header-transform', function(e) {
     var appName = document.querySelector('#mainToolbar .app-name');
     var middleContainer = document.querySelector('#mainToolbar .middle-container');
-    var bottomContainer = document.querySelector('#mainToolbar .bottom-container');
+    //var bottomContainer = document.querySelector('#mainToolbar .bottom-container');
     var detail = e.detail;
     var heightDiff = detail.height - detail.condensedHeight;
     var yRatio = Math.min(1, detail.y / heightDiff);
     var maxMiddleScale = 0.50;  // appName max size when condensed. The smaller the number the smaller the condensed size.
     var scaleMiddle = Math.max(maxMiddleScale, (heightDiff - detail.y) / (heightDiff / (1-maxMiddleScale))  + maxMiddleScale);
-    var scaleBottom = 1 - yRatio;
+    //var scaleBottom = 1 - yRatio;
 
     /* global Polymer */
     
