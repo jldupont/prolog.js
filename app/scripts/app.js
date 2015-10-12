@@ -12,10 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 (function(document) {
   'use strict';
 
-
-
   var worker = new Worker("scripts/worker.js");
-  //console.log(worker);
 
   worker.addEventListener("message", function(msg) {
     console.log("App, msg: ", msg);
