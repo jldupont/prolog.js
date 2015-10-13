@@ -34,10 +34,8 @@ addEventListener('message', function(msg_enveloppe) {
  
 });
 
-var dba = DbAccess();
-
-var db_user     = new Database(dba);
-var db_builtins = new Database(dba);
+var db_user     = new Database(DbAccess);
+var db_builtins = new Database(DbAccess);
 
 var dbm = new DatabaseManager( db_builtins, db_user );
 
@@ -46,14 +44,27 @@ var interpreter = new Interpreter(db_user, db_builtins);
 
 
 function store_code(msg) {
-    
-    console.log("Worker: Storing ", msg.code_type," code: f/a: ", msg.f, msg.a);
 
     if (msg.code_type == 'user')
-        dbm.user_insert_code(msg.f, msg.a, msg.code);
-    else
-        dbm.builtin_insert_code(msg.f, msg.a, msg.code);
+        db_user.clear();    
+        
+    console.debug("Worker: storing code: ", msg.code_type);
+
+    for (var index=0; index<msg.codes.length; index++) {
+        var code = msg.codes[index];
+        var f = code.code.f;
+        var a = code.code.a;
+        
+        console.debug("Worker: Storing ", msg.code_type," code: f/a: ", f, a);    
+
+        if (msg.code_type == 'user')
+            dbm.user_insert_code(f, a, code.code);
+        else
+            dbm.builtin_insert_code(f, a, code.code);
+    }
+
 }
+
 
 function set_question(msg) {
     

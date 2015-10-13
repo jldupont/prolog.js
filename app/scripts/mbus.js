@@ -19,6 +19,8 @@
     this.queue = [];
     
     this.in_post = false;
+    
+    this.debug = true;
   }
 
   /*  Subscription
@@ -60,6 +62,9 @@
         console.log("Mbus: no subscribers for: ", t);
         continue;
       }
+      
+      if (this.debug)
+        console.debug("*** MBUS: publishing: ",t, m);
       
       this._publish(sub_entries, t, m);
       
