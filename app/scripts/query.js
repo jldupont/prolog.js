@@ -15,20 +15,21 @@
   var app = document.querySelector('#app');
 
   var elquery;
+  var view_answers;
   
   // Listen for template bound event to know when bindings
   // have resolved and content has been stamped to the page
   app.addEventListener('dom-change', function() {
   
     /* global Quill */
-    var answers_view = new Quill('#answers', {
+    view_answers = new Quill('#answers', {
       modules: {
       }
       ,theme: 'snow'
       
     });
 
-      answers_view.editor.disable();
+      view_answers.editor.disable();
 
 
     elquery = document.querySelector('#query');
@@ -37,6 +38,11 @@
       //console.log("Query, onchange: ", query.value);
       
       var query= elquery.value;
+      
+      append_line(query, {
+        prefix: "?- "
+        ,italic: true
+      }, true);
       
       var parsed_query = Prolog.parse_per_sentence(query, true).sentences[0];
       
@@ -58,6 +64,21 @@
   
   });//dom-change
 
+  /**  Append a line to the "Answers" textarea
+   *
+   */
+  function append_line(line, attrs, with_newline) {
+    
+    var pos_end = view_answers.getLength();
+    
+    if (with_newline)
+      line += '\n';
+
+    if (attrs.prefix)
+      line = attrs.prefix + line;
+      
+    view_answers.insertText(pos_end, line, attrs);
+  }
   
   
 })(document);
