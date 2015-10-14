@@ -207,9 +207,9 @@ Prolog.compile_query = function(parsed_sentence) {
     try {
         code = c.process_query(parsed_sentence);
         
-        result.push( new Code(code) );
+        result = new Code(code) ;
     } catch(e) {
-        result.push( e );
+        result = e;
     }
     
     return result;
