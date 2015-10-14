@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-10-09 */
+/*! prolog.js - v0.0.1 - 2015-10-14 */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
 /* global Op, Compiler, Code
@@ -203,9 +203,9 @@ Prolog.compile_query = function(parsed_sentence) {
     try {
         code = c.process_query(parsed_sentence);
         
-        result.push( new Code(code) );
+        result = new Code(code) ;
     } catch(e) {
-        result.push( e );
+        result = e;
     }
     
     return result;

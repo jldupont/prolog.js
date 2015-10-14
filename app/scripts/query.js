@@ -38,13 +38,20 @@
       
       var query= elquery.value;
       
-      var parsed_query = Prolog.parse_per_sentence(query, true);
+      var parsed_query = Prolog.parse_per_sentence(query, true).sentences[0];
       
-      console.log("Parsed Query: ", parsed_query);
+      if (parsed_query.maybe_error) {
+        
+      } else {
+
+        console.log("Parsed Query: ", parsed_query);
+        
+        var maybe_code = Prolog.compile_query(parsed_query.maybe_token_list);
+        
+        console.log("Compiled Query: ", maybe_code);
+        
+      }
       
-      var maybe_code = Prolog.compile_query(parsed_query);
-      
-      console.log("Compiled Query: ", maybe_code);
       
     };
 
