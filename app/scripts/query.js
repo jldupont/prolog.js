@@ -42,7 +42,7 @@
       
       console.log("Parsed Query: ", parsed_query);
       
-      var maybe_code = Prolog.compile_per_sentence(parsed_query);
+      var maybe_code = Prolog.compile_query(parsed_query);
       
       console.log("Compiled Query: ", maybe_code);
       
