@@ -1,5 +1,30 @@
 /**
  *   Main file for worker.js
+ * 
+ *   Input Messages:
+ *   ===============
+ * 
+ *   - code     : provide user or builtin code
+ *   - run      : execute a number of instructions
+ *   - redo     : attempt to find another solution
+ *   - question : provide the question/query
+ * 
+ * 
+ *   States:
+ *   =======
+ * 
+ *   - running : the interpreter is running
+ *   - paused  : the interpreter is paused
+ *   - result  : the interpreter provided a solution
+ *   - end     : the query can no longer provide any solution
+ *   - error   : the interpreter is in error state
+ * 
+ *   State "Error"
+ *   =============
+ * 
+ *   Possible causes:
+ *   - 
+ * 
  */
 
 /* global Database, DbAccess, DatabaseManager, Interpreter
@@ -69,7 +94,7 @@ function store_code(msg) {
 function set_question(msg) {
     
     var code = msg.code;
-    
+
     interpreter.set_question(code);
 }
 
