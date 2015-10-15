@@ -10,6 +10,16 @@
  *   - question : provide the question/query
  * 
  * 
+ *   Output Messages:
+ *   ================
+ * 
+ *   - result   : the interpreter shares a solution
+ *   - paused   : the interpreter finished running 
+ *                    the specified number of steps
+ * 
+ *   - error    : the interpreter encountered an error 
+ * 
+ * 
  *   States:
  *   =======
  * 
@@ -96,15 +106,50 @@ function set_question(msg) {
     var code = msg.code;
 
     interpreter.set_question(code);
+    
+    console.log("Worker: set question: ", code);
 }
 
 function do_run(msg) {
     
-    var steps = msg.steps;
-    var ref   = msg.ref;
-    var ret_msg = msg.ret_msg;
-    var ret_msg_err = msg.ret_msg_err;
+    var steps   = msg.steps    || 10000;
+    var ref     = msg.ref      || 0;
+
+    var result;
+
+    for (var count = 0 ; count<steps; count++)
+        try {
+            
+            result = interpreter.step();
+            
+        } catch(e) {
+            
+            console.log(e);
+            
+            postMessage({
+                 type: 'error'
+                ,error: JSON.stringify(e)
+            });
+            return;
+        }
     
+    if (result) {
+        // the end has been reached ... a result should be available
+
+        postMessage({
+            type: 'result'
+            ,ref: ref
+        });
+
+         
+    } else {
+        
+        postMessage({
+            type: 'paused'
+            ,ref: ref
+        });
+        
+    }
     
 }
 /*! prolog.js - v0.0.1 - 2015-10-14 */

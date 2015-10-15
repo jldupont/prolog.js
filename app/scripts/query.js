@@ -60,8 +60,8 @@
         
         var maybe_code = Prolog.compile_query(parsed_query.maybe_token_list);
         
-        console.log("Compiled Query: ", maybe_code);
-        send_query_to_worker(maybe_code);
+        console.log("Compiled Query: ", maybe_code.code);
+        send_query_to_worker(maybe_code.code);
       }
       
       
