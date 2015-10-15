@@ -3,7 +3,7 @@
  * 
  */
 
-/* global Prolog
+/* global Prolog, wpr
 */
 
 (function(document) {
@@ -35,18 +35,24 @@
     elquery = document.querySelector('#query');
     
     elquery.onchange = function(event) {
-      //console.log("Query, onchange: ", query.value);
-      
+
       var query= elquery.value;
       
       append_line(query, {
         prefix: "?- "
         ,italic: true
-      }, true);
+        ,nl: true
+      });
       
       var parsed_query = Prolog.parse_per_sentence(query, true).sentences[0];
       
       if (parsed_query.maybe_error) {
+
+        append_line(parsed_query.maybe_error, {
+          color: "rgb(255, 0, 0)"
+          ,bold: true
+          ,nl: true
+        });
         
       } else {
 
@@ -55,7 +61,7 @@
         var maybe_code = Prolog.compile_query(parsed_query.maybe_token_list);
         
         console.log("Compiled Query: ", maybe_code);
-        
+        send_query_to_worker(maybe_code);
       }
       
       
@@ -64,14 +70,22 @@
   
   });//dom-change
 
+
+  function send_query_to_worker(query_code) {
+    wpr.postMessage({
+      type: 'question'
+      ,code: query_code
+    });
+  }
+
   /**  Append a line to the "Answers" textarea
    *
    */
-  function append_line(line, attrs, with_newline) {
+  function append_line(line, attrs) {
     
     var pos_end = view_answers.getLength();
     
-    if (with_newline)
+    if (attrs.nl)
       line += '\n';
 
     if (attrs.prefix)
