@@ -53,17 +53,15 @@
           ,bold: true
           ,nl: true
         });
-        
-      } else {
 
-        console.log("Parsed Query: ", parsed_query);
-        
-        var maybe_code = Prolog.compile_query(parsed_query.maybe_token_list);
-        
-        console.log("Compiled Query: ", maybe_code.code);
-        send_query_to_worker(maybe_code.code);
+        return;        
       }
+
       
+      
+      console.log("Parsed Query: ", parsed_query);
+      send_query_to_worker(query);
+
       
     };
 
@@ -71,10 +69,10 @@
   });//dom-change
 
 
-  function send_query_to_worker(query_code) {
+  function send_query_to_worker(query_text) {
     wpr.postMessage({
       type: 'question'
-      ,code: query_code
+      ,text: query_text
     });
   }
 

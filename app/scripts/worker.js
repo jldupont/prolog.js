@@ -37,7 +37,7 @@
  * 
  */
 
-/* global Database, DbAccess, DatabaseManager, Interpreter
+/* global Database, DbAccess, DatabaseManager, Interpreter, Prolog
 */
 
 addEventListener('message', function(msg_enveloppe) {
@@ -103,11 +103,19 @@ function store_code(msg) {
 
 function set_question(msg) {
     
-    var code = msg.code;
-
-    interpreter.set_question(code);
+    console.debug("Worker: question: ", msg.text);
     
-    console.log("Worker: set question: ", code);
+    var query_text = msg.text;
+    
+    var parsed_query = Prolog.parse_per_sentence(query_text, true).sentences[0];
+    
+    console.log("Worker: parsed question: ", parsed_query);
+    
+    var query_code_object = Prolog.compile_per_sentence( [ parsed_query.maybe_token_list ] )[0];
+    
+    interpreter.set_question(query_code_object.code);
+    
+    console.log("Worker: set question: ", query_code_object.code);
 }
 
 function do_run(msg) {
