@@ -111,7 +111,9 @@ function set_question(msg) {
     
     console.log("Worker: parsed question: ", parsed_query);
     
-    var query_code_object = Prolog.compile_per_sentence( [ parsed_query.maybe_token_list ] )[0];
+    var query_code_object = Prolog.compile_query( parsed_query.maybe_token_list  );
+    
+    console.log("Worker: query object code: ", query_code_object);
     
     interpreter.set_question(query_code_object.code);
     

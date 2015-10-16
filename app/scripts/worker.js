@@ -111,7 +111,9 @@ function set_question(msg) {
     
     console.log("Worker: parsed question: ", parsed_query);
     
-    var query_code_object = Prolog.compile_per_sentence( [ parsed_query.maybe_token_list ] )[0];
+    var query_code_object = Prolog.compile_query( parsed_query.maybe_token_list  );
+    
+    console.log("Worker: query object code: ", query_code_object);
     
     interpreter.set_question(query_code_object.code);
     
@@ -160,7 +162,7 @@ function do_run(msg) {
     }
     
 }
-/*! prolog.js - v0.0.1 - 2015-10-14 */
+/*! prolog.js - v0.0.1 - 2015-10-15 */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
 /* global Op, Compiler, Code
@@ -216,6 +218,8 @@ Prolog.parse = function(input_text) {
 /**
  *  Compiles a list of sentences
  *  
+ *  `sentence` is really an object Functor
+ * 
  *  @param parsed_sentences: [ sentence ] | [ ParseSummary ]
  *  @return [Code | Error]
  */
@@ -224,6 +228,8 @@ Prolog.compile_per_sentence = function(parsed_sentences) {
     if (parsed_sentences.is_error)
         throw new Error("Attempt to compile erroneous sentences");
     
+    //if (!(parsed_sentences instanceof Array))
+    //   throw new Error("Expecting Array");
     
     var result=[];
     var c = new Compiler();
@@ -262,7 +268,7 @@ Prolog.compile_per_sentence = function(parsed_sentences) {
  *
  *  A query cannot take the form of a 'rule' and can only be 1 expression.
  * 
- *  @return [ ParseSummary ]
+ *  @return { sentences: [ ParseSummary ] , is_error: true|false }
  * 
  */ 
 Prolog.parse_per_sentence = function(input_text, is_query) {
@@ -354,16 +360,17 @@ Prolog._combine = function(tokens_list) {
 /**
  * Compiles a query
  * 
+ * @param functor : an object Functor
  * @return Code | Error
  */
-Prolog.compile_query = function(parsed_sentence) {
+Prolog.compile_query = function(functor) {
     
     var result, code;
     
     var c = new Compiler();
     
     try {
-        code = c.process_query(parsed_sentence);
+        code = c.process_query(functor);
         
         result = new Code(code) ;
     } catch(e) {
