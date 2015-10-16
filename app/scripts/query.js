@@ -65,6 +65,27 @@
     }
   });
 
+  mbus.sub({
+    type: 'pr_question_ok'
+    ,cb: function() {
+      
+      wpr.postMessage({
+         type: 'run'
+         ,steps: 10000
+      });
+      
+    }
+  });
+
+  mbus.sub({
+    type: 'pr_result'
+    ,cb: function(msg) {
+
+      console.log("RESULT: ", msg);      
+
+    }
+  });
+
   function send_query_to_worker(query_text) {
     wpr.postMessage({
       type: 'question'

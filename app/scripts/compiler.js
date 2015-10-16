@@ -25,6 +25,7 @@
       mbus.post('parsed',{
         sentences:  parsed_sentences
         ,file: file
+        ,text: text
       });
       
     }
@@ -77,6 +78,7 @@
         if (locs.length === 0)
           mbus.post('parsed-ok', {
              file: msg.file
+             ,text: msg.text
             ,sentences: extract_parsed_sentences( msg.sentences.sentences )
           });
     }
@@ -90,14 +92,14 @@
       
       var result = Prolog.compile_per_sentence(msg.sentences);
       
-      console.log(result);
+      //console.log(result);
       
       
       var maybe_errors = extract_compilation_errors( result );
       
       if (maybe_errors.length === 0) {
         
-        send_code_to_worker("user", result);
+        send_code_to_worker("user", msg.text);
         
         /*
         mbus.post('code', {
@@ -117,12 +119,12 @@
   });
   
 
-  function send_code_to_worker(type, code) {
+  function send_code_to_worker(type, code_text) {
     wpr.postMessage({
       type: 'code'
-      ,codes: code
+      ,code_text: code_text
       ,code_type: type
     });    
-  };
+  }
 
 })(document);

@@ -13,6 +13,7 @@
  *   Output Messages:
  *   ================
  * 
+ *   - pr_question_ok
  *   - pr_result   : the interpreter shares a solution
  *   - pr_paused   : the interpreter finished running 
  *                    the specified number of steps
@@ -77,27 +78,46 @@ var dbm = new DatabaseManager( db_builtins, db_user );
 var interpreter = new Interpreter(db_user, db_builtins);
 
 
-
+/**
+ *  Receive 'text code' from the main thread
+ *  Compile
+ *  Put in db
+ */
 function store_code(msg) {
 
     if (msg.code_type == 'user')
         db_user.clear();    
         
     console.debug("Worker: storing code: ", msg.code_type);
+    
+    var parsed_text = Prolog.parse_per_sentence(msg.code_text);
 
-    for (var index=0; index<msg.codes.length; index++) {
-        var code = msg.codes[index];
+    // there should not be any errors
+    //  because checks are performed on the main thread side
+    
+    
+    var codes = Prolog.compile_per_sentence(parsed_text);
+    
+    put_code_in_db(msg.code_type, codes);
+
+}
+
+
+function put_code_in_db(code_type, codes) {
+
+    for (var index=0; index<codes.length; index++) {
+        var code = codes[index];
         var f = code.code.f;
         var a = code.code.a;
         
-        console.debug("Worker: Storing ", msg.code_type," code: f/a: ", f, a);    
+        console.debug("Worker: Storing ", code_type," code: f/a: ", f, a);    
 
-        if (msg.code_type == 'user')
+        if (code_type == 'user')
             dbm.user_insert_code(f, a, code.code);
         else
             dbm.builtin_insert_code(f, a, code.code);
     }
-
+    
 }
 
 
@@ -136,6 +156,10 @@ function set_question(msg) {
     interpreter.set_question(query_code_object.code);
     
     console.debug("Worker: set question: ", query_code_object.code);
+    
+    postMessage({
+        type: 'pr_question_ok'
+    });
 }
 
 function do_run(msg) {
@@ -155,7 +179,7 @@ function do_run(msg) {
             console.log(e);
             
             postMessage({
-                 type: 'error'
+                 type: 'pr_error'
                 ,error: JSON.stringify(e)
             });
             return;
@@ -164,17 +188,20 @@ function do_run(msg) {
     if (result) {
         // the end has been reached ... a result should be available
 
+        console.log("Worker Stack: ", interpreter.get_stack());
+
         postMessage({
-            type: 'result'
+            type: 'pr_result'
             ,ref: ref
+            ,vars: interpreter.get_query_vars()
         });
 
          
     } else {
         
         postMessage({
-            type: 'paused'
-            ,ref: ref
+            type: 'pr_paused'
+            ,ref:  ref
         });
         
     }
