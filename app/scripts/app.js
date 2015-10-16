@@ -15,7 +15,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   var worker = new Worker("scripts/worker.js");
 
   worker.addEventListener("message", function(msg) {
-    console.log("App, msg: ", msg);
+    console.debug("App, msg: ", msg);
+    mbus.post(msg.data);
   });
 
   window.wpr = worker;

@@ -3,7 +3,7 @@
  * 
  */
 
-/* global Prolog, wpr
+/* global Prolog, wpr, mbus
 */
 
 (function(document) {
@@ -44,30 +44,26 @@
         ,nl: true
       });
       
-      var parsed_query = Prolog.parse_per_sentence(query, true).sentences[0];
-      
-      if (parsed_query.maybe_error) {
-
-        append_line(parsed_query.maybe_error, {
-          color: "rgb(255, 0, 0)"
-          ,bold: true
-          ,nl: true
-        });
-
-        return;        
-      }
-
-      
-      
-      console.log("Parsed Query: ", parsed_query);
       send_query_to_worker(query);
 
-      
     };
 
   
   });//dom-change
 
+
+  mbus.sub({
+     type: 'pr_error'
+    ,cb : function(msg) {
+
+        append_line(msg.error, {
+          color: "rgb(255, 0, 0)"
+          ,bold: true
+          ,nl: true
+        });
+      
+    }
+  });
 
   function send_query_to_worker(query_text) {
     wpr.postMessage({

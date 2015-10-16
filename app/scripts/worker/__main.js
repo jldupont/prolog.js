@@ -13,11 +13,11 @@
  *   Output Messages:
  *   ================
  * 
- *   - result   : the interpreter shares a solution
- *   - paused   : the interpreter finished running 
+ *   - pr_result   : the interpreter shares a solution
+ *   - pr_paused   : the interpreter finished running 
  *                    the specified number of steps
  * 
- *   - error    : the interpreter encountered an error 
+ *   - pr_error : the compiler / interpreter encountered an error 
  * 
  * 
  *   States:
@@ -41,7 +41,7 @@
 */
 
 addEventListener('message', function(msg_enveloppe) {
-    console.log("Worker message: ", msg_enveloppe);
+    console.debug("Worker message: ", msg_enveloppe);
     
     var msg = msg_enveloppe.data;
     
@@ -109,15 +109,33 @@ function set_question(msg) {
     
     var parsed_query = Prolog.parse_per_sentence(query_text, true).sentences[0];
     
-    console.log("Worker: parsed question: ", parsed_query);
+    if (parsed_query.maybe_error) {
+        postMessage({
+             type: 'pr_error'
+            ,error: parsed_query.maybe_error
+        });
+        return;
+    }
+    
+    console.debug("Worker: parsed question: ", parsed_query);
     
     var query_code_object = Prolog.compile_query( parsed_query.maybe_token_list  );
     
-    console.log("Worker: query object code: ", query_code_object);
+    if (query_code_object instanceof Error) {
+
+        postMessage({
+             type: 'pr_error'
+            ,error: query_code_object.classname
+        });
+        
+        return;
+    }
+    
+    console.debug("Worker: query object code: ", query_code_object);
     
     interpreter.set_question(query_code_object.code);
     
-    console.log("Worker: set question: ", query_code_object.code);
+    console.debug("Worker: set question: ", query_code_object.code);
 }
 
 function do_run(msg) {

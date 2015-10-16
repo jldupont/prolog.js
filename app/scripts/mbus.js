@@ -32,14 +32,27 @@
   
   Mbus.prototype.sub = function(entry) {
     
+    if (!entry.type)
+      throw new Error("MBus: must specify 'type' field");
+    
     var subs = this.subs[entry.type] || [];
     subs.push(entry);
     this.subs[entry.type] = subs;
   };
   
   
-  Mbus.prototype.post = function(type, msg) {
+  Mbus.prototype.post = function(type_or_msg, maybe_msg) {
     
+    var type, msg;
+
+    if (type_or_msg instanceof Object) {
+      type = type_or_msg.type;
+      msg  = type_or_msg;
+    } else {
+      type = type_or_msg;
+      msg  = maybe_msg;
+    }
+
     this.queue.push({ type:type, msg: msg });
     
     if (this.in_post) {
