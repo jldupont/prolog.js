@@ -188,7 +188,8 @@ function do_run(msg) {
     if (result) {
         // the end has been reached ... a result should be available
 
-        console.log("Worker Stack: ", interpreter.get_stack());
+        console.log("Worker Stack:   ", interpreter.get_stack());
+        console.log("Worker Context: ", interpreter.ctx);
 
         postMessage({
             type: 'pr_result'
