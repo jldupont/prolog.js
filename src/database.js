@@ -11,7 +11,7 @@
  * 
  **/
 
-/* global ErrorAttemptToRedefineBuiltin
+/* global ErrorAttemptToRedefineBuiltin, ErrorExpectingFunctor
 */
 
 /*
@@ -69,7 +69,21 @@ Database.prototype._insert = function(root_node){
 	return functor_signature;
 };
 
-
+/**
+ *  Insert Code objects in the database
+ * 
+ *  Each Code object looks something like:
+ * 
+ *   {
+ 	    f: $functor_name
+ 	   ,a: $functor_arity
+ 	   ,head: $functor_head_code
+ 	   ,g* : $functor_goal_code
+     }
+ 
+ *
+ *   @throws ErrorExpectingFunctor 
+ */
 Database.prototype.batch_insert_code = function(codes) {
 
 	if (!(codes instanceof Array))
@@ -96,7 +110,15 @@ Database.prototype.exists = function(functor, arity) {
 	return this.db[functor_signature] !== undefined;
 };
 
+/**
+ *   Insert 1 Functor code in the database
+ * 
+ *   @throws ErrorExpectingFunctor
+ */ 
 Database.prototype.insert_code = function(functor, arity, code) {
+	
+	if (!functor || !arity || !code)
+		throw new ErrorExpectingFunctor("Invalid functor name/arity/code: ");
 	
 	var functor_signature = this.al.compute_signature([functor, arity]);
 

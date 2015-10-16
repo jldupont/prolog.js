@@ -1064,8 +1064,7 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorInternal = ErrorInternal;
 	module.exports.ErrorAlreadyBound = ErrorAlreadyBound;
 	module.exports.ErrorNotBound = ErrorNotBound;
-	//module.exports.ErrorSyntax = ErrorSyntax;
-	
+
 	module.exports.ErrorExpectingListStart = ErrorExpectingListStart;
 	module.exports.ErrorExpectingListEnd = ErrorExpectingListEnd;
 	module.exports.ErrorUnexpectedListEnd = ErrorUnexpectedListEnd;
