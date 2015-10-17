@@ -480,6 +480,7 @@ Functor.prototype.get_name = function(){
 Functor.inspect_compact_version = false;
 Functor.inspect_short_version = false;
 Functor.inspect_quoted = false;
+Functor.inspect_cons = false;
 
 Functor.prototype.inspect = function(){
 	
@@ -490,7 +491,11 @@ Functor.prototype.inspect = function(){
 	
 	if (Functor.inspect_compact_version) {
 		fargs = this.format_args(this.args);
-		result = this.name+"("+fargs+")";
+		
+		if (this.name == 'cons' && Functor.inspect_cons)
+			result = "["+fargs+"]";
+		else
+			result = this.name+"("+fargs+")";
 		
 	} else {
 		

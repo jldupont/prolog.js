@@ -715,8 +715,10 @@ it('Interpreter - batch2 - program - 2', function(){
 	                ];
 	
 	Functor.inspect_compact_version = true;
+	Functor.inspect_cons = true;
 	Var.inspect_extended = true;
 	Var.inspect_compact = true;
+	Token.inspect_compact = true;
 	
 	test(rules, query, expected, { tracer: call_tracer });
 	//test(rules, query, expected, { tracer: advanced_tracer });
