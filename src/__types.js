@@ -495,7 +495,7 @@ Functor.prototype.inspect = function(inside_cons){
 		if (this.name == 'cons' && Functor.inspect_cons) {
 			fargs = this.format_args(this.args, true);
 			
-			if (inside_cons)
+			if (inside_cons === true)
 				result = fargs;
 			else
 				result = "["+fargs+"]";

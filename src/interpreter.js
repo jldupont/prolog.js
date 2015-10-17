@@ -645,7 +645,7 @@ Interpreter.prototype.builtin_unif = function(x0) {
 			//
 			that.maybe_add_to_trail(that.ctx.tse.trail, t1);
 			
-			console.log("builtin_unif: add to trail: ", t1.name, t1.id, value);
+			//console.log("builtin_unif: add to trail: ", t1.name, t1.id, value);
 		});
 	
 	//console.log("---- BCALL result: ", typeof this.ctx.cu);
@@ -676,9 +676,6 @@ Interpreter.prototype.inst_call = function(inst) {
 	this.ctx.tse.vars = {};
 	this.ctx.tse.vars.$x0 = x0;
 	
-	// I know it's pessimistic
-	this.ctx.cu = false;
-	
 	// Get ready for `head` related instructions
 	this.ctx.cs = null;
 	this.ctx.csx = null;
@@ -699,6 +696,8 @@ Interpreter.prototype.inst_call = function(inst) {
 	 *  - current code `cc`
 	 *  - instruction pointer `i` inside label
 	 */  
+
+	//this.ctx.p.same = (this.ctx.p.f == fname && this.ctx.p.a == arity);
 
 	var result = this._execute({
 		 f:  fname
@@ -1577,6 +1576,15 @@ Interpreter.prototype.inst_get_var = function(inst) {
 	
 	var local_var = inst.get('p') || inst.get('x', "$x");
 	
+	this.ctx.cu = true;
+
+	if (this.ctx.csm == 'w') {
+		var nvar = new Var(local_var);
+		this.ctx.cse.vars[local_var] = nvar;
+		this.ctx.cs.push_arg( nvar );
+		return;
+	}
+	
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 
 	// We don't need to trail anything here :
@@ -1584,8 +1592,7 @@ Interpreter.prototype.inst_get_var = function(inst) {
 	//  all local variables will get flushed during a subsequent `call`.
 	//
 	this.ctx.cse.vars[local_var] = value_or_var;
-	
-	this.ctx.cu = true;
+
 };
 
 /**
@@ -1598,10 +1605,18 @@ Interpreter.prototype.inst_get_var = function(inst) {
 Interpreter.prototype.inst_get_value = function(inst) {
 	
 	var p = inst.get('p');
+	var pv = this.ctx.cse.vars[p];
+
+	
+	if (this.ctx.csm == 'w') {
+		this.ctx.cs.push_arg( pv );
+		this.ctx.cu = true;
+		return;
+	}
+
+	
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 
-	var pv = this.ctx.cse.vars[p];
-	
 	var that = this;
 	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1) {
 		that.maybe_add_to_trail(that.ctx.cse.trail, t1);

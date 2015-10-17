@@ -708,7 +708,7 @@ Functor.prototype.inspect = function(inside_cons){
 		if (this.name == 'cons' && Functor.inspect_cons) {
 			fargs = this.format_args(this.args, true);
 			
-			if (inside_cons)
+			if (inside_cons === true)
 				result = fargs;
 			else
 				result = "["+fargs+"]";
@@ -1469,16 +1469,25 @@ Compiler.prototype.process_head = function(exp, with_body) {
 			
 			var first_time = (vars[ctx.n.name] === undefined);
 			var at_root = ctx.root_param;
+			var in_cons = ctx.in_cons === true;
+
+			// not the first time anymore...
+			vars[ctx.n.name] = true;
 			
-			if (first_time && at_root) {
+			if (first_time && (at_root || in_cons)) {
 				result.push(new Instruction("get_var", {p:ctx.n.name}));
+				return;
 			}
 			
 			if (first_time && !at_root) {
+				
 				if (ctx.n.name[0] == "_")
 					result.push(new Instruction("unif_void"));
 				else
 					result.push(new Instruction("unif_var", {p:ctx.n.name}));
+					
+				return;
+					
 			}
 			
 			if (!first_time && at_root) {
@@ -1489,8 +1498,6 @@ Compiler.prototype.process_head = function(exp, with_body) {
 				result.push(new Instruction("unif_value", {p:ctx.n.name}));
 			}
 
-			// not the first time anymore...
-			vars[ctx.n.name] = true;
 						
 			return;			
 		}
@@ -2908,7 +2915,7 @@ Interpreter.prototype.builtin_unif = function(x0) {
 			//
 			that.maybe_add_to_trail(that.ctx.tse.trail, t1);
 			
-			console.log("builtin_unif: add to trail: ", t1.name, t1.id, value);
+			//console.log("builtin_unif: add to trail: ", t1.name, t1.id, value);
 		});
 	
 	//console.log("---- BCALL result: ", typeof this.ctx.cu);
@@ -2939,9 +2946,6 @@ Interpreter.prototype.inst_call = function(inst) {
 	this.ctx.tse.vars = {};
 	this.ctx.tse.vars.$x0 = x0;
 	
-	// I know it's pessimistic
-	this.ctx.cu = false;
-	
 	// Get ready for `head` related instructions
 	this.ctx.cs = null;
 	this.ctx.csx = null;
@@ -2962,6 +2966,8 @@ Interpreter.prototype.inst_call = function(inst) {
 	 *  - current code `cc`
 	 *  - instruction pointer `i` inside label
 	 */  
+
+	//this.ctx.p.same = (this.ctx.p.f == fname && this.ctx.p.a == arity);
 
 	var result = this._execute({
 		 f:  fname
@@ -3840,6 +3846,15 @@ Interpreter.prototype.inst_get_var = function(inst) {
 	
 	var local_var = inst.get('p') || inst.get('x', "$x");
 	
+	this.ctx.cu = true;
+
+	if (this.ctx.csm == 'w') {
+		var nvar = new Var(local_var);
+		this.ctx.cse.vars[local_var] = nvar;
+		this.ctx.cs.push_arg( nvar );
+		return;
+	}
+	
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 
 	// We don't need to trail anything here :
@@ -3847,8 +3862,7 @@ Interpreter.prototype.inst_get_var = function(inst) {
 	//  all local variables will get flushed during a subsequent `call`.
 	//
 	this.ctx.cse.vars[local_var] = value_or_var;
-	
-	this.ctx.cu = true;
+
 };
 
 /**
@@ -3861,10 +3875,18 @@ Interpreter.prototype.inst_get_var = function(inst) {
 Interpreter.prototype.inst_get_value = function(inst) {
 	
 	var p = inst.get('p');
+	var pv = this.ctx.cse.vars[p];
+
+	
+	if (this.ctx.csm == 'w') {
+		this.ctx.cs.push_arg( pv );
+		this.ctx.cu = true;
+		return;
+	}
+
+	
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 
-	var pv = this.ctx.cse.vars[p];
-	
 	var that = this;
 	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1) {
 		that.maybe_add_to_trail(that.ctx.cse.trail, t1);
@@ -5730,6 +5752,8 @@ Visitor.prototype.__process_depth = function(node){
 			,is_struct: (bnode instanceof Functor)
 		};
 
+		var in_cons = (bnode.name == 'cons');
+		
 		/*
 		 *  Announces 'root' node
 		 *   and nodes at a 2nd pass
@@ -5746,7 +5770,7 @@ Visitor.prototype.__process_depth = function(node){
 				//
 				n.v = variable_counter++;
 
-				this.cb({ n: n, is_struct: true, i:index, v: n.v, as_param: true});
+				this.cb({ n: n, is_struct: true, i:index, v: n.v, as_param: true, in_cons: in_cons});
 
 				// Schedule for revisiting (i.e. continue down the tree)
 				stack.unshift(n);
@@ -5755,7 +5779,7 @@ Visitor.prototype.__process_depth = function(node){
 				
 				// This covers all other node types
 				//  e.g. terms such as Numbers and Atoms
-				this.cb({ n: n, i: index, root_param: bnode.is_root });
+				this.cb({ n: n, i: index, root_param: bnode.is_root, in_cons: in_cons });
 			}
 			
 		} // for args

@@ -1160,10 +1160,10 @@ it('Compiler - list - 1', function(){
 			     'get_struct   ( f/1, x(0) )',
 			     'get_var      ( x(1) )',
 			     'get_struct   ( cons/2, x(1) )',
-			     'unif_var     ( p("A") )',
+			     'get_var      ( p("A") )',
 			     'get_var      ( x(2) )',
 			     'get_struct   ( cons/2, x(2) )',
-			     'unif_var     ( p("B") )',
+			     'get_var      ( p("B") )',
 			     'unif_nil',
 			     'jump         ( p("g0") )' 
 			     ],
@@ -1387,8 +1387,8 @@ it('Compiler - complex - 10', function(){
        'get_var     x(1)',
        'get_var     p("S")',
        'get_struct  cons/2, x(1)',
-       'unif_var    p("A")',
-       'unif_var    p("As")',
+       'get_var     p("A")',
+       'get_var     p("As")',
        'jump        p("g0")' 
        ],
     g0: 

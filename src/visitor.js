@@ -91,6 +91,8 @@ Visitor.prototype.__process_depth = function(node){
 			,is_struct: (bnode instanceof Functor)
 		};
 
+		var in_cons = (bnode.name == 'cons');
+		
 		/*
 		 *  Announces 'root' node
 		 *   and nodes at a 2nd pass
@@ -107,7 +109,7 @@ Visitor.prototype.__process_depth = function(node){
 				//
 				n.v = variable_counter++;
 
-				this.cb({ n: n, is_struct: true, i:index, v: n.v, as_param: true});
+				this.cb({ n: n, is_struct: true, i:index, v: n.v, as_param: true, in_cons: in_cons});
 
 				// Schedule for revisiting (i.e. continue down the tree)
 				stack.unshift(n);
@@ -116,7 +118,7 @@ Visitor.prototype.__process_depth = function(node){
 				
 				// This covers all other node types
 				//  e.g. terms such as Numbers and Atoms
-				this.cb({ n: n, i: index, root_param: bnode.is_root });
+				this.cb({ n: n, i: index, root_param: bnode.is_root, in_cons: in_cons });
 			}
 			
 		} // for args

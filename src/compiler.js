@@ -173,16 +173,25 @@ Compiler.prototype.process_head = function(exp, with_body) {
 			
 			var first_time = (vars[ctx.n.name] === undefined);
 			var at_root = ctx.root_param;
+			var in_cons = ctx.in_cons === true;
+
+			// not the first time anymore...
+			vars[ctx.n.name] = true;
 			
-			if (first_time && at_root) {
+			if (first_time && (at_root || in_cons)) {
 				result.push(new Instruction("get_var", {p:ctx.n.name}));
+				return;
 			}
 			
 			if (first_time && !at_root) {
+				
 				if (ctx.n.name[0] == "_")
 					result.push(new Instruction("unif_void"));
 				else
 					result.push(new Instruction("unif_var", {p:ctx.n.name}));
+					
+				return;
+					
 			}
 			
 			if (!first_time && at_root) {
@@ -193,8 +202,6 @@ Compiler.prototype.process_head = function(exp, with_body) {
 				result.push(new Instruction("unif_value", {p:ctx.n.name}));
 			}
 
-			// not the first time anymore...
-			vars[ctx.n.name] = true;
 						
 			return;			
 		}
