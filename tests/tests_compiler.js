@@ -390,7 +390,7 @@ it('Compiler - goal - basic - 2', function(){
 	var expected = [[
 	             'allocate',
                  'put_struct   ( h1/1, x(0) )',
-                 'unif_var     ( p("A") )',
+                 'put_var      ( p("A") )',
                  'setup',
                  'call',
                  'maybe_retry',
@@ -1396,7 +1396,7 @@ it('Compiler - complex - 10', function(){
        'put_struct  select/3, x(0)',
        'put_var     p("A")',
        'put_var     p("S")',
-       'unif_var    p("S1")',
+       'put_var     p("S1")',
        'setup'       ,
        'call'        ,
        'maybe_retry' ,

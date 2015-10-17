@@ -229,19 +229,6 @@ it('Interpreter - complex - 1', function(){
 	
 	//console.log("qcode: ", qcode);
 	
-	/*
-		{ g0: 
-		   [ allocate    ,
-		     put_struct   ( f1/1, p(0) ),
-		     put_var      ( p("A") ),
-		     setup
-		     call        ,
-		     maybe_retry
-		     deallocate
-		     proceed
-		     ] }
-	 */
-	
 	var it = new Interpreter(db);
 	
 	//it.set_tracer(basic_tracer);

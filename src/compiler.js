@@ -549,14 +549,10 @@ Compiler.prototype.process_goal = function(exp, is_query, vars) {
 			if (n instanceof Var) {
 				if (n.name[0] == "_")
 					results.push(new Instruction("put_void"));
-				else
-					if (vars[n.name] || is_query) {
-						results.push(new Instruction("put_var", {p: n.name}));
-					}
-					else {
-						results.push(new Instruction("unif_var", {p: n.name}));
-						vars[n.name] = true;
-					}
+				else {
+					results.push(new Instruction("put_var", {p: n.name}));
+					vars[n.name] = true;
+				}
 			}
 
 			if (n instanceof Value) {

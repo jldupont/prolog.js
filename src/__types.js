@@ -649,11 +649,14 @@ Var.prototype.bind = function(value, on_bind) {
 	if (this.value !== null)
 		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
 	
+	
+
 	if (on_bind) {
-		on_bind(this);
+		on_bind(this, value);
 	} 
-		
-	this.value = value;
+
+	this.value = value;		
+	
 };
 
 Var.prototype.is_bound = function(){

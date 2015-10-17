@@ -621,6 +621,7 @@ Interpreter.prototype.inst_bcall = function(inst) {
 		
 	bfunc.apply(this, [x0]);
 	
+	this._restore_continuation( this.ctx.cse.cp );
 };
 
 Interpreter.prototype.builtin_unif = function(x0) {
@@ -632,15 +633,19 @@ Interpreter.prototype.builtin_unif = function(x0) {
 	
 	//console.log("--- BUILTIN: typeof left:  ", typeof left.value);
 	//console.log("--- BUILTIN: typeof right: ", typeof right.value);
-	//console.log("--- BUILTIN: Unif: ", JSON.stringify(left), JSON.stringify(right));
+	
+	//console.log("--- BUILTIN: Unif: Left:  ", JSON.stringify(left));
+	//console.log("--- BUILTIN: Unif: Right: ", JSON.stringify(right));
 	
 	var that = this;
-	this.ctx.cu = Utils.unify(left, right, function(t1) {
+	this.ctx.cu = Utils.unify(left, right, function(t1, value) {
 			
 			// we are in the `head` and thus we accumulate the trail
 			//  in the current environment context
 			//
-			that.maybe_add_to_trail(that.ctx.cse.trail, t1);
+			that.maybe_add_to_trail(that.ctx.tse.trail, t1);
+			
+			console.log("builtin_unif: add to trail: ", t1.name, t1.id, value);
 		});
 	
 	//console.log("---- BCALL result: ", typeof this.ctx.cu);
@@ -835,6 +840,9 @@ Interpreter.prototype._deallocate = function(){
  *   
  */
 Interpreter.prototype.inst_maybe_fail = function() {
+	
+	// At this point, we don't need $x0 anymore
+	//delete this.ctx.cse.vars.$x0 ;
 	
 	// NOOP if we are not faced with a failure
 	if (this.ctx.cu)
@@ -1360,7 +1368,7 @@ Interpreter.prototype.inst_put_var = function(inst) {
 
 	// Do we have a local variable already setup?
 	var local_var = this.ctx.cse.vars[vname];
-	if (!local_var) {
+	if (local_var === undefined) {
 		local_var = new Var(vname);
 		this.ctx.cse.vars[local_var.name] = local_var;
 	} 

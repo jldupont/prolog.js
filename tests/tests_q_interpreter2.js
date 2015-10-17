@@ -5,7 +5,7 @@
  */
 
 var should = require('should');
-var assert = require('assert');
+//var assert = require('assert');
 var util   = require('util');
 
 var pr = require("../prolog.js");
@@ -14,7 +14,7 @@ var Prolog = pr.Prolog;
 
 var Lexer = pr.Lexer;
 var Token = pr.Token;
-var OpNode = pr.OpNode;
+//var OpNode = pr.OpNode;
 var Functor = pr.Functor;
 var Op = pr.Op;
 var Var = pr.Var;
@@ -27,7 +27,7 @@ var ParserL2 = pr.ParserL2;
 var ParserL3 = pr.ParserL3;
 var Compiler = pr.Compiler;
 var Interpreter = pr.Interpreter;
-var Instruction = pr.Instruction;
+//var Instruction = pr.Instruction;
 
 var ErrorNoMoreInstruction = pr.ErrorNoMoreInstruction;
 
@@ -159,7 +159,7 @@ function advanced_tracer(where, it_ctx, data, options) {
 			console.log("CSE: ", it_ctx.ctx.cse.vars);
 			
 			if (it_ctx.ctx.cse.vars != it_ctx.ctx.tse.vars)
-				console.log("TSE: ", it_ctx.ctx.tse.vars);
+				console.log("TSE: ", it_ctx.ctx.tse.vars, "\n");
 			console.log("\n");
 		}
 			
@@ -644,6 +644,87 @@ it('Interpreter - batch2 - program - 1', function(){
 	
 });
 
+
+/*
+select(X, [X|Tail], Tail).
+select(Elem, [Head|Tail], [Head|Rest]) :-
+   select(Elem, Tail, Rest).
+   
+select([A|As],S):- select(A,S,S1),select(As,S1).
+select([],_). 
+
+left_of(A,B,C):- append(_,[A,B|_],C).  
+next_to(A,B,C):- left_of(A,B,C) ; left_of(B,A,C).
+
+zebra(Owns, HS):- 
+  HS   = [ h(_,norwegian,_,_,_),    h(blue,_,_,_,_),   h(_,_,_,milk,_), _, _], 
+  select([ h(red,brit,_,_,_),       h(_,swede,dog,_,_), 
+           h(_,dane,_,tea,_),       h(_,german,_,_,prince)], HS),
+  select([ h(_,_,birds,_,pallmall), h(yellow,_,_,_,dunhill),
+           h(_,_,_,beer,bluemaster)],                        HS), 
+  left_of( h(green,_,_,coffee,_),   h(white,_,_,_,_),        HS),
+  next_to( h(_,_,_,_,dunhill),      h(_,_,horse,_,_),        HS),
+  next_to( h(_,_,_,_,blend),        h(_,_,cats, _,_),        HS),
+  next_to( h(_,_,_,_,blend),        h(_,_,_,water,_),        HS),
+  member(  h(_,Owns,zebra,_,_),                              HS).
+*/
+
+
+it('Interpreter - batch2 - program - 2', function(){
+	
+	this.timeout(17000);
+	
+	console.log("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Interpreter - batch2 - program 2");
+	
+	var rules = [
+		
+		 'append([],X,X).\n'
+		+'append([X|L1],L2,[X|L3]):- append(L1,L2,L3).\n'
+		
+		+'select(X, [X|Tail], Tail).\n'
+		+'select(Elem, [Head|Tail], [Head|Rest]) :- select(Elem, Tail, Rest).\n'
+		
+		+'select([A|As],S):- select(A,S,S1),select(As,S1).\n'
+		+'select([],_).\n'
+		
+		+'left_of(A,B,C):- append(_,[A,B|_],C).\n'
+		+'next_to(A,B,C):- left_of(A,B,C) ; left_of(B,A,C).\n'
+		
+		+'zebra(Owns, HS):-\n' 
+		+'  HS   = [ h(_,norwegian,_,_,_),    h(blue,_,_,_,_),   h(_,_,_,milk,_), _, _], \n'
+		+'  select([ h(red,brit,_,_,_),       h(_,swede,dog,_,_),          \n' 
+		+'           h(_,dane,_,tea,_),       h(_,german,_,_,prince)], HS),\n'
+		+'  select([ h(_,_,birds,_,pallmall), h(yellow,_,_,_,dunhill),     \n'
+		+'           h(_,_,_,beer,bluemaster)],                        HS),\n' 
+		+'  left_of( h(green,_,_,coffee,_),   h(white,_,_,_,_),        HS),\n'
+		+'  next_to( h(_,_,_,_,dunhill),      h(_,_,horse,_,_),        HS),\n'
+		+'  next_to( h(_,_,_,_,blend),        h(_,_,cats, _,_),        HS),\n'
+		+'  next_to( h(_,_,_,_,blend),        h(_,_,_,water,_),        HS),\n'
+		+'  member(  h(_,Owns,zebra,_,_),                              HS).\n'
+		
+		
+	];
+	
+	var query = "zebra(Who,HS).";
+	
+	var expected = [
+	{
+		Who: ''
+		,HS: ''
+	}
+	                ];
+	
+	Functor.inspect_compact_version = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected, { tracer: call_tracer });
+	//test(rules, query, expected, { tracer: advanced_tracer });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	test(rules, query, expected);
+	
+});
 
 it('Interpreter - batch3 - program - 1', function(){
 
@@ -1208,6 +1289,32 @@ it('Interpreter - primitive - 12b', function(){
 	
 	var expected = [
 	                { "$cu": true, X1: 21 }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+
+it('Interpreter - primitive - 13', function(){
+
+	var rules = [
+	             "f(HS) :- HS = [ h(_,norwegian,_,_,_),    h(blue,_,_,_,_),   h(_,_,_,milk,_), _, _]."
+				];
+	
+
+
+	var query = "f(X).";
+	
+	var expected = [
+	                { "$cu": true, X: 'cons(h(_,"norwegian",_,_,_),cons(h("blue",_,_,_,_),cons(h(_,_,_,"milk",_),cons(_,cons(_,nil)))))' }
 	                ];
 
 	Token.inspect_compact = true;

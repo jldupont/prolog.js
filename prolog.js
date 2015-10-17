@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-10-15 */
+/*! prolog.js - v0.0.1 - 2015-10-17 */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
 /* global Op, Compiler, Code
@@ -862,11 +862,14 @@ Var.prototype.bind = function(value, on_bind) {
 	if (this.value !== null)
 		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
 	
+	
+
 	if (on_bind) {
-		on_bind(this);
+		on_bind(this, value);
 	} 
-		
-	this.value = value;
+
+	this.value = value;		
+	
 };
 
 Var.prototype.is_bound = function(){
@@ -1277,8 +1280,7 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorInternal = ErrorInternal;
 	module.exports.ErrorAlreadyBound = ErrorAlreadyBound;
 	module.exports.ErrorNotBound = ErrorNotBound;
-	//module.exports.ErrorSyntax = ErrorSyntax;
-	
+
 	module.exports.ErrorExpectingListStart = ErrorExpectingListStart;
 	module.exports.ErrorExpectingListEnd = ErrorExpectingListEnd;
 	module.exports.ErrorUnexpectedListEnd = ErrorUnexpectedListEnd;
@@ -1827,14 +1829,10 @@ Compiler.prototype.process_goal = function(exp, is_query, vars) {
 			if (n instanceof Var) {
 				if (n.name[0] == "_")
 					results.push(new Instruction("put_void"));
-				else
-					if (vars[n.name] || is_query) {
-						results.push(new Instruction("put_var", {p: n.name}));
-					}
-					else {
-						results.push(new Instruction("unif_var", {p: n.name}));
-						vars[n.name] = true;
-					}
+				else {
+					results.push(new Instruction("put_var", {p: n.name}));
+					vars[n.name] = true;
+				}
 			}
 
 			if (n instanceof Value) {
@@ -1954,7 +1952,7 @@ if (typeof module!= 'undefined') {
 	module.exports.Compiler = Compiler;
 }
 
-/* global ErrorAttemptToRedefineBuiltin
+/* global ErrorAttemptToRedefineBuiltin, ErrorExpectingFunctor
 */
 
 /*
@@ -2012,7 +2010,21 @@ Database.prototype._insert = function(root_node){
 	return functor_signature;
 };
 
-
+/**
+ *  Insert Code objects in the database
+ * 
+ *  Each Code object looks something like:
+ * 
+ *   {
+ 	    f: $functor_name
+ 	   ,a: $functor_arity
+ 	   ,head: $functor_head_code
+ 	   ,g* : $functor_goal_code
+     }
+ 
+ *
+ *   @throws ErrorExpectingFunctor 
+ */
 Database.prototype.batch_insert_code = function(codes) {
 
 	if (!(codes instanceof Array))
@@ -2039,7 +2051,15 @@ Database.prototype.exists = function(functor, arity) {
 	return this.db[functor_signature] !== undefined;
 };
 
+/**
+ *   Insert 1 Functor code in the database
+ * 
+ *   @throws ErrorExpectingFunctor
+ */ 
 Database.prototype.insert_code = function(functor, arity, code) {
+	
+	if (functor===undefined || arity===undefined || code===undefined)
+		throw new ErrorExpectingFunctor("Invalid functor name/arity/code: ");
 	
 	var functor_signature = this.al.compute_signature([functor, arity]);
 
@@ -2848,6 +2868,7 @@ Interpreter.prototype.inst_bcall = function(inst) {
 		
 	bfunc.apply(this, [x0]);
 	
+	this._restore_continuation( this.ctx.cse.cp );
 };
 
 Interpreter.prototype.builtin_unif = function(x0) {
@@ -2859,15 +2880,19 @@ Interpreter.prototype.builtin_unif = function(x0) {
 	
 	//console.log("--- BUILTIN: typeof left:  ", typeof left.value);
 	//console.log("--- BUILTIN: typeof right: ", typeof right.value);
-	//console.log("--- BUILTIN: Unif: ", JSON.stringify(left), JSON.stringify(right));
+	
+	//console.log("--- BUILTIN: Unif: Left:  ", JSON.stringify(left));
+	//console.log("--- BUILTIN: Unif: Right: ", JSON.stringify(right));
 	
 	var that = this;
-	this.ctx.cu = Utils.unify(left, right, function(t1) {
+	this.ctx.cu = Utils.unify(left, right, function(t1, value) {
 			
 			// we are in the `head` and thus we accumulate the trail
 			//  in the current environment context
 			//
-			that.maybe_add_to_trail(that.ctx.cse.trail, t1);
+			that.maybe_add_to_trail(that.ctx.tse.trail, t1);
+			
+			console.log("builtin_unif: add to trail: ", t1.name, t1.id, value);
 		});
 	
 	//console.log("---- BCALL result: ", typeof this.ctx.cu);
@@ -3062,6 +3087,9 @@ Interpreter.prototype._deallocate = function(){
  *   
  */
 Interpreter.prototype.inst_maybe_fail = function() {
+	
+	// At this point, we don't need $x0 anymore
+	//delete this.ctx.cse.vars.$x0 ;
 	
 	// NOOP if we are not faced with a failure
 	if (this.ctx.cu)
@@ -3587,7 +3615,7 @@ Interpreter.prototype.inst_put_var = function(inst) {
 
 	// Do we have a local variable already setup?
 	var local_var = this.ctx.cse.vars[vname];
-	if (!local_var) {
+	if (local_var === undefined) {
 		local_var = new Var(vname);
 		this.ctx.cse.vars[local_var.name] = local_var;
 	} 

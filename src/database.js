@@ -117,7 +117,7 @@ Database.prototype.exists = function(functor, arity) {
  */ 
 Database.prototype.insert_code = function(functor, arity, code) {
 	
-	if (!functor || !arity || !code)
+	if (functor===undefined || arity===undefined || code===undefined)
 		throw new ErrorExpectingFunctor("Invalid functor name/arity/code: ");
 	
 	var functor_signature = this.al.compute_signature([functor, arity]);
