@@ -1311,7 +1311,8 @@ Interpreter.prototype.inst_put_term = function(inst) {
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
 	
-	struct.push_arg(term);
+	//struct.push_arg(new Token('term', term) );
+	struct.push_arg( term );
 };
 
 /**

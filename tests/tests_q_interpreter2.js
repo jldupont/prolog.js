@@ -480,7 +480,7 @@ it('Interpreter - batch2 - complex - 2', function(){
 	var query = "puzzle(Houses).";
 	
 	var expected = [
-{"Houses": 'list(house("red","english",Var(_),Var(_),Var(_)),Var(_),Var(_),Var(_),Var(_))'  }
+{"Houses": 'list(house(red,english,Var(_),Var(_),Var(_)),Var(_),Var(_),Var(_),Var(_))'  }
 	                ];
 	
 	test(rules, query, expected);
@@ -633,7 +633,7 @@ it('Interpreter - batch2 - program - 1', function(){
 	
 	var expected = [
 	{
-		Houses: 'list(house("yellow",norwegian,_,"kools",fox),house(blue,"ukrainian","tea",chesterfield,horse),house("red","english",milk,oldgold,snails),house(ivory,"spaniard",orangejuice,luckystike,"dog"),house("green",japanese,"coffee",parliament,_))'
+		Houses: 'list(house(yellow,norwegian,_,kools,fox),house(blue,ukrainian,tea,chesterfield,horse),house(red,english,milk,oldgold,snails),house(ivory,spaniard,orangejuice,luckystike,dog),house(green,japanese,coffee,parliament,_))'
 	}
 	                ];
 	
@@ -752,11 +752,11 @@ it('Interpreter - batch2 - program - 2a', function(){
 	var expected = [
 	{
 		//Who: ''
-		HS: '[h(_,"norwegian",birds,_,pallmall),'
-		    +'h("blue",swede,dog,beer,bluemaster),'
-		    +'h(red,brit,_,"milk",_),'
-		    +'h(yellow,"dane",_,"tea",dunhill),'
-		    +'h(_,"german",_,_,"prince"),nil]'
+		HS: '[h(_,norwegian,birds,_,pallmall),'
+		    +'h(blue,swede,dog,beer,bluemaster),'
+		    +'h(red,brit,_,milk,_),'
+		    +'h(yellow,dane,_,tea,dunhill),'
+		    +'h(_,german,_,_,prince),nil]'
 	}
 	                ];
 	
@@ -787,20 +787,20 @@ it('Interpreter - batch2 - program - 2b', function(){
 		 'append([],X,X).\n'
 		+'append([X|L1],L2,[X|L3]):- append(L1,L2,L3).\n'
 		
-		+'select(X, [X|Tail], Tail).\n'
-		+'select(Elem, [Head|Tail], [Head|Rest]) :- select(Elem, Tail, Rest).\n'
+		+'select3(X, [X|Tail], Tail).\n'
+		+'select3(Elem, [Head|Tail], [Head|Rest]) :- select3(Elem, Tail, Rest).\n'
 		
-		+'select([A|As],S):- select(A,S,S1),select(As,S1).\n'
-		+'select([],_).\n'
+		+'select2([A|As],S):- select3(A,S,S1),select2(As,S1).\n'
+		+'select2([],_).\n'
 		
 		+'left_of(A,B,C):- append(_,[A,B|_],C).\n'
 		+'next_to(A,B,C):- left_of(A,B,C) ; left_of(B,A,C).\n'
 		
 		+'zebra(Owns, HS):-\n' 
 		+'  HS   = [ h(_,norwegian,_,_,_),    h(blue,_,_,_,_),   h(_,_,_,milk,_), _, _], \n'
-		+'  select([ h(red,brit,_,_,_),       h(_,swede,dog,_,_),          \n' 
+		+'  select2([ h(red,brit,_,_,_),       h(_,swede,dog,_,_),          \n' 
 		+'           h(_,dane,_,tea,_),       h(_,german,_,_,prince)], HS),\n'
-		+'  select([ h(_,_,birds,_,pallmall), h(yellow,_,_,_,dunhill),     \n'
+		+'  select2([ h(_,_,birds,_,pallmall), h(yellow,_,_,_,dunhill),     \n'
 		+'           h(_,_,_,beer,bluemaster)],                        HS),\n' 
 		+'  left_of( h(green,_,_,coffee,_),   h(white,_,_,_,_),        HS).\n'
 		];
@@ -843,12 +843,13 @@ it('Interpreter - batch2 - program - 2b', function(){
 	
 	Functor.inspect_compact_version = true;
 	Functor.inspect_cons = true;
-	Var.inspect_extended = true;
+	Var.inspect_extended = false;
 	Var.inspect_compact = true;
-	Token.inspect_compact = true;
+	Token.inspect_compact = false;
+	Token.inspect_quoted = false;
 	
-	//test(rules, query, expected, { tracer: call_tracer });
-	test(rules, query, expected, { tracer: advanced_tracer });
+	test(rules, query, expected, { tracer: call_tracer });
+	//test(rules, query, expected, { tracer: advanced_tracer });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
 	//test(rules, query, expected);

@@ -256,11 +256,12 @@ Token.inspect_compact = false;
 
 Token.prototype.inspect = function(maybe_arg){
 	
-	if (Token.inspect_compact)
+	if (Token.inspect_compact) {
 		if (this.name == 'nil')
 			return 'nil';
 		else
-			return ""+this.value;
+			return this.value;
+	}
 	
 	var result = "";
 	
@@ -764,6 +765,9 @@ Functor.prototype.format_args = function (input, inside_cons) {
 };
 
 Functor.prototype.format_arg = function(result, arg, inside_cons){
+	
+	if (typeof arg == 'string')
+		return result + arg;
 	
 	if (arg && arg.inspect)
 		result += arg.inspect(inside_cons);
@@ -3581,7 +3585,8 @@ Interpreter.prototype.inst_put_term = function(inst) {
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
 	
-	struct.push_arg(term);
+	//struct.push_arg(new Token('term', term) );
+	struct.push_arg( term );
 };
 
 /**
