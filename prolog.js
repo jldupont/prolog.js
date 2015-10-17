@@ -254,7 +254,7 @@ function Token(name, maybe_value, maybe_attrs) {
 Token.inspect_quoted = false;
 Token.inspect_compact = false;
 
-Token.prototype.inspect = function(){
+Token.prototype.inspect = function(maybe_arg){
 	
 	if (Token.inspect_compact)
 		if (this.name == 'nil')
@@ -695,7 +695,7 @@ Functor.inspect_short_version = false;
 Functor.inspect_quoted = false;
 Functor.inspect_cons = false;
 
-Functor.prototype.inspect = function(){
+Functor.prototype.inspect = function(inside_cons){
 	
 	var fargs;
 	var result = "";
@@ -703,12 +703,23 @@ Functor.prototype.inspect = function(){
 	var arity = this.arity || this.args.length;
 	
 	if (Functor.inspect_compact_version) {
-		fargs = this.format_args(this.args);
 		
-		if (this.name == 'cons' && Functor.inspect_cons)
-			result = "["+fargs+"]";
-		else
+		
+		if (this.name == 'cons' && Functor.inspect_cons) {
+			fargs = this.format_args(this.args, true);
+			
+			if (inside_cons)
+				result = fargs;
+			else
+				result = "["+fargs+"]";
+
+		}
+			
+		else {
+			fargs = this.format_args(this.args);
 			result = this.name+"("+fargs+")";
+		}
+			
 		
 	} else {
 		
@@ -732,7 +743,7 @@ Functor.prototype.inspect = function(){
 	return result;
 };
 
-Functor.prototype.format_args = function (input) {
+Functor.prototype.format_args = function (input, inside_cons) {
 	
 	var result = "";
 	for (var index = 0; index<input.length; index++) {
@@ -743,19 +754,19 @@ Functor.prototype.format_args = function (input) {
 		
 		if (Array.isArray(arg)) {
 			result += '[';
-			result += this.format_args(arg);
+			result += this.format_args(arg, inside_cons);
 			result += ']';
 		} else 
-			result = this.format_arg(result, arg);
+			result = this.format_arg(result, arg, inside_cons);
 	}
 	
 	return result;
 };
 
-Functor.prototype.format_arg = function(result, arg){
+Functor.prototype.format_arg = function(result, arg, inside_cons){
 	
 	if (arg && arg.inspect)
-		result += arg.inspect();
+		result += arg.inspect(inside_cons);
 	else
 		result += JSON.stringify(arg);
 	
@@ -818,7 +829,7 @@ Var.counter = 0;
 Var.inspect_extended = false;
 Var.inspect_compact = false;
 
-Var.prototype.inspect = function(depth){
+Var.prototype.inspect = function(maybe_param, depth){
 	
 	// Keep the anon name as it was
 	//  requested during Var creation:
@@ -834,7 +845,7 @@ Var.prototype.inspect = function(depth){
 	
 	if (this.value) {
 		
-		var value = this.value.inspect? this.value.inspect(depth+1) : this.value;
+		var value = this.value.inspect? this.value.inspect(maybe_param,depth+1) : this.value;
 		
 		if (Var.inspect_compact) {
 			return value;
