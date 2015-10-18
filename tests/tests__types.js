@@ -538,8 +538,8 @@ it('_Types - Reviver - 3', function(){
 	Var.inspect_compact = false;
 	//Var.inspect_extended = true;
 	
-	console.log("Reviver 3 fromJSON ORIG: ", v,"\n");
-	console.log("Reviver 3 fromJSON:      ", obj,"\n");
+	//console.log("Reviver 3 fromJSON ORIG: ", v,"\n");
+	//console.log("Reviver 3 fromJSON:      ", obj,"\n");
 
 	var result = Utils.compare_objects(obj, v);
 
