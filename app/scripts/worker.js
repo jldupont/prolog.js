@@ -208,7 +208,7 @@ function do_run(msg) {
     }
     
 }
-/*! prolog.js - v0.0.1 - 2015-10-15 */
+/*! prolog.js - v0.0.1 - 2015-10-18 */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
 /* global Op, Compiler, Code
@@ -464,13 +464,14 @@ function Token(name, maybe_value, maybe_attrs) {
 Token.inspect_quoted = false;
 Token.inspect_compact = false;
 
-Token.prototype.inspect = function(){
+Token.prototype.inspect = function(maybe_arg){
 	
-	if (Token.inspect_compact)
+	if (Token.inspect_compact) {
 		if (this.name == 'nil')
 			return 'nil';
 		else
-			return ""+this.value;
+			return this.value;
+	}
 	
 	var result = "";
 	
@@ -903,8 +904,9 @@ Functor.prototype.get_name = function(){
 Functor.inspect_compact_version = false;
 Functor.inspect_short_version = false;
 Functor.inspect_quoted = false;
+Functor.inspect_cons = false;
 
-Functor.prototype.inspect = function(){
+Functor.prototype.inspect = function(inside_cons){
 	
 	var fargs;
 	var result = "";
@@ -912,8 +914,23 @@ Functor.prototype.inspect = function(){
 	var arity = this.arity || this.args.length;
 	
 	if (Functor.inspect_compact_version) {
-		fargs = this.format_args(this.args);
-		result = this.name+"("+fargs+")";
+		
+		
+		if (this.name == 'cons' && Functor.inspect_cons) {
+			fargs = this.format_args(this.args, true);
+			
+			if (inside_cons === true)
+				result = fargs;
+			else
+				result = "["+fargs+"]";
+
+		}
+			
+		else {
+			fargs = this.format_args(this.args);
+			result = this.name+"("+fargs+")";
+		}
+			
 		
 	} else {
 		
@@ -937,7 +954,7 @@ Functor.prototype.inspect = function(){
 	return result;
 };
 
-Functor.prototype.format_args = function (input) {
+Functor.prototype.format_args = function (input, inside_cons) {
 	
 	var result = "";
 	for (var index = 0; index<input.length; index++) {
@@ -948,19 +965,22 @@ Functor.prototype.format_args = function (input) {
 		
 		if (Array.isArray(arg)) {
 			result += '[';
-			result += this.format_args(arg);
+			result += this.format_args(arg, inside_cons);
 			result += ']';
 		} else 
-			result = this.format_arg(result, arg);
+			result = this.format_arg(result, arg, inside_cons);
 	}
 	
 	return result;
 };
 
-Functor.prototype.format_arg = function(result, arg){
+Functor.prototype.format_arg = function(result, arg, inside_cons){
+	
+	if (typeof arg == 'string')
+		return result + arg;
 	
 	if (arg && arg.inspect)
-		result += arg.inspect();
+		result += arg.inspect(inside_cons);
 	else
 		result += JSON.stringify(arg);
 	
@@ -1023,7 +1043,7 @@ Var.counter = 0;
 Var.inspect_extended = false;
 Var.inspect_compact = false;
 
-Var.prototype.inspect = function(depth){
+Var.prototype.inspect = function(maybe_param, depth){
 	
 	// Keep the anon name as it was
 	//  requested during Var creation:
@@ -1039,7 +1059,7 @@ Var.prototype.inspect = function(depth){
 	
 	if (this.value) {
 		
-		var value = this.value.inspect? this.value.inspect(depth+1) : this.value;
+		var value = this.value.inspect? this.value.inspect(maybe_param,depth+1) : this.value;
 		
 		if (Var.inspect_compact) {
 			return value;
@@ -1072,11 +1092,14 @@ Var.prototype.bind = function(value, on_bind) {
 	if (this.value !== null)
 		throw new ErrorAlreadyBound("Already Bound: Var("+this.name+")");
 	
+	
+
 	if (on_bind) {
-		on_bind(this);
+		on_bind(this, value);
 	} 
-		
-	this.value = value;
+
+	this.value = value;		
+	
 };
 
 Var.prototype.is_bound = function(){
@@ -1227,7 +1250,16 @@ Instruction.prototype.inspect = function(){
 			if (inserted || (this.ctx.f && !inserted))
 				result += ", ";
 			
-			result += params[i] + "("+ JSON.stringify(this.ctx[params[i]])+")";
+			var raw_value = this.ctx[params[i]];
+			
+			//console.log("Raw Value: ", raw_value);
+			
+			var value = raw_value.inspect ? raw_value.inspect() : JSON.stringify(raw_value);
+			
+			if (Instruction.inspect_compact && raw_value[0] == "_")
+				value = "_";
+			
+			result += params[i] + "("+ value +")";
 			inserted= true;
 		}
 	}
@@ -1487,8 +1519,7 @@ if (typeof module!= 'undefined') {
 	module.exports.ErrorInternal = ErrorInternal;
 	module.exports.ErrorAlreadyBound = ErrorAlreadyBound;
 	module.exports.ErrorNotBound = ErrorNotBound;
-	//module.exports.ErrorSyntax = ErrorSyntax;
-	
+
 	module.exports.ErrorExpectingListStart = ErrorExpectingListStart;
 	module.exports.ErrorExpectingListEnd = ErrorExpectingListEnd;
 	module.exports.ErrorUnexpectedListEnd = ErrorUnexpectedListEnd;
@@ -1661,16 +1692,25 @@ Compiler.prototype.process_head = function(exp, with_body) {
 			
 			var first_time = (vars[ctx.n.name] === undefined);
 			var at_root = ctx.root_param;
+			var in_cons = ctx.in_cons === true;
+
+			// not the first time anymore...
+			vars[ctx.n.name] = true;
 			
-			if (first_time && at_root) {
+			if (first_time && (at_root || in_cons)) {
 				result.push(new Instruction("get_var", {p:ctx.n.name}));
+				return;
 			}
 			
 			if (first_time && !at_root) {
+				
 				if (ctx.n.name[0] == "_")
 					result.push(new Instruction("unif_void"));
 				else
 					result.push(new Instruction("unif_var", {p:ctx.n.name}));
+					
+				return;
+					
 			}
 			
 			if (!first_time && at_root) {
@@ -1681,8 +1721,6 @@ Compiler.prototype.process_head = function(exp, with_body) {
 				result.push(new Instruction("unif_value", {p:ctx.n.name}));
 			}
 
-			// not the first time anymore...
-			vars[ctx.n.name] = true;
 						
 			return;			
 		}
@@ -1690,7 +1728,7 @@ Compiler.prototype.process_head = function(exp, with_body) {
 		if (ctx.n instanceof Token) {
 			
 			if (ctx.n.name == 'nil') {
-				result.push(new Instruction('unif_nil'));
+				result.push(new Instruction('get_nil'));
 				return;
 			}
 			
@@ -2037,14 +2075,10 @@ Compiler.prototype.process_goal = function(exp, is_query, vars) {
 			if (n instanceof Var) {
 				if (n.name[0] == "_")
 					results.push(new Instruction("put_void"));
-				else
-					if (vars[n.name] || is_query) {
-						results.push(new Instruction("put_var", {p: n.name}));
-					}
-					else {
-						results.push(new Instruction("unif_var", {p: n.name}));
-						vars[n.name] = true;
-					}
+				else {
+					results.push(new Instruction("put_var", {p: n.name}));
+					vars[n.name] = true;
+				}
 			}
 
 			if (n instanceof Value) {
@@ -2164,7 +2198,7 @@ if (typeof module!= 'undefined') {
 	module.exports.Compiler = Compiler;
 }
 
-/* global ErrorAttemptToRedefineBuiltin
+/* global ErrorAttemptToRedefineBuiltin, ErrorExpectingFunctor
 */
 
 /*
@@ -2222,7 +2256,21 @@ Database.prototype._insert = function(root_node){
 	return functor_signature;
 };
 
-
+/**
+ *  Insert Code objects in the database
+ * 
+ *  Each Code object looks something like:
+ * 
+ *   {
+ 	    f: $functor_name
+ 	   ,a: $functor_arity
+ 	   ,head: $functor_head_code
+ 	   ,g* : $functor_goal_code
+     }
+ 
+ *
+ *   @throws ErrorExpectingFunctor 
+ */
 Database.prototype.batch_insert_code = function(codes) {
 
 	if (!(codes instanceof Array))
@@ -2249,7 +2297,15 @@ Database.prototype.exists = function(functor, arity) {
 	return this.db[functor_signature] !== undefined;
 };
 
+/**
+ *   Insert 1 Functor code in the database
+ * 
+ *   @throws ErrorExpectingFunctor
+ */ 
 Database.prototype.insert_code = function(functor, arity, code) {
+	
+	if (functor===undefined || arity===undefined || code===undefined)
+		throw new ErrorExpectingFunctor("Invalid functor name/arity/code: ");
 	
 	var functor_signature = this.al.compute_signature([functor, arity]);
 
@@ -3058,6 +3114,7 @@ Interpreter.prototype.inst_bcall = function(inst) {
 		
 	bfunc.apply(this, [x0]);
 	
+	this._restore_continuation( this.ctx.cse.cp );
 };
 
 Interpreter.prototype.builtin_unif = function(x0) {
@@ -3069,15 +3126,19 @@ Interpreter.prototype.builtin_unif = function(x0) {
 	
 	//console.log("--- BUILTIN: typeof left:  ", typeof left.value);
 	//console.log("--- BUILTIN: typeof right: ", typeof right.value);
-	//console.log("--- BUILTIN: Unif: ", JSON.stringify(left), JSON.stringify(right));
+	
+	//console.log("--- BUILTIN: Unif: Left:  ", JSON.stringify(left));
+	//console.log("--- BUILTIN: Unif: Right: ", JSON.stringify(right));
 	
 	var that = this;
-	this.ctx.cu = Utils.unify(left, right, function(t1) {
+	this.ctx.cu = Utils.unify(left, right, function(t1, value) {
 			
 			// we are in the `head` and thus we accumulate the trail
 			//  in the current environment context
 			//
-			that.maybe_add_to_trail(that.ctx.cse.trail, t1);
+			that.maybe_add_to_trail(that.ctx.tse.trail, t1);
+			
+			//console.log("builtin_unif: add to trail: ", t1.name, t1.id, value);
 		});
 	
 	//console.log("---- BCALL result: ", typeof this.ctx.cu);
@@ -3108,9 +3169,6 @@ Interpreter.prototype.inst_call = function(inst) {
 	this.ctx.tse.vars = {};
 	this.ctx.tse.vars.$x0 = x0;
 	
-	// I know it's pessimistic
-	this.ctx.cu = false;
-	
 	// Get ready for `head` related instructions
 	this.ctx.cs = null;
 	this.ctx.csx = null;
@@ -3131,6 +3189,8 @@ Interpreter.prototype.inst_call = function(inst) {
 	 *  - current code `cc`
 	 *  - instruction pointer `i` inside label
 	 */  
+
+	//this.ctx.p.same = (this.ctx.p.f == fname && this.ctx.p.a == arity);
 
 	var result = this._execute({
 		 f:  fname
@@ -3272,6 +3332,9 @@ Interpreter.prototype._deallocate = function(){
  *   
  */
 Interpreter.prototype.inst_maybe_fail = function() {
+	
+	// At this point, we don't need $x0 anymore
+	//delete this.ctx.cse.vars.$x0 ;
 	
 	// NOOP if we are not faced with a failure
 	if (this.ctx.cu)
@@ -3741,7 +3804,8 @@ Interpreter.prototype.inst_put_term = function(inst) {
 	var cv = this.ctx.cv;
 	var struct = this.ctx.tse.vars[cv];
 	
-	struct.push_arg(term);
+	//struct.push_arg(new Token('term', term) );
+	struct.push_arg( term );
 };
 
 /**
@@ -3797,7 +3861,7 @@ Interpreter.prototype.inst_put_var = function(inst) {
 
 	// Do we have a local variable already setup?
 	var local_var = this.ctx.cse.vars[vname];
-	if (!local_var) {
+	if (local_var === undefined) {
 		local_var = new Var(vname);
 		this.ctx.cse.vars[local_var.name] = local_var;
 	} 
@@ -3910,7 +3974,7 @@ Interpreter.prototype.inst_unif_void = function() {
 /**
  *   Skip a structure's argument
  */
-Interpreter.prototype.inst_unif_nil = function() {
+Interpreter.prototype.inst_get_nil = function() {
 	
 	if (this.ctx.csm == 'w') {
 		this.ctx.cs.push_arg( new Token('nil') );
@@ -3919,7 +3983,13 @@ Interpreter.prototype.inst_unif_nil = function() {
 	}
 
 	var cell = this.ctx.cs.get_arg( this.ctx.csi++ );
-	this.ctx.cu = Utils.unify(cell, new Token('nil') );
+	
+	//console.log("::::: GET_NIL: ",cell,"\n");
+	
+	var that = this;
+	this.ctx.cu = Utils.unify(cell, new Token('nil'), function(t1) {
+		that.maybe_add_to_trail(that.ctx.cse.trail, t1);
+	} );
 
 	if (!this.ctx.cu)
 		this.backtrack();	
@@ -4006,6 +4076,15 @@ Interpreter.prototype.inst_get_var = function(inst) {
 	
 	var local_var = inst.get('p') || inst.get('x', "$x");
 	
+	this.ctx.cu = true;
+
+	if (this.ctx.csm == 'w') {
+		var nvar = new Var(local_var);
+		this.ctx.cse.vars[local_var] = nvar;
+		this.ctx.cs.push_arg( nvar );
+		return;
+	}
+	
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 
 	// We don't need to trail anything here :
@@ -4013,8 +4092,7 @@ Interpreter.prototype.inst_get_var = function(inst) {
 	//  all local variables will get flushed during a subsequent `call`.
 	//
 	this.ctx.cse.vars[local_var] = value_or_var;
-	
-	this.ctx.cu = true;
+
 };
 
 /**
@@ -4027,10 +4105,18 @@ Interpreter.prototype.inst_get_var = function(inst) {
 Interpreter.prototype.inst_get_value = function(inst) {
 	
 	var p = inst.get('p');
+	var pv = this.ctx.cse.vars[p];
+
+	
+	if (this.ctx.csm == 'w') {
+		this.ctx.cs.push_arg( pv );
+		this.ctx.cu = true;
+		return;
+	}
+
+	
 	var value_or_var = this.ctx.cs.get_arg( this.ctx.csi++ );
 
-	var pv = this.ctx.cse.vars[p];
-	
 	var that = this;
 	this.ctx.cu = Utils.unify(pv, value_or_var, function(t1) {
 		that.maybe_add_to_trail(that.ctx.cse.trail, t1);
@@ -5571,6 +5657,9 @@ Utils.compare_objects = function(expected, input, use_throw){
 		if (input.inspect) {
 			var repr = input.inspect();
 			
+			//console.log("CHECK, typeof input :     ", typeof input);
+			
+			//console.log("CHECK, JSON input :     ", JSON.stringify(input));
 			//console.log("CHECK, input    repr: ", repr);
 			//console.log("CHECK, expected repr: ", expected);
 			
@@ -5896,6 +5985,8 @@ Visitor.prototype.__process_depth = function(node){
 			,is_struct: (bnode instanceof Functor)
 		};
 
+		var in_cons = (bnode.name == 'cons');
+		
 		/*
 		 *  Announces 'root' node
 		 *   and nodes at a 2nd pass
@@ -5912,7 +6003,7 @@ Visitor.prototype.__process_depth = function(node){
 				//
 				n.v = variable_counter++;
 
-				this.cb({ n: n, is_struct: true, i:index, v: n.v, as_param: true});
+				this.cb({ n: n, is_struct: true, i:index, v: n.v, as_param: true, in_cons: in_cons});
 
 				// Schedule for revisiting (i.e. continue down the tree)
 				stack.unshift(n);
@@ -5921,7 +6012,7 @@ Visitor.prototype.__process_depth = function(node){
 				
 				// This covers all other node types
 				//  e.g. terms such as Numbers and Atoms
-				this.cb({ n: n, i: index, root_param: bnode.is_root });
+				this.cb({ n: n, i: index, root_param: bnode.is_root, in_cons: in_cons });
 			}
 			
 		} // for args

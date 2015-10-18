@@ -71,7 +71,7 @@
       
       wpr.postMessage({
          type: 'run'
-         ,steps: 10000
+         ,steps: 100000
       });
       
     }

@@ -8,6 +8,10 @@ Expecting:
  HS = [h(yellow,norwegian,cats,water,dunhill),h(blue,dane,horse,tea,blend),h(red,brit,birds,milk,pallmall),h(green,german,zebra,coffee,prince),h(white,swede,dog,beer,bluemaster)]
  Who = german
 """
+member(X, [Y|T]) :- X = Y; member(X, T).
+
+append([],X,X).                            
+append([X|Y],Z,[X|W]) :- append(Y,Z,W).
 
 select(X, [X|Tail], Tail).
 select(Elem, [Head|Tail], [Head|Rest]) :-
@@ -31,4 +35,3 @@ zebra(Owns, HS):-
   next_to( h(_,_,_,_,blend),        h(_,_,cats, _,_),        HS),
   next_to( h(_,_,_,_,blend),        h(_,_,_,water,_),        HS),
   member(  h(_,Owns,zebra,_,_),                              HS).
-  
