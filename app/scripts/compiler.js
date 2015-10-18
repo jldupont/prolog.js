@@ -58,10 +58,10 @@
     
     var result = [];
     for (var index=0; index<entries.length;index++) {
-      var maybe_error = entries[index].maybe_error;
+      var entry = entries[index];
       
-      if (maybe_error)
-        result.push( maybe_error );
+      if (entry instanceof Error)
+        result.push( entry );
     }
     
     return result;
@@ -92,7 +92,7 @@
       
       var result = Prolog.compile_per_sentence(msg.sentences);
       
-      //console.log(result);
+      console.log("Compilation: ", result);
       
       
       var maybe_errors = extract_compilation_errors( result );
