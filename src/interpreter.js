@@ -1491,7 +1491,12 @@ Interpreter.prototype.inst_get_nil = function() {
 
 	var cell = this.ctx.cs.get_arg( this.ctx.csi++ );
 	
-	this.ctx.cu = Utils.unify(cell, new Token('nil') );
+	//console.log("::::: GET_NIL: ",cell,"\n");
+	
+	var that = this;
+	this.ctx.cu = Utils.unify(cell, new Token('nil'), function(t1) {
+		that.maybe_add_to_trail(that.ctx.cse.trail, t1);
+	} );
 
 	if (!this.ctx.cu)
 		this.backtrack();	

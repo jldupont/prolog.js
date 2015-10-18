@@ -164,6 +164,12 @@ function advanced_tracer(where, it_ctx, data, options) {
 			console.log(line);
 		}
 		
+		var ci = it_ctx.ctx.csi ? it_ctx.ctx.csi - 1 : 0;
+		var cs = it_ctx.ctx.cs ? it_ctx.ctx.cs.get_arg(ci) : "-";
+		//console.log("**** CS STRUCT:  ", cs);
+		//console.log("**** $x0 STRUCT: ", it_ctx.ctx.cse.vars.$x0);
+		
+
 		if (dump_vars) {
 			console.log("CSE: ", it_ctx.ctx.cse.vars);
 			
@@ -776,7 +782,6 @@ it('Interpreter - batch2 - program - 2a', function(){
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
 	test(rules, query, expected);
-	
 });
 
 
@@ -842,7 +847,7 @@ it('Interpreter - batch2 - program - 2b', function(){
 	var expected = [
 	{
 		//Who: ''
-		HS: ''
+		HS: '[h(yellow,norwegian,_,_,dunhill),h(blue,swede,dog,beer,bluemaster),h(red,brit,birds,milk,pallmall),h(green,german,_,coffee,prince),h(white,dane,_,tea,_),Token(nil,null)]'
 	}
 	                ];
 	
@@ -853,11 +858,11 @@ it('Interpreter - batch2 - program - 2b', function(){
 	Token.inspect_compact = false;
 	Token.inspect_quoted = false;
 	
-	test(rules, query, expected, { tracer: call_tracer });
+	//test(rules, query, expected, { tracer: call_tracer });
 	//test(rules, query, expected, { tracer: advanced_tracer });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
-	//test(rules, query, expected);
+	test(rules, query, expected);
 	
 });
 
@@ -1462,7 +1467,7 @@ it('Interpreter - primitive - 13', function(){
 	var query = "f(X).";
 	
 	var expected = [
-	                { "$cu": true, X: '[h(_,"norwegian",_,_,_),h("blue",_,_,_,_),h(_,_,_,"milk",_),_,_,nil]' }
+	                { "$cu": true, X: '[h(_,norwegian,_,_,_),h(blue,_,_,_,_),h(_,_,_,milk,_),_,_,nil]' }
 	                ];
 
 	Token.inspect_compact = true;
