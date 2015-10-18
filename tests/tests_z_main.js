@@ -175,12 +175,24 @@ it('Main - error - 4', function() {
 	], {show_parsed: false});	
 });
 
-/*
+
 it('Main - error - 5', function() {
 	
 	//console.log("\n---- Main - error - 5\n\n");
 	
 	var text =  'x is 2.';
+	
+	test_compile(text, [
+		new ParseSummary(new ErrorInvalidFact())
+	], {show_parsed: true});	
+});
+
+/*
+it('Main - syntax - 1', function() {
+	
+	//console.log("\n---- Main - syntax - 1\n\n");
+	
+	var text =  'select(X, [X|Tail], Tail)\n select(Elem, [Head|Tail], [Head|Rest]) :- select(Elem, Tail, Rest).\n';
 	
 	test_compile(text, [
 		new ParseSummary(new ErrorInvalidFact())

@@ -24,23 +24,38 @@ var ErrorSyntax =pr.ErrorSyntax;
 
 
 var setup = function(text) {
-
+	var p, r;
+	
 	var l = new Lexer(text);
 	var tokens = l.process();
 
 	var t = new ParserL1(tokens);
 	var ttokens = t.process();
 	
-	var p = new ParserL2(ttokens);
+	try {
+		p = new ParserL2(ttokens);
+		
+	} catch(e) {
+		console.log("Parser Error: ", e);
+		console.log("Parser L1 tokens: ", ttokens);
+		throw e;
+	}
 	
 	var result = p.process();
 	var terms = result.terms;
 
 	//console.log("Terms: ", terms);
 	
-	var p = new ParserL3(terms, Op.ordered_list_by_precedence);
+	try {
+		p = new ParserL3(terms, Op.ordered_list_by_precedence);
+		r = p.process();
+	} catch(e) {
+		//console.log("Parser Error: ", e, "\n");
+		//console.log("Parser L2 tokens: ", terms, "\n");
+		throw e;
+	}
 	
-	var r = p.process();
+	
 
 	return r;
 };
@@ -311,6 +326,21 @@ it('ParserL3 - multi-expression - 1', function(){
 	
 	process(text, expected);
 });
+
+/*
+it('ParserL3 - multi-expression - 2', function(){
+	
+	Functor.inspect_compact_version = false;
+	
+	var text = "select(X, [X|Tail], Tail)\n select(Elem, [Head|Tail], [Head|Rest]) :- select(Elem, Tail, Rest).\n";
+	var expected = [ 
+	                 [ 'Functor(f2/3,Token(term,d),Token(term,e),Token(term,f))' ],
+	                 [ 'Functor(f3/3,Token(term,x),Token(term,y),Token(term,z))' ] 
+					];
+	
+	process(text, expected);
+});
+*/
 
 
 it('ParserL3 - list - 1', function(){
