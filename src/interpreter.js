@@ -1481,7 +1481,7 @@ Interpreter.prototype.inst_unif_void = function() {
 /**
  *   Skip a structure's argument
  */
-Interpreter.prototype.inst_unif_nil = function() {
+Interpreter.prototype.inst_get_nil = function() {
 	
 	if (this.ctx.csm == 'w') {
 		this.ctx.cs.push_arg( new Token('nil') );
@@ -1490,6 +1490,7 @@ Interpreter.prototype.inst_unif_nil = function() {
 	}
 
 	var cell = this.ctx.cs.get_arg( this.ctx.csi++ );
+	
 	this.ctx.cu = Utils.unify(cell, new Token('nil') );
 
 	if (!this.ctx.cu)

@@ -42,8 +42,13 @@ function call_tracer(where, ctx, data) {
 	if (ctx.stack)
 		depth = Utils.pad(""+ctx.stack.length, 5)+" -- ";
 	
+	if (where == 'backtracking') {
+		console.log("---- BACKTRACKING\n");
+		return;
+	}
+	
 	if (where == 'after_inst') 
-		if (data.opcode == 'call') {
+		if (data.opcode == 'setup') {
 			var clause = ctx.ctx.p.ci;
 			console.log(icount, depth, "CALL:",clause,"  ", ctx.ctx.tse.vars['$x0']);
 		};

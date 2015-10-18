@@ -827,7 +827,16 @@ Instruction.prototype.inspect = function(){
 			if (inserted || (this.ctx.f && !inserted))
 				result += ", ";
 			
-			result += params[i] + "("+ JSON.stringify(this.ctx[params[i]])+")";
+			var raw_value = this.ctx[params[i]];
+			
+			//console.log("Raw Value: ", raw_value);
+			
+			var value = raw_value.inspect ? raw_value.inspect() : JSON.stringify(raw_value);
+			
+			if (Instruction.inspect_compact && raw_value[0] == "_")
+				value = "_";
+			
+			result += params[i] + "("+ value +")";
 			inserted= true;
 		}
 	}

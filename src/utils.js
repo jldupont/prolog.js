@@ -66,6 +66,9 @@ Utils.compare_objects = function(expected, input, use_throw){
 		if (input.inspect) {
 			var repr = input.inspect();
 			
+			//console.log("CHECK, typeof input :     ", typeof input);
+			
+			//console.log("CHECK, JSON input :     ", JSON.stringify(input));
 			//console.log("CHECK, input    repr: ", repr);
 			//console.log("CHECK, expected repr: ", expected);
 			

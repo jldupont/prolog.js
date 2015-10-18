@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-10-17 */
+/*! prolog.js - v0.0.1 - 2015-10-18 */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
 /* global Op, Compiler, Code
@@ -1040,7 +1040,16 @@ Instruction.prototype.inspect = function(){
 			if (inserted || (this.ctx.f && !inserted))
 				result += ", ";
 			
-			result += params[i] + "("+ JSON.stringify(this.ctx[params[i]])+")";
+			var raw_value = this.ctx[params[i]];
+			
+			//console.log("Raw Value: ", raw_value);
+			
+			var value = raw_value.inspect ? raw_value.inspect() : JSON.stringify(raw_value);
+			
+			if (Instruction.inspect_compact && raw_value[0] == "_")
+				value = "_";
+			
+			result += params[i] + "("+ value +")";
 			inserted= true;
 		}
 	}
@@ -1509,7 +1518,7 @@ Compiler.prototype.process_head = function(exp, with_body) {
 		if (ctx.n instanceof Token) {
 			
 			if (ctx.n.name == 'nil') {
-				result.push(new Instruction('unif_nil'));
+				result.push(new Instruction('get_nil'));
 				return;
 			}
 			
@@ -3755,7 +3764,7 @@ Interpreter.prototype.inst_unif_void = function() {
 /**
  *   Skip a structure's argument
  */
-Interpreter.prototype.inst_unif_nil = function() {
+Interpreter.prototype.inst_get_nil = function() {
 	
 	if (this.ctx.csm == 'w') {
 		this.ctx.cs.push_arg( new Token('nil') );
@@ -3764,6 +3773,7 @@ Interpreter.prototype.inst_unif_nil = function() {
 	}
 
 	var cell = this.ctx.cs.get_arg( this.ctx.csi++ );
+	
 	this.ctx.cu = Utils.unify(cell, new Token('nil') );
 
 	if (!this.ctx.cu)
@@ -5432,6 +5442,9 @@ Utils.compare_objects = function(expected, input, use_throw){
 		if (input.inspect) {
 			var repr = input.inspect();
 			
+			//console.log("CHECK, typeof input :     ", typeof input);
+			
+			//console.log("CHECK, JSON input :     ", JSON.stringify(input));
 			//console.log("CHECK, input    repr: ", repr);
 			//console.log("CHECK, expected repr: ", expected);
 			

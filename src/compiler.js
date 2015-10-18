@@ -209,7 +209,7 @@ Compiler.prototype.process_head = function(exp, with_body) {
 		if (ctx.n instanceof Token) {
 			
 			if (ctx.n.name == 'nil') {
-				result.push(new Instruction('unif_nil'));
+				result.push(new Instruction('get_nil'));
 				return;
 			}
 			

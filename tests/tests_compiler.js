@@ -29,6 +29,8 @@ var ErrorInvalidHead = pr.ErrorInvalidHead;
 
 var process_rule = function(input_text, expecteds, options) {
 	
+	Var.inspect_compact = true;
+	
 	options = options || {};
 	
 	var expressions = setup(input_text);
@@ -62,7 +64,7 @@ var process_rule = function(input_text, expecteds, options) {
 		results.push(result);
 	};
 	
-	
+	Var.inspect_compact = true;
 	
 	if (options.show_compiled)
 		console.log("Code: ", results);
@@ -74,6 +76,8 @@ var process_rule = function(input_text, expecteds, options) {
 		
 		var ri = results[index];
 		var expected = expecteds[index];
+		
+		//console.log("Comparing: ", expected, "-->", ri);
 		
 		var result = Utils.compare_objects(expected, ri);
 		should.equal(result, true, "input: " + util.inspect(ri));
@@ -251,6 +255,8 @@ var process_body = function(input_text, expecteds, show_results) {
 
 
 var process = function(input_text, expecteds) {
+	
+	Var.inspect_compact = true;
 	
 	var expressions = setup(input_text);
 	
@@ -1164,7 +1170,7 @@ it('Compiler - list - 1', function(){
 			     'get_var      ( x(2) )',
 			     'get_struct   ( cons/2, x(2) )',
 			     'get_var      ( p("B") )',
-			     'unif_nil',
+			     'get_nil',
 			     'jump         ( p("g0") )' 
 			     ],
 		  f: 'f',
@@ -1416,8 +1422,8 @@ it('Compiler - complex - 10', function(){
     a: 2 },
   { head: 
      [ 'get_struct  select/2, x(0)',
-       'unif_nil'    ,
-       'get_var     p("_$181")',
+       'get_nil'    ,
+       'get_var     p(_)',
        'proceed'
         ],
     f: 'select',

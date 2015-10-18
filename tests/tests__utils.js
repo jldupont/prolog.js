@@ -240,17 +240,27 @@ it('Utils - Unify - anon - 3', function(){
 	}, ErrorNotBound);
 
 });
-/*
-it('Utils - Unify - anon - 4', function(){
+
+it('Utils - Unify - anon - 4a', function(){
 
 	var a1 = new Var('_');
-	var a2 = new Var('_');
+	var a2 = new Token('nil');
 
 	var result = Utils.unify(a1, a2);
 
-	should.equal(result, false);
+	should.equal(result, true);
 });
-*/
+
+
+it('Utils - Unify - anon - 4b', function(){
+
+	var a2 = new Var('_');
+	var a1 = new Token('nil');
+
+	var result = Utils.unify(a1, a2);
+
+	should.equal(result, true);
+});
 
 
 it('Utils - Unify - deref - 1', function(){
