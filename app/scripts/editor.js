@@ -111,7 +111,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     });
     
-    var dber = new Debouncer(1000, {source: 'editor-text-change'}, function(_, ctx){
+    var dber = new Debouncer(250, {source: 'editor-text-change'}, function(_, ctx){
         
         // Let's avoid recursion...
         if (ctx.source == 'parser')

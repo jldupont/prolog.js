@@ -34,8 +34,10 @@
   function compute_error_locations(parserSummaryList) {
     var locs = [];
     
-    for (var index=0; index < parserSummaryList.length; index++) {
-      var entry = parserSummaryList[index];
+    var sentences = parserSummaryList.sentences;
+    
+    for (var index=0; index < sentences.length; index++) {
+      var entry = sentences[index];
       if (entry && (entry.maybe_error !== null))
         locs.push( entry.maybe_error.token.offset);
     }
