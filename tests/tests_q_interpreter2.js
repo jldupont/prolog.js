@@ -790,7 +790,7 @@ it('Interpreter - batch2 - program - 2b', function(){
 	
 	this.timeout(17000);
 	
-	console.log("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Interpreter - batch2 - program 2b");
+	//console.log("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Interpreter - batch2 - program 2b");
 	
 	var rules = [
 		
@@ -866,6 +866,86 @@ it('Interpreter - batch2 - program - 2b', function(){
 	
 });
 
+
+it('Interpreter - batch2 - program - 2c', function(){
+	
+	this.timeout(17000);
+	
+	//console.log("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Interpreter - batch2 - program 2c");
+	
+	var rules = [
+		
+		 'append([],X,X).\n'
+		+'append([X|L1],L2,[X|L3]):- append(L1,L2,L3).\n'
+		
+		+'member(X, [Y|T]) :- X = Y; member(X, T).'
+		
+		+'select3(X, [X|Tail], Tail).\n'
+		+'select3(Elem, [Head|Tail], [Head|Rest]) :- select3(Elem, Tail, Rest).\n'
+		
+		+'select2([A|As],S):- select3(A,S,S1),select2(As,S1).\n'
+		+'select2([],_).\n'
+		
+		+'left_of(A,B,C):- append(_,[A,B|_],C).\n'
+		+'next_to(A,B,C):- left_of(A,B,C) ; left_of(B,A,C).\n'
+		
+		+'zebra(Owns, HS):-\n' 
+		+'  HS   = [ h(_,norwegian,_,_,_),    h(blue,_,_,_,_),   h(_,_,_,milk,_), _, _], \n'
+		+'  select2([ h(red,brit,_,_,_),       h(_,swede,dog,_,_),          \n' 
+		+'           h(_,dane,_,tea,_),       h(_,german,_,_,prince)], HS),\n'
+		+'  select2([ h(_,_,birds,_,pallmall), h(yellow,_,_,_,dunhill),     \n'
+		+'           h(_,_,_,beer,bluemaster)],                        HS),\n' 
+		+'  left_of( h(green,_,_,coffee,_),   h(white,_,_,_,_),        HS),\n'
+		
+		+'  next_to( h(_,_,_,_,dunhill),      h(_,_,horse,_,_),        HS),\n'
+		+'  next_to( h(_,_,_,_,blend),        h(_,_,cats, _,_),        HS),\n'
+		+'  next_to( h(_,_,_,_,blend),        h(_,_,_,water,_),        HS),\n'
+		+'  member(  h(_,Owns,zebra,_,_),                              HS).\n'
+		
+		
+	];
+	
+	
+	/*
+		with 'left_of'
+		=============
+	
+		HS= [	h(yellow,norwegian,_,_,dunhill),
+				h(blue,swede,dog,beer,bluemaster),
+				h(red,brit,birds,milk,pallmall),
+				h(green,german,_,coffee,prince),
+				h(white,dane,_,tea,_)]
+	
+	*/
+	
+	/*  COMPLETE ANSWER:
+	HS = [h(yellow,norwegian,cats,water,dunhill),h(blue,dane,horse,tea,blend),h(red,brit,birds,milk,pallmall),h(green,german,zebra,coffee,prince),h(white,swede,dog,beer,bluemaster)]
+    Owner = german ? 
+	*/
+	
+	var query = "zebra(Who,HS).";
+	
+	var expected = [
+	{
+		Who: 'german'
+		,HS: '[h(yellow,norwegian,cats,water,dunhill),h(blue,dane,horse,tea,blend),h(red,brit,birds,milk,pallmall),h(green,german,zebra,coffee,prince),h(white,swede,dog,beer,bluemaster),Token(nil,null)]'
+	}
+	                ];
+	
+	Functor.inspect_compact_version = true;
+	Functor.inspect_cons = true;
+	Var.inspect_extended = false;
+	Var.inspect_compact = true;
+	Token.inspect_compact = false;
+	Token.inspect_quoted = false;
+	
+	//test(rules, query, expected, { tracer: call_tracer });
+	//test(rules, query, expected, { tracer: advanced_tracer });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	test(rules, query, expected);
+	
+});
 
 
 
