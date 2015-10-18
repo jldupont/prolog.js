@@ -82,7 +82,23 @@
     ,cb: function(msg) {
 
       console.log("RESULT: ", msg);      
-
+      
+      append_line('Instruction Count: '+msg.step_count, {
+        italic: true
+        ,nl: true
+      });
+      
+      for (var vname in msg.vars) {
+        
+        var value = (msg.vars[vname]).inspect();
+        
+        append_line(vname+'='+value, {
+          color: 'rgb(0,0,255)'
+          ,nl: true
+        });
+        
+      }// vars
+      
     }
   });
 

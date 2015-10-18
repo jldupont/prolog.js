@@ -194,6 +194,7 @@ function do_run(msg) {
         postMessage({
             type: 'pr_result'
             ,ref: ref
+            ,step_count: interpreter.ctx.step_counter
             ,vars: interpreter.get_query_vars()
         });
 
