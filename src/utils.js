@@ -12,7 +12,7 @@
   global Var, Token, Functor
 */
 
-function Utils() {};
+function Utils() {}
 
 /**
  * Compare Objects
@@ -33,14 +33,14 @@ Utils.compare_objects = function(expected, input, use_throw){
 				throw new Error("Expecting an array");
 			
 			return false;
-		};
+		}
 			
 		
 		if (input.length != expected.length) {
 			if (use_throw)
 				throw new Error("Expecting arrays of same arity");
 			return false;
-		};
+		}
 			
 		
 		for (var index = 0; index<expected.length; index++)
@@ -48,7 +48,7 @@ Utils.compare_objects = function(expected, input, use_throw){
 				return false;
 		
 		return true;
-	};
+	}
 	
 	// Shortcut
 	//
@@ -81,9 +81,9 @@ Utils.compare_objects = function(expected, input, use_throw){
 			if (repr == expected)
 				return true;
 			
-		};
+		}
 		
-	};
+	}
 	
 	
 	if (expected && expected.inspect) {
@@ -100,7 +100,7 @@ Utils.compare_objects = function(expected, input, use_throw){
 			if (use_throw)
 				throw new Error("Expecting match using inspect: " + JSON.stringify(expected));
 			return false;
-		};
+		}
 
 	}
 	
@@ -116,6 +116,10 @@ Utils.compare_objects = function(expected, input, use_throw){
 		
 		for (var key in expected) {
 			
+			// don't compare private stuff
+			if (key[0] == "_")
+				continue;
+			
 			var e = expected[key];
 			var i = input[key];
 
@@ -126,7 +130,7 @@ Utils.compare_objects = function(expected, input, use_throw){
 				if (use_throw)
 					throw new Error("Expected/Input got undefined: e="+JSON.stringify(e)+", i:"+JSON.stringify(i));
 				return false;
-			};
+			}
 				
 			
 			if (e.hasOwnProperty(key) !== i.hasOwnProperty(key)) {
@@ -139,10 +143,10 @@ Utils.compare_objects = function(expected, input, use_throw){
 			if (!Utils.compare_objects(e, i))
 				return false;
 						
-		};// all object keys
+		}// all object keys
 		
 		return true;
-	};// object
+	}// object
 
 	//console.log("Comparing: expected: ", expected);
 	//console.log("Comparing: input:    ", JSON.stringify(input));

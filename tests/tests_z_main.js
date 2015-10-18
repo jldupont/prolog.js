@@ -95,7 +95,7 @@ function test_compile(text, expected, options) {
 	
 	var result = Prolog.compile_per_sentence(parsed_result);
 	
-	console.log(result);
+	//console.log(result);
 }
 
 // --------------------------------------------------------------- TESTS
@@ -184,7 +184,7 @@ it('Main - error - 5', function() {
 	
 	test_compile(text, [
 		new ParseSummary(new ErrorInvalidFact())
-	], {show_parsed: true});	
+	], {show_parsed: false});	
 });
 
 /*

@@ -228,6 +228,8 @@ if (typeof module != 'undefined') {
  */
 function Token(name, maybe_value, maybe_attrs) {
 	
+	this.__classname__ = 'Token';
+	
 	maybe_attrs = maybe_attrs || {}; 
 	
 	this.name = name;
@@ -253,6 +255,14 @@ function Token(name, maybe_value, maybe_attrs) {
 
 Token.inspect_quoted = false;
 Token.inspect_compact = false;
+
+Token.prototype.toJSON = function() {
+	return "Token:"+this.name+":"+this.value;
+};
+
+Token.fromJSON = function(name, value){
+	return new Token(name, value);
+};
 
 Token.prototype.inspect = function(maybe_arg){
 	
@@ -651,6 +661,8 @@ Code.prototype.inspect = function(){
  */
 function Functor(name, maybe_arguments_list) {
 	
+	this.__classname__ = 'Functor';
+	
 	this.name = name;
 	this.original_token = null;
 	this.prec = 0;
@@ -812,6 +824,8 @@ Functor.compare = function(f1, f2) {
  */
 function Var(name) {
 	
+	this.__classname__ = 'Var';
+	
 	this.is_anon = (name[0] == '_');
 	this.prec = 0;
 	this.name = name;
@@ -821,10 +835,10 @@ function Var(name) {
 	
 	this.value = null;
 	
-	this.id = Var.counter++;
+	this._id = Var.counter++;
 	
 	if (this.name[0] == "_")
-		this.name = this.name+"$"+this.id;
+		this.name = this.name+"$"+this._id;
 	
 	//console.log(".............. CREATED: ", name, this.name, this.is_anon);
 }
@@ -832,6 +846,24 @@ function Var(name) {
 Var.counter = 0;
 Var.inspect_extended = false;
 Var.inspect_compact = false;
+
+Var.prototype.toJSON = function() {
+	return "Var:"+this.name+":"+JSON.stringify(this.value);
+};
+
+Var.fromJSON = function(name, raw_value) {
+	
+	//console.log("Var.fromJSON: ", raw_value);
+	
+	var value = JSON.parse(raw_value, Types.ReviveFromJSON);
+	
+	//console.log("Var.fromJSON: value: ", value);
+	
+	var v = new Var(name);
+	v.bind(value);
+	
+	return v;
+};
 
 Var.prototype.inspect = function(maybe_param, depth){
 	
@@ -1100,18 +1132,22 @@ ParseSummary.prototype.inspect = function() {
 
 
 
+
+
 // ============================================================ Errors
 
 
+
 function ErrorSyntax(msg, token) {
-	this.classname = 'ErrorSyntax';
+	this.__classname__ = 'ErrorSyntax';
 	this.message = msg;
 	this.token = token;
 }
 ErrorSyntax.prototype = Error.prototype;
 
+
 function ErrorInvalidFact(msg, token) {
-	this.classname = 'ErrorInvalidFact';
+	this.__classname__ = 'ErrorInvalidFact';
 	this.message = msg;
 	this.token = token;
 }
@@ -1119,7 +1155,7 @@ ErrorInvalidFact.prototype = Error.prototype;
 
 
 function ErrorExpectingFunctor(msg, token) {
-	this.classname = 'ErrorExpectingFunctor';
+	this.__classname__ = 'ErrorExpectingFunctor';
 	this.message = msg;
 	this.token = token;
 }
@@ -1127,7 +1163,7 @@ ErrorExpectingFunctor.prototype = Error.prototype;
 
 
 function ErrorExpectingVariable(msg, token) {
-	this.classname = 'ErrorExpectingVariable';
+	this.__classname__ = 'ErrorExpectingVariable';
 	this.message = msg;
 	this.token = token;
 }
@@ -1135,21 +1171,21 @@ ErrorExpectingVariable.prototype = Error.prototype;
 
 
 function ErrorFunctorNotFound(msg, token) {
-	this.classname = 'ErrorFunctorNotFound';
+	this.__classname__ = 'ErrorFunctorNotFound';
 	this.message = msg;
 	this.token = token;
 }
 ErrorFunctorNotFound.prototype = Error.prototype;
 
 function ErrorFunctorClauseNotFound(msg, token) {
-	this.classname = 'ErrorFunctorClauseNotFound';
+	this.__classname__ = 'ErrorFunctorClauseNotFound';
 	this.message = msg;
 	this.token = token;
 }
 ErrorFunctorClauseNotFound.prototype = Error.prototype;
 
 function ErrorFunctorCodeNotFound(msg, token) {
-	this.classname = 'ErrorFunctorCodeNotFound';
+	this.__classname__ = 'ErrorFunctorCodeNotFound';
 	this.message = msg;
 	this.token = token;
 }
@@ -1157,77 +1193,77 @@ ErrorFunctorCodeNotFound.prototype = Error.prototype;
 
 
 function ErrorExpectingGoal(msg, token) {
-	this.classname = 'ErrorExpectingGoal';
+	this.__classname__ = 'ErrorExpectingGoal';
 	this.message = msg;
 	this.token = token;
 }
 ErrorExpectingGoal.prototype = Error.prototype;
 
 function ErrorInvalidHead(msg, token) {
-	this.classname = 'ErrorInvalidHead';
+	this.__classname__ = 'ErrorInvalidHead';
 	this.message = msg;
 	this.token = token;
 }
 ErrorInvalidHead.prototype = Error.prototype;
 
 function ErrorRuleInQuestion(msg, token) {
-	this.classname = 'ErrorRuleInQuestion';
+	this.__classname__ = 'ErrorRuleInQuestion';
 	this.message = msg;
 	this.token = token;
 }
 ErrorRuleInQuestion.prototype = Error.prototype;
 
 function ErrorNoMoreInstruction(msg, token) {
-	this.classname = 'ErrorNoMoreInstruction';
+	this.__classname__ = 'ErrorNoMoreInstruction';
 	this.message = msg;
 	this.token = token;
 }
 ErrorNoMoreInstruction.prototype = Error.prototype;
 
 function ErrorInvalidInstruction(msg, token) {
-	this.classname = 'ErrorInvalidInstruction';
+	this.__classname__ = 'ErrorInvalidInstruction';
 	this.message = msg;
 	this.token = token;
 }
 ErrorInvalidInstruction.prototype = Error.prototype;
 
 function ErrorInternal(msg, token) {
-	this.classname = 'ErrorInternal';
+	this.__classname__ = 'ErrorInternal';
 	this.message = msg;
 	this.token = token;
 }
 ErrorInternal.prototype = Error.prototype;
 
 function ErrorInvalidValue(msg, token) {
-	this.classname = 'ErrorInvalidValue';
+	this.__classname__ = 'ErrorInvalidValue';
 	this.message = msg;
 	this.token = token;
 }
 ErrorInvalidValue.prototype = Error.prototype;
 
 function ErrorAlreadyBound(msg, token) {
-	this.classname = 'ErrorAlreadyBound';
+	this.__classname__ = 'ErrorAlreadyBound';
 	this.message = msg;
 	this.token = token;
 }
 ErrorAlreadyBound.prototype = Error.prototype;
 
 function ErrorNotBound(msg, token) {
-	this.classname = 'ErrorNotBound';
+	this.__classname__ = 'ErrorNotBound';
 	this.message = msg;
 	this.token = token;
 }
 ErrorNotBound.prototype = Error.prototype;
 
 function ErrorExpectingListStart(msg, token) {
-	this.classname = 'ErrorExpectingListStart';
+	this.__classname__ = 'ErrorExpectingListStart';
 	this.message = msg;
 	this.token = token;
 }
 ErrorExpectingListStart.prototype = Error.prototype;
 
 function ErrorExpectingListEnd(msg, token) {
-	this.classname = 'ErrorExpectingListEnd';
+	this.__classname__ = 'ErrorExpectingListEnd';
 	this.message = msg;
 	this.token = token;
 }
@@ -1235,42 +1271,42 @@ ErrorExpectingListEnd.prototype = Error.prototype;
 
 
 function ErrorInvalidToken(msg, token) {
-	this.classname = 'ErrorInvalidToken';
+	this.__classname__ = 'ErrorInvalidToken';
 	this.message = msg;
 	this.token = token;
 }
 ErrorInvalidToken.prototype = Error.prototype;
 
 function ErrorUnexpectedParensClose(msg, token) {
-	this.classname = 'ErrorUnexpectedParensClose';
+	this.__classname__ = 'ErrorUnexpectedParensClose';
 	this.message = msg;
 	this.token = token;
 }
 ErrorUnexpectedParensClose.prototype = Error.prototype;
 
 function ErrorUnexpectedPeriod(msg, token) {
-	this.classname = 'ErrorUnexpectedPeriod';
+	this.__classname__ = 'ErrorUnexpectedPeriod';
 	this.message = msg;
 	this.token = token;
 }
 ErrorUnexpectedPeriod.prototype = Error.prototype;
 
 function ErrorUnexpectedEnd(msg, token) {
-	this.classname = 'ErrorUnexpectedEnd';
+	this.__classname__ = 'ErrorUnexpectedEnd';
 	this.message = msg;
 	this.token = token;
 }
 ErrorUnexpectedEnd.prototype = Error.prototype;
 
 function ErrorUnexpectedListEnd(msg, token) {
-	this.classname = 'ErrorUnexpectedListEnd';
+	this.__classname__ = 'ErrorUnexpectedListEnd';
 	this.message = msg;
 	this.token = token;
 }
 ErrorUnexpectedListEnd.prototype = Error.prototype;
 
 function ErrorAttemptToRedefineBuiltin(msg, functor, arity) {
-	this.classname = 'ErrorAttemptToRedefineBuiltin';
+	this.__classname__ = 'ErrorAttemptToRedefineBuiltin';
 	this.message = msg;
 	this.functor = functor;
 	this.arity = arity;
@@ -1278,7 +1314,50 @@ function ErrorAttemptToRedefineBuiltin(msg, functor, arity) {
 ErrorAttemptToRedefineBuiltin.prototype = Error.prototype;
 
 
+// ============================================================ TYPES
+
+var Types = {};
+
+Types.revivable = {
+	Token    : Token
+	,Var     : Var
+	,Functor : Functor
+};
+
+/**
+ *  This function is meant to be used along
+ *   with JSON.parse
+ */
+Types.ReviveFromJSON = function(key, value) {
+	
+	//console.log("ReviveFromJSON: ", key, "Value: ", value);
+	//console.log("ReviveFromJSON: this= ", this);
+	
+	var parts = value.match(/(.*?):(.*?):(.*)/);
+	
+	var type  = parts[1];
+	var name  = parts[2];
+	var val   = parts[3];
+	
+	//var v = JSON.parse(val, Types.ReviveFromJSON);
+	
+	var constructor = Types.revivable[type];
+	
+	//console.log("Parts ", type, parts);
+	
+	var obj = constructor.fromJSON(name, val);
+	
+	return obj;
+};
+
+
+// ============================================================== EXPORTS
+
+
+
 if (typeof module!= 'undefined') {
+	
+	module.exports.Types = Types;
 	module.exports.Eos = Eos;
 	module.exports.Code = Code;
 	module.exports.InComment = InComment;
@@ -5393,7 +5472,7 @@ if (typeof module!= 'undefined') {
   global Var, Token, Functor
 */
 
-function Utils() {};
+function Utils() {}
 
 /**
  * Compare Objects
@@ -5414,14 +5493,14 @@ Utils.compare_objects = function(expected, input, use_throw){
 				throw new Error("Expecting an array");
 			
 			return false;
-		};
+		}
 			
 		
 		if (input.length != expected.length) {
 			if (use_throw)
 				throw new Error("Expecting arrays of same arity");
 			return false;
-		};
+		}
 			
 		
 		for (var index = 0; index<expected.length; index++)
@@ -5429,7 +5508,7 @@ Utils.compare_objects = function(expected, input, use_throw){
 				return false;
 		
 		return true;
-	};
+	}
 	
 	// Shortcut
 	//
@@ -5462,9 +5541,9 @@ Utils.compare_objects = function(expected, input, use_throw){
 			if (repr == expected)
 				return true;
 			
-		};
+		}
 		
-	};
+	}
 	
 	
 	if (expected && expected.inspect) {
@@ -5481,7 +5560,7 @@ Utils.compare_objects = function(expected, input, use_throw){
 			if (use_throw)
 				throw new Error("Expecting match using inspect: " + JSON.stringify(expected));
 			return false;
-		};
+		}
 
 	}
 	
@@ -5497,6 +5576,10 @@ Utils.compare_objects = function(expected, input, use_throw){
 		
 		for (var key in expected) {
 			
+			// don't compare private stuff
+			if (key[0] == "_")
+				continue;
+			
 			var e = expected[key];
 			var i = input[key];
 
@@ -5507,7 +5590,7 @@ Utils.compare_objects = function(expected, input, use_throw){
 				if (use_throw)
 					throw new Error("Expected/Input got undefined: e="+JSON.stringify(e)+", i:"+JSON.stringify(i));
 				return false;
-			};
+			}
 				
 			
 			if (e.hasOwnProperty(key) !== i.hasOwnProperty(key)) {
@@ -5520,10 +5603,10 @@ Utils.compare_objects = function(expected, input, use_throw){
 			if (!Utils.compare_objects(e, i))
 				return false;
 						
-		};// all object keys
+		}// all object keys
 		
 		return true;
-	};// object
+	}// object
 
 	//console.log("Comparing: expected: ", expected);
 	//console.log("Comparing: input:    ", JSON.stringify(input));

@@ -5,10 +5,11 @@
  */
 
 var should = require('should');
-var assert = require('assert');
+//var assert = require('assert');
 
 var pr = require("../prolog.js");
 
+var Types = pr.Types;
 var Token = pr.Token;
 var Functor = pr.Functor;
 var Op = pr.Op;
@@ -19,7 +20,7 @@ var Instruction = pr.Instruction;
 var ErrorAlreadyBound = pr.ErrorAlreadyBound;
 var ErrorNotBound = pr.ErrorNotBound;
 var ErrorInvalidValue = pr.ErrorInvalidValue;
-
+var ErrorSyntax = pr.ErrorSyntax;
 
 Functor.inspect_short_version = false;
 
@@ -474,5 +475,74 @@ it('_Types - Var - Deref - 4', function(){
 	//console.log(should_be_a_var);
 	
 	should.equal(should_be_a_var.name, "Z");
+
+});
+
+
+it('_Types - Error Class - 1', function(){
+
+	var e = new ErrorSyntax("test", "token");
+	
+	var j = JSON.stringify(e);
+
+	should.equal(j, '{"__classname__":"ErrorSyntax","message":"test","token":"token"}');
+
+});
+
+
+it('_Types - Reviver - 1', function(){
+
+	var e = new Token('term', 666);
+	
+	var j = JSON.stringify(e);
+	
+	var obj = JSON.parse(j, Types.ReviveFromJSON);
+
+	//console.log("Reviver: ", obj);
+
+	var result = Utils.compare_objects(obj, new Token('term', 666));
+
+	should.ok(result);
+
+});
+
+it('_Types - Reviver - 2', function(){
+
+	var e = new Token('term', "some:path");
+	
+	var j = JSON.stringify(e);
+	
+	var obj = JSON.parse(j, Types.ReviveFromJSON);
+
+	//console.log("Reviver: ", obj);
+
+	var result = Utils.compare_objects(obj, new Token('term', 'some:path'));
+
+	should.ok(result);
+
+});
+
+
+it('_Types - Reviver - 3', function(){
+
+	var t = new Token('term', "some:path");
+	var v = new Var('var');
+	v.bind(t);
+
+	var j = JSON.stringify(v);
+	
+	//console.log("Reviver 3 toJSON: ", j,"\n");
+	
+	var obj = JSON.parse(j, Types.ReviveFromJSON);
+
+	Var.inspect_compact = false;
+	//Var.inspect_extended = true;
+	
+	console.log("Reviver 3 fromJSON ORIG: ", v,"\n");
+	console.log("Reviver 3 fromJSON:      ", obj,"\n");
+
+	var result = Utils.compare_objects(obj, v);
+
+	should.ok(result);
 
 });
