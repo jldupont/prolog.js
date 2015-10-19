@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-10-18 */
+/*! prolog.js - v0.0.1 - 2015-10-19 */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
 /* global Op, Compiler, Code
@@ -4935,13 +4935,17 @@ ParserL2.prototype._process_list = function(maybe_token){
 		
 		next_token = this.get_token();
 
-	if (next_token === null)
-		throw new ErrorUnexpectedEnd("Unexpected end in list definition", previous_token);
+		if (next_token === null)
+			throw new ErrorUnexpectedEnd("Unexpected end in list definition", previous_token);
 		
 		if (next_token.name == 'functor') {
 			this.regive();
 			res = this._process({ process_functor: true });
 			next_token = res.terms;
+		}
+
+		if (next_token.name == 'list:open') {
+			next_token = this._process_list();
 		}
 
 		cons.push_arg( next_token );

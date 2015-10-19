@@ -294,13 +294,17 @@ ParserL2.prototype._process_list = function(maybe_token){
 		
 		next_token = this.get_token();
 
-	if (next_token === null)
-		throw new ErrorUnexpectedEnd("Unexpected end in list definition", previous_token);
+		if (next_token === null)
+			throw new ErrorUnexpectedEnd("Unexpected end in list definition", previous_token);
 		
 		if (next_token.name == 'functor') {
 			this.regive();
 			res = this._process({ process_functor: true });
 			next_token = res.terms;
+		}
+
+		if (next_token.name == 'list:open') {
+			next_token = this._process_list();
 		}
 
 		cons.push_arg( next_token );

@@ -29,7 +29,7 @@ var Compiler = pr.Compiler;
 var Interpreter = pr.Interpreter;
 //var Instruction = pr.Instruction;
 
-var ErrorNoMoreInstruction = pr.ErrorNoMoreInstruction;
+//var ErrorNoMoreInstruction = pr.ErrorNoMoreInstruction;
 
 function call_tracer(where, ctx, data) {
 	
@@ -51,7 +51,7 @@ function call_tracer(where, ctx, data) {
 		if (data.opcode == 'setup') {
 			var clause = ctx.ctx.p.ci;
 			console.log(icount, depth, "CALL:",clause,"  ", ctx.ctx.tse.vars['$x0']);
-		};
+		}
 	
 	if (where == 'before_inst')
 		if (data.opcode == 'proceed' || data.opcode == 'maybe_fail') {
@@ -62,9 +62,9 @@ function call_tracer(where, ctx, data) {
 				console.log(icount, depth, "EXIT:",clause, " ", ctx.ctx.tse.vars['$x0']);
 			else
 				console.log(icount, depth, "FAIL: ", ctx.ctx.tse.vars['$x0']);
-		};
+		}
 		
-};
+}
 
 function basic_tracer(ctx, it_ctx, data) {
 
@@ -1047,6 +1047,53 @@ append/3  code ==>
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
 	//test(rules, query, expected, { tracer: call_tracer });
 });
+
+
+
+it('Interpreter - batch3 - program - 2', function(){
+
+	//console.log("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Interpreter - batch3 - program 2\n\n");
+
+	var rules = [
+					'neigh(Left, Right, List) :-'
+			        	+'List = [Left | [Right | _]] ;'
+			        	+'List = [_ | [Left | Right]].'
+			        	
+					+'member(X, [Y|T]) :- X = Y; member(X, T).'
+					
+					+'zebraowner(Houses, ZebraOwner):-'
+					       +'member([englishman, _, red], Houses),'
+					        +'member([spanish, jaguar, _], Houses),'
+					        +'neigh([_, snail, _], [japanese, _, _], Houses),'
+					        +'neigh([_, snail, _], [_, _, blue], Houses),'
+					        +'member([ZebraOwner, zebra, _], Houses),'
+					        +'member([_, _, green], Houses).'
+					        
+					+'zebra(X) :- zebraowner([_, _, _], X).'	
+				];
+	
+
+	var query = "zebra(X).";
+	
+	var expected = [
+	                { "$cu": true, X: 'japanese' }
+	                ];
+
+	Functor.inspect_cons = true;
+	Functor.inspect_compact_version = true;
+	Token.inspect_compact = true;
+	//Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+
+
 
 it('Interpreter - Disj - 1', function(){
 

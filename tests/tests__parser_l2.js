@@ -69,12 +69,14 @@ var setup = function(text, options) {
 		p = new ParserL2(ttokens);
 		result = p.process();
 	} catch(e) {
-		if (options.parserl2_dump)
+		
+		if (options.parserl2_dump) {
 			console.log(result);
+			throw e;
+		}
+			
 	}
 	
-	
-		
 	var exp0 = result.terms[0];
 	
 	//console.log(exp0);
@@ -111,7 +113,7 @@ var compare = function(input, expected) {
 		var ri = util.inspect(i, {depth: null});
 		if (ri!=re)
 			return false;
-	};
+	}
 	
 	return true;
 };
@@ -587,4 +589,17 @@ it('ParserL2 - error - 1', function(){
 		process(text, expected);
 	}
 	,ErrorUnexpectedEnd);
+});
+
+
+
+it('ParserL2 - list complex - 1', function(){
+
+	//Functor.inspect_compact_version = true;
+
+	var text = "[1 | [2 | [3,4] ] ]";
+	var expected = [ "cons(Token(number,1),cons(Token(number,2),cons(Token(number,3),cons(Token(number,4),Token(nil,null)))))" ];
+	
+	//process(text, expected, {show_parsedl1 : true, show_parsedl2: true});
+	process(text, expected);
 });
