@@ -39,6 +39,7 @@
  */
 
 /* global Database, DbAccess, DatabaseManager, Interpreter, Prolog
+            Functor, Var, Token
 */
 
 addEventListener('message', function(msg_enveloppe) {
@@ -69,6 +70,7 @@ addEventListener('message', function(msg_enveloppe) {
  
  
 });
+
 
 var db_user     = new Database(DbAccess);
 var db_builtins = new Database(DbAccess);
@@ -123,7 +125,13 @@ function put_code_in_db(code_type, codes) {
 
 function set_question(msg) {
     
-    console.debug("Worker: question: ", msg.text);
+    Functor.inspect_compact_version = true;
+    Functor.inspect_cons = true;
+    
+    Var.inspect_compact = true;
+    Token.inspect_compact = true;
+    
+    //console.debug("Worker: question: ", msg.text);
     
     var query_text = msg.text;
     
@@ -137,7 +145,7 @@ function set_question(msg) {
         return;
     }
     
-    console.debug("Worker: parsed question: ", parsed_query);
+    //console.debug("Worker: parsed question: ", parsed_query);
     
     var query_code_object = Prolog.compile_query( parsed_query.maybe_token_list  );
     
@@ -151,11 +159,11 @@ function set_question(msg) {
         return;
     }
     
-    console.debug("Worker: query object code: ", query_code_object);
+    //console.debug("Worker: query object code: ", query_code_object);
     
     interpreter.set_question(query_code_object.code);
     
-    console.debug("Worker: set question: ", query_code_object.code);
+    //console.debug("Worker: set question: ", query_code_object.code);
     
     postMessage({
         type: 'pr_question_ok'
@@ -191,11 +199,22 @@ function do_run(msg) {
         console.log("Worker Stack:   ", interpreter.get_stack());
         console.log("Worker Context: ", interpreter.ctx);
 
+        var vars = interpreter.get_query_vars();
+        var varss = {};
+        
+        for (var key in vars) {
+            
+            var value = vars[key];
+            
+            varss[key] = value.inspect ? value.inspect() : JSON.stringify(value);
+        }
+            
+
         postMessage({
             type: 'pr_result'
             ,ref: ref
             ,step_count: interpreter.ctx.step_counter
-            ,vars: interpreter.get_query_vars()
+            ,vars: varss
         });
 
          

@@ -90,7 +90,7 @@
       
       for (var vname in msg.vars) {
         
-        var value = (msg.vars[vname]).inspect();
+        var value = (msg.vars[vname]).replace(/,/g, ', ');
         
         append_line(vname+'='+value, {
           color: 'rgb(0,0,255)'
