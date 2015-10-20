@@ -1519,7 +1519,6 @@ it('Compiler - complex - 11', function(){
 
 
 
-/*
 
 it('Compiler - struct - 1', function(){
 	
@@ -1531,10 +1530,62 @@ it('Compiler - struct - 1', function(){
 	
 
 	var expected = [
-		
+		{ head: 
+		   [ 'get_struct  test/1, x(0)',
+		     'get_var     p("X")',
+		     'jump        p("g0")'
+		     ],
+		  g0: 
+		   [ 'allocate'    ,
+		     'put_struct  plus/2, x(0)',
+		     'put_var     p("X")',
+		     'put_number  p(1)',
+		     'setup'       ,
+		     'call'        ,
+		     'maybe_retry' ,
+		     'deallocate'  ,
+		     'proceed'
+		     ],
+		  f: 'test',
+		  a: 1 }		
 	];
 	
 	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_parsed: true});
 	process_rule(text, expected);
 });
-*/
+
+
+it('Compiler - struct - 2', function(){
+	
+	//console.log("\n***Compiler - struct - 2\n");
+	
+	Instruction.inspect_compact = true;
+	
+	var text = "test(X) :- f(X + 1).";
+
+	var expected = [
+		{ head: 
+		   [ 'get_struct  test/1, x(0)',
+		     'get_var     p("X")',
+		     'jump        p("g0")'
+		     ],
+		  g0: 
+		   [ 'allocate'    ,
+		     'put_struct  plus/2, x(1)',
+		     'put_var     p("X")',
+		     'put_number  p(1)',
+		     'put_struct  f/1, x(0)',
+     		 'put_value   x(1)',
+		     'setup'       ,
+		     'call'        ,
+		     'maybe_retry' ,
+		     'deallocate'  ,
+		     'proceed'
+		     ],
+		  f: 'test',
+		  a: 1 }		
+	];
+	
+	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_parsed: true});
+	process_rule(text, expected);
+});

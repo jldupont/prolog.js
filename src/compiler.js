@@ -528,7 +528,7 @@ Compiler.prototype.process_goal = function(exp, is_query, vars) {
 	}
 	
 	
-	if (exp.attrs.primitive) {
+	if (exp.attrs.primitive && exp.attrs.to_evaluate) {
 		return this.process_primitive(exp, is_query, vars);
 	}
 	

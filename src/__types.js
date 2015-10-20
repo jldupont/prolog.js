@@ -207,13 +207,16 @@ Op._list = [
 	   ,new Op("rule",    ':-', 1200, 'xfx')
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
+	   
 	   ,new Op("unif",    '=',   700, 'xfx', {builtin:   true, boolean: true})
 	   ,new Op("notunif", '\\=', 700, 'xfx', {builtin:   true, boolean: true})
-	   ,new Op("em",      '=<',  700, 'xfx', {primitive: true, boolean: true})
-	   ,new Op("ge",      '>=',  700, 'xfx', {primitive: true, boolean: true})
-	   ,new Op("lt",      '<',   700, 'xfx', {primitive: true, boolean: true})
-	   ,new Op("gt",      '>',   700, 'xfx', {primitive: true, boolean: true})
-	   ,new Op("is",      'is',  700, 'xfx', {primitive: true, retvalue: false})
+	   
+	   ,new Op("em",      '=<',  700, 'xfx', {primitive: true, boolean: true, to_evaluate: true})
+	   ,new Op("ge",      '>=',  700, 'xfx', {primitive: true, boolean: true, to_evaluate: true})
+	   ,new Op("lt",      '<',   700, 'xfx', {primitive: true, boolean: true, to_evaluate: true})
+	   ,new Op("gt",      '>',   700, 'xfx', {primitive: true, boolean: true, to_evaluate: true})
+	   
+	   ,new Op("is",      'is',  700, 'xfx', {primitive: true, retvalue: false, to_evaluate: true})
 	    
 	   ,new Op("minus",   '-',   500, 'yfx', {primitive: true, retvalue: true})
 	   ,new Op("plus",    '+',   500, 'yfx', {primitive: true, retvalue: true})

@@ -54,8 +54,8 @@ Lexer.token_map = {
 	// The operators should match with the ones supported
 	//  downstream in the parsers
 	// --------------------------------------------------
-	':-':   function() { return new Token('op:rule',  ':-',      {is_operator: true}); }
-	,'?-':  function() { return new Token('op:query', '?-',      {is_operator: true}); }
+	':-':   function() { return new Token('op:rule',  ':-',     {is_operator: true}); }
+	,'?-':  function() { return new Token('op:query', '?-',     {is_operator: true}); }
 	,',':   function() { return new Token('op:conj', ',',       {is_operator: true}); }
 	,';':   function() { return new Token('op:disj', ';',       {is_operator: true}); }
 	,'=':   function() { return new Token('op:unif', '=',       {is_operator: true}); }
@@ -68,7 +68,7 @@ Lexer.token_map = {
 	,'+':   function() { return new Token('op:plus',  '+',      {is_operator: true}); }
 	,'*':   function() { return new Token('op:mult',  '*',      {is_operator: true}); }
 	,'/':   function() { return new Token('op:div',   '/',      {is_operator: true}); }
-	,'is':  function() { return new Token('op:is',    'is',     {is_operator: true}); }
+	,'is':  function() { return new Token('op:is',    'is',     {is_operator: true, to_evaluate: true}); }
 	,'|':   function() { return new Token('list:tail','|'  ); }
 	
 	,'\n':  function() { return new Token('newline'); }

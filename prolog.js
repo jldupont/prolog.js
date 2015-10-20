@@ -420,13 +420,16 @@ Op._list = [
 	   ,new Op("rule",    ':-', 1200, 'xfx')
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
+	   
 	   ,new Op("unif",    '=',   700, 'xfx', {builtin:   true, boolean: true})
 	   ,new Op("notunif", '\\=', 700, 'xfx', {builtin:   true, boolean: true})
-	   ,new Op("em",      '=<',  700, 'xfx', {primitive: true, boolean: true})
-	   ,new Op("ge",      '>=',  700, 'xfx', {primitive: true, boolean: true})
-	   ,new Op("lt",      '<',   700, 'xfx', {primitive: true, boolean: true})
-	   ,new Op("gt",      '>',   700, 'xfx', {primitive: true, boolean: true})
-	   ,new Op("is",      'is',  700, 'xfx', {primitive: true, retvalue: false})
+	   
+	   ,new Op("em",      '=<',  700, 'xfx', {primitive: true, boolean: true, to_evaluate: true})
+	   ,new Op("ge",      '>=',  700, 'xfx', {primitive: true, boolean: true, to_evaluate: true})
+	   ,new Op("lt",      '<',   700, 'xfx', {primitive: true, boolean: true, to_evaluate: true})
+	   ,new Op("gt",      '>',   700, 'xfx', {primitive: true, boolean: true, to_evaluate: true})
+	   
+	   ,new Op("is",      'is',  700, 'xfx', {primitive: true, retvalue: false, to_evaluate: true})
 	    
 	   ,new Op("minus",   '-',   500, 'yfx', {primitive: true, retvalue: true})
 	   ,new Op("plus",    '+',   500, 'yfx', {primitive: true, retvalue: true})
@@ -1918,7 +1921,7 @@ Compiler.prototype.process_goal = function(exp, is_query, vars) {
 	}
 	
 	
-	if (exp.attrs.primitive) {
+	if (exp.attrs.primitive && exp.attrs.to_evaluate) {
 		return this.process_primitive(exp, is_query, vars);
 	}
 	
@@ -4295,8 +4298,8 @@ Lexer.token_map = {
 	// The operators should match with the ones supported
 	//  downstream in the parsers
 	// --------------------------------------------------
-	':-':   function() { return new Token('op:rule',  ':-',      {is_operator: true}); }
-	,'?-':  function() { return new Token('op:query', '?-',      {is_operator: true}); }
+	':-':   function() { return new Token('op:rule',  ':-',     {is_operator: true}); }
+	,'?-':  function() { return new Token('op:query', '?-',     {is_operator: true}); }
 	,',':   function() { return new Token('op:conj', ',',       {is_operator: true}); }
 	,';':   function() { return new Token('op:disj', ';',       {is_operator: true}); }
 	,'=':   function() { return new Token('op:unif', '=',       {is_operator: true}); }
@@ -4309,7 +4312,7 @@ Lexer.token_map = {
 	,'+':   function() { return new Token('op:plus',  '+',      {is_operator: true}); }
 	,'*':   function() { return new Token('op:mult',  '*',      {is_operator: true}); }
 	,'/':   function() { return new Token('op:div',   '/',      {is_operator: true}); }
-	,'is':  function() { return new Token('op:is',    'is',     {is_operator: true}); }
+	,'is':  function() { return new Token('op:is',    'is',     {is_operator: true, to_evaluate: true}); }
 	,'|':   function() { return new Token('list:tail','|'  ); }
 	
 	,'\n':  function() { return new Token('newline'); }

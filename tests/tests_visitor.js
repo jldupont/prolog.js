@@ -5,14 +5,14 @@
  */
 
 var should = require('should');
-var assert = require('assert');
+//var assert = require('assert');
 var util   = require('util');
 
 var pr = require("../prolog.js");
 
 var Lexer = pr.Lexer;
 var Token = pr.Token;
-var OpNode = pr.OpNode;
+//var OpNode = pr.OpNode;
 var Functor = pr.Functor;
 var Op = pr.Op;
 var Utils = pr.Utils;
@@ -21,6 +21,7 @@ var Var = pr.Var;
 var ParserL1 = pr.ParserL1;
 var ParserL2 = pr.ParserL2;
 var ParserL3 = pr.ParserL3;
+var Visitor2 = pr.Visitor2;
 var Visitor3 = pr.Visitor3;
 
 Functor.inspect_short_version = true;
@@ -50,7 +51,11 @@ var setup = function(text) {
 	return r3;
 };
 
-var process = function(input_text, expecteds, left_to_right) {
+var process = function(input_text, expecteds, options) {
+	
+	options = options || {};
+	
+	var visit = options.visitor || Visitor3;
 	
 	Functor.inspect_compact_version = false;
 	Var.inspect_extended = false;
@@ -59,16 +64,21 @@ var process = function(input_text, expecteds, left_to_right) {
 	
 	var expressions = setup(input_text);
 	
+	if (options.show_parsed)
+		console.log("Parsed: ", expressions);
+	
 	var results = [];
 	
 	//console.log(expressions);
+	
+	var result = true;
 	
 	for (var index = 0; index<expressions.length; index++) {
 		
 		var expression = expressions[index];
 		
 		if (!expression)
-			return false;
+			result = false;
 		
 		var cb = function(jctx, lctx, rctx){
 			results.push([jctx, lctx, rctx]);
@@ -76,12 +86,13 @@ var process = function(input_text, expecteds, left_to_right) {
 		
 		//console.log("Expression: ", expression[0]);
 		
-		var i = new Visitor3(expression[0]);
+		var i = new visit(expression[0]);
 		
 		i.process(cb);
-	};
+	}
 	
-	//console.log(results);
+	if (options.show_results)
+		console.log("Results: ", results);
 	
 	for (var index=0; index < results.length; index++) {
 		
@@ -174,3 +185,20 @@ it('Visitor - basic - 5', function(){
 
 	process(text, expected);
 });
+
+
+/*
+it('Visitor - expression - 1', function(){
+	
+	var text = "X is Y+1";
+	var expected = [
+
+ 		[ { type: 'root', vc: 0 }, { n: 'Functor(is/2)' }, null 
+ 		] 
+
+		];
+
+	//process(text, expected, {show_parsed: true, show_results: true});
+	process(text, expected, { visitor: Visitor2 });
+});
+*/
