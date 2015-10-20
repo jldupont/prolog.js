@@ -416,7 +416,8 @@ Op.AMBIGUOUS_PRECEDENCE = true;
  *   A term enclosed in parentheses ( ... ) has precedence 0.
  */
 Op._list = [ 
-	    new Op("rule",    ':-', 1200, 'xfx')
+		new Op("query",   '?-', 1300, 'fy')
+	   ,new Op("rule",    ':-', 1200, 'xfx')
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
 	   ,new Op("unif",    '=',   700, 'xfx', {builtin:   true, boolean: true})
@@ -4274,7 +4275,7 @@ function Lexer (text) {
 	this.in_comment = false;
 	this.comment_chars = "";
 	
-	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|\\=|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
+	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|\?\-|:\-|\\=|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
 }
 
 Lexer.prototype._handleNewline = function(){
@@ -4294,7 +4295,8 @@ Lexer.token_map = {
 	// The operators should match with the ones supported
 	//  downstream in the parsers
 	// --------------------------------------------------
-	':-':   function() { return new Token('op:rule', ':-',      {is_operator: true}); }
+	':-':   function() { return new Token('op:rule',  ':-',      {is_operator: true}); }
+	,'?-':  function() { return new Token('op:query', '?-',      {is_operator: true}); }
 	,',':   function() { return new Token('op:conj', ',',       {is_operator: true}); }
 	,';':   function() { return new Token('op:disj', ';',       {is_operator: true}); }
 	,'=':   function() { return new Token('op:unif', '=',       {is_operator: true}); }

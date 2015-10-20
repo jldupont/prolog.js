@@ -462,3 +462,32 @@ it('ParserL3 - invalid - 1', function(){
 	}, ErrorSyntax);
 	
 });
+
+
+it('ParserL3 - query - 1', function(){
+	
+	Functor.inspect_compact_version = true;
+	
+	var text = "?- f(X).";
+
+	var expected = [[
+	                 'query(f(Var(X)))'
+	               ]];
+	
+	process(text, expected);
+});
+
+/*
+it('ParserL3 - query - 2', function(){
+	
+	Functor.inspect_compact_version = true;
+	
+	var text = "?- f(X) :- X = 0.";
+
+	var expected = [[
+	                 'query(f(Var(X)))'
+	               ]];
+	
+	process(text, expected);
+});
+*/

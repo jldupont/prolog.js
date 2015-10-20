@@ -1291,7 +1291,6 @@ it('Compiler - expression - 2', function(){
 	process_rule(text, expected);
 });
 
-
 it('Compiler - sub-expression - 1', function(){
 	
 	//console.log("\n***Compiler - expression - 1\n");
@@ -1516,3 +1515,26 @@ it('Compiler - complex - 11', function(){
 	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_db: true});
 	process_rule(text, expected);
 });
+
+
+
+
+/*
+
+it('Compiler - struct - 1', function(){
+	
+	//console.log("\n***Compiler - struct - 1\n");
+	
+	Instruction.inspect_compact = true;
+	
+	var text = "test(X) :- (X + 1).";
+	
+
+	var expected = [
+		
+	];
+	
+	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_parsed: true});
+	process_rule(text, expected);
+});
+*/

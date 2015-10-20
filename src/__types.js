@@ -203,7 +203,8 @@ Op.AMBIGUOUS_PRECEDENCE = true;
  *   A term enclosed in parentheses ( ... ) has precedence 0.
  */
 Op._list = [ 
-	    new Op("rule",    ':-', 1200, 'xfx')
+		new Op("query",   '?-', 1300, 'fy')
+	   ,new Op("rule",    ':-', 1200, 'xfx')
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
 	   ,new Op("unif",    '=',   700, 'xfx', {builtin:   true, boolean: true})
