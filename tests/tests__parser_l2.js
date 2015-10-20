@@ -271,6 +271,25 @@ it('ParserL2 - operator - 4', function(){
 	process(text, expected);
 });
 
+it('ParserL2 - operator - 5', function(){
+
+	var text = "f(X) :- X=0, X\\=1.";
+	var expected = [ 
+						  'Functor(f/1,Var(X))',
+						  'OpNode(`:-`,1200)',
+						  'Var(X)',
+						  'OpNode(`=`,700)',
+						  'Token(number,0)',
+						  'OpNode(`,`,1000)',
+						  'Var(X)',
+						  'OpNode(`\\=`,700)',
+						  'Token(number,1)'		
+	                 ];
+	
+	process(text, expected);
+});
+
+
 it('ParserL2 - parens - 1', function(){
 
 	var text = "X=(4 + 5).";

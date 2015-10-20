@@ -652,6 +652,22 @@ Interpreter.prototype.builtin_unif = function(x0) {
 	//console.log("---- BCALL result: ", this.ctx.cu);
 };
 
+/**
+ *   Instruction `op_notunif`
+ *
+ *   $x0.arg[0]  ==> lvalue
+ *   $x0.arg[1]  ==> rvalue
+ *   
+ */
+Interpreter.prototype.builtin_notunif = function(x0) {
+
+	var left  = x0.args[0];
+	var right = x0.args[1];
+
+	this.ctx.cu = !Utils.unify(left, right, {no_bind: true});
+
+};
+
 
 /**
  *   Instruction "call"
@@ -1070,10 +1086,16 @@ Interpreter.prototype.inst_op_unif = function(_inst) {
 	var vy0 = this._get_value(y0.args[0]);
 	var vy1 = this._get_value(y0.args[1]);
 	
-	this.ctx.cu = Utils.unify(vy0, vy1);
 	
+	var that = this;
+	this.ctx.cu = Utils.unify(vy0, vy1, function(t1) {
+		that.maybe_add_to_trail(that.ctx.cse.trail, t1);
+	} );
+
 	return this._exit(); 
 };
+
+
 
 /**
  *   Exit procedure for all primitives

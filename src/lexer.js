@@ -34,7 +34,7 @@ function Lexer (text) {
 	this.in_comment = false;
 	this.comment_chars = "";
 	
-	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
+	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|\\=|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
 }
 
 Lexer.prototype._handleNewline = function(){
@@ -54,28 +54,29 @@ Lexer.token_map = {
 	// The operators should match with the ones supported
 	//  downstream in the parsers
 	// --------------------------------------------------
-	':-':  function() { return new Token('op:rule', ':-', {is_operator: true}); }
-	,',':  function() { return new Token('op:conj', ',',  {is_operator: true}); }
-	,';':  function() { return new Token('op:disj', ';',  {is_operator: true}); }
-	,'=':  function() { return new Token('op:unif', '=',  {is_operator: true}); }
-	,'<':  function() { return new Token('op:lt',   '<',  {is_operator: true}); }
-	,'>':  function() { return new Token('op:gt',   '>',  {is_operator: true}); }
-	,'=<': function() { return new Token('op:em',   '=<', {is_operator: true}); }
-	,'>=': function() { return new Token('op:ge',   '>=', {is_operator: true}); }
-	,'-':  function() { return new Token('op:minus', '-', {is_operator: true}); }
-	,'+':  function() { return new Token('op:plus',  '+', {is_operator: true}); }
-	,'*':  function() { return new Token('op:mult',  '*', {is_operator: true}); }
-	,'/':  function() { return new Token('op:div',   '/', {is_operator: true}); }
-	,'is': function() { return new Token('op:is',    'is',{is_operator: true}); }
-	,'|':  function() { return new Token('list:tail','|'  ); }
+	':-':   function() { return new Token('op:rule', ':-',      {is_operator: true}); }
+	,',':   function() { return new Token('op:conj', ',',       {is_operator: true}); }
+	,';':   function() { return new Token('op:disj', ';',       {is_operator: true}); }
+	,'=':   function() { return new Token('op:unif', '=',       {is_operator: true}); }
+	,'\\=': function() { return new Token('op:notunif', '\\=',  {is_operator: true}); }
+	,'<':   function() { return new Token('op:lt',   '<',       {is_operator: true}); }
+	,'>':   function() { return new Token('op:gt',   '>',       {is_operator: true}); }
+	,'=<':  function() { return new Token('op:em',   '=<',      {is_operator: true}); }
+	,'>=':  function() { return new Token('op:ge',   '>=',      {is_operator: true}); }
+	,'-':   function() { return new Token('op:minus', '-',      {is_operator: true}); }
+	,'+':   function() { return new Token('op:plus',  '+',      {is_operator: true}); }
+	,'*':   function() { return new Token('op:mult',  '*',      {is_operator: true}); }
+	,'/':   function() { return new Token('op:div',   '/',      {is_operator: true}); }
+	,'is':  function() { return new Token('op:is',    'is',     {is_operator: true}); }
+	,'|':   function() { return new Token('list:tail','|'  ); }
 	
-	,'\n': function() { return new Token('newline'); }
-	,'.':  function() { return new Token('period'); }
-	,'(':  function() { return new Token('parens_open',  null); }
-	,')':  function() { return new Token('parens_close', null); }
+	,'\n':  function() { return new Token('newline'); }
+	,'.':   function() { return new Token('period'); }
+	,'(':   function() { return new Token('parens_open',  null); }
+	,')':   function() { return new Token('parens_close', null); }
 	
-	,'[':  function() { return new Token('list:open',  null); }
-	,']':  function() { return new Token('list:close', null); }
+	,'[':   function() { return new Token('list:open',  null); }
+	,']':   function() { return new Token('list:close', null); }
 };
 
 /**

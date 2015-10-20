@@ -312,6 +312,17 @@ it('ParserL3 - expression - 8 ', function(){
 	process(text, expected);
 });
 
+it('ParserL3 - expression - 9 ', function(){
+	
+	var text = "f(X) :- X = 1, X \\= 0.";
+	
+	var expected =  [ [ 
+	                    'Functor(rule/2,Functor(f/1,Var(X)),Functor(conj/2,Functor(unif/2,Var(X),Token(number,1)),Functor(notunif/2,Var(X),Token(number,0))))' 
+	                    ] ];
+	
+	process(text, expected);
+});
+
 
 it('ParserL3 - multi-expression - 1', function(){
 	

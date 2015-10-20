@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-10-19 */
+/*! prolog.js - v0.0.1 - 2015-10-20 */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
 /* global Op, Compiler, Code
@@ -420,6 +420,7 @@ Op._list = [
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
 	   ,new Op("unif",    '=',   700, 'xfx', {builtin:   true, boolean: true})
+	   ,new Op("notunif", '\\=', 700, 'xfx', {builtin:   true, boolean: true})
 	   ,new Op("em",      '=<',  700, 'xfx', {primitive: true, boolean: true})
 	   ,new Op("ge",      '>=',  700, 'xfx', {primitive: true, boolean: true})
 	   ,new Op("lt",      '<',   700, 'xfx', {primitive: true, boolean: true})
@@ -3014,6 +3015,22 @@ Interpreter.prototype.builtin_unif = function(x0) {
 	//console.log("---- BCALL result: ", this.ctx.cu);
 };
 
+/**
+ *   Instruction `op_notunif`
+ *
+ *   $x0.arg[0]  ==> lvalue
+ *   $x0.arg[1]  ==> rvalue
+ *   
+ */
+Interpreter.prototype.builtin_notunif = function(x0) {
+
+	var left  = x0.args[0];
+	var right = x0.args[1];
+
+	this.ctx.cu = !Utils.unify(left, right, {no_bind: true});
+
+};
+
 
 /**
  *   Instruction "call"
@@ -3432,10 +3449,16 @@ Interpreter.prototype.inst_op_unif = function(_inst) {
 	var vy0 = this._get_value(y0.args[0]);
 	var vy1 = this._get_value(y0.args[1]);
 	
-	this.ctx.cu = Utils.unify(vy0, vy1);
 	
+	var that = this;
+	this.ctx.cu = Utils.unify(vy0, vy1, function(t1) {
+		that.maybe_add_to_trail(that.ctx.cse.trail, t1);
+	} );
+
 	return this._exit(); 
 };
+
+
 
 /**
  *   Exit procedure for all primitives
@@ -4251,7 +4274,7 @@ function Lexer (text) {
 	this.in_comment = false;
 	this.comment_chars = "";
 	
-	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
+	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|\\=|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
 }
 
 Lexer.prototype._handleNewline = function(){
@@ -4271,28 +4294,29 @@ Lexer.token_map = {
 	// The operators should match with the ones supported
 	//  downstream in the parsers
 	// --------------------------------------------------
-	':-':  function() { return new Token('op:rule', ':-', {is_operator: true}); }
-	,',':  function() { return new Token('op:conj', ',',  {is_operator: true}); }
-	,';':  function() { return new Token('op:disj', ';',  {is_operator: true}); }
-	,'=':  function() { return new Token('op:unif', '=',  {is_operator: true}); }
-	,'<':  function() { return new Token('op:lt',   '<',  {is_operator: true}); }
-	,'>':  function() { return new Token('op:gt',   '>',  {is_operator: true}); }
-	,'=<': function() { return new Token('op:em',   '=<', {is_operator: true}); }
-	,'>=': function() { return new Token('op:ge',   '>=', {is_operator: true}); }
-	,'-':  function() { return new Token('op:minus', '-', {is_operator: true}); }
-	,'+':  function() { return new Token('op:plus',  '+', {is_operator: true}); }
-	,'*':  function() { return new Token('op:mult',  '*', {is_operator: true}); }
-	,'/':  function() { return new Token('op:div',   '/', {is_operator: true}); }
-	,'is': function() { return new Token('op:is',    'is',{is_operator: true}); }
-	,'|':  function() { return new Token('list:tail','|'  ); }
+	':-':   function() { return new Token('op:rule', ':-',      {is_operator: true}); }
+	,',':   function() { return new Token('op:conj', ',',       {is_operator: true}); }
+	,';':   function() { return new Token('op:disj', ';',       {is_operator: true}); }
+	,'=':   function() { return new Token('op:unif', '=',       {is_operator: true}); }
+	,'\\=': function() { return new Token('op:notunif', '\\=',  {is_operator: true}); }
+	,'<':   function() { return new Token('op:lt',   '<',       {is_operator: true}); }
+	,'>':   function() { return new Token('op:gt',   '>',       {is_operator: true}); }
+	,'=<':  function() { return new Token('op:em',   '=<',      {is_operator: true}); }
+	,'>=':  function() { return new Token('op:ge',   '>=',      {is_operator: true}); }
+	,'-':   function() { return new Token('op:minus', '-',      {is_operator: true}); }
+	,'+':   function() { return new Token('op:plus',  '+',      {is_operator: true}); }
+	,'*':   function() { return new Token('op:mult',  '*',      {is_operator: true}); }
+	,'/':   function() { return new Token('op:div',   '/',      {is_operator: true}); }
+	,'is':  function() { return new Token('op:is',    'is',     {is_operator: true}); }
+	,'|':   function() { return new Token('list:tail','|'  ); }
 	
-	,'\n': function() { return new Token('newline'); }
-	,'.':  function() { return new Token('period'); }
-	,'(':  function() { return new Token('parens_open',  null); }
-	,')':  function() { return new Token('parens_close', null); }
+	,'\n':  function() { return new Token('newline'); }
+	,'.':   function() { return new Token('period'); }
+	,'(':   function() { return new Token('parens_open',  null); }
+	,')':   function() { return new Token('parens_close', null); }
 	
-	,'[':  function() { return new Token('list:open',  null); }
-	,']':  function() { return new Token('list:close', null); }
+	,'[':   function() { return new Token('list:open',  null); }
+	,']':   function() { return new Token('list:close', null); }
 };
 
 /**
@@ -5643,7 +5667,11 @@ Utils.compare_objects = function(expected, input, use_throw){
  * + Two terms unify if and only if they unify for one of the above three reasons (there are no reasons left unstated).
  * 
  */
-Utils.unify = function(t1, t2, on_bind) {
+Utils.unify = function(t1, t2, on_bind_or_options) {
+
+	var on_bind = typeof on_bind_or_options == 'function' ? on_bind_or_options:undefined;
+	var options = typeof on_bind_or_options == 'object' ? on_bind_or_options : {};
+	var no_bind = options.no_bind === true;
 
 	/*
 	var t1id, t2id;
@@ -5693,19 +5721,23 @@ Utils.unify = function(t1, t2, on_bind) {
 		}
 		
 		if (t1d.is_bound()) {
-			t2.safe_bind(t1, on_bind);
+			if (!no_bind)
+				t2.safe_bind(t1, on_bind);
 			return true;
 		}
 		
 		if (t2d.is_bound()) {
-			t1.safe_bind(t2, on_bind);
+			if (!no_bind)
+				t1.safe_bind(t2, on_bind);
 			return true;
 		}
 		
 		// Both unbound
 		// ============
 		
-		t1d.bind(t2, on_bind);
+		if (!no_bind)
+			t1d.bind(t2, on_bind);
+			
 		return true;
 	}
 	
@@ -5716,7 +5748,8 @@ Utils.unify = function(t1, t2, on_bind) {
 			return Utils.unify(t1d.get_value(), t2, on_bind);
 		}
 		
-		t1d.bind(t2, on_bind);
+		if (!no_bind)
+			t1d.bind(t2, on_bind);
 		return true;
 	}
 	
@@ -5727,7 +5760,9 @@ Utils.unify = function(t1, t2, on_bind) {
 			return Utils.unify(t2d.get_value(), t1, on_bind);
 		}
 
-		t2d.bind(t1, on_bind);
+		if (!no_bind)
+			t2d.bind(t1, on_bind);
+			
 		return true;
 	}
 	

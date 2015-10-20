@@ -1609,6 +1609,56 @@ it('Interpreter - primitive - 13', function(){
 });
 
 
+it('Interpreter - primitive - 14a', function(){
+
+	var rules = [
+	             "f(X) :- X = 1, X \\= 0."
+				];
+	
+
+
+	var query = "f(X).";
+	
+	var expected = [
+	                { "$cu": true, X: 1 }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+it('Interpreter - primitive - 14b', function(){
+
+	var rules = [
+	             "f(X) :- X = 1, X \\= 1."
+				];
+	
+
+
+	var query = "f(X).";
+	
+	var expected = [
+	                { "$cu": false }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
 
 
 // =================================================================================================== CUT
