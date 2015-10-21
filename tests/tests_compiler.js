@@ -26,6 +26,7 @@ var Instruction = pr.Instruction;
 var Utils = pr.Utils;
 
 var ErrorInvalidHead = pr.ErrorInvalidHead;
+var ErrorRuleInQuestion = pr.ErrorRuleInQuestion;
 
 var process_rule = function(input_text, expecteds, options) {
 	
@@ -1622,5 +1623,43 @@ it('Compiler - query - 1', function(){
 	
 	//process(text, expected, {show_parsed: true, show_compiled: true, show_parsed: true});
 	process(text, expected);
+});
+
+it('Compiler - query - 2', function(){
+	
+	//console.log("\n***Compiler - query - 2\n");
+	
+	Instruction.inspect_compact = true;
+	
+	var text = "?- f(X) :- f2(X).";
+
+	var expected = [
+		{ is_query: true,
+		  g0: 
+		   [ 'allocate'    ,
+		     'put_struct  f/1, x(0)',
+		     'put_var     p("X")',
+		     'setup'       ,
+		     'call'        ,
+		     'maybe_retry' ,
+		     'deallocate'  ,
+		     'end'
+		     ] 
+			
+		}		
+	];
+
+	var result = false;
+	
+	try {
+		//process(text, expected, {show_parsed: true, show_compiled: true, show_parsed: true});
+		process(text, expected);
+	} catch(e) {
+		result = e instanceof ErrorRuleInQuestion;
+	}
+	
+	should.ok(result);
+	
+	//process(text, expected);
 });
 

@@ -78,7 +78,7 @@ Compiler.prototype.process_query_or_rule_or_fact = function(exp) {
 
 
 	if (exp.name == 'query')
-		return this.process_body(exp.args[0], true);
+		return this.process_query(exp.args[0]);
 
 
 	if (exp.name == 'rule')
