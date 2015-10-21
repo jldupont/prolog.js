@@ -5,7 +5,7 @@
  */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
-/* global Op, Compiler, Code
+/* global Op, Compiler, Code, Functor
           ,ParseSummary
           ,ErrorRuleInQuestion, ErrorInvalidFact
 */
@@ -87,8 +87,14 @@ Prolog.compile_per_sentence = function(parsed_sentences) {
         //console.log("Attempting compilation: ", parsed_sentence);
         
         try {
-            code_object = c.process_rule_or_fact(parsed_sentence);
-            result.push( new Code(code_object) );
+            
+            if (parsed_sentence instanceof Functor && parsed_sentence.name == 'query') {
+                code_object = c.compile_query( parsed_sentence.args[0] );
+            } else {
+                code_object = c.process_rule_or_fact(parsed_sentence);
+                result.push( new Code(code_object) );
+            }
+            
         } catch(e) {
             result.push(e);
         }

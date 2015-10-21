@@ -1,7 +1,7 @@
-/*! prolog.js - v0.0.1 - 2015-10-20 */
+/*! prolog.js - v0.0.1 - 2015-10-21 */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
-/* global Op, Compiler, Code
+/* global Op, Compiler, Code, Functor
           ,ParseSummary
           ,ErrorRuleInQuestion, ErrorInvalidFact
 */
@@ -83,8 +83,14 @@ Prolog.compile_per_sentence = function(parsed_sentences) {
         //console.log("Attempting compilation: ", parsed_sentence);
         
         try {
-            code_object = c.process_rule_or_fact(parsed_sentence);
-            result.push( new Code(code_object) );
+            
+            if (parsed_sentence instanceof Functor && parsed_sentence.name == 'query') {
+                code_object = c.compile_query( parsed_sentence.args[0] );
+            } else {
+                code_object = c.process_rule_or_fact(parsed_sentence);
+                result.push( new Code(code_object) );
+            }
+            
         } catch(e) {
             result.push(e);
         }
@@ -1414,6 +1420,7 @@ if (typeof module!= 'undefined') {
  */
 function Compiler() {}
 
+
 /**
  * Process a `rule` or `fact` expression
  * 
@@ -1434,6 +1441,45 @@ Compiler.prototype.process_rule_or_fact = function(exp) {
 	if (!(exp instanceof Functor))
 		throw new ErrorExpectingFunctor("Expecting Functor, got: "+JSON.stringify(exp), exp);
 	
+	if (exp.name == 'rule')
+		return this.process_rule(exp);
+
+	var with_body = false;
+	
+	var result = {
+		'head': this.process_head(exp, with_body)
+		,'f': exp.name
+		,'a': exp.args.length
+	};
+	
+	return result;
+};
+
+/**
+ * Process a `query`, `rule` or `fact` expression
+ * 
+ * Expecting a `rule` i.e. 1 root node Functor(":-", ...)
+ *  OR a `fact`  i.e. 1 root node Functor(name, ...)
+ *
+ * A `fact` is a body-less rule (just a `head`)
+ *  (or a rule with a body 'true').
+ *
+ *  -------------------------------------------------------------
+ *  
+ * @raise ErrorExpectingFunctor
+ * 
+ * @return Object: compiled code
+ */
+Compiler.prototype.process_query_or_rule_or_fact = function(exp) {
+	
+	if (!(exp instanceof Functor))
+		throw new ErrorExpectingFunctor("Expecting Functor, got: "+JSON.stringify(exp), exp);
+
+
+	if (exp.name == 'query')
+		return this.process_body(exp.args[0], true);
+
+
 	if (exp.name == 'rule')
 		return this.process_rule(exp);
 
@@ -1684,7 +1730,9 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 	
 	var vars = head_vars;
 	var map = {};
-	var result = {};
+	var result = {
+		is_query: is_query
+	};
 	var merges = {};
 	
 	var v = new Visitor3(exp);

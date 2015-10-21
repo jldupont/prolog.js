@@ -5,14 +5,14 @@
  */
 
 var should = require('should');
-var assert = require('assert');
+//var assert = require('assert');
 var util   = require('util');
 
 var pr = require("../prolog.js");
 
 var Lexer = pr.Lexer;
-var Token = pr.Token;
-var OpNode = pr.OpNode;
+//var Token = pr.Token;
+//var OpNode = pr.OpNode;
 var Functor = pr.Functor;
 var Op = pr.Op;
 var Var = pr.Var;
@@ -20,7 +20,7 @@ var Var = pr.Var;
 var ParserL1 = pr.ParserL1;
 var ParserL2 = pr.ParserL2;
 var ParserL3 = pr.ParserL3;
-var Visitor = pr.Visitor;
+//var Visitor = pr.Visitor;
 var Compiler = pr.Compiler;
 var Instruction = pr.Instruction;
 var Utils = pr.Utils;
@@ -254,7 +254,9 @@ var process_body = function(input_text, expecteds, show_results) {
 };
 
 
-var process = function(input_text, expecteds) {
+var process = function(input_text, expecteds, options) {
+	
+	options = options || {};
 	
 	Var.inspect_compact = true;
 	
@@ -262,7 +264,8 @@ var process = function(input_text, expecteds) {
 	
 	var results = [];
 	
-	//console.log(expressions);
+	if (options.show_parsed)
+		console.log(expressions);
 	
 	for (var index = 0; index<expressions.length; index++) {
 		
@@ -275,12 +278,13 @@ var process = function(input_text, expecteds) {
 		
 		//console.log("Expression: ", expression);
 
-		var result = c.process_rule_or_fact(expression);
+		var result = c.process_query_or_rule_or_fact(expression);
 		
 		results.push(result);
-	};
+	}
 	
-	//console.log(results);
+	if (options.show_compiled)
+		console.log(results);
 	
 	//if (expecteds.length!=results.length)
 	//	throw new Error();
@@ -296,6 +300,7 @@ var process = function(input_text, expecteds) {
 
 
 };
+
 
 // ==================================================== HEAD
 //
@@ -1589,3 +1594,33 @@ it('Compiler - struct - 2', function(){
 	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_parsed: true});
 	process_rule(text, expected);
 });
+
+
+it('Compiler - query - 1', function(){
+	
+	//console.log("\n***Compiler - query - 1\n");
+	
+	Instruction.inspect_compact = true;
+	
+	var text = "?- f(X).";
+
+	var expected = [
+		{ is_query: true,
+		  g0: 
+		   [ 'allocate'    ,
+		     'put_struct  f/1, x(0)',
+		     'put_var     p("X")',
+		     'setup'       ,
+		     'call'        ,
+		     'maybe_retry' ,
+		     'deallocate'  ,
+		     'end'
+		     ] 
+			
+		}		
+	];
+	
+	//process(text, expected, {show_parsed: true, show_compiled: true, show_parsed: true});
+	process(text, expected);
+});
+

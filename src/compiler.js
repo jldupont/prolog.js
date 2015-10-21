@@ -21,6 +21,7 @@
  */
 function Compiler() {}
 
+
 /**
  * Process a `rule` or `fact` expression
  * 
@@ -41,6 +42,45 @@ Compiler.prototype.process_rule_or_fact = function(exp) {
 	if (!(exp instanceof Functor))
 		throw new ErrorExpectingFunctor("Expecting Functor, got: "+JSON.stringify(exp), exp);
 	
+	if (exp.name == 'rule')
+		return this.process_rule(exp);
+
+	var with_body = false;
+	
+	var result = {
+		'head': this.process_head(exp, with_body)
+		,'f': exp.name
+		,'a': exp.args.length
+	};
+	
+	return result;
+};
+
+/**
+ * Process a `query`, `rule` or `fact` expression
+ * 
+ * Expecting a `rule` i.e. 1 root node Functor(":-", ...)
+ *  OR a `fact`  i.e. 1 root node Functor(name, ...)
+ *
+ * A `fact` is a body-less rule (just a `head`)
+ *  (or a rule with a body 'true').
+ *
+ *  -------------------------------------------------------------
+ *  
+ * @raise ErrorExpectingFunctor
+ * 
+ * @return Object: compiled code
+ */
+Compiler.prototype.process_query_or_rule_or_fact = function(exp) {
+	
+	if (!(exp instanceof Functor))
+		throw new ErrorExpectingFunctor("Expecting Functor, got: "+JSON.stringify(exp), exp);
+
+
+	if (exp.name == 'query')
+		return this.process_body(exp.args[0], true);
+
+
 	if (exp.name == 'rule')
 		return this.process_rule(exp);
 
@@ -291,7 +331,9 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 	
 	var vars = head_vars;
 	var map = {};
-	var result = {};
+	var result = {
+		is_query: is_query
+	};
 	var merges = {};
 	
 	var v = new Visitor3(exp);
