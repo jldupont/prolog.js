@@ -3,8 +3,6 @@ Einstein's Puzzle
 
 Expecting:
   
- ?- zebra(Who,HS).
- 
  HS = [h(yellow,norwegian,cats,water,dunhill),h(blue,dane,horse,tea,blend),h(red,brit,birds,milk,pallmall),h(green,german,zebra,coffee,prince),h(white,swede,dog,beer,bluemaster)]
  Who = german
 """
@@ -35,3 +33,7 @@ zebra(Owns, HS):-
   next_to( h(_,_,_,_,blend),        h(_,_,_,water,_),        HS),
   member(  h(_,Owns,zebra,_,_),                              HS).
   
+  
+%% The query is listed at the end of the code
+%%  
+?- zebra(Who,HS).

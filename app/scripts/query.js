@@ -14,7 +14,6 @@
   // Learn more about auto-binding templates at http://goo.gl/Dx1u2g
   var app = document.querySelector('#app');
 
-  var elquery;
   var view_answers;
   
   // Listen for template bound event to know when bindings
@@ -29,26 +28,9 @@
       
     });
 
-      view_answers.editor.disable();
+    view_answers.editor.disable();
 
 
-    elquery = document.querySelector('#query');
-    
-    elquery.onchange = function(event) {
-
-      var query= elquery.value;
-      
-      append_line(query, {
-        prefix: "?- "
-        ,italic: true
-        ,nl: true
-      });
-      
-      send_query_to_worker(query);
-
-    };
-
-  
   });//dom-change
 
 

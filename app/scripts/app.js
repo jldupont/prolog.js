@@ -54,11 +54,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.addEventListener('dom-change', function() {
     console.log('Our app is ready to rock!');
     
-    var main_tabs = document.querySelector("#main_tabs");
-    
-    // Select the Code tab by default
-    main_tabs.selected = 0;
-    
   });
 
 

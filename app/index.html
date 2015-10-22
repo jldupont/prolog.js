@@ -86,6 +86,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <span>Einstein's Puzzle</span>
           </a>
 
+          <hr>
+
           <a data-route="contact" href="/contact" on-click="onDataRouteClick">
             <iron-icon icon="mail"></iron-icon>
             <span>Contact</span>
@@ -116,34 +118,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               
               <paper-material elevation="1">
                 
-                <paper-tabs selected="{{selected}}" id="main_tabs">
-                  <paper-tab>Database</paper-tab>
-                  <paper-tab>Query</paper-tab>
-                </paper-tabs>
-                
-                <iron-pages selected="{{selected}}">
-                  
+
                   <div id="page-code">
                     <div class="quill-wrapper">
                         <quill-toolbar id="full-toolbar"></quill-toolbar>  
                         <hr>
                         <div id='editor'>
-                          <div>Hello World -- http://www.google.ca/</div>
+                          <div>Select an example from the menu to start</div>
                         </div>
                    </div>
                   </div>
                   
-                  <div id='page-query'>
+            </paper-material>                  
+            <paper-material elevation="1">
+              
+                  <div id='page-answers'>
                     <div class='quill-wrapper'>
                       <div id='answers'>
                         <div>Answers will appear <b>here</b></div>
                       </div>
                     </div>
-                    <paper-input placeholder="Enter Your Query Here" id="query"></paper-input>
                   </div>
                   
-                </iron-pages>
-
               </paper-material>
 
             </section>
@@ -157,7 +153,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               </paper-material>
             </section>
 
-          </iron-pages>
+
         </div>
       </paper-scroll-header-panel>
     </paper-drawer-panel>

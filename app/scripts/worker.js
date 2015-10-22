@@ -228,10 +228,10 @@ function do_run(msg) {
     }
     
 }
-/*! prolog.js - v0.0.1 - 2015-10-18 */
+/*! prolog.js - v0.0.1 - 2015-10-21 */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
-/* global Op, Compiler, Code
+/* global Op, Compiler, Code, Functor
           ,ParseSummary
           ,ErrorRuleInQuestion, ErrorInvalidFact
 */
@@ -313,8 +313,14 @@ Prolog.compile_per_sentence = function(parsed_sentences) {
         //console.log("Attempting compilation: ", parsed_sentence);
         
         try {
-            code_object = c.process_rule_or_fact(parsed_sentence);
-            result.push( new Code(code_object) );
+            
+            if (parsed_sentence instanceof Functor && parsed_sentence.name == 'query') {
+                code_object = c.compile_query( parsed_sentence.args[0] );
+            } else {
+                code_object = c.process_rule_or_fact(parsed_sentence);
+                result.push( new Code(code_object) );
+            }
+            
         } catch(e) {
             result.push(e);
         }
@@ -646,15 +652,20 @@ Op.AMBIGUOUS_PRECEDENCE = true;
  *   A term enclosed in parentheses ( ... ) has precedence 0.
  */
 Op._list = [ 
-	    new Op("rule",    ':-', 1200, 'xfx')
+		new Op("query",   '?-', 1300, 'fy')
+	   ,new Op("rule",    ':-', 1200, 'xfx')
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
+	   
 	   ,new Op("unif",    '=',   700, 'xfx', {builtin:   true, boolean: true})
-	   ,new Op("em",      '=<',  700, 'xfx', {primitive: true, boolean: true})
-	   ,new Op("ge",      '>=',  700, 'xfx', {primitive: true, boolean: true})
-	   ,new Op("lt",      '<',   700, 'xfx', {primitive: true, boolean: true})
-	   ,new Op("gt",      '>',   700, 'xfx', {primitive: true, boolean: true})
-	   ,new Op("is",      'is',  700, 'xfx', {primitive: true, retvalue: false})
+	   ,new Op("notunif", '\\=', 700, 'xfx', {builtin:   true, boolean: true})
+	   
+	   ,new Op("em",      '=<',  700, 'xfx', {primitive: true, boolean: true, to_evaluate: true})
+	   ,new Op("ge",      '>=',  700, 'xfx', {primitive: true, boolean: true, to_evaluate: true})
+	   ,new Op("lt",      '<',   700, 'xfx', {primitive: true, boolean: true, to_evaluate: true})
+	   ,new Op("gt",      '>',   700, 'xfx', {primitive: true, boolean: true, to_evaluate: true})
+	   
+	   ,new Op("is",      'is',  700, 'xfx', {primitive: true, retvalue: false, to_evaluate: true})
 	    
 	   ,new Op("minus",   '-',   500, 'yfx', {primitive: true, retvalue: true})
 	   ,new Op("plus",    '+',   500, 'yfx', {primitive: true, retvalue: true})
@@ -1639,6 +1650,7 @@ if (typeof module!= 'undefined') {
  */
 function Compiler() {}
 
+
 /**
  * Process a `rule` or `fact` expression
  * 
@@ -1659,6 +1671,45 @@ Compiler.prototype.process_rule_or_fact = function(exp) {
 	if (!(exp instanceof Functor))
 		throw new ErrorExpectingFunctor("Expecting Functor, got: "+JSON.stringify(exp), exp);
 	
+	if (exp.name == 'rule')
+		return this.process_rule(exp);
+
+	var with_body = false;
+	
+	var result = {
+		'head': this.process_head(exp, with_body)
+		,'f': exp.name
+		,'a': exp.args.length
+	};
+	
+	return result;
+};
+
+/**
+ * Process a `query`, `rule` or `fact` expression
+ * 
+ * Expecting a `rule` i.e. 1 root node Functor(":-", ...)
+ *  OR a `fact`  i.e. 1 root node Functor(name, ...)
+ *
+ * A `fact` is a body-less rule (just a `head`)
+ *  (or a rule with a body 'true').
+ *
+ *  -------------------------------------------------------------
+ *  
+ * @raise ErrorExpectingFunctor
+ * 
+ * @return Object: compiled code
+ */
+Compiler.prototype.process_query_or_rule_or_fact = function(exp) {
+	
+	if (!(exp instanceof Functor))
+		throw new ErrorExpectingFunctor("Expecting Functor, got: "+JSON.stringify(exp), exp);
+
+
+	if (exp.name == 'query')
+		return this.process_query(exp.args[0]);
+
+
 	if (exp.name == 'rule')
 		return this.process_rule(exp);
 
@@ -1909,7 +1960,9 @@ Compiler.prototype.process_body = function(exp, is_query, head_vars) {
 	
 	var vars = head_vars;
 	var map = {};
-	var result = {};
+	var result = {
+		is_query: is_query
+	};
 	var merges = {};
 	
 	var v = new Visitor3(exp);
@@ -2146,7 +2199,7 @@ Compiler.prototype.process_goal = function(exp, is_query, vars) {
 	}
 	
 	
-	if (exp.attrs.primitive) {
+	if (exp.attrs.primitive && exp.attrs.to_evaluate) {
 		return this.process_primitive(exp, is_query, vars);
 	}
 	
@@ -3244,6 +3297,22 @@ Interpreter.prototype.builtin_unif = function(x0) {
 	//console.log("---- BCALL result: ", this.ctx.cu);
 };
 
+/**
+ *   Instruction `op_notunif`
+ *
+ *   $x0.arg[0]  ==> lvalue
+ *   $x0.arg[1]  ==> rvalue
+ *   
+ */
+Interpreter.prototype.builtin_notunif = function(x0) {
+
+	var left  = x0.args[0];
+	var right = x0.args[1];
+
+	this.ctx.cu = !Utils.unify(left, right, {no_bind: true});
+
+};
+
 
 /**
  *   Instruction "call"
@@ -3662,10 +3731,16 @@ Interpreter.prototype.inst_op_unif = function(_inst) {
 	var vy0 = this._get_value(y0.args[0]);
 	var vy1 = this._get_value(y0.args[1]);
 	
-	this.ctx.cu = Utils.unify(vy0, vy1);
 	
+	var that = this;
+	this.ctx.cu = Utils.unify(vy0, vy1, function(t1) {
+		that.maybe_add_to_trail(that.ctx.cse.trail, t1);
+	} );
+
 	return this._exit(); 
 };
+
+
 
 /**
  *   Exit procedure for all primitives
@@ -4481,7 +4556,7 @@ function Lexer (text) {
 	this.in_comment = false;
 	this.comment_chars = "";
 	
-	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|:\-|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
+	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|\?\-|:\-|\\=|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
 }
 
 Lexer.prototype._handleNewline = function(){
@@ -4501,28 +4576,30 @@ Lexer.token_map = {
 	// The operators should match with the ones supported
 	//  downstream in the parsers
 	// --------------------------------------------------
-	':-':  function() { return new Token('op:rule', ':-', {is_operator: true}); }
-	,',':  function() { return new Token('op:conj', ',',  {is_operator: true}); }
-	,';':  function() { return new Token('op:disj', ';',  {is_operator: true}); }
-	,'=':  function() { return new Token('op:unif', '=',  {is_operator: true}); }
-	,'<':  function() { return new Token('op:lt',   '<',  {is_operator: true}); }
-	,'>':  function() { return new Token('op:gt',   '>',  {is_operator: true}); }
-	,'=<': function() { return new Token('op:em',   '=<', {is_operator: true}); }
-	,'>=': function() { return new Token('op:ge',   '>=', {is_operator: true}); }
-	,'-':  function() { return new Token('op:minus', '-', {is_operator: true}); }
-	,'+':  function() { return new Token('op:plus',  '+', {is_operator: true}); }
-	,'*':  function() { return new Token('op:mult',  '*', {is_operator: true}); }
-	,'/':  function() { return new Token('op:div',   '/', {is_operator: true}); }
-	,'is': function() { return new Token('op:is',    'is',{is_operator: true}); }
-	,'|':  function() { return new Token('list:tail','|'  ); }
+	':-':   function() { return new Token('op:rule',  ':-',     {is_operator: true}); }
+	,'?-':  function() { return new Token('op:query', '?-',     {is_operator: true}); }
+	,',':   function() { return new Token('op:conj', ',',       {is_operator: true}); }
+	,';':   function() { return new Token('op:disj', ';',       {is_operator: true}); }
+	,'=':   function() { return new Token('op:unif', '=',       {is_operator: true}); }
+	,'\\=': function() { return new Token('op:notunif', '\\=',  {is_operator: true}); }
+	,'<':   function() { return new Token('op:lt',   '<',       {is_operator: true}); }
+	,'>':   function() { return new Token('op:gt',   '>',       {is_operator: true}); }
+	,'=<':  function() { return new Token('op:em',   '=<',      {is_operator: true}); }
+	,'>=':  function() { return new Token('op:ge',   '>=',      {is_operator: true}); }
+	,'-':   function() { return new Token('op:minus', '-',      {is_operator: true}); }
+	,'+':   function() { return new Token('op:plus',  '+',      {is_operator: true}); }
+	,'*':   function() { return new Token('op:mult',  '*',      {is_operator: true}); }
+	,'/':   function() { return new Token('op:div',   '/',      {is_operator: true}); }
+	,'is':  function() { return new Token('op:is',    'is',     {is_operator: true, to_evaluate: true}); }
+	,'|':   function() { return new Token('list:tail','|'  ); }
 	
-	,'\n': function() { return new Token('newline'); }
-	,'.':  function() { return new Token('period'); }
-	,'(':  function() { return new Token('parens_open',  null); }
-	,')':  function() { return new Token('parens_close', null); }
+	,'\n':  function() { return new Token('newline'); }
+	,'.':   function() { return new Token('period'); }
+	,'(':   function() { return new Token('parens_open',  null); }
+	,')':   function() { return new Token('parens_close', null); }
 	
-	,'[':  function() { return new Token('list:open',  null); }
-	,']':  function() { return new Token('list:close', null); }
+	,'[':   function() { return new Token('list:open',  null); }
+	,']':   function() { return new Token('list:close', null); }
 };
 
 /**
@@ -5165,13 +5242,17 @@ ParserL2.prototype._process_list = function(maybe_token){
 		
 		next_token = this.get_token();
 
-	if (next_token === null)
-		throw new ErrorUnexpectedEnd("Unexpected end in list definition", previous_token);
+		if (next_token === null)
+			throw new ErrorUnexpectedEnd("Unexpected end in list definition", previous_token);
 		
 		if (next_token.name == 'functor') {
 			this.regive();
 			res = this._process({ process_functor: true });
 			next_token = res.terms;
+		}
+
+		if (next_token.name == 'list:open') {
+			next_token = this._process_list();
 		}
 
 		cons.push_arg( next_token );
@@ -5869,7 +5950,11 @@ Utils.compare_objects = function(expected, input, use_throw){
  * + Two terms unify if and only if they unify for one of the above three reasons (there are no reasons left unstated).
  * 
  */
-Utils.unify = function(t1, t2, on_bind) {
+Utils.unify = function(t1, t2, on_bind_or_options) {
+
+	var on_bind = typeof on_bind_or_options == 'function' ? on_bind_or_options:undefined;
+	var options = typeof on_bind_or_options == 'object' ? on_bind_or_options : {};
+	var no_bind = options.no_bind === true;
 
 	/*
 	var t1id, t2id;
@@ -5919,19 +6004,23 @@ Utils.unify = function(t1, t2, on_bind) {
 		}
 		
 		if (t1d.is_bound()) {
-			t2.safe_bind(t1, on_bind);
+			if (!no_bind)
+				t2.safe_bind(t1, on_bind);
 			return true;
 		}
 		
 		if (t2d.is_bound()) {
-			t1.safe_bind(t2, on_bind);
+			if (!no_bind)
+				t1.safe_bind(t2, on_bind);
 			return true;
 		}
 		
 		// Both unbound
 		// ============
 		
-		t1d.bind(t2, on_bind);
+		if (!no_bind)
+			t1d.bind(t2, on_bind);
+			
 		return true;
 	}
 	
@@ -5942,7 +6031,8 @@ Utils.unify = function(t1, t2, on_bind) {
 			return Utils.unify(t1d.get_value(), t2, on_bind);
 		}
 		
-		t1d.bind(t2, on_bind);
+		if (!no_bind)
+			t1d.bind(t2, on_bind);
 		return true;
 	}
 	
@@ -5953,7 +6043,9 @@ Utils.unify = function(t1, t2, on_bind) {
 			return Utils.unify(t2d.get_value(), t1, on_bind);
 		}
 
-		t2d.bind(t1, on_bind);
+		if (!no_bind)
+			t2d.bind(t1, on_bind);
+			
 		return true;
 	}
 	
