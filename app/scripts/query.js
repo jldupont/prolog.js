@@ -3,7 +3,7 @@
  * 
  */
 
-/* global Prolog, wpr, mbus
+/* global wpr, mbus
 */
 
 (function(document) {
@@ -30,9 +30,19 @@
 
     view_answers.editor.disable();
 
+    document.querySelector("#action-clear").addEventListener("click", function(){
+      console.log("Clear!");
+      clear();
+    });
+
 
   });//dom-change
 
+
+  function clear() {
+    var len = view_answers.getLength();
+    view_answers.deleteText(0, len);
+  }
 
   mbus.sub({
      type: 'pr_error'
@@ -84,12 +94,6 @@
     }
   });
 
-  function send_query_to_worker(query_text) {
-    wpr.postMessage({
-      type: 'question'
-      ,text: query_text
-    });
-  }
 
   /**  Append a line to the "Answers" textarea
    *

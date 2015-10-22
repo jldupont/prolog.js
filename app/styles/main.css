@@ -17,7 +17,17 @@ body {
   min-height: 300px;
 }
 
-paper-tab.iron-selected {
-  background-color: #3F51B5;
-  color: white;
+#answers {
+  min-height: 75px;
+}
+
+
+paper-fab {
+  margin-bottom: 5px;
+}
+
+#icons-action {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
 }

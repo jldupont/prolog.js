@@ -67,9 +67,6 @@ addEventListener('message', function(msg_enveloppe) {
 });
 
 
-Functor.inspect_compact_version = true;
-Var.inspect_compact = true;
-Token.inspect_compact = true;
 
 
 
@@ -88,6 +85,12 @@ var interpreter = new Interpreter(db_user, db_builtins);
  *  Put in db
  */
 function store_code(msg) {
+
+    Functor.inspect_compact_version = true;
+    Functor.inspect_cons = true;
+    Var.inspect_compact = true;
+    Token.inspect_compact = true;
+
 
     if (msg.code_type == 'user')
         db_user.clear();    
