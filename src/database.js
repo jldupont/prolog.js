@@ -91,10 +91,10 @@ Database.prototype.batch_insert_code = function(codes) {
 	
 	for (var index in codes) {
 		var code_object = codes[index];
-		var f = code_object.f;
-		var a = code_object.a;
+		var f = code_object.f || code_object.code.f;
+		var a = code_object.a || code_object.code.a;
 		
-		this.insert_code(f, a, code_object);
+		this.insert_code(f, a, code_object.code || code_object);
 	}
 
 };
@@ -118,7 +118,7 @@ Database.prototype.exists = function(functor, arity) {
 Database.prototype.insert_code = function(functor, arity, code) {
 	
 	if (functor===undefined || arity===undefined || code===undefined)
-		throw new ErrorExpectingFunctor("Invalid functor name/arity/code: ");
+		throw new ErrorExpectingFunctor("Invalid functor name/arity/code: "+functor+"/"+arity+" code: "+JSON.stringify(code));
 	
 	var functor_signature = this.al.compute_signature([functor, arity]);
 

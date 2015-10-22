@@ -210,6 +210,7 @@ var prepare = function(rules_and_facts, query, tracer, options) {
 	var cquery = compile_query(query);
 	
 	//console.log(cquery);
+	//console.log(crules);
 
 	var db = new Database(DbAccess);
 
@@ -234,7 +235,9 @@ var prepare = function(rules_and_facts, query, tracer, options) {
 
 var compile_rules_and_facts = function(input_texts) {
 	
-	var results = Prolog.compile(input_texts);
+	var parsed = Prolog.parse_per_sentence(input_texts);
+	
+	var results = Prolog.compile_per_sentence(parsed.sentences);
 	
 	return results;
 };
@@ -336,7 +339,7 @@ var test = function(rules, query, expected, options) {
 
 var dump_db = function(db){
 	
-	for (key in db) {
+	for (var key in db) {
 		console.log("\n\n", key, " code ==> ", db[key]);
 	};
 	

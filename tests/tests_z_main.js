@@ -11,7 +11,7 @@ var pr = require("../prolog.js");
 
 var Functor = pr.Functor;
 var Utils = pr.Utils;
-
+var Var = pr.Var;
 
 var Prolog = pr.Prolog;
 var ParseSummary = pr.ParseSummary;
@@ -185,6 +185,16 @@ it('Main - error - 5', function() {
 	test_compile(text, [
 		new ParseSummary(new ErrorInvalidFact())
 	], {show_parsed: false});	
+});
+
+it('Main - query - 1', function() {
+	
+	var text =  '?- f(X).';
+	
+	test(text, [
+		new ParseSummary(null, new Functor("query", new Functor("f", new Var("X"))))
+	], {show_parsed: false});	
+	
 });
 
 /*
