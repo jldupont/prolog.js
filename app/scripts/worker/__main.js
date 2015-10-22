@@ -94,11 +94,15 @@ function store_code(msg) {
     
     var parsed_text = Prolog.parse_per_sentence(msg.code_text);
 
+    //console.log("Worker, parsed: ", parsed_text);
+
     // there should not be any errors
     //  because checks are performed on the main thread side
     
     
     var codes = Prolog.compile_per_sentence(parsed_text);
+    
+    console.log("Worker, codes: ", codes);
     
     put_code_in_db(msg.code_type, codes);
 
