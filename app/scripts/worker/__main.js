@@ -52,11 +52,6 @@ addEventListener('message', function(msg_enveloppe) {
         return;
     }
 
-    if (msg.type == 'question') {
-        set_question(msg);
-        return;
-    }
-
 
     if (msg.type == 'run') {
         do_run(msg);
@@ -70,6 +65,13 @@ addEventListener('message', function(msg_enveloppe) {
  
  
 });
+
+
+Functor.inspect_compact_version = true;
+Var.inspect_compact = true;
+Token.inspect_compact = true;
+
+
 
 
 var db_user     = new Database(DbAccess);
@@ -90,7 +92,7 @@ function store_code(msg) {
     if (msg.code_type == 'user')
         db_user.clear();    
         
-    console.debug("Worker: storing code: ", msg.code_type);
+    //console.debug("Worker: storing code: ", msg.code_type);
     
     var parsed_text = Prolog.parse_per_sentence(msg.code_text);
 
@@ -102,7 +104,7 @@ function store_code(msg) {
     
     var codes = Prolog.compile_per_sentence(parsed_text);
     
-    console.log("Worker, codes: ", codes);
+    //console.log("Worker, codes: ", codes);
     
     put_code_in_db(msg.code_type, codes);
 
@@ -116,7 +118,17 @@ function put_code_in_db(code_type, codes) {
         var f = code.code.f;
         var a = code.code.a;
         
-        console.debug("Worker: Storing ", code_type," code: f/a: ", f, a);    
+        if (code.code.is_query) {
+            interpreter.set_question(code.code);
+            
+            postMessage({
+                type: 'pr_question_ok'
+            });
+            return;
+        }
+        
+        
+        //console.debug("Worker: Storing ", code_type," code: f/a: ", f, a);    
 
         if (code_type == 'user')
             dbm.user_insert_code(f, a, code.code);
@@ -127,52 +139,6 @@ function put_code_in_db(code_type, codes) {
 }
 
 
-function set_question(msg) {
-    
-    Functor.inspect_compact_version = true;
-    Functor.inspect_cons = true;
-    
-    Var.inspect_compact = true;
-    Token.inspect_compact = true;
-    
-    //console.debug("Worker: question: ", msg.text);
-    
-    var query_text = msg.text;
-    
-    var parsed_query = Prolog.parse_per_sentence(query_text, true).sentences[0];
-    
-    if (parsed_query.maybe_error) {
-        postMessage({
-             type: 'pr_error'
-            ,error: parsed_query.maybe_error
-        });
-        return;
-    }
-    
-    //console.debug("Worker: parsed question: ", parsed_query);
-    
-    var query_code_object = Prolog.compile_query( parsed_query.maybe_token_list  );
-    
-    if (query_code_object instanceof Error) {
-
-        postMessage({
-             type: 'pr_error'
-            ,error: query_code_object.classname
-        });
-        
-        return;
-    }
-    
-    //console.debug("Worker: query object code: ", query_code_object);
-    
-    interpreter.set_question(query_code_object.code);
-    
-    //console.debug("Worker: set question: ", query_code_object.code);
-    
-    postMessage({
-        type: 'pr_question_ok'
-    });
-}
 
 function do_run(msg) {
     
@@ -200,8 +166,8 @@ function do_run(msg) {
     if (result) {
         // the end has been reached ... a result should be available
 
-        console.log("Worker Stack:   ", interpreter.get_stack());
-        console.log("Worker Context: ", interpreter.ctx);
+        //console.log("Worker Stack:   ", interpreter.get_stack());
+        //console.log("Worker Context: ", interpreter.ctx);
 
         var vars = interpreter.get_query_vars();
         var varss = {};

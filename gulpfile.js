@@ -251,7 +251,7 @@ gulp.task('serve', ['styles', 'elements', 'images', 'worker', 'es6'], function (
   gulp.watch(['app/styles/**/*.css'], ['styles', reload]);
   gulp.watch(['app/elements/**/*.css'], ['elements', reload]);
   gulp.watch(['app/{scripts,elements}/**/{*.js,*.html}'], ['worker', 'jshint']);
-  gulp.watch(['app/es6/**/*.js'], ['es6', 'jshint']);
+  //gulp.watch(['app/es6/**/*.js'], ['es6', 'jshint']);
   gulp.watch(['app/images/**/*'], reload);
   gulp.watch(['gulpfile.js'], reload);
 });
@@ -292,7 +292,7 @@ gulp.task('default', ['clean'], function (cb) {
   // Uncomment 'cache-config' after 'rename-index' if you are going to use service workers.
   runSequence(
     ['copy', 'styles'],
-    'elements', 'worker', 'es6',
+    'elements', 'worker', //'es6',
     ['jshint', 'images', 'fonts', 'html'],
     'vulcanize','rename-index', // 'cache-config',
     cb);
