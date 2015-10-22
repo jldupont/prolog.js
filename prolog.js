@@ -119,8 +119,9 @@ Prolog.compile_per_sentence = function(parsed_sentences) {
                 code_object = c.process_query( parsed_sentence.args[0] );
             } else {
                 code_object = c.process_rule_or_fact(parsed_sentence);
-                result.push( new Code(code_object) );
             }
+            
+            result.push( new Code(code_object) );
             
         } catch(e) {
             result.push(e);
