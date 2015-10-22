@@ -31,10 +31,17 @@
     view_answers.editor.disable();
 
     document.querySelector("#action-clear").addEventListener("click", function(){
-      console.log("Clear!");
       clear();
     });
 
+
+    document.querySelector("#action-redo").addEventListener("click", function(){
+
+      wpr.postMessage({
+         type: 'redo'
+      });
+
+    });
 
   });//dom-change
 
