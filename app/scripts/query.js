@@ -15,6 +15,7 @@
   var app = document.querySelector('#app');
 
   var view_answers;
+  var state_stop = false;
   
   // Listen for template bound event to know when bindings
   // have resolved and content has been stamped to the page
@@ -30,12 +31,14 @@
 
     view_answers.editor.disable();
 
+    
+
     document.querySelector("#action-clear").addEventListener("click", function(){
       clear();
     });
 
     document.querySelector("#action-stop").addEventListener("click", function(){
-      
+      state_stop = true;
     });
 
     document.querySelector("#action-redo").addEventListener("click", function(){
@@ -87,6 +90,27 @@
      type: 'pr_paused'
     ,cb : function(msg) {
 
+      if (state_stop) {
+        disable("action-stop", true);
+        
+        var count;
+        
+        if (Number.toLocaleString)
+          count = (+msg.step_count).toLocaleString();
+        else
+          count = msg.step_count;
+        
+        append_line("Current Instruction Count: " + count, {
+          italic: true
+          ,nl: true
+        });
+        
+      } else {
+        disable("action-stop", false);
+        issue_run();
+      }
+
+      state_stop = false;
 
     }
   });
