@@ -60,7 +60,8 @@ addEventListener('message', function(msg_enveloppe) {
  
  
    if (msg.type == 'redo') {
-        
+        do_redo();
+        return;
     }
  
  
@@ -200,6 +201,18 @@ function do_run(msg) {
         });
         
     }
+    
+}
+
+
+function do_redo() {
+    
+    var result = interpreter.backtrack();
+    
+    postMessage({
+         type:   'pr_redo'
+        ,result: result
+    });
     
 }
 /*! prolog.js - v0.0.1 - 2015-10-22 */

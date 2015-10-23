@@ -49,6 +49,12 @@
   });//dom-change
 
 
+  function disable(which, state) {
+    var value = state === true ? "disabled": undefined;
+    document.querySelector("#"+which).disabled = value;
+  }
+
+
   function clear() {
     var len = view_answers.getLength();
     view_answers.deleteText(0, len);
@@ -71,11 +77,9 @@
     type: 'pr_question_ok'
     ,cb: function() {
       
-      wpr.postMessage({
-         type: 'run'
-         ,steps: 100000
-      });
+      disable("action-stop", false);
       
+      issue_run();
     }
   });
 
@@ -88,10 +92,32 @@
   });
 
   mbus.sub({
+     type: 'pr_redo'
+    ,cb : function(msg) {
+
+      disable("action-redo", true);
+      console.log("Can redo? ", msg.result);
+     
+      append_separator();
+      
+      if (msg.result) 
+        issue_run();
+      else
+        append_line("Cannot redo", {
+          color: 'rgb(255, 0, 0)'
+        });
+        
+    }
+  });
+
+  mbus.sub({
     type: 'pr_result'
     ,cb: function(msg) {
 
       console.log("RESULT: ", msg);      
+      
+      disable("action-redo", false);
+      disable("action-stop", true);
       
       append_line('Instruction Count: '+msg.step_count, {
         italic: true
@@ -112,11 +138,23 @@
     }
   });
 
+  function issue_run() {
+      wpr.postMessage({
+         type: 'run'
+         ,steps: 100000
+      });
+  }
+
+  function append_separator() {
+    append_line("\n");
+  }
 
   /**  Append a line to the "Answers" textarea
    *
    */
   function append_line(line, attrs) {
+    
+    attrs = attrs || {};
     
     var pos_end = view_answers.getLength();
     
