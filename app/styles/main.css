@@ -26,8 +26,14 @@ paper-fab {
   margin-bottom: 5px;
 }
 
-#icons-action {
+#icons-action-left {
   position: absolute;
-  right: 10px;
+  left: -25px;
+  bottom: 10px;
+}
+
+#icons-action-right {
+  position: absolute;
+  right: -25px;
   bottom: 10px;
 }

@@ -34,6 +34,9 @@
       clear();
     });
 
+    document.querySelector("#action-stop").addEventListener("click", function(){
+      
+    });
 
     document.querySelector("#action-redo").addEventListener("click", function(){
 

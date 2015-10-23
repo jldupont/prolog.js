@@ -196,6 +196,7 @@ function do_run(msg) {
         postMessage({
             type: 'pr_paused'
             ,ref:  ref
+            ,step_count: interpreter.ctx.step_counter
         });
         
     }
