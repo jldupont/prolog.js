@@ -29,7 +29,7 @@ paper-fab {
 #icons-action-left {
   position: absolute;
   left: -25px;
-  bottom: 10px;
+  top: 10px;
 }
 
 #icons-action-right {
