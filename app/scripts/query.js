@@ -103,8 +103,10 @@
       if (msg.result) 
         issue_run();
       else
-        append_line("Cannot redo", {
+        append_line("Cannot redo\n", {
           color: 'rgb(255, 0, 0)'
+          ,italic: true
+          ,nl: true
         });
         
     }
@@ -134,6 +136,8 @@
         });
         
       }// vars
+      
+      append_separator();
       
     }
   });
