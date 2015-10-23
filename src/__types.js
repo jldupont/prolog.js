@@ -217,12 +217,14 @@ Op._list = [
 	   ,new Op("gt",      '>',   700, 'xfx', {primitive: true, boolean: true, to_evaluate: true})
 	   
 	   ,new Op("is",      'is',  700, 'xfx', {primitive: true, retvalue: false, to_evaluate: true})
+	   
 	    
 	   ,new Op("minus",   '-',   500, 'yfx', {primitive: true, retvalue: true})
 	   ,new Op("plus",    '+',   500, 'yfx', {primitive: true, retvalue: true})
 	   ,new Op("mult",    '*',   400, 'yfx', {primitive: true, retvalue: true})
 	   ,new Op("div",     '/',   400, 'yfx', {primitive: true, retvalue: true})
-	    
+	   
+	   ,new Op("not",     'not', 200, 'fy',  {primitive: true}) 
 	   ,new Op("uminus",   '-',  200, 'fy')
 	   ,new Op("uplus",    '+',  200, 'fy') 
 	  ]; 

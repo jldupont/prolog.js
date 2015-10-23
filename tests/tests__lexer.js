@@ -623,7 +623,7 @@ it('Lexer - process sentence - 1', function() {
 	should.equal(result, true);
 
 	
-})
+});
 
 it('Lexer - process sentence - 2', function() {
 	
@@ -645,7 +645,86 @@ it('Lexer - process sentence - 2', function() {
 	should.equal(result, true);
 
 	
-})
+});
+
+
+it('Lexer - other operators - not', function() {
+	
+	var text =   'not f(X).'
+				;
+	
+	var elist = [
+					 [  new Token('op:not','not'),
+					    new Token('term'," "),
+					    new Token('term','f'),
+					    new Token('parens_open'),
+					    new Token('term','X'),
+					    new Token('parens_close') 
+					    ]
+	             ];
+	
+	var l = new Lexer(text);
+	var list = l.process_per_sentence();
+	
+	//console.log(list);
+	
+	var result = Token.check_for_match(list, elist);
+
+	should.equal(result, true);
+
+	
+});
+
+it('Lexer - other functors - true', function() {
+	
+	var text =   'not true.'
+				;
+	
+	var elist = [
+					 [  new Token('op:not','not'),
+					    new Token('term'," "),
+					    new Token('term','true'),
+					    ]
+	             ];
+	
+	var l = new Lexer(text);
+	var list = l.process_per_sentence();
+	
+	//console.log(list);
+	
+	var result = Token.check_for_match(list, elist);
+
+	should.equal(result, true);
+
+	
+});
+
+it('Lexer - other functors - false', function() {
+	
+	var text =   'not false.'
+				;
+	
+	var elist = [
+					 [  new Token('op:not','not'),
+					    new Token('term'," "),
+					    new Token('term','false'),
+					    ]
+	             ];
+	
+	var l = new Lexer(text);
+	var list = l.process_per_sentence();
+	
+	//console.log(list);
+	
+	var result = Token.check_for_match(list, elist);
+
+	should.equal(result, true);
+
+	
+});
+
+
+
 /*
 it('Lexer - offset - 1', function() {
 	

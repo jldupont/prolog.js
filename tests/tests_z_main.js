@@ -197,15 +197,15 @@ it('Main - query - 1', function() {
 	
 });
 
-/*
-it('Main - syntax - 1', function() {
+
+it('Main - other operators - not', function() {
 	
-	//console.log("\n---- Main - syntax - 1\n\n");
+	//console.log("\n---- Main - other operators - not\n\n");
 	
-	var text =  'select(X, [X|Tail], Tail)\n select(Elem, [Head|Tail], [Head|Rest]) :- select(Elem, Tail, Rest).\n';
+	var text =  'not true.';
 	
 	test_compile(text, [
 		new ParseSummary(new ErrorInvalidFact())
 	], {show_parsed: true});	
 });
-*/
+

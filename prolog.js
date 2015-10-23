@@ -1,4 +1,4 @@
-/*! prolog.js - v0.0.1 - 2015-10-22 */
+/*! prolog.js - v0.0.1 - 2015-10-23 */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
 /* global Op, Compiler, Code, Functor
@@ -370,12 +370,14 @@ Op._list = [
 	   ,new Op("gt",      '>',   700, 'xfx', {primitive: true, boolean: true, to_evaluate: true})
 	   
 	   ,new Op("is",      'is',  700, 'xfx', {primitive: true, retvalue: false, to_evaluate: true})
+	   
 	    
 	   ,new Op("minus",   '-',   500, 'yfx', {primitive: true, retvalue: true})
 	   ,new Op("plus",    '+',   500, 'yfx', {primitive: true, retvalue: true})
 	   ,new Op("mult",    '*',   400, 'yfx', {primitive: true, retvalue: true})
 	   ,new Op("div",     '/',   400, 'yfx', {primitive: true, retvalue: true})
-	    
+	   
+	   ,new Op("not",     'not', 200, 'fy',  {primitive: true}) 
 	   ,new Op("uminus",   '-',  200, 'fy')
 	   ,new Op("uplus",    '+',  200, 'fy') 
 	  ]; 
@@ -4260,7 +4262,7 @@ function Lexer (text) {
 	this.in_comment = false;
 	this.comment_chars = "";
 	
-	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|\?\-|:\-|\\=|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
+	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.not\s.|\s.is\s.|\s.true\s.|\s.false\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|\?\-|:\-|\\=|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
 }
 
 Lexer.prototype._handleNewline = function(){
@@ -4294,6 +4296,7 @@ Lexer.token_map = {
 	,'+':   function() { return new Token('op:plus',  '+',      {is_operator: true}); }
 	,'*':   function() { return new Token('op:mult',  '*',      {is_operator: true}); }
 	,'/':   function() { return new Token('op:div',   '/',      {is_operator: true}); }
+	,'not': function() { return new Token('op:not',   'not',    {is_operator: true}); }
 	,'is':  function() { return new Token('op:is',    'is',     {is_operator: true, to_evaluate: true}); }
 	,'|':   function() { return new Token('list:tail','|'  ); }
 	

@@ -34,7 +34,7 @@ function Lexer (text) {
 	this.in_comment = false;
 	this.comment_chars = "";
 	
-	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|\?\-|:\-|\\=|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
+	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.not\s.|\s.is\s.|\s.true\s.|\s.false\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|\?\-|:\-|\\=|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
 }
 
 Lexer.prototype._handleNewline = function(){
@@ -68,6 +68,7 @@ Lexer.token_map = {
 	,'+':   function() { return new Token('op:plus',  '+',      {is_operator: true}); }
 	,'*':   function() { return new Token('op:mult',  '*',      {is_operator: true}); }
 	,'/':   function() { return new Token('op:div',   '/',      {is_operator: true}); }
+	,'not': function() { return new Token('op:not',   'not',    {is_operator: true}); }
 	,'is':  function() { return new Token('op:is',    'is',     {is_operator: true, to_evaluate: true}); }
 	,'|':   function() { return new Token('list:tail','|'  ); }
 	
