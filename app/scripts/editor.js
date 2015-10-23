@@ -101,12 +101,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ,subscriber: 'editor'
       ,cb: function(msg) {
         
+        var ext = msg.file.split(".")[1];
+        
         clear();
         
         current_file = msg.file;
         
-        var delta_object = JSON.parse(msg.text);
-        ed.setContents(delta_object);
+        if (ext == 'plq') {
+          var delta_object = JSON.parse(msg.text);
+          ed.setContents(delta_object);
+          
+        } else {
+          ed.setText( msg. text );
+        }
         
       }
     });

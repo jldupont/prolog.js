@@ -77,6 +77,14 @@
   });
 
   mbus.sub({
+     type: 'pr_paused'
+    ,cb : function(msg) {
+
+
+    }
+  });
+
+  mbus.sub({
     type: 'pr_result'
     ,cb: function(msg) {
 
