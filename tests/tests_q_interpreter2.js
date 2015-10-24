@@ -1893,3 +1893,53 @@ it('Interpreter - boolean - 2', function(){
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
 	//test(rules, query, expected, { tracer: call_tracer });
 });
+
+it('Interpreter - arithmetic - equal', function(){
+
+	var rules = [
+	             "f(A, B) :- X is A, Y is B, X =:= Y."
+				];
+	
+
+
+	var query = "f(1, 1).";
+	
+	var expected = [
+	                { "$cu": true }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true, show_compiled: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+it('Interpreter - arithmetic - equalnot', function(){
+
+	var rules = [
+	             "f(A, B) :- X is A, Y is B, X =\\= Y."
+				];
+	
+
+
+	var query = "f(1, 2).";
+	
+	var expected = [
+	                { "$cu": true }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true, show_compiled: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});

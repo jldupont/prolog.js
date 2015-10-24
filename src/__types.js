@@ -212,6 +212,9 @@ Op._list = [
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
 	   
+	   ,new Op("equal",   '=:=',  700, 'xfx', {builtin:   true, boolean: true})
+	   ,new Op("equalnot",'=\\=', 700, 'xfx', {builtin:   true, boolean: true})
+	   
 	   ,new Op("unif",    '=',   700, 'xfx', {builtin:   true, boolean: true})
 	   ,new Op("notunif", '\\=', 700, 'xfx', {builtin:   true, boolean: true})
 	   

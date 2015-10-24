@@ -34,7 +34,7 @@ function Lexer (text) {
 	this.in_comment = false;
 	this.comment_chars = "";
 	
-	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.not\s.|\s.is\s.|\s.true\s.|\s.false\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|\?\-|:\-|\\=|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
+	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|=\\=|=\:=|"""|\[|\]|\||\s.not\s.|\s.is\s.|\s.true\s.|\s.false\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|\?\-|:\-|\\=|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
 }
 
 Lexer.prototype._handleNewline = function(){
@@ -56,6 +56,8 @@ Lexer.token_map = {
 	// --------------------------------------------------
 	':-':   function() { return new Token('op:rule',  ':-',     {is_operator: true}); }
 	,'?-':  function() { return new Token('op:query', '?-',     {is_operator: true}); }
+	,'=\\=':function() { return new Token('op:equalnot', '=\\=',{is_operator: true}); }
+	,'=:=': function() { return new Token('op:equal',    '=:=', {is_operator: true}); }
 	,',':   function() { return new Token('op:conj', ',',       {is_operator: true}); }
 	,';':   function() { return new Token('op:disj', ';',       {is_operator: true}); }
 	,'=':   function() { return new Token('op:unif', '=',       {is_operator: true}); }

@@ -589,6 +589,12 @@ Interpreter.prototype.inst_setup = function() {
 	this.ctx.tse.p.ct = 0;
 };
 
+//
+//
+// ================================================================================= BUILTINS
+//
+//
+
 /**
  *   Instruction "bcall"
  * 
@@ -652,6 +658,7 @@ Interpreter.prototype.builtin_unif = function(x0) {
 	//console.log("---- BCALL result: ", this.ctx.cu);
 };
 
+
 /**
  *   Instruction `op_notunif`
  *
@@ -668,6 +675,35 @@ Interpreter.prototype.builtin_notunif = function(x0) {
 
 };
 
+/**
+ *   Instruction `op_equal`
+ *
+ *   $x0.arg[0]  ==> lvalue
+ *   $x0.arg[1]  ==> rvalue
+ *   
+ */
+Interpreter.prototype.builtin_equal = function(x0) {
+
+	var left  = x0.args[0];
+	var right = x0.args[1];
+	
+	var lvalue = this._get_value(left);
+	var rvalue = this._get_value(right);
+
+	this.ctx.cu = lvalue == rvalue;
+};
+
+Interpreter.prototype.builtin_equalnot = function(x0) {
+
+	this.builtin_equal(x0);
+	this.ctx.cu = !this.ctx.cu;
+};
+
+//
+//
+// ================================================================================= CONTROL-FLOW
+//
+//
 
 /**
  *   Instruction "call"
