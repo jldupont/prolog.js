@@ -58,12 +58,12 @@ var process_rule = function(input_text, expecteds, options) {
 		} catch(e) {
 			console.error("Compilation Error: ", e);	
 			throw e;
-		};
+		}
 	
 		//console.log("result= ", result);
 		
 		results.push(result);
-	};
+	}
 	
 	Var.inspect_compact = true;
 	
@@ -80,9 +80,9 @@ var process_rule = function(input_text, expecteds, options) {
 		
 		//console.log("Comparing: ", expected, "-->", ri);
 		
-		var result = Utils.compare_objects(expected, ri);
+		result = Utils.compare_objects(expected, ri);
 		should.equal(result, true, "input: " + util.inspect(ri));
-	};
+	}
 
 
 };
@@ -1663,3 +1663,27 @@ it('Compiler - query - 2', function(){
 	//process(text, expected);
 });
 
+
+it('Compiler - other operators - not', function(){
+	
+	Instruction.inspect_compact = true;
+	
+	var text = "not f(X).";
+
+	var expected = [
+		[
+		 'allocate'    ,
+		  'put_struct  f/1, x(0)',
+		  'put_var     p("X")',
+		  'setup'       ,
+		  'call'    ,
+		  'maybe_retryn' ,
+		  'deallocate'  ,
+		  'proceed'
+  		]
+	];
+
+	//process_goal(text, expected, {show_parsed: true, show_compiled: true, show_parsed: true});
+	process_goal(text, expected);
+
+});

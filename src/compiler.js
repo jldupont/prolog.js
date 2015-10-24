@@ -574,6 +574,14 @@ Compiler.prototype.process_goal = function(exp, is_query, vars) {
 		return this.process_primitive(exp, is_query, vars);
 	}
 	
+	// Transform 'not' operator
+	//
+	//  Just take the functor
+	//
+	if (exp.name == 'not') {
+		exp = exp.args[0];
+		exp.not = true;
+	}
 	
 	var v = new Visitor2(exp);
 	
@@ -633,7 +641,12 @@ Compiler.prototype.process_goal = function(exp, is_query, vars) {
 			} else {
 				results.push(new Instruction('setup'));
 				results.push(new Instruction('call'));
-				results.push(new Instruction('maybe_retry'));
+				
+				if (ctx.n.not)
+					results.push(new Instruction('maybe_retryn'));
+				else
+					results.push(new Instruction('maybe_retry'));
+				//results.push(new Instruction('maybe_retry'));
 				results.push(new Instruction('deallocate'));
 			}
 			

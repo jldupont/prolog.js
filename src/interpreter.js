@@ -733,6 +733,7 @@ Interpreter.prototype.inst_call = function(inst) {
 }; // CALL
 
 
+
 /**
  *   Instruction "maybe_retry"
  * 
@@ -786,6 +787,47 @@ Interpreter.prototype.inst_maybe_retry = function() {
 	
 };
 
+Interpreter.prototype.inst_maybe_retryn = function() {
+	
+	// A 'noop' if there isn't a failure reported
+	//
+	if (!this.ctx.cu) {
+		this.ctx.cu = !this.ctx.cu;
+		return;
+	}
+		
+
+	/*  Whatever happens after, we anyways need
+	 *   to unwind the trail before attempting anything else.
+	 * 
+	 */
+	this._unwind_trail( this.ctx.tse.trail );
+	
+	this.ctx.tse.p.ci ++;
+
+	/*
+	 *  The Choice Point context is kept on the top of stack `tse`
+	 */
+	if (this.ctx.tse.p.ci < this.ctx.tse.p.ct) {
+		
+		/* We can try the next clause
+		 * 
+		    The fetch function will have incremented the
+		    instruction pointer past this instruction
+		    so we need to subtract 2 to get it pointing
+		    back to the 'CALL' instruction.
+		
+			The `backtrack` step will have already
+			loaded the code, we just have to cause a
+			`jump` by manipulating `i` directly.
+		*/
+		this.ctx.p.i -= 2;
+	}
+
+	// ELSE:  the following `deallocate` will get rid of the
+	//        environment from the stack
+	
+};
 
 /**
  *   Instruction "allocate"

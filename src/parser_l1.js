@@ -8,6 +8,7 @@
  *  Goes through the token list and :
  *  
  *  * get rid of whitespaces
+ *  * handle boolean values
  *  
  *  * rearrange stream for infix notation for functors
  *    e.g.  functor(arg1, arg2, ...) ==>  functor, arg1, arg2, ...)
@@ -59,6 +60,12 @@ ParserL1.prototype.next = function() {
 		return new Eos();
 		
 		
+	if (head.name == 'term')
+		if (head.value === 'true' || head.value === 'false') {
+			head.name = 'boolean';
+			head.value = head.value === 'true';
+		}
+			
 		
 	// Check for whitespaces and remove
 	//

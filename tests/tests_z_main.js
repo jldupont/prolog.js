@@ -12,6 +12,7 @@ var pr = require("../prolog.js");
 var Functor = pr.Functor;
 var Utils = pr.Utils;
 var Var = pr.Var;
+var Token = pr.Token;
 
 var Prolog = pr.Prolog;
 var ParseSummary = pr.ParseSummary;
@@ -205,7 +206,7 @@ it('Main - other operators - not', function() {
 	var text =  'not true.';
 	
 	test_compile(text, [
-		new ParseSummary(new ErrorInvalidFact())
-	], {show_parsed: true});	
+		new ParseSummary(null, new Functor('not', new Token('boolean')))
+	], {show_parsed: false});	
 });
 
