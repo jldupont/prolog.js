@@ -167,6 +167,29 @@ it('ParserL1 - expression - 1', function(){
 	process(text, expected_list);
 });
 
+it('ParserL1 - string - 1', function(){
+
+	var text = "test(X) :- print('Test: ', X).";
+
+	var expected_list = [
+		new Token('functor','test'),
+		new Token('var','X'),
+		new Token('parens_close',null),
+		new Token('op:rule',':-'),
+		new Token('functor','print'),
+		new Token('string','Test: '),
+		new Token('op:conj',','),
+		new Token('var','X'),
+		new Token('parens_close', null),
+		new Token('period',null)	                     
+		];
+	
+	//process(text, expected_list, {show_parsed: true});
+	process(text, expected_list);
+});
+
+
+
 /*  THIS DOES NOT BLOW UP AT THIS POINT - IT IS NORMAL
 it('ParserL1 - error - 1', function(){
 
