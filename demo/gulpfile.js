@@ -118,6 +118,9 @@ gulp.task('copy', function () {
   var examples = gulp.src(['app/examples/**/*'])
     .pipe(gulp.dest('dist/examples'));
 
+  var CNAME = gulp.src(['CNAME'])
+    .pipe(gulp.dest('dist/'));
+
   var swBootstrap = gulp.src(['bower_components/platinum-sw/bootstrap/*.js'])
     .pipe(gulp.dest('dist/elements/bootstrap'));
 
@@ -128,7 +131,7 @@ gulp.task('copy', function () {
     .pipe($.rename('elements.vulcanized.html'))
     .pipe(gulp.dest('dist/elements'));
 
-  return merge(app, bower, elements, examples, vulcanized, swBootstrap, swToolbox)
+  return merge(app, bower, elements, examples, vulcanized, swBootstrap, swToolbox, CNAME)
     .pipe($.size({title: 'copy'}));
 });
 
