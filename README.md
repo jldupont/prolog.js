@@ -1,6 +1,9 @@
 # prolog.js
 Prolog parser, compiler and interpreter in Javascript
 
+### Status
+[![Build Status](https://travis-ci.org/jldupont/prolog.js.svg?branch=master)](https://travis-ci.org/jldupont/prolog.js)
+
 # Features
 
 * Fact
