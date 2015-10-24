@@ -1,3 +1,5 @@
 /node_modules/
 /bower_components/
 /app
+/demo/node_modules/
+/demo/bower_components/

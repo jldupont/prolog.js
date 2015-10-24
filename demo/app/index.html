@@ -1,0 +1,219 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<html lang="">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Prolog Interpreter in Javascript">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="Polymer Starter Kit" />
+  <title>Polymer Starter Kit</title>
+  <!-- Place favicon.ico in the `app/` directory -->
+
+  <!-- Chrome for Android theme color -->
+  <meta name="theme-color" content="#2E3AA1">
+
+  <!-- Web Application Manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Tile color for Win8 -->
+  <meta name="msapplication-TileColor" content="#3372DF">
+
+  <!-- Add to homescreen for Chrome on Android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="PSK">
+  <link rel="icon" sizes="192x192" href="images/touch/chrome-touch-icon-192x192.png">
+
+  <!-- Add to homescreen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Polymer Starter Kit">
+  <link rel="apple-touch-icon" href="images/touch/apple-touch-icon.png">
+
+  <!-- Tile icon for Win8 (144x144) -->
+  <meta name="msapplication-TileImage" content="images/touch/ms-touch-icon-144x144-precomposed.png">
+
+  <!-- build:css styles/main.css -->
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="bower_components/quill/dist/quill.snow.css"> 
+  <!-- endbuild-->
+
+  <!-- build:js bower_components/webcomponentsjs/webcomponents-lite.min.js -->
+  <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <!-- endbuild -->
+
+  <!-- will be replaced with elements/elements.vulcanized.html -->
+  <link rel="import" href="elements/elements.html">
+  <!-- endreplace-->
+
+  <!-- For shared styles, shared-styles.html import in elements.html -->
+  <style is="custom-style" include="shared-styles"></style>
+
+</head>
+
+<body unresolved class="fullbleed layout vertical">
+  <span id="browser-sync-binding"></span>
+  <template is="dom-bind" id="app">
+
+    <paper-drawer-panel id="paperDrawerPanel">
+      <!-- Drawer Scroll Header Panel -->
+      <paper-scroll-header-panel drawer fixed>
+
+        <!-- Drawer Toolbar -->
+        <paper-toolbar id="drawerToolbar">
+          <span class="paper-font-title">Menu</span>
+        </paper-toolbar>
+
+        <!-- Drawer Content -->
+        <paper-menu class="list" attr-for-selected="data-route" selected="[[route]]">
+          
+          <a data-route="home" href="/" on-click="onDataRouteClick">
+            <iron-icon icon="home"></iron-icon>
+            <span>Home</span>
+          </a>
+
+          <a on-click="load_example" data-file="examples/einstein.plq">
+            <iron-icon icon="icons:bookmark"></iron-icon>
+            <span>Einstein's Puzzle</span>
+          </a>
+
+          <a on-click="load_example" data-file="examples/loop.plq">
+            <iron-icon icon="icons:bookmark"></iron-icon>
+            <span>Loop Handling</span>
+          </a>
+
+          <hr>
+
+          <a data-route="contact" href="/contact" on-click="onDataRouteClick">
+            <iron-icon icon="mail"></iron-icon>
+            <span>Contact</span>
+          </a>
+        </paper-menu>
+      </paper-scroll-header-panel>
+
+      <!-- Main Area -->
+      <paper-scroll-header-panel main condenses keep-condensed-header>
+
+        <!-- Main Toolbar -->
+        <paper-toolbar id="mainToolbar">
+          <paper-icon-button id="paperToggle" icon="menu" paper-drawer-toggle></paper-icon-button>
+          <span class="flex"></span>
+
+          <!-- Application name -->
+          <div class="middle middle-container center horizontal layout">
+            <div class="app-name">Prolog.js</div>
+          </div>
+
+        </paper-toolbar>
+
+        <!-- Main Content -->
+        <div class="content">
+          <iron-pages attr-for-selected="data-route" selected="{{route}}">
+
+            <section data-route="home">
+              
+              <paper-material elevation="1">
+                
+                  <div id="page-code">
+                    <div class="quill-wrapper">
+                        <quill-toolbar id="full-toolbar"></quill-toolbar>  
+                        <hr>
+                        <div id='editor'>
+                          <div>Select an example from the menu to start</div>
+                        </div>
+                   </div>
+                  </div>
+                  
+            </paper-material>                  
+            <paper-material elevation="1">
+
+                  <div id='icons-action-left' class='layout vertical'>
+                    <paper-fab mini id='action-clear' icon="content-cut" title="clear" class="blue"></paper-fab>
+                  </div>
+              
+                  <div id='page-answers'>
+                    <div class='quill-wrapper'>
+                      <div id='answers'>
+                        <div>Answers will appear <b>here</b></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div id='icons-action-right' class='layout vertical'>
+                    <paper-fab mini id='action-stop' icon="clear" title="stop" class="red" disabled></paper-fab>
+                    <paper-fab mini id='action-redo' icon="redo"  title="redo" class="green" disabled></paper-fab>  
+                  </div>
+                  
+                  
+              </paper-material>
+
+            </section>
+
+            <section data-route="contact">
+              <paper-material elevation="1">
+                <h2 class="page-title">Contact</h2>
+                <p><iron-icon icon="icons:mail"></iron-icon> 
+                  <a href="mailto:prolog@jldupont.com?subject=Mail from Prolog.js project">Email Me</a>  
+                </p>
+              </paper-material>
+            </section>
+
+
+        </div>
+      </paper-scroll-header-panel>
+    </paper-drawer-panel>
+
+    <!-- Uncomment next block to enable Service Worker support (1/2) -->
+   <!--
+    <paper-toast id="caching-complete"
+                 duration="6000"
+                 text="Caching complete! This app will work offline.">
+    </paper-toast>
+
+    <platinum-sw-register auto-register
+                          clients-claim
+                          skip-waiting
+                          on-service-worker-installed="displayInstalledToast">
+      
+      <!--<platinum-sw-cache default-cache-strategy="fastest"
+                         cache-config-file="cache-config.json">
+      -->
+      </platinum-sw-cache>
+    </platinum-sw-register>
+    -->
+
+  </template>
+
+  <!-- build:js scripts/app.js -->
+  <script src="bower_components/quill/dist/quill.js"></script>
+  <script src="bower_components/clipboard/dist/clipboard.min.js"></script>
+  
+  <!--
+  <script src="scripts/quill_modules/tooltip.js"></script>
+  <script src="scripts/quill_modules/link.js"></script>
+  -->
+  
+  <script src="scripts/mbus.js"></script>
+  <script src="scripts/app.js"></script>
+  <script src="scripts/editor.js"></script>
+  <script src="scripts/query.js"></script>
+  <script src="scripts/compiler.js"></script>
+  <script src="scripts/interpreter.js"></script>
+  <script src="scripts/utils.js"></script>
+  
+  <script src="scripts/prolog.js"></script>
+  
+  <!-- endbuild-->
+  
+</body>
+
+</html>

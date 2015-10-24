@@ -1,0 +1,40 @@
+{
+  "name": "prolog.js",
+  "version": "0.0.1",
+  "homepage": "https://github.com/jldupont/prolog.js",
+  "authors": [
+    "Jean-Lou Dupont <github@jldupont.com>"
+  ],
+  "description": "Prolog Interpreter in Javascript",
+  "moduleType": [
+    "node"
+  ],
+  "keywords": [
+    "prolog",
+    "javascript",
+    "interpreter",
+    "virtual-machine"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.1.0",
+	  "iron-elements": "PolymerElements/iron-elements#^1.0.0",
+    "paper-elements": "PolymerElements/paper-elements#^1.0.1",
+    "platinum-elements": "PolymerElements/platinum-elements#^1.1.0",
+    "neon-elements": "PolymerElements/neon-elements#^1.0.0",
+    "page": "visionmedia/page.js#~1.6.3",
+    "quill": "quilljs/quill#^0.20.0"
+    ,"clipboard": "^1.3.1"
+  },
+	"devDependencies": {
+    "web-component-tester": "*",
+    "test-fixture": "PolymerElements/test-fixture#^1.0.0"
+  }  
+}
