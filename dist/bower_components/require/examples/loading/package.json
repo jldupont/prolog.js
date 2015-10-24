@@ -1,9 +1,0 @@
-{
-  "name": "loading",
-  "version": "0.0.0",
-  "description": "loading",
-  "main": "js/index.js",
-  "dependencies": {
-    "utils": "git://github.com/nathanfaucett/utils"
-  }
-}
