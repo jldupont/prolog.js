@@ -23,6 +23,9 @@ Prolog parser, compiler and interpreter in Javascript
 
 The query operator is not standard in prolog source code. It is provided as convenience and used in the online demo.
 
+# DEMO
+
+The demo can be accessed through [here](http://prolog.jldupont.com/).
 
 # Javascript bridge
 
