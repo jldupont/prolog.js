@@ -365,6 +365,9 @@ Op._list = [
 	   ,new Op("disj",    ';',  1100, 'xfy')
 	   ,new Op("conj",    ',',  1000, 'xfy')
 	   
+	   ,new Op("equal",   '=:=',  700, 'xfx', {builtin:   true, boolean: true})
+	   ,new Op("equalnot",'=\\=', 700, 'xfx', {builtin:   true, boolean: true})
+	   
 	   ,new Op("unif",    '=',   700, 'xfx', {builtin:   true, boolean: true})
 	   ,new Op("notunif", '\\=', 700, 'xfx', {builtin:   true, boolean: true})
 	   
@@ -1907,6 +1910,10 @@ Compiler.prototype.process_goal = function(exp, is_query, vars) {
 	if (exp.name == 'cut') {
 		return [new Instruction('cut'), new Instruction("proceed")];
 	}
+
+	if (exp.name == 'fail') {
+		return [new Instruction('fail')];
+	}
 	
 	
 	if (exp.attrs.primitive && exp.attrs.to_evaluate) {
@@ -2957,6 +2964,12 @@ Interpreter.prototype.inst_setup = function() {
 	this.ctx.tse.p.ct = 0;
 };
 
+//
+//
+// ================================================================================= BUILTINS
+//
+//
+
 /**
  *   Instruction "bcall"
  * 
@@ -3020,6 +3033,7 @@ Interpreter.prototype.builtin_unif = function(x0) {
 	//console.log("---- BCALL result: ", this.ctx.cu);
 };
 
+
 /**
  *   Instruction `op_notunif`
  *
@@ -3036,6 +3050,45 @@ Interpreter.prototype.builtin_notunif = function(x0) {
 
 };
 
+/**
+ *   Instruction `op_equal`
+ *
+ *   $x0.arg[0]  ==> lvalue
+ *   $x0.arg[1]  ==> rvalue
+ *   
+ */
+Interpreter.prototype.builtin_equal = function(x0) {
+
+	var left  = x0.args[0];
+	var right = x0.args[1];
+	
+	var lvalue = this._get_value(left);
+	var rvalue = this._get_value(right);
+
+	this.ctx.cu = lvalue == rvalue;
+};
+
+Interpreter.prototype.builtin_equalnot = function(x0) {
+
+	this.builtin_equal(x0);
+	this.ctx.cu = !this.ctx.cu;
+};
+
+//
+//
+// ================================================================================= CONTROL-FLOW
+//
+//
+
+/**
+ *   Instruction "fail"
+ * 
+ */
+Interpreter.prototype.inst_fail = function(inst) {
+	
+	this.backtrack();
+	
+};
 
 /**
  *   Instruction "call"
@@ -4364,7 +4417,7 @@ function Lexer (text) {
 	this.in_comment = false;
 	this.comment_chars = "";
 	
-	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.not\s.|\s.is\s.|\s.true\s.|\s.false\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|\?\-|:\-|\\=|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
+	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|=\\=|=\:=|"""|\[|\]|\||\s.not\s.|\s.is\s.|\s.true\s.|\s.false\s.|\s.fail\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|\?\-|:\-|\\=|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
 }
 
 Lexer.prototype._handleNewline = function(){
@@ -4386,6 +4439,8 @@ Lexer.token_map = {
 	// --------------------------------------------------
 	':-':   function() { return new Token('op:rule',  ':-',     {is_operator: true}); }
 	,'?-':  function() { return new Token('op:query', '?-',     {is_operator: true}); }
+	,'=\\=':function() { return new Token('op:equalnot', '=\\=',{is_operator: true}); }
+	,'=:=': function() { return new Token('op:equal',    '=:=', {is_operator: true}); }
 	,',':   function() { return new Token('op:conj', ',',       {is_operator: true}); }
 	,';':   function() { return new Token('op:disj', ';',       {is_operator: true}); }
 	,'=':   function() { return new Token('op:unif', '=',       {is_operator: true}); }
@@ -5286,6 +5341,17 @@ ParserL2.prototype._preprocess = function() {
 			fcut.col  = token.col;
 			fcut.offset = token.offset;
 			this.ptokens.push(fcut);
+			continue;
+		}
+
+		if (token.name == 'term' && token.value == 'fail') {
+			var ffail = new Functor("fail");
+			ffail.attrs.primitive = true;
+			ffail.original_token = token;
+			ffail.line = token.line;
+			ffail.col  = token.col;
+			ffail.offset = token.offset;
+			this.ptokens.push(ffail);
 			continue;
 		}
 

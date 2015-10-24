@@ -7,11 +7,21 @@
 module.exports = function (grunt) {
 
     grunt.loadNpmTasks('grunt-mocha-test');
+    grunt.loadNpmTasks('grunt-contrib-copy');
     
     // Define the configuration for all the tasks
     grunt.initConfig({
 
     	pkg: grunt.file.readJSON("package.json"),
+    	
+    copy: {
+      
+      demo: {
+         src: 'prolog.js'
+        ,dest: 'demo/app/scripts/prolog.js'
+      }
+      
+    },
     	
     uglify: {
         my_target: {
@@ -72,5 +82,5 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     
     grunt.registerTask("test", ["concat", "mochaTest"]);
-    grunt.registerTask('default', ['concat', 'uglify', 'test']);
+    grunt.registerTask('default', ['concat', 'uglify', 'test', 'copy']);
 };
