@@ -29,3 +29,7 @@ The query operator is not standard in prolog source code. It is provided as conv
 The compiler can be fed directly with Javascript objects. The classes `Functor` and `Token` can be used for this purpose. 
 To understand how to construct "sentences" using these objects, I would encourage looking at the `/tests` and experimenting with
 `Prolog.parse_per_sentence`.
+
+# Contact
+
+For more information, please contact [Jean-Lou Dupont on G+](https://plus.google.com/u/0/+JeanLouDupont/posts).
