@@ -206,11 +206,15 @@ var parser = function(text) {
 
 var prepare = function(rules_and_facts, query, tracer, options) {
 	
+	options = options || {};
+	
 	var crules = compile_rules_and_facts(rules_and_facts);
 	var cquery = compile_query(query);
 	
-	//console.log(cquery);
-	//console.log(crules);
+	if (options.show_compiled) {
+		console.log(cquery);
+		console.log(crules);
+	}
 
 	var db = new Database(DbAccess);
 
@@ -1813,3 +1817,79 @@ it('Interpreter - cut - 2', function(){
 });
 
 
+
+it('Interpreter - boolean - 1a', function(){
+
+	var rules = [
+	             "f(a, X) :- X is true."
+				];
+	
+
+
+	var query = "f(a, Y).";
+	
+	var expected = [
+	                { "$cu": true, Y: true }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true, show_compiled: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+
+it('Interpreter - boolean - 1b', function(){
+
+	var rules = [
+	             "f(a, X) :- X is false."
+				];
+	
+
+
+	var query = "f(a, Y).";
+	
+	var expected = [
+	                { "$cu": true, Y: false }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true, show_compiled: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});
+
+it('Interpreter - boolean - 2', function(){
+
+	var rules = [
+	             "f(a, X) :- X = not true."
+				];
+	
+
+
+	var query = "f(a, Y).";
+	
+	var expected = [
+	                { "$cu": true, Y: 'not(true())' }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true, show_compiled: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});

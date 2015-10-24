@@ -230,7 +230,7 @@ it('ParserL2 - operator - 1', function(){
 	var text = "love(mercedes) :- true";
 	var expected = [ 'Functor(love/1,Token(term,mercedes))',
 	                 'OpNode(`:-`,1200)',
-	                 'Token(boolean,true)' ];
+	                 'Functor(true/0)' ];
 	
 	process(text, expected);
 });

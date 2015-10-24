@@ -36,7 +36,7 @@
            ,ErrorExpectingListStart, ErrorExpectingListEnd
            ,ErrorUnexpectedParensClose, ErrorUnexpectedPeriod
            ,ErrorUnexpectedEnd, ErrorUnexpectedListEnd
-           , ErrorSyntax
+           
  */
 
 /**
@@ -502,6 +502,18 @@ ParserL2.prototype._preprocess = function() {
 			continue;
 		}
 
+		if (token.name == 'boolean') {
+			
+			var fbool = new Functor(""+token.value);
+			fbool.attrs.primitive = true;
+			//fbool.attrs.to_evaluate = true;
+			fbool.original_token = token;
+			fbool.line = token.line;
+			fbool.col  = token.col;
+			fbool.offset = token.offset;
+			this.ptokens.push(fbool);
+			continue;
+		}
 		
 		if (token.name == 'term' && token.value == '!') {
 			var fcut = new Functor("cut");

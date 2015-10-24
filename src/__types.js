@@ -20,7 +20,11 @@ function Token(name, maybe_value, maybe_attrs) {
 	maybe_attrs = maybe_attrs || {}; 
 	
 	this.name = name;
-	this.value = maybe_value || null;
+	
+	if (maybe_value === false)
+		this.value = false;
+	else
+		this.value = maybe_value || null;
 	
 	// so, 0 || null ==> null ...
 	if (maybe_value ===0)

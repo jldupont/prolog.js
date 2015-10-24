@@ -173,7 +173,11 @@ function Token(name, maybe_value, maybe_attrs) {
 	maybe_attrs = maybe_attrs || {}; 
 	
 	this.name = name;
-	this.value = maybe_value || null;
+	
+	if (maybe_value === false)
+		this.value = false;
+	else
+		this.value = maybe_value || null;
 	
 	// so, 0 || null ==> null ...
 	if (maybe_value ===0)
@@ -3437,9 +3441,15 @@ Interpreter.prototype._get_value = function(token) {
 	if (Utils.isNumeric(token))
 		return token;
 	
-	if (token instanceof Token)
+	if (token instanceof Token) {
 		if (token.name == 'number')
 			return token.value;
+
+		if (token.name == 'boolean')
+			return token.value;
+	}
+			
+			
 	
 	throw new ErrorInvalidToken("Invalid Token: Got: "+JSON.stringify(token), token);
 };
@@ -3545,13 +3555,50 @@ Interpreter.prototype.inst_op_is = function(inst) {
 	var rval = y0.args[1];
 
 	if (!(lvar instanceof Var))
-		throw new ErrorExpectingVariable("Expecting a variable as lvalue of `is`, got: "+JSON.stringify(lvar), inst);
+		throw new ErrorExpectingVariable("Expecting an unbound variable as lvalue of `is`, got: "+JSON.stringify(lvar), inst);
 	
 	// lvar is not supposed to be bound yet!
 	//
 	lvar.bind(rval);
 	
 	this.ctx.cu = true;
+};
+
+/**
+ *   Instruction `op_true`
+ *   
+ *   
+ */
+Interpreter.prototype.inst_op_true = function(inst) {
+
+	this.ctx.cse.vars.$y1 = new Token("boolean", true);
+	this.ctx.cu = true;
+};
+
+Interpreter.prototype.inst_op_false = function(inst) {
+
+	this.ctx.cse.vars.$y1 = new Token("boolean", false);
+	this.ctx.cu = true;
+};
+
+Interpreter.prototype.inst_op_not = function(inst) {
+
+	this.ctx.cu = true;
+	
+	var p = this.ctx.cse.vars.$y0.args[0];
+
+	console.log("op_not: p= ", p);
+
+	if (p instanceof Token && p.name == 'boolean') {
+		this.ctx.cse.vars.$y1 = new Token("boolean", !p.value);
+		return;
+	}
+		
+	if (p !== true && p !== false)
+		throw Error("Expecting Boolean got: "+JSON.stringify(p));
+		
+	this.ctx.cse.vars.$y1 = new Token("boolean", !p);
+	
 };
 
 
@@ -4752,7 +4799,7 @@ if (typeof module!= 'undefined') {
            ,ErrorExpectingListStart, ErrorExpectingListEnd
            ,ErrorUnexpectedParensClose, ErrorUnexpectedPeriod
            ,ErrorUnexpectedEnd, ErrorUnexpectedListEnd
-           , ErrorSyntax
+           
  */
 
 /**
@@ -5218,6 +5265,18 @@ ParserL2.prototype._preprocess = function() {
 			continue;
 		}
 
+		if (token.name == 'boolean') {
+			
+			var fbool = new Functor(""+token.value);
+			fbool.attrs.primitive = true;
+			//fbool.attrs.to_evaluate = true;
+			fbool.original_token = token;
+			fbool.line = token.line;
+			fbool.col  = token.col;
+			fbool.offset = token.offset;
+			this.ptokens.push(fbool);
+			continue;
+		}
 		
 		if (token.name == 'term' && token.value == '!') {
 			var fcut = new Functor("cut");
