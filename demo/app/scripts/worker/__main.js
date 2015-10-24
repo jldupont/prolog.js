@@ -187,6 +187,7 @@ function do_run(msg) {
         postMessage({
             type: 'pr_result'
             ,ref: ref
+            ,state: interpreter.get_context().cu
             ,step_count: interpreter.ctx.step_counter
             ,vars: varss
         });

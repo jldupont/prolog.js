@@ -161,6 +161,13 @@
         
       }// vars
       
+      var state = msg.state ? "yes":"no";
+      
+      append_line(state, {
+        bold: true
+        ,nl:true
+      });
+      
       append_separator();
       
     }

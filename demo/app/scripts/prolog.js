@@ -2407,6 +2407,10 @@ function Interpreter(db, db_builtins) {
 	
 }
 
+Interpreter.prototype.get_context = function(){
+	return this.ctx;
+};
+
 Interpreter.prototype.get_stack = function(){
 	return this.stack;
 };
