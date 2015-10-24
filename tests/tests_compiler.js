@@ -141,7 +141,7 @@ var process_head = function(input_text, expecteds) {
 		var result = c.process_head(expression);
 		
 		results.push(result);
-	};
+	}
 	
 	//console.log(results);
 	
@@ -153,9 +153,9 @@ var process_head = function(input_text, expecteds) {
 		var ri = results[index];
 		var expected = expecteds[index];
 		
-		var result = Utils.compare_objects(expected, ri, true);
+		result = Utils.compare_objects(expected, ri, true);
 		should.equal(result, true, "expected: " + util.inspect(results));
-	};
+	}
 
 
 };
@@ -182,7 +182,7 @@ var process_goal = function(input_text, expecteds) {
 		var result = c.process_goal(expression);
 		
 		results.push(result);
-	};
+	}
 	
 	//console.log(results);
 	
@@ -197,10 +197,10 @@ var process_goal = function(input_text, expecteds) {
 		//console.log("Input:  ", ri);
 		//console.log("Expect: ", expected);
 		
-		var result = Utils.compare_objects(expected, ri);
+		result = Utils.compare_objects(expected, ri);
 		
 		should.equal(result, true, "input: " + util.inspect(ri));
-	};
+	}
 
 
 };
@@ -234,7 +234,7 @@ var process_body = function(input_text, expecteds, show_results) {
 		var result = c.process_body(expression);
 		
 		results.push(result);
-	};
+	}
 	
 	if (show_results)
 		console.log(results);
@@ -247,9 +247,9 @@ var process_body = function(input_text, expecteds, show_results) {
 		var ri = results[index];
 		var expected = expecteds[index];
 		
-		var result = Utils.compare_objects(expected, ri, true);
+		result = Utils.compare_objects(expected, ri, true);
 		should.equal(result, true, "input: " + util.inspect(ri));
-	};
+	}
 
 
 };
@@ -295,9 +295,9 @@ var process = function(input_text, expecteds, options) {
 		var ri = results[index];
 		var expected = expecteds[index];
 		
-		var result = Utils.compare_objects(expected, ri);
+		result = Utils.compare_objects(expected, ri);
 		should.equal(result, true, "input: " + util.inspect(ri));
-	};
+	}
 
 
 };
