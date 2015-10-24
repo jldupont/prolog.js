@@ -17,6 +17,7 @@
  *  * replace `+-`  with `-`
  *  
  *  * translate `!` to functor('cut')
+ *  * translate `fail` to functor('fail')
  *  
  *  * translate `( exp ... )` ==> functor `ident( exp ...)` 
  *  * Translate `Token(var, name)` ==> `Var(name)` 
@@ -523,6 +524,17 @@ ParserL2.prototype._preprocess = function() {
 			fcut.col  = token.col;
 			fcut.offset = token.offset;
 			this.ptokens.push(fcut);
+			continue;
+		}
+
+		if (token.name == 'term' && token.value == 'fail') {
+			var ffail = new Functor("fail");
+			ffail.attrs.primitive = true;
+			ffail.original_token = token;
+			ffail.line = token.line;
+			ffail.col  = token.col;
+			ffail.offset = token.offset;
+			this.ptokens.push(ffail);
 			continue;
 		}
 

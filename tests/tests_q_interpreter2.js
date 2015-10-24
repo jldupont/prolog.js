@@ -1943,3 +1943,32 @@ it('Interpreter - arithmetic - equalnot', function(){
 	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
 	//test(rules, query, expected, { tracer: call_tracer });
 });
+
+
+// =================================================================================================== FAIL
+
+
+it('Interpreter - control - fail', function(){
+
+	var rules = [
+	             "f(X) :- X>10 , fail."
+				];
+	
+
+
+	var query = "f(11).";
+	
+	var expected = [
+	                { "$cu": false }
+	                ];
+
+	Token.inspect_compact = true;
+	Var.inspect_extended = true;
+	Var.inspect_compact = true;
+	
+	test(rules, query, expected);
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_db: true, show_compiled: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true });
+	//test(rules, query, expected, { tracer: advanced_tracer, dump_vars: true, dump_db: true });
+	//test(rules, query, expected, { tracer: call_tracer });
+});

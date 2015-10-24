@@ -706,6 +706,16 @@ Interpreter.prototype.builtin_equalnot = function(x0) {
 //
 
 /**
+ *   Instruction "fail"
+ * 
+ */
+Interpreter.prototype.inst_fail = function(inst) {
+	
+	this.backtrack();
+	
+};
+
+/**
  *   Instruction "call"
  * 
  *   Executes the Functor pointed to by $x0

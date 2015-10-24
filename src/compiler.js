@@ -568,6 +568,10 @@ Compiler.prototype.process_goal = function(exp, is_query, vars) {
 	if (exp.name == 'cut') {
 		return [new Instruction('cut'), new Instruction("proceed")];
 	}
+
+	if (exp.name == 'fail') {
+		return [new Instruction('fail')];
+	}
 	
 	
 	if (exp.attrs.primitive && exp.attrs.to_evaluate) {

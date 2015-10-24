@@ -1687,3 +1687,34 @@ it('Compiler - other operators - not', function(){
 	process_goal(text, expected);
 
 });
+
+it('Compiler - other operators - fail', function(){
+	
+	Instruction.inspect_compact = true;
+	
+	var text = "f(X) :- X>0 ; fail.";
+
+	var expected = [
+		{ head: 
+		   [ 'get_struct  f/1, x(0)',
+		     'get_var     p("X")',
+		     'jump        p("g0")'
+		     ],
+		  is_query: false,
+		  g2: [ 'try_finally' , 'fail'         ],
+		  g0: 
+		   [ 'try_else    p("g2")',
+		     'prepare'     ,
+		     'push_var    p("X")',
+		     'push_number p(0)',
+		     'op_gt'       ,
+		     'proceed'
+		     ],
+		  f: 'f',
+		  a: 1 }
+	];
+
+	//process_rule(text, expected, {show_parsed: true, show_compiled: true, show_parsed: true});
+	process_rule(text, expected);
+
+});
