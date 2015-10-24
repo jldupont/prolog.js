@@ -187,6 +187,7 @@ function do_run(msg) {
         postMessage({
             type: 'pr_result'
             ,ref: ref
+            ,state: interpreter.get_context().cu
             ,step_count: interpreter.ctx.step_counter
             ,vars: varss
         });
@@ -2623,6 +2624,10 @@ function Interpreter(db, db_builtins) {
 	this.reached_end_question = false;
 	
 }
+
+Interpreter.prototype.get_context = function(){
+	return this.ctx;
+};
 
 Interpreter.prototype.get_stack = function(){
 	return this.stack;
