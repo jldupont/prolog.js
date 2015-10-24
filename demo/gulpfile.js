@@ -58,7 +58,8 @@ gulp.task('worker', function() {
   return gulp.src(['app/scripts/worker/*.js', 'app/scripts/prolog.js'])
     .pipe(debug({title: 'worker:'}))
     .pipe(concat('worker.js'))
-    .pipe(gulp.dest('app/scripts/'));
+    .pipe(gulp.dest('app/scripts/'))
+    .pipe(gulp.dest('dist/scripts/'));
 });
 
 
