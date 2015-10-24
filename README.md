@@ -15,12 +15,13 @@ Prolog parser, compiler and interpreter in Javascript
   * `is`
   * `+`, `-`, `*` and `/` arithmetic operators
   * `=` unification
-  * `>`, `<`, `=<` and `>=` arithmetic operators
+  * `=:=`, `=\=`, `>`, `<`, `=<` and `>=` arithmetic operators
   * `+`, `-` and `not` unary operators
 * `builtin` and `user` namespaces
   * But no builtin facts or rules are provided out-of-the-box
 * List with `|` tail operator
 * `?-` unary operator
+* `fail`
  
 # `?-` operator
 
