@@ -215,7 +215,7 @@ function do_redo() {
     });
     
 }
-/*! prolog.js - v0.0.1 - 2015-10-22 */
+/*! prolog.js - v0.0.1 - 2015-10-24 */
 
 /* global Lexer, ParserL1, ParserL2, ParserL3 */
 /* global Op, Compiler, Code, Functor
@@ -390,7 +390,11 @@ function Token(name, maybe_value, maybe_attrs) {
 	maybe_attrs = maybe_attrs || {}; 
 	
 	this.name = name;
-	this.value = maybe_value || null;
+	
+	if (maybe_value === false)
+		this.value = false;
+	else
+		this.value = maybe_value || null;
 	
 	// so, 0 || null ==> null ...
 	if (maybe_value ===0)
@@ -587,12 +591,14 @@ Op._list = [
 	   ,new Op("gt",      '>',   700, 'xfx', {primitive: true, boolean: true, to_evaluate: true})
 	   
 	   ,new Op("is",      'is',  700, 'xfx', {primitive: true, retvalue: false, to_evaluate: true})
+	   
 	    
 	   ,new Op("minus",   '-',   500, 'yfx', {primitive: true, retvalue: true})
 	   ,new Op("plus",    '+',   500, 'yfx', {primitive: true, retvalue: true})
 	   ,new Op("mult",    '*',   400, 'yfx', {primitive: true, retvalue: true})
 	   ,new Op("div",     '/',   400, 'yfx', {primitive: true, retvalue: true})
-	    
+	   
+	   ,new Op("not",     'not', 200, 'fy',  {primitive: true}) 
 	   ,new Op("uminus",   '-',  200, 'fy')
 	   ,new Op("uplus",    '+',  200, 'fy') 
 	  ]; 
@@ -2124,6 +2130,14 @@ Compiler.prototype.process_goal = function(exp, is_query, vars) {
 		return this.process_primitive(exp, is_query, vars);
 	}
 	
+	// Transform 'not' operator
+	//
+	//  Just take the functor
+	//
+	if (exp.name == 'not') {
+		exp = exp.args[0];
+		exp.not = true;
+	}
 	
 	var v = new Visitor2(exp);
 	
@@ -2183,7 +2197,12 @@ Compiler.prototype.process_goal = function(exp, is_query, vars) {
 			} else {
 				results.push(new Instruction('setup'));
 				results.push(new Instruction('call'));
-				results.push(new Instruction('maybe_retry'));
+				
+				if (ctx.n.not)
+					results.push(new Instruction('maybe_retryn'));
+				else
+					results.push(new Instruction('maybe_retry'));
+				//results.push(new Instruction('maybe_retry'));
 				results.push(new Instruction('deallocate'));
 			}
 			
@@ -3299,6 +3318,7 @@ Interpreter.prototype.inst_call = function(inst) {
 }; // CALL
 
 
+
 /**
  *   Instruction "maybe_retry"
  * 
@@ -3352,6 +3372,47 @@ Interpreter.prototype.inst_maybe_retry = function() {
 	
 };
 
+Interpreter.prototype.inst_maybe_retryn = function() {
+	
+	// A 'noop' if there isn't a failure reported
+	//
+	if (!this.ctx.cu) {
+		this.ctx.cu = !this.ctx.cu;
+		return;
+	}
+		
+
+	/*  Whatever happens after, we anyways need
+	 *   to unwind the trail before attempting anything else.
+	 * 
+	 */
+	this._unwind_trail( this.ctx.tse.trail );
+	
+	this.ctx.tse.p.ci ++;
+
+	/*
+	 *  The Choice Point context is kept on the top of stack `tse`
+	 */
+	if (this.ctx.tse.p.ci < this.ctx.tse.p.ct) {
+		
+		/* We can try the next clause
+		 * 
+		    The fetch function will have incremented the
+		    instruction pointer past this instruction
+		    so we need to subtract 2 to get it pointing
+		    back to the 'CALL' instruction.
+		
+			The `backtrack` step will have already
+			loaded the code, we just have to cause a
+			`jump` by manipulating `i` directly.
+		*/
+		this.ctx.p.i -= 2;
+	}
+
+	// ELSE:  the following `deallocate` will get rid of the
+	//        environment from the stack
+	
+};
 
 /**
  *   Instruction "allocate"
@@ -3597,9 +3658,15 @@ Interpreter.prototype._get_value = function(token) {
 	if (Utils.isNumeric(token))
 		return token;
 	
-	if (token instanceof Token)
+	if (token instanceof Token) {
 		if (token.name == 'number')
 			return token.value;
+
+		if (token.name == 'boolean')
+			return token.value;
+	}
+			
+			
 	
 	throw new ErrorInvalidToken("Invalid Token: Got: "+JSON.stringify(token), token);
 };
@@ -3705,13 +3772,50 @@ Interpreter.prototype.inst_op_is = function(inst) {
 	var rval = y0.args[1];
 
 	if (!(lvar instanceof Var))
-		throw new ErrorExpectingVariable("Expecting a variable as lvalue of `is`, got: "+JSON.stringify(lvar), inst);
+		throw new ErrorExpectingVariable("Expecting an unbound variable as lvalue of `is`, got: "+JSON.stringify(lvar), inst);
 	
 	// lvar is not supposed to be bound yet!
 	//
 	lvar.bind(rval);
 	
 	this.ctx.cu = true;
+};
+
+/**
+ *   Instruction `op_true`
+ *   
+ *   
+ */
+Interpreter.prototype.inst_op_true = function(inst) {
+
+	this.ctx.cse.vars.$y1 = new Token("boolean", true);
+	this.ctx.cu = true;
+};
+
+Interpreter.prototype.inst_op_false = function(inst) {
+
+	this.ctx.cse.vars.$y1 = new Token("boolean", false);
+	this.ctx.cu = true;
+};
+
+Interpreter.prototype.inst_op_not = function(inst) {
+
+	this.ctx.cu = true;
+	
+	var p = this.ctx.cse.vars.$y0.args[0];
+
+	console.log("op_not: p= ", p);
+
+	if (p instanceof Token && p.name == 'boolean') {
+		this.ctx.cse.vars.$y1 = new Token("boolean", !p.value);
+		return;
+	}
+		
+	if (p !== true && p !== false)
+		throw Error("Expecting Boolean got: "+JSON.stringify(p));
+		
+	this.ctx.cse.vars.$y1 = new Token("boolean", !p);
+	
 };
 
 
@@ -4477,7 +4581,7 @@ function Lexer (text) {
 	this.in_comment = false;
 	this.comment_chars = "";
 	
-	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.is\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|\?\-|:\-|\\=|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
+	this._tokenRegexp = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|>=|=<|"""|\[|\]|\||\s.not\s.|\s.is\s.|\s.true\s.|\s.false\s.|\d+(\.\d+)?|[A-Za-z_0-9]+|\?\-|:\-|\\=|=|\+\-|\*|\/|\-\+|[()\.,]|[\n\r]|./gm;
 }
 
 Lexer.prototype._handleNewline = function(){
@@ -4511,6 +4615,7 @@ Lexer.token_map = {
 	,'+':   function() { return new Token('op:plus',  '+',      {is_operator: true}); }
 	,'*':   function() { return new Token('op:mult',  '*',      {is_operator: true}); }
 	,'/':   function() { return new Token('op:div',   '/',      {is_operator: true}); }
+	,'not': function() { return new Token('op:not',   'not',    {is_operator: true}); }
 	,'is':  function() { return new Token('op:is',    'is',     {is_operator: true, to_evaluate: true}); }
 	,'|':   function() { return new Token('list:tail','|'  ); }
 	
@@ -4801,6 +4906,12 @@ ParserL1.prototype.next = function() {
 		return new Eos();
 		
 		
+	if (head.name == 'term')
+		if (head.value === 'true' || head.value === 'false') {
+			head.name = 'boolean';
+			head.value = head.value === 'true';
+		}
+			
 		
 	// Check for whitespaces and remove
 	//
@@ -4905,7 +5016,7 @@ if (typeof module!= 'undefined') {
            ,ErrorExpectingListStart, ErrorExpectingListEnd
            ,ErrorUnexpectedParensClose, ErrorUnexpectedPeriod
            ,ErrorUnexpectedEnd, ErrorUnexpectedListEnd
-           , ErrorSyntax
+           
  */
 
 /**
@@ -5371,6 +5482,18 @@ ParserL2.prototype._preprocess = function() {
 			continue;
 		}
 
+		if (token.name == 'boolean') {
+			
+			var fbool = new Functor(""+token.value);
+			fbool.attrs.primitive = true;
+			//fbool.attrs.to_evaluate = true;
+			fbool.original_token = token;
+			fbool.line = token.line;
+			fbool.col  = token.col;
+			fbool.offset = token.offset;
+			this.ptokens.push(fbool);
+			continue;
+		}
 		
 		if (token.name == 'term' && token.value == '!') {
 			var fcut = new Functor("cut");
