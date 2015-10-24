@@ -1,0 +1,41 @@
+{
+  "name": "require.js",
+  "version": "0.3.97",
+  "description": "node.js require loader/compiler for the browser and node.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nathanfaucett/require.js.git"
+  },
+  "bin": {
+    "requirejs": "bin/index.js"
+  },
+  "main": "build/require.min.js",
+  "keywords": [
+    "require",
+    "require.js",
+    "loader",
+    "module",
+    "include",
+    "requirejs",
+    "requirejs.js",
+    "node",
+    "node.js"
+  ],
+  "author": "Nathan Faucett",
+  "license": "BSD-2-Clause",
+  "readmeFilename": "README.md",
+  "devDependencies": {
+    "grunt": "",
+    "grunt-contrib-jshint": "^0.10.0",
+    "grunt-contrib-uglify": "",
+    "grunt-contrib-watch": "",
+    "grunt-jsbeautifier": ""
+  },
+  "dependencies": {
+    "file_path": "git://github.com/nathanfaucett/file_path",
+    "optimist": "^0.6.1",
+    "template": "git://github.com/nathanfaucett/template",
+    "type": "git://github.com/nathanfaucett/type",
+    "url_path": "git://github.com/nathanfaucett/url_path"
+  }
+}
