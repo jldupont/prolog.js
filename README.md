@@ -6,6 +6,7 @@ Prolog parser, compiler and interpreter in Javascript
 
 # Features
 
+* No server-code required
 * Fact
 * Rule
 * Cut operator `!`
